@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import UpdatedTaskFromProject from "@/emails/UpdatedTaskFromProject";
 import resendHelper from "@/lib/resend";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteBoard,
   AuthenticationError,
   AuthorizationError,
@@ -23,9 +23,10 @@ export const updateTask = async (data: {
 }) => {
   let authzUser;
   try {
-    authzUser = await requireAuthenticated();
+    authzUser = await requireFeature("projects", "edit");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
 

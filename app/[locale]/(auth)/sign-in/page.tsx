@@ -1,3 +1,4 @@
+import { version } from "@/package.json";
 import { LoginComponent } from "./components/LoginComponent";
 
 const SignInPage = async () => {
@@ -10,7 +11,7 @@ const SignInPage = async () => {
         <LoginComponent />
       </div>
       <footer className="flex flex-col gap-2 border-t border-slate-800 px-6 py-7 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-        <span>VenSai CRM · v0.22.0</span>
+        <span>VenSai CRM · v{version}</span>
         <span>Powered by <strong className="text-slate-300">Hari Cornucopia Tech Pvt. Ltd.</strong> · Built with Next.js</span>
       </footer>
     </main>

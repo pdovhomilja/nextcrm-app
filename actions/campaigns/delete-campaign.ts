@@ -1,7 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteCampaign,
   AuthenticationError,
   AuthorizationError,
@@ -10,9 +10,10 @@ import {
 export const deleteCampaign = async (id: string) => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("campaigns", "delete");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
 

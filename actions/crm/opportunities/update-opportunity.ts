@@ -8,7 +8,7 @@ import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 import { handleStageTransition } from "@/lib/crm/stage-transition";
 import { qualifiedEntryBlockReason } from "@/lib/crm/approval-gate";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteOpportunity,
   AuthenticationError,
   AuthorizationError,
@@ -54,9 +54,10 @@ export const updateOpportunity = async (data: {
   // Authorization runs before the approval gate and the update.
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("opportunities", "edit");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
   try {

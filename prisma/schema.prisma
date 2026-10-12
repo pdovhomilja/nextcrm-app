@@ -1006,6 +1006,8 @@ model Users {
   name             String?
   password         String?
   username         String?
+  phone            String?
+  mustChangePassword Boolean      @default(false)
   userStatus       ActiveStatus @default(PENDING)
   userLanguage     Language     @default(en)
   banned           Boolean      @default(false)
@@ -1055,6 +1057,8 @@ model Users {
   invoiceActivity              Invoice_Activity[]    @relation("InvoiceActivityActor")
   ordersOwned crm_Orders[] @relation("OrderOwner")
   scheduleOrganized TeamScheduleEntry[] @relation("ScheduleOrganizer")
+  permissionGroups  PermissionGroupMember[]
+  permissionOverrides UserPermission[]
 
   @@index([email])
   @@index([userStatus])
@@ -1062,6 +1066,70 @@ model Users {
   @@index([role])
   @@index([created_on])
   @@index([lastLoginAt])
+}
+
+enum PermissionEffect {
+  ALLOW
+  DENY
+}
+
+/// Stored only when an admin changes a role default; otherwise the code defaults apply.
+model RolePermission {
+  id        String   @id @default(uuid()) @db.Uuid
+  role      AppRole
+  feature   String
+  action    String
+  allowed   Boolean
+  updatedAt DateTime @updatedAt
+
+  @@unique([role, feature, action])
+}
+
+model PermissionGroup {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     PermissionGroupMember[]
+  permissions GroupPermission[]
+}
+
+model PermissionGroupMember {
+  groupId   String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  group PermissionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  Users           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, userId])
+  @@index([userId])
+}
+
+model GroupPermission {
+  id      String           @id @default(uuid()) @db.Uuid
+  groupId String           @db.Uuid
+  feature String
+  action  String
+  effect  PermissionEffect
+
+  group PermissionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, feature, action])
+}
+
+model UserPermission {
+  id      String           @id @default(uuid()) @db.Uuid
+  userId  String           @db.Uuid
+  feature String
+  action  String
+  effect  PermissionEffect
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feature, action])
 }
 
 model crm_AuditLog {

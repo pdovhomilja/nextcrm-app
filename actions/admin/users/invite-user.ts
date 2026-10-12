@@ -1,11 +1,12 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { Language, EmailSendProvider } from "@prisma/client";
+import { Language, EmailSendProvider, AppRole } from "@prisma/client";
 import {
   requireRole,
   AuthenticationError,
   AuthorizationError,
+  parseRole,
 } from "@/lib/authz";
 import resendHelper from "@/lib/resend";
 import { getPublicAppUrl } from "@/lib/app-url";
@@ -28,7 +29,9 @@ export type InviteEmployeeInput = {
   username: string;
   workEmail?: string;
   personalEmail: string;
+  phone: string;
   language: string;
+  role: string;
 };
 
 export const inviteUser = async (data: InviteEmployeeInput) => {
@@ -47,13 +50,19 @@ export const inviteUser = async (data: InviteEmployeeInput) => {
   });
 
   const { name, username, personalEmail, language } = data;
+  const role = parseRole(data.role);
   const personal = personalEmail.trim().toLowerCase();
+  const phone = data.phone?.trim() ?? "";
   const slug = slugifyUsername(username);
 
   if (!name?.trim()) return { error: "Display name is required" };
   if (!slug || slug.length < 2) return { error: "Username must be at least 2 characters (e.g. dhoni)" };
   if (!personal || !personal.includes("@")) return { error: "Valid personal email is required" };
+  if (!phone || phone.replace(/\D/g, "").length < 8) {
+    return { error: "Enter a valid phone number (at least 8 digits)" };
+  }
   if (!language) return { error: "Language is required" };
+  if (!role) return { error: "Select a valid role" };
 
   let workEmail: string;
   try {
@@ -95,9 +104,11 @@ export const inviteUser = async (data: InviteEmployeeInput) => {
         username: slug,
         email: personal,
         workEmail,
+        phone,
+        mustChangePassword: true,
         userStatus: "ACTIVE",
         userLanguage: language as Language,
-        role: "user",
+        role: role as AppRole,
         emailVerified: true,
       },
       select: {

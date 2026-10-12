@@ -1,7 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import { requireFeature, AuthenticationError, AuthorizationError } from "@/lib/authz";
 
 export const createTarget = async (data: {
   last_name?: string;
@@ -21,9 +21,10 @@ export const createTarget = async (data: {
 }) => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("campaigns", "create");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
 

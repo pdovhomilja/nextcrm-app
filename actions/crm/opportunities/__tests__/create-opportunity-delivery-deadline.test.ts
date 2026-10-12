@@ -3,6 +3,7 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 // authz behavior is covered by the *-scope tests, so pass it through here.
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn(),
+  requireFeature: () => jest.requireMock("@/lib/authz").requireAuthenticated(),
   assertCanWriteAccount: jest.fn(),
   AuthenticationError: class AuthenticationError extends Error {},
   AuthorizationError: class AuthorizationError extends Error {},

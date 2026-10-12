@@ -3,6 +3,7 @@
 
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn(),
+  requireFeature: () => jest.requireMock("@/lib/authz").requireAuthenticated(),
   assertCanWriteLead: jest.fn(),
   assertCanWriteAccount: jest.fn(),
   AuthenticationError: class AuthenticationError extends Error {},

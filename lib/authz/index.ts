@@ -88,5 +88,25 @@ export {
   assertCanReadTask,
   assertCanWriteTask,
 } from "./scopes/crm";
+export type {
+  FeatureKey,
+  PermissionAction,
+  PermissionMatrix,
+} from "./permissions";
+export {
+  FEATURES,
+  PERMISSION_ACTIONS,
+  ROLE_DEFAULTS,
+  isFeatureKey,
+  isPermissionAction,
+  resolvePermissions,
+  featureForPath,
+} from "./permissions";
+export {
+  getUserPermissions,
+  can,
+  requireFeature,
+  requireFeaturePage,
+} from "./feature-access";
 export type { ReportScope } from "./scopes/report-scope";
 export { getReportScope } from "./scopes/report-scope";

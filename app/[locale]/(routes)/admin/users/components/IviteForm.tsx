@@ -50,7 +50,13 @@ const FormSchema = z.object({
     .regex(/^[a-z0-9._-]+$/i, "Use letters, numbers, dots, or hyphens only"),
   workEmail: z.string().email(),
   personalEmail: z.string().email(),
+  phone: z
+    .string()
+    .min(8, "Enter a valid phone number")
+    .max(24)
+    .refine((v) => v.replace(/\D/g, "").length >= 8, "Enter at least 8 digits"),
   language: z.string().min(2),
+  role: z.enum(["user", "manager", "admin"]),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -68,7 +74,9 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
       username: "",
       workEmail: "",
       personalEmail: "",
+      phone: "",
       language: "en",
+      role: "user",
     },
   });
 
@@ -92,7 +100,9 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
         username: data.username,
         workEmail: data.workEmail,
         personalEmail: data.personalEmail,
+        phone: data.phone,
         language: data.language,
+        role: data.role,
       });
 
       if (result.error) {
@@ -104,7 +114,9 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
           username: "",
           workEmail: "",
           personalEmail: "",
+          phone: "",
           language: "en",
+          role: "user",
         });
         setWorkEmailTouched(false);
         router.refresh();
@@ -198,7 +210,28 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>Random password is sent here — not to the work address.</FormDescription>
+                  <FormDescription>
+                    Temporary password is emailed here. Sign in with password or a one-time code, then
+                    set a new password.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem className="sm:col-span-2">
+                  <FormLabel>Phone number</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={isLoading}
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -220,6 +253,29 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
                       <SelectItem value="cz">Czech</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>User is the default. Admins can change it later.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

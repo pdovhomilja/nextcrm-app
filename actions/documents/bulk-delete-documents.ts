@@ -1,8 +1,9 @@
 "use server";
 import {
-  requireAuthenticated,
+  requireFeature,
   filterAuthorizedDocumentIds,
   AuthenticationError,
+  AuthorizationError,
 } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -12,9 +13,10 @@ import { minioClient, MINIO_BUCKET } from "@/lib/minio";
 export async function bulkDeleteDocuments(documentIds: string[]) {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("documents", "delete");
   } catch (e) {
     if (e instanceof AuthenticationError) throw new Error("Unauthenticated");
+    if (e instanceof AuthorizationError) throw new Error("You don't have permission to do this.");
     throw e;
   }
 

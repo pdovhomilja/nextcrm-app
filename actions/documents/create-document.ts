@@ -1,6 +1,6 @@
 "use server";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
@@ -22,9 +22,10 @@ interface CreateDocumentInput {
 export async function createDocument(input: CreateDocumentInput) {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("documents", "create");
   } catch (e) {
     if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    if (e instanceof AuthorizationError) throw new Error("You don't have permission to do this.");
     throw e;
   }
 

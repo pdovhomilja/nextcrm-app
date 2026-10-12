@@ -6,4 +6,6 @@ export interface Session {
   role: string;
   userLanguage: string;
   userStatus: string;
+  mustChangePassword?: boolean;
+  phone?: string | null;
 }
