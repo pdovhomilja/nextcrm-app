@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.0...v0.33.1) (2026-10-12)
+
+
+### Fixed
+
+* **odoo-connector:** paid and cancelled imported orders also get their missing lines ([1c639aa](https://github.com/pdovhomilja/nextcrm-app/commit/1c639aa7633b2840be748482e0d920b2998a0abb))
+* **odoo-connector:** paid and cancelled imported orders also get their missing lines (0.4.2) ([82b0f0a](https://github.com/pdovhomilja/nextcrm-app/commit/82b0f0a099b684d5382d702ebca38aaa9e6c0553))
+
 ## [0.33.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.32.0...v0.33.0) (2026-10-11)
 
 
