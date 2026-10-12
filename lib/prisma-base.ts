@@ -2,22 +2,11 @@ import { PrismaClient } from "@prisma/client";
 import { Pool, type PoolConfig } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+import { resolveRuntimeDatabaseUrl } from "@/lib/database-url";
+
 declare global {
   var cachedPrisma: PrismaClient | undefined;
   var cachedPgPool: Pool | undefined;
-}
-
-function resolveDatabaseUrl(): string {
-  const url = process.env.DATABASE_URL?.trim();
-  if (!url) {
-    throw new Error("DATABASE_URL is not set");
-  }
-  if (process.env.NODE_ENV === "production" && url.includes("prisma_migration")) {
-    console.error(
-      "[prisma] DATABASE_URL uses the prisma_migration role. Use your app/pooled URL at runtime and set DIRECT_DATABASE_URL for migrations only."
-    );
-  }
-  return url;
 }
 
 function poolConfig(connectionString: string): PoolConfig {
@@ -32,7 +21,7 @@ function poolConfig(connectionString: string): PoolConfig {
 }
 
 const prismaClientSingleton = () => {
-  const connectionString = resolveDatabaseUrl();
+  const connectionString = resolveRuntimeDatabaseUrl();
   const pool = global.cachedPgPool ?? new Pool(poolConfig(connectionString));
   if (!global.cachedPgPool) {
     global.cachedPgPool = pool;
