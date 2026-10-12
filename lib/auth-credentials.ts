@@ -42,3 +42,16 @@ export async function upsertCredentialAccount(userId: string, loginEmail: string
     },
   });
 }
+
+/** Keeps email/password sign-in aligned when an admin changes Users.email. */
+export async function updateCredentialLoginEmail(userId: string, loginEmail: string) {
+  const normalizedEmail = loginEmail.trim().toLowerCase();
+  const existing = await prismadb.account.findFirst({
+    where: { userId, providerId: "credential" },
+  });
+  if (!existing) return;
+  await prismadb.account.update({
+    where: { id: existing.id },
+    data: { accountId: normalizedEmail },
+  });
+}
