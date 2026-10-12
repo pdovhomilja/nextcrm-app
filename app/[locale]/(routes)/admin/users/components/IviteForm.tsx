@@ -51,6 +51,7 @@ const FormSchema = z.object({
   workEmail: z.string().email(),
   personalEmail: z.string().email(),
   language: z.string().min(2),
+  role: z.enum(["user", "manager", "admin"]),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -69,6 +70,7 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
       workEmail: "",
       personalEmail: "",
       language: "en",
+      role: "user",
     },
   });
 
@@ -93,6 +95,7 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
         workEmail: data.workEmail,
         personalEmail: data.personalEmail,
         language: data.language,
+        role: data.role,
       });
 
       if (result.error) {
@@ -105,6 +108,7 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
           workEmail: "",
           personalEmail: "",
           language: "en",
+          role: "user",
         });
         setWorkEmailTouched(false);
         router.refresh();
@@ -220,6 +224,29 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
                       <SelectItem value="cz">Czech</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>User is the default. Admins can change it later.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

@@ -5,9 +5,8 @@ import { admin as adminPlugin } from "better-auth/plugins";
 import { prismadb } from "@/lib/prisma";
 import { ac, admin, manager, user } from "@/lib/auth-permissions";
 import { newUserNotify } from "@/lib/new-user-notify";
-import resendHelper from "@/lib/resend";
+import { OTP_EXPIRES_SECONDS, sendOtpEmail } from "@/lib/auth-otp-mail";
 import { getBetterAuthTrustedOrigins } from "@/lib/auth-base-url";
-import { getAppName } from "@/lib/app-name";
 
 const googleClientId = process.env.GOOGLE_ID || process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET;
@@ -87,26 +86,13 @@ export const auth = betterAuth({
 
   plugins: [
     emailOTP({
-      sendVerificationOTP: async ({ email, otp, type }) => {
-        if (process.env.NODE_ENV !== "production") {
-          console.log(`\n========================================\n[Auth DEV Mode] Verification OTP for ${email}: ${otp}\n========================================\n`);
-        }
-        try {
-          const resend = await resendHelper();
-          await resend.emails.send({
-            from: `${getAppName()} <${process.env.EMAIL_FROM || "noreply@domain.com"}>`,
-            to: email,
-            subject: `Your verification code: ${otp}`,
-            text: `Your one-time verification code is: ${otp}\n\nThis code expires in 5 minutes.\n\nIf you did not request this, please ignore this email.`,
-          });
-        } catch (e) {
-          // In dev/test, email sending may fail — OTP is captured by testUtils plugin
-          if (process.env.NODE_ENV !== "production") {
-            console.log(`[Auth] Email sending failed in dev mode for ${email}, but captured OTP: ${otp}`);
-          } else {
-            throw e;
-          }
-        }
+      expiresIn: OTP_EXPIRES_SECONDS,
+      allowedAttempts: 5,
+      // Resend the same unexpired code. Rotating it made the code already
+      // in the inbox fail when the new email never arrived.
+      resendStrategy: "reuse",
+      sendVerificationOTP: async ({ email, otp }) => {
+        await sendOtpEmail(email, otp);
       },
     }),
     // testUtils captures OTPs for E2E testing — only enabled in non-production
