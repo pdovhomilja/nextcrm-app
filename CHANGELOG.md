@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.3...v0.33.4) (2026-10-12)
+
+
+### Fixed
+
+* one approval mail per manager; plugin form no longer re-sends a saved secret ([dc83aed](https://github.com/pdovhomilja/nextcrm-app/commit/dc83aedc6f701ab45399d215e9188d4c058061ad))
+* one approval mail per manager; plugin form no longer re-sends a saved secret ([cd751f1](https://github.com/pdovhomilja/nextcrm-app/commit/cd751f17ee3300b26a4cf04a2a5b7b35f5544216))
+
 ## [0.33.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.2...v0.33.3) (2026-10-12)
 
 
