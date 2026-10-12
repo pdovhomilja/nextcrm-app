@@ -11,6 +11,6 @@ elif [ -n "${DIRECT_URL:-}" ]; then
 fi
 
 # Embeddings migrations need pgvector (Supabase + local pgvector/pgvector image).
-echo 'CREATE EXTENSION IF NOT EXISTS vector;' | pnpm exec prisma db execute --stdin --schema prisma/schema.prisma
+echo 'CREATE EXTENSION IF NOT EXISTS vector;' | pnpm exec prisma db execute --stdin
 
 exec prisma migrate deploy
