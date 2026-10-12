@@ -5,6 +5,55 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.2...v0.33.3) (2026-10-12)
+
+
+### Fixed
+
+* **authz:** account detail page checks that the caller may read the account ([3e3a3bc](https://github.com/pdovhomilja/nextcrm-app/commit/3e3a3bce4f31fd6f4be5fe895c5ff12923ff5bde))
+* **crm:** accounts list crash on null first name; scope account detail page ([7e231cf](https://github.com/pdovhomilja/nextcrm-app/commit/7e231cfd07072071488b077ef1616fe5cdca7aba))
+* **crm:** accounts list no longer crashes on a contact without a first name ([cd35cfc](https://github.com/pdovhomilja/nextcrm-app/commit/cd35cfcec0182f9c44e803a20e0c1079417b4a89))
+
+## [0.33.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.1...v0.33.2) (2026-10-12)
+
+
+### Fixed
+
+* **authz:** scope CRM data, invoice and target-list reads to the caller ([f35ba30](https://github.com/pdovhomilja/nextcrm-app/commit/f35ba30a158b882ac3b36cb9774720208d2db04f))
+* **authz:** scope CRM data, invoice and target-list reads to the caller ([2bc8e0c](https://github.com/pdovhomilja/nextcrm-app/commit/2bc8e0cf3bfde01d4cd17bbb184fcae958376a7d))
+
+## [0.33.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.0...v0.33.1) (2026-10-12)
+
+
+### Fixed
+
+* **odoo-connector:** paid and cancelled imported orders also get their missing lines ([1c639aa](https://github.com/pdovhomilja/nextcrm-app/commit/1c639aa7633b2840be748482e0d920b2998a0abb))
+* **odoo-connector:** paid and cancelled imported orders also get their missing lines (0.4.2) ([82b0f0a](https://github.com/pdovhomilja/nextcrm-app/commit/82b0f0a099b684d5382d702ebca38aaa9e6c0553))
+
+## [0.33.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.32.0...v0.33.0) (2026-10-11)
+
+
+### Added
+
+* **odoo-connector:** take over hand-made CRM products with the same SKU ([174a42c](https://github.com/pdovhomilja/nextcrm-app/commit/174a42c2fbdf4c6744ebbadd6e2eda31d97f1562))
+* **odoo-connector:** take over hand-made CRM products with the same SKU; re-copy missing order lines (0.4.1) ([f8c0059](https://github.com/pdovhomilja/nextcrm-app/commit/f8c00593e58ce4aa38818106eb440d7beaf55bd5))
+* **plugins:** SDK 0.2.5, products.upsertExternal can take over a CRM product with the same SKU ([c41760c](https://github.com/pdovhomilja/nextcrm-app/commit/c41760cb51ff66b6af5d8f62a284ae9b2006b55f))
+
+## [0.32.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.31.1...v0.32.0) (2026-10-11)
+
+
+### Added
+
+* **odoo-connector:** Odoo orders in and the Odoo tab on the account (part 3b) ([f000ac3](https://github.com/pdovhomilja/nextcrm-app/commit/f000ac38fcb4be3ea9c409fe89e68cd4d05fc4bc))
+
+## [0.31.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.31.0...v0.31.1) (2026-10-11)
+
+
+### Fixed
+
+* **odoo-connector:** order follow-ups from part 3a ([af5c6a9](https://github.com/pdovhomilja/nextcrm-app/commit/af5c6a9d1fe1378a340314796c47d98732a0b1f5))
+* **odoo-connector:** order follow-ups from part 3a ([a3c79c4](https://github.com/pdovhomilja/nextcrm-app/commit/a3c79c4285714ddd505b5cbffbfbcf4a7e45d476))
+
 ## [0.31.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.30.0...v0.31.0) (2026-10-11)
 
 

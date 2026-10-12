@@ -44,7 +44,11 @@
     "createdKind": {
       "customer": "zákazník",
       "delivery": "doručovací adresa"
-    }
+    },
+    "orderCounts": "objednávky zkontrolováno {checked}, posunuto {moved}",
+    "orderImported": "importováno {imported}",
+    "importedCounts": "Importováno z Odoo: celkem {total}, při posledním běhu {last}",
+    "importFailed": "Neimportováno z Odoo"
   },
   "needsOwner": {
     "title": "Importované účty bez vlastníka",
@@ -70,7 +74,11 @@
     "orderFailedSubject": "Objednávka {number} nebyla odeslána do Odoo",
     "orderFailedText": "Objednávku {number} se nepodařilo odeslat do Odoo: {error}. Odstraňte příčinu a klikněte u objednávky na Zkusit znovu.",
     "stuckSubject": "Objednávka {number} čeká na Odoo už den",
-    "stuckText": "Objednávka {number} čeká na odeslání do Odoo od {since}. Poslední chyba: {error}. Konektor to dál zkouší; zkontrolujte Odoo."
+    "stuckText": "Objednávka {number} čeká na odeslání do Odoo od {since}. Poslední chyba: {error}. Konektor to dál zkouší; zkontrolujte Odoo.",
+    "missingSubject": "Objednávka {number}: objednávka v Odoo nenalezena",
+    "missingText": "Konektor už nenachází objednávku Odoo {name} pro objednávku CRM {number}. V Odoo byla smazána, nebo k ní uživatel API ztratil přístup. Objednávka v CRM si ponechává svůj stav; pokud byla objednávka v Odoo smazána, zrušte ji ručně.",
+    "movedSubject": "Objednávka {number}: v Odoo se změnil zákazník",
+    "movedText": "Objednávka Odoo {name} (objednávka CRM {number}) teď v Odoo patří jinému zákazníkovi. Objednávka v CRM zůstává u svého účtu a dál sleduje objednávku v Odoo; v Odoo ověřte, zda je změna správná."
   },
   "product": {
     "linked": "Produkt v Odoo č. {id}"
@@ -88,13 +96,39 @@
     "invoice": "{number} · splatnost {due} · {amount}, zbývá uhradit {residual} · {state}",
     "waiting": "Čeká na Odoo od {date}",
     "lastError": "Poslední chyba: {error}",
-    "failed": "Neodesláno: {reason}"
+    "failed": "Neodesláno: {reason}",
+    "missing": "V Odoo nenalezena (smazána, nebo ji uživatel API nevidí)",
+    "imported": "Importováno z Odoo",
+    "moved": "V Odoo se změnil zákazník"
   },
   "orders": {
     "noAccount": "Účet objednávky nemá název",
     "notOdooProduct": "Produkt {product} nepochází z Odoo",
     "noPriceList": "Zákazník nemá v Odoo ceník",
     "currency": "Měna objednávky {order} se liší od měny ceníku v Odoo {list}",
-    "otherLines": "V Odoo už je jako {name} s jinými řádky; požádejte o její zrušení v Odoo a klikněte na Zkusit znovu"
+    "otherLines": "V Odoo už je jako {name} s jinými řádky; požádejte o její zrušení v Odoo a klikněte na Zkusit znovu",
+    "linesMissing": "Nezobrazené řádky: {count} (produkty nejsou v CRM)"
+  },
+  "tab": {
+    "title": "Odoo",
+    "notLinked": "Není propojeno se zákazníkem v Odoo",
+    "asOf": "Stav k {date}",
+    "notYet": "Z Odoo zatím nenačteno",
+    "orders": "Objednávky",
+    "ordersEmpty": "Žádné objednávky v Odoo",
+    "allOrders": "Všechny objednávky v Odoo",
+    "invoices": "Neuhrazené faktury",
+    "invoicesEmpty": "Nic k úhradě",
+    "owed": "Dluží: {amounts}",
+    "overdue": "{days} dní po splatnosti",
+    "totals": "Potvrzené objednávky bez DPH",
+    "year": "{year}: {amount} {currency}",
+    "number": "Číslo",
+    "odoo": "Odoo",
+    "date": "Datum",
+    "due": "Splatnost",
+    "total": "Celkem",
+    "left": "Zbývá uhradit",
+    "status": "Stav"
   }
 }

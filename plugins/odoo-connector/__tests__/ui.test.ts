@@ -67,7 +67,7 @@ describe("order screens", () => {
   });
 
   it("links the Odoo order and passes on waiting and failure details", async () => {
-    const { ctx } = mkOrders();
+    const { ctx } = mkOrders({ orders: [order(), order({ id: "o2" })] });
     await ctx.store.set(K.order("o1"), { odooId: 900, name: "S00900", state: "sale", sentAt: "2026-10-13T08:00:00.000Z", total: 242, totalDiffers: false, priceDiffs: [], deliveries: [], invoices: [], created: ["customer"], checkedAt: "x" });
     expect(await orderPanelData(ctx, "o1")).toMatchObject({ link: { name: "S00900", url: "https://odoo.example.com/odoo/action-sale.action_orders/900", created: ["customer"] }, waiting: null, failed: null });
     await ctx.store.set(K.send("o2"), { attempts: 1, lastError: "Odoo error 503", waitingSince: "2026-10-13T08:00:00.000Z" });
@@ -84,7 +84,7 @@ describe("order screens", () => {
     await ctx.store.set(K.created, [{ at: "z", kind: "customer", odooId: 5, name: "Bubble", orderNumber: "N2" }]);
     expect(await ordersData(ctx, at)).toEqual({
       enabled: true, waiting: 1, sent: 1, failed: [{ orderId: "o2", number: "N2", reason: "orders.notOdooProduct", at: "x" }],
-      paused: { at: "y", reason: "403" }, created: [{ at: "z", kind: "customer", odooId: 5, name: "Bubble", orderNumber: "N2" }],
+      paused: { at: "y", reason: "403" }, created: [{ at: "z", kind: "customer", odooId: 5, name: "Bubble", orderNumber: "N2" }], imported: { total: 0, lastRun: 0, failed: [] },
     });
   });
 

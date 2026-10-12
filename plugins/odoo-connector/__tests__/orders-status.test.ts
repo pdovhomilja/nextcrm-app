@@ -10,7 +10,6 @@ const link = (over: Partial<OrderLink> = {}): OrderLink => ({ odooId: 900, name:
 
 describe("status table (spec § 4.3)", () => {
   it.each([
-    ["deleted", null, [], "CANCELLED"],
     ["cancelled", sale({ state: "cancel" }), [], "CANCELLED"],
     ["draft", sale({ state: "draft" }), [], "SENT"],
     ["quotation sent", sale({ state: "sent" }), [], "SENT"],
@@ -24,7 +23,7 @@ describe("status table (spec § 4.3)", () => {
     ["in payment", sale({ invoice_status: "invoiced", invoice_ids: [1] }), [inv({ payment_state: "in_payment" })], "PAID"],
     ["reversed invoice ignored", sale({ invoice_status: "invoiced", invoice_ids: [1, 2] }), [inv({ payment_state: "reversed" }), inv({ id: 2, payment_state: "paid" })], "PAID"],
     ["paid partial invoice is not PAID", sale({ invoice_status: "to invoice", invoice_ids: [1] }), [inv({ payment_state: "paid" })], "CONFIRMED"],
-  ] as const)("%s", (_n, s, moves, want) => expect(targetStatus(s as OdooSale | null, moves as unknown as OdooMove[])).toBe(want));
+  ] as const)("%s", (_n, s, moves, want) => expect(targetStatus(s as OdooSale, moves as unknown as OdooMove[])).toBe(want));
 });
 
 describe("reading back", () => {
@@ -47,10 +46,10 @@ describe("reading back", () => {
     expect((await ctx.store.get<OrderLink>(K.order("o1")))!.invoices).toEqual([{ number: "INV/1", type: "out_invoice", date: "2026-10-14", due: "2026-10-28", amount: 242, residual: 42, paymentState: "partial" }]);
   });
 
-  it("maps a deleted Odoo order to CANCELLED (Review Focus 4)", async () => {
+  it("leaves a deleted Odoo order's CRM status alone (Review Focus 4, Pavel 2026-10-11)", async () => {
     const { ctx, client, data, calls } = await setup({}, null);
     await syncOrderStatuses({ ctx, client, dry: false, now });
-    expect(data.orders[0].status).toBe("CANCELLED");
+    expect(data.orders[0].status).toBe("SENT");
     expect(calls.some((c) => c.path === "/json/2/sale.order/read")).toBe(false);
   });
 
@@ -78,7 +77,7 @@ describe("reading back", () => {
     const { ctx, client } = await setup({}, {});
     const catalog = jest.spyOn(require("../catalog"), "syncCatalog").mockResolvedValue(undefined);
     const summary = await runSync(ctx, client, now);
-    expect(summary.orders).toEqual({ checked: 1, moved: 1 });
+    expect(summary.orders).toEqual({ checked: 1, moved: 1, imported: 0 });
     catalog.mockRestore();
   });
 });

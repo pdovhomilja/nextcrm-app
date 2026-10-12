@@ -29,6 +29,7 @@ Install it under **Admin → Plugins → Odoo connector**.
 | `dryRun` | on | While on, the sync only writes to the plugin log what it would create or change, and the scheduled sync is paused: use **Sync now**. |
 | `priceLists` | empty | The Odoo price lists to import: their Odoo ids, separated by commas, for example `242, 245`. See [Catalog](#catalog). |
 | `sendOrders` | off | Send orders in READY to Odoo as draft sale orders. While off, the connector never writes to Odoo. |
+| `timeZone` | `UTC` | The time zone the plugin's screens and emails show times in, for example `Europe/Prague`. |
 
 The secret `apiKey` holds the Odoo user's API key. It is stored encrypted.
 
@@ -74,7 +75,7 @@ Products, categories and these price lists are read-only in the CRM: change them
 
 A list you remove from `priceLists` stays in the CRM as an inactive list, so older orders keep it, and is no longer given to accounts. A list is skipped, with a line in the plugin log, when a list it builds on can't be read with the Odoo user's access, or when it builds on more than 10 other lists.
 
-Rules the CRM cannot use are listed on the admin page under **Rules the CRM cannot use**. The same list notes rules Odoo ranks differently from the CRM (a rule on one product variant next to a rule on the whole product). An Odoo variant whose SKU a CRM product already uses is not imported; the plugin log names it and the next syncs try again until one of the two SKUs changes.
+Rules the CRM cannot use are listed on the admin page under **Rules the CRM cannot use**. The same list notes rules Odoo ranks differently from the CRM (a rule on one product variant next to a rule on the whole product). A product created by hand in the CRM with the same SKU as an Odoo variant is taken over: it keeps its id (so orders and price list rules that use it stay intact), becomes the Odoo product and is kept current from Odoo from then on; the plugin log says "Took over CRM product …". A deleted CRM product, or a product of another plugin, with the same SKU is never taken over: that variant is not imported, the plugin log names it and the next syncs try again.
 
 ## Compare with Odoo
 
@@ -109,14 +110,30 @@ The Odoo user needs **create** on contacts (`res.partner`) and sales orders (`sa
 | everything shipped | DELIVERED |
 | fully invoiced | INVOICED |
 | fully invoiced and every invoice paid | PAID |
-| cancelled or deleted | CANCELLED |
+| cancelled | CANCELLED |
 
 Statuses are read on every sync (`syncMinutes`). They only move forward; partly shipped or partly paid orders keep the earlier status and the **Odoo** panel on the order shows the details: deliveries, invoices with what is left to pay, a "Price differs from Odoo" list when Odoo's price list would charge more than 1 more or less than the order, and a note when someone changed the order's total in Odoo.
 
+When the connector can no longer find the Odoo order, the order keeps its status and the panel says "Not found in Odoo"; admins get one email. Odoo gives the same answer for a deleted order and for one the API user lost access to, so the connector never cancels on its own: if the Odoo order was deleted, cancel the CRM order by hand.
+
 ### When sending fails
 
-- **Odoo unreachable:** the order stays READY and goes out when Odoo is back; the panel shows since when it waits.
+- **Odoo unreachable:** the order stays READY and goes out when Odoo is back; the panel shows since when it waits. An order reopened or cancelled while it waits starts afresh when it is submitted again.
 - **Odoo refuses access** (wrong key or missing rights): sending pauses for every order and admins get one notification. Fix the rights, then click **Test connection**.
 - **Odoo refuses the order:** after 5 refusals, or at once for a product that does not come from Odoo, a currency that differs from the Odoo price list, or an order already in Odoo with other lines, the order becomes **SYNC_FAILED** and admins are notified. Fix the cause and click **Retry** on the order.
 
 Sending is safe to repeat: whatever fails in between, each order exists once in Odoo.
+
+## Orders from Odoo
+
+Every sync also brings in the **confirmed** Odoo orders of customers linked to an account, including everything from before the link. Quotations and orders cancelled before they were imported stay out. An imported order:
+
+- is read-only in the CRM, numbered from the CRM's order series, owned by the account's owner, with the Odoo order date, currency and note;
+- has its product lines at Odoo's unit price, after any line discount. Notes, section headings and down payments are skipped. A product that is archived in Odoo (for example an old batch) is added to the CRM as an archived product, so the order is complete; reps cannot order it. Only a line whose product cannot be created in the CRM is left out, and the order note says how many lines are not shown; once the product exists, the next sync fills those lines in. VAT comes from the CRM product, so the CRM total can differ slightly; the order's **Odoo** panel then shows Odoo's total;
+- follows Odoo's status like an order sent from the CRM, and its lines are updated when they change in Odoo.
+
+Orders the CRM sent to Odoo are never imported again. If an imported order moves to another customer in Odoo, the CRM order keeps its account, its panel says "Customer changed in Odoo" and admins get one email. At most 200 orders are imported per sync; a large first import spreads over several syncs. An order that cannot be imported (for example its currency does not exist in the CRM) is listed on the admin page and tried again on every sync.
+
+### The Odoo tab on the account
+
+Linked accounts get an **Odoo** tab: the account's orders that exist in Odoo (newest 50, with the Odoo number, total without VAT and status), the open invoices and credit notes with what is owed (overdue ones in red), and the confirmed orders without VAT for this year and last year. The tab shows the data of the last sync ("As of …") and opens even when Odoo is down.

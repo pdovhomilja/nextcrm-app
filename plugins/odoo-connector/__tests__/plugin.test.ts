@@ -1,14 +1,15 @@
 import plugin from "../plugin";
 
 it("declares a read-only Odoo connector", () => {
-  expect([plugin.id, plugin.version, plugin.sdk]).toEqual(["odoo-connector", "0.3.0", "^0.2.4"]);
+  expect([plugin.id, plugin.version, plugin.sdk]).toEqual(["odoo-connector", "0.4.2", "^0.2.5"]);
   expect(plugin.permissions).toEqual(["http", "accounts:read", "accounts:write", "contacts:read", "contacts:write", "users:read", "notify", "products:read", "products:write", "priceLists:read", "priceLists:write", "orders:read", "orders:write"]);
-  expect(Object.keys(plugin.settings.shape)).toEqual(["url", "database", "syncMinutes", "defaultCountry", "dryRun", "priceLists", "sendOrders"]);
+  expect(Object.keys(plugin.settings.shape)).toEqual(["url", "database", "syncMinutes", "defaultCountry", "dryRun", "priceLists", "sendOrders", "timeZone"]);
   expect(Object.keys(plugin.secrets.shape)).toEqual(["apiKey"]);
   expect(plugin.extensions.crons.map((c) => [c.id, c.schedule])).toEqual([["sync", "*/5 * * * *"]]);
   expect(plugin.extensions.adminActions.map((a) => a.id)).toEqual(["test", "sync", "lists", "compare"]);
   expect(plugin.extensions.pages.map((p) => [p.path, p.roles, p.nav?.label])).toEqual([["needs-owner", ["manager", "admin"], "needsOwner.nav"]]);
   expect(plugin.extensions.accountPanels.map((p) => p.id)).toEqual(["odoo"]);
+  expect(plugin.extensions.accountTabs.map((t) => [t.id, t.title])).toEqual([["odoo", "tab.title"]]);
   expect(typeof plugin.onInstall).toBe("function");
 });
 

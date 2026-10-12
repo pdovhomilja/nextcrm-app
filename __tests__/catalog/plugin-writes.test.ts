@@ -89,3 +89,33 @@ it("stamps rules in array order so later rules win ties, like Odoo's id desc (re
   const [a, b] = db.crm_PriceListRules.createMany.mock.calls[0][0].data;
   expect(b.createdAt.getTime()).toBeGreaterThan(a.createdAt.getTime());
 });
+
+describe("adoptBySku (SDK 0.2.5)", () => {
+  beforeEach(() => {
+    db.crm_ProductCategories.findUnique.mockResolvedValue({ id: "cat-7" });
+    db.crm_Products.findUnique.mockResolvedValue(null);
+  });
+
+  it("takes over a CRM product with the same SKU: same id, now EXTERNAL with the plugin's ref and fields", async () => {
+    db.crm_Products.findFirst.mockResolvedValue({ id: "crm-1", source: "CRM", deletedAt: null });
+    db.crm_Products.update.mockResolvedValue({ id: "crm-1" });
+    expect(await upsertExternalProduct("odoo", "332", product, { adoptBySku: true })).toEqual({ id: "crm-1", created: false, adopted: true });
+    expect(db.crm_Products.update.mock.calls[0][0]).toMatchObject({ where: { id: "crm-1" }, data: { source: "EXTERNAL", externalRef: "332", sku: "800004", categoryId: "cat-7", unit_price: "1.89" } });
+    expect(db.crm_Products.create).not.toHaveBeenCalled();
+    const audit = jest.requireMock("@/lib/audit-log").writeAuditLog;
+    expect(audit).toHaveBeenCalledWith(expect.objectContaining({ entityType: "product", entityId: "crm-1", action: "updated" }));
+  });
+
+  it("never takes over another plugin's product or a deleted one", async () => {
+    db.crm_Products.findFirst.mockResolvedValue({ id: "ext-9", source: "EXTERNAL", externalRef: "77", deletedAt: null });
+    await expect(upsertExternalProduct("odoo", "332", product, { adoptBySku: true })).rejects.toThrow("SKU used by a different external product: 800004");
+    db.crm_Products.findFirst.mockResolvedValue({ id: "crm-2", source: "CRM", deletedAt: new Date() });
+    await expect(upsertExternalProduct("odoo", "332", product, { adoptBySku: true })).rejects.toThrow("SKU used by a CRM product: 800004");
+    expect(db.crm_Products.update).not.toHaveBeenCalled();
+  });
+
+  it("without the option a CRM product's SKU still blocks the import", async () => {
+    db.crm_Products.findFirst.mockResolvedValue({ id: "crm-1", source: "CRM", deletedAt: null });
+    await expect(upsertExternalProduct("odoo", "332", product)).rejects.toThrow("SKU used by a CRM product: 800004");
+  });
+});

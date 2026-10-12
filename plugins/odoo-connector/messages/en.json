@@ -44,7 +44,11 @@
     "createdKind": {
       "customer": "customer",
       "delivery": "delivery address"
-    }
+    },
+    "orderCounts": "orders checked {checked}, moved {moved}",
+    "orderImported": "imported {imported}",
+    "importedCounts": "Imported from Odoo: {total} in total, {last} on the last run",
+    "importFailed": "Not imported from Odoo"
   },
   "needsOwner": {
     "title": "Imported accounts without an owner",
@@ -70,7 +74,11 @@
     "orderFailedSubject": "Order {number} was not sent to Odoo",
     "orderFailedText": "Order {number} could not be sent to Odoo: {error}. Fix the cause, then click Retry on the order.",
     "stuckSubject": "Order {number} has been waiting for Odoo for a day",
-    "stuckText": "Order {number} has been waiting to be sent to Odoo since {since}. Last error: {error}. The connector keeps trying; check Odoo."
+    "stuckText": "Order {number} has been waiting to be sent to Odoo since {since}. Last error: {error}. The connector keeps trying; check Odoo.",
+    "missingSubject": "Order {number}: Odoo order not found",
+    "missingText": "The connector can no longer find Odoo order {name} for CRM order {number}. It was deleted in Odoo, or the Odoo API user lost access to it. The CRM order keeps its status; cancel it by hand if the Odoo order was deleted.",
+    "movedSubject": "Order {number}: customer changed in Odoo",
+    "movedText": "Odoo order {name} (CRM order {number}) now belongs to another customer in Odoo. The CRM order keeps its account and still follows the Odoo order; check in Odoo whether the change is right."
   },
   "product": {
     "linked": "Odoo product #{id}"
@@ -88,13 +96,39 @@
     "invoice": "{number} · due {due} · {amount}, left to pay {residual} · {state}",
     "waiting": "Waiting for Odoo since {date}",
     "lastError": "Last error: {error}",
-    "failed": "Not sent: {reason}"
+    "failed": "Not sent: {reason}",
+    "missing": "Not found in Odoo (deleted, or the API user can't see it)",
+    "imported": "Imported from Odoo",
+    "moved": "Customer changed in Odoo"
   },
   "orders": {
     "noAccount": "The order's account has no name",
     "notOdooProduct": "Product {product} does not come from Odoo",
     "noPriceList": "The customer has no price list in Odoo",
     "currency": "Order currency {order} differs from the Odoo price list currency {list}",
-    "otherLines": "Already in Odoo as {name} with other lines; ask Odoo to cancel it, then click Retry"
+    "otherLines": "Already in Odoo as {name} with other lines; ask Odoo to cancel it, then click Retry",
+    "linesMissing": "{count} lines not shown: products not in the CRM"
+  },
+  "tab": {
+    "title": "Odoo",
+    "notLinked": "Not linked to an Odoo customer",
+    "asOf": "As of {date}",
+    "notYet": "Not read from Odoo yet",
+    "orders": "Orders",
+    "ordersEmpty": "No orders in Odoo",
+    "allOrders": "All orders in Odoo",
+    "invoices": "Open invoices",
+    "invoicesEmpty": "Nothing to pay",
+    "owed": "Owed: {amounts}",
+    "overdue": "{days} days overdue",
+    "totals": "Confirmed orders without VAT",
+    "year": "{year}: {amount} {currency}",
+    "number": "Number",
+    "odoo": "Odoo",
+    "date": "Date",
+    "due": "Due",
+    "total": "Total",
+    "left": "Left to pay",
+    "status": "Status"
   }
 }

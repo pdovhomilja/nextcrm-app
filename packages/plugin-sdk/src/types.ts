@@ -103,7 +103,8 @@ export interface ExternalRuleInput {
 }
 /** Plugins write only EXTERNAL rows, keyed by the external system's id (catalog spec § 2.3). */
 export interface ProductsApi extends ReadApi {
-  upsertExternal(ref: string, fields: ExternalProductInput): Promise<{ id: string; created: boolean }>;
+  /** `adoptBySku` (SDK 0.2.5): a live CRM product with the same SKU becomes this external product instead of blocking it. */
+  upsertExternal(ref: string, fields: ExternalProductInput, opts?: { adoptBySku?: boolean }): Promise<{ id: string; created: boolean; adopted?: boolean }>;
   findExternal(): Promise<{ id: string; ref: string; status: string }[]>;
 }
 export interface ProductCategoriesApi { upsertExternal(ref: string, fields: { name: string; parentRef: string | null }): Promise<{ id: string }> }

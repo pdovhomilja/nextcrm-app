@@ -2,9 +2,10 @@ import type { M2O, OdooPartner } from "./map";
 import { PARTNER_FIELDS, accountFields, changedFields, contactFields } from "./map";
 import { matchAccount } from "./match";
 import { OdooAuthError, jsonClient, type OdooClient } from "./odoo";
-import type { Ctx } from "./settings";
+import { tell, type Ctx } from "./settings";
 import { syncCatalog } from "./catalog";
 import { syncOrderStatuses } from "./orders-status";
+import { syncOrdersIn } from "./orders-in";
 import { K, type AccountLink, type CatalogCounts, type Conflict, type RunSummary } from "./store";
 
 const PAGE = 100;
@@ -31,7 +32,7 @@ interface Run {
   started: number;
   done: Set<number>;
   catalog?: CatalogCounts;
-  orders?: { checked: number; moved: number };
+  orders?: { checked: number; moved: number; imported?: number };
 }
 
 const CUSTOMER = [["customer_rank", ">", 0], ["parent_id", "=", false]];
@@ -187,8 +188,12 @@ async function incremental(r: Run, cursor: string): Promise<string | null> {
 }
 
 export function summaryText(ctx: Ctx, s: RunSummary): string {
-  return s.ok ? ctx.t("admin.counts", { created: s.created, updated: s.updated, unchanged: s.unchanged, skipped: s.skipped, conflicts: s.conflicts, failed: s.failed })
-    : ctx.t("admin.failed", { error: s.error ?? "?" });
+  if (!s.ok) return ctx.t("admin.failed", { error: s.error ?? "?" });
+  const counts = ctx.t("admin.counts", { created: s.created, updated: s.updated, unchanged: s.unchanged, skipped: s.skipped, conflicts: s.conflicts, failed: s.failed });
+  const parts = [counts];
+  if (s.orders?.checked) parts.push(ctx.t("admin.orderCounts", { checked: s.orders.checked, moved: s.orders.moved }));
+  if (s.orders?.imported) parts.push(ctx.t("admin.orderImported", { imported: s.orders.imported }));
+  return parts.join(" · ");
 }
 
 export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<RunSummary> {
@@ -215,6 +220,13 @@ export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<
       if (e instanceof OdooAuthError) throw e;
       ctx.log.error(`Order statuses failed: ${e instanceof Error ? e.message : String(e)}`);
     }
+    try {
+      const imported = await syncOrdersIn({ ctx, client, dry, now });
+      r.orders = { ...(r.orders ?? { checked: 0, moved: 0 }), imported };
+    } catch (e) {
+      if (e instanceof OdooAuthError) throw e;
+      ctx.log.error(`Orders from Odoo failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
     if (!dry && top) await ctx.store.set(K.cursor, { at: top });
     summary = { at: now.toISOString(), ok: true, dryRun: dry, ...r.counts, catalog: r.catalog, orders: r.orders };
     await ctx.store.set(K.failures, { count: 0 });
@@ -225,7 +237,7 @@ export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<
     ctx.log.error(`Sync failed: ${error}`, { ...r.counts });
     const failures = ((await ctx.store.get<{ count: number }>(K.failures))?.count ?? 0) + 1;
     await ctx.store.set(K.failures, { count: failures });
-    if (failures === 3) await ctx.notify({ roles: ["admin"], subject: ctx.t("mail.failingSubject"), text: ctx.t("mail.failingText", { error }) });
+    if (failures === 3) await tell(ctx, { roles: ["admin"], subject: ctx.t("mail.failingSubject"), text: ctx.t("mail.failingText", { error }) });
   } finally {
     await ctx.store.delete(K.lock);
   }

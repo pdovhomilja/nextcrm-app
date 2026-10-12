@@ -14,6 +14,9 @@ export interface FakeSales {
   /** Odoo's price for sale.order.line/onchange; null = Odoo returns no price. */
   price: number | null;
   nextId: number;
+  /** product.product rows (any active state) for archived variants on imported orders. */
+  variants?: RecordData[];
+  taxes?: RecordData[];
   /** Fields sale.order/fields_get reports (an Odoo without Inventory has no delivery_status or picking_ids). */
   saleFields?: string[];
   /** How Odoo stores a VAT number it is given (base_vat reformats it). */
@@ -42,7 +45,7 @@ export function salesHandlers(s: FakeSales) {
     "res.partner/fields_get": () => Object.fromEntries(["id", "name", "parent_id", "customer_rank", "active", "write_date"].map((f) => [f, {}])),
     "res.users/search_read": search(s.users),
     "res.partner/search_read": search(s.partners),
-    "res.partner/read": (b: any) => pick(s.partners.filter((p) => b.ids.includes(p.id)), b.fields),
+    "res.partner/read": (b: any) => pick(s.partners.filter((p) => b.ids.includes(p.id)).map((p) => ({ ...p, commercial_partner_id: p.commercial_partner_id ?? (p.parent_id ? p.parent_id : [p.id, String(p.name ?? p.id)]) })), b.fields),
     "res.partner/create": (b: any) => guard("res.partner/create", () => b.vals_list.map((v: RecordData) => {
       const id = s.nextId++;
       const row: RecordData = { id, active: true, type: "contact", parent_id: false, property_product_pricelist: [234, "Retail (CZK)"], ...norm(v) };
@@ -51,8 +54,16 @@ export function salesHandlers(s: FakeSales) {
       return id;
     })),
     "product.pricelist/read": (b: any) => pick(s.lists.filter((l) => b.ids.includes(l.id)), b.fields),
-    "sale.order/search_read": search(s.orders),
-    "sale.order/fields_get": () => Object.fromEntries((s.saleFields ?? ["id", "name", "state", "delivery_status", "invoice_status", "amount_total", "invoice_ids", "picking_ids"]).map((f) => [f, {}])),
+    "sale.order/search_read": (b: any) => {
+      const commercial = (o: RecordData) => {
+        const pid = Array.isArray(o.partner_id) ? (o.partner_id as [number, string])[0] : (o.partner_id as number);
+        const p = s.partners.find((x) => x.id === pid);
+        return p?.parent_id ? (p.parent_id as [number, string])[0] : pid;
+      };
+      const hit = s.orders.filter((o) => evalDomain(o, b.domain ?? [], (f, r) => (f === "partner_id.commercial_partner_id" ? commercial(r) : r[f])));
+      return pick(hit.slice(0, b.limit ?? hit.length), b.fields);
+    },
+    "sale.order/fields_get": () => Object.fromEntries((s.saleFields ?? ["id", "name", "state", "delivery_status", "invoice_status", "amount_total", "invoice_ids", "picking_ids", "partner_id", "origin", "date_order", "currency_id", "note", "write_date", "amount_untaxed"]).map((f) => [f, {}])),
     "sale.order/read": (b: any) => pick(s.orders.filter((o) => b.ids.includes(o.id)), b.fields),
     "sale.order/create": (b: any) => guard("sale.order/create", () => b.vals_list.map((v: RecordData) => {
       const id = s.nextId++;
@@ -61,7 +72,11 @@ export function salesHandlers(s: FakeSales) {
       for (const [, , l] of order_line) s.lines.push({ id: s.nextId++, order_id: [id, "x"], display_type: false, ...norm(l) });
       return id;
     })),
-    "sale.order.line/search_read": search(s.lines),
+    "sale.order.line/search_read": (b: any) => guard("sale.order.line/search_read", () => search(s.lines)(b)),
+    "product.product/fields_get": () => Object.fromEntries(["id", "display_name", "default_code", "description_sale", "type", "active", "sale_ok", "lst_price", "standard_price", "currency_id", "taxes_id", "uom_id", "categ_id", "product_tmpl_id", "write_date"].map((f) => [f, {}])),
+    "product.product/read": (b: any) => pick((s.variants ?? []).filter((v) => b.ids.includes(v.id)), b.fields),
+    "account.tax/read": (b: any) => pick((s.taxes ?? []).filter((t) => b.ids.includes(t.id)), b.fields),
+    "sale.order.line/fields_get": () => Object.fromEntries(["id", "order_id", "product_id", "product_uom_qty", "price_unit", "discount", "display_type", "is_downpayment"].map((f) => [f, {}])),
     "sale.order.line/onchange": () => ({ value: s.price === null ? {} : { price_unit: s.price } }),
     "stock.picking/search_read": search(s.pickings),
     "account.move/search_read": search(s.moves),

@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import type { AuthzUser } from "@/lib/authz";
+import { targetListReadScopeWhere } from "@/lib/authz/scopes/crm";
 import {
   paginationSchema,
   paginationArgs,
@@ -9,13 +11,24 @@ import {
   softDeleteData,
 } from "../helpers";
 
+// Object-level authorization (GHSA-q96c-2vj9-8v7f): a `user` reaches only
+// target lists they created; managers and admins reach all. Out-of-scope
+// access returns NOT_FOUND, like the campaign tools.
+async function assertTargetListInScope(user: AuthzUser, id: string): Promise<void> {
+  const row = await prismadb.crm_TargetLists.findFirst({
+    where: { id, ...targetListReadScopeWhere(user) },
+    select: { id: true },
+  });
+  if (!row) notFound("TargetList");
+}
+
 export const crmTargetListTools = [
   {
     name: "crm_list_target_lists",
-    description: "List target lists (org-wide)",
+    description: "List target lists the caller is allowed to see",
     schema: z.object({ ...paginationSchema }),
-    async handler(args: { limit: number; offset: number }, _userId: string) {
-      const where = { deletedAt: null };
+    async handler(args: { limit: number; offset: number }, _userId: string, user: AuthzUser) {
+      const where = targetListReadScopeWhere(user);
       const [data, total] = await Promise.all([
         prismadb.crm_TargetLists.findMany({
           where,
@@ -37,10 +50,11 @@ export const crmTargetListTools = [
     }),
     async handler(
       args: { id: string; limit: number; offset: number },
-      _userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
       const tl = await prismadb.crm_TargetLists.findFirst({
-        where: { id: args.id, deletedAt: null },
+        where: { id: args.id, ...targetListReadScopeWhere(user) },
         include: {
           targets: {
             ...paginationArgs(args),
@@ -77,12 +91,10 @@ export const crmTargetListTools = [
     }),
     async handler(
       args: { id: string; name?: string; description?: string },
-      _userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
-      const existing = await prismadb.crm_TargetLists.findFirst({
-        where: { id: args.id, deletedAt: null },
-      });
-      if (!existing) notFound("TargetList");
+      await assertTargetListInScope(user, args.id);
       const { id, ...updateData } = args;
       const tl = await prismadb.crm_TargetLists.update({
         where: { id },
@@ -95,11 +107,8 @@ export const crmTargetListTools = [
     name: "crm_delete_target_list",
     description: "Soft-delete a target list (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
-      const existing = await prismadb.crm_TargetLists.findFirst({
-        where: { id: args.id, deletedAt: null },
-      });
-      if (!existing) notFound("TargetList");
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      await assertTargetListInScope(user, args.id);
       const tl = await prismadb.crm_TargetLists.update({
         where: { id: args.id },
         data: softDeleteData(_userId),
@@ -116,12 +125,10 @@ export const crmTargetListTools = [
     }),
     async handler(
       args: { target_list_id: string; target_ids: string[] },
-      _userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
-      const tl = await prismadb.crm_TargetLists.findFirst({
-        where: { id: args.target_list_id, deletedAt: null },
-      });
-      if (!tl) notFound("TargetList");
+      await assertTargetListInScope(user, args.target_list_id);
       await prismadb.targetsToTargetLists.createMany({
         data: args.target_ids.map((tid) => ({
           target_id: tid,
@@ -144,8 +151,10 @@ export const crmTargetListTools = [
     }),
     async handler(
       args: { target_list_id: string; target_ids: string[] },
-      _userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
+      await assertTargetListInScope(user, args.target_list_id);
       await prismadb.targetsToTargetLists.deleteMany({
         where: {
           target_list_id: args.target_list_id,
