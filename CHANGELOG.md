@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.2...v0.33.3) (2026-10-12)
+
+
+### Fixed
+
+* **authz:** account detail page checks that the caller may read the account ([3e3a3bc](https://github.com/pdovhomilja/nextcrm-app/commit/3e3a3bce4f31fd6f4be5fe895c5ff12923ff5bde))
+* **crm:** accounts list crash on null first name; scope account detail page ([7e231cf](https://github.com/pdovhomilja/nextcrm-app/commit/7e231cfd07072071488b077ef1616fe5cdca7aba))
+* **crm:** accounts list no longer crashes on a contact without a first name ([cd35cfc](https://github.com/pdovhomilja/nextcrm-app/commit/cd35cfcec0182f9c44e803a20e0c1079417b4a89))
+
 ## [0.33.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.1...v0.33.2) (2026-10-12)
 
 
