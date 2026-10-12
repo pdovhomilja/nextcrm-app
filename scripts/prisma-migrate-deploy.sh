@@ -10,4 +10,7 @@ elif [ -n "${DIRECT_URL:-}" ]; then
   export DATABASE_URL="$DIRECT_URL"
 fi
 
+# Embeddings migrations need pgvector (Supabase + local pgvector/pgvector image).
+echo 'CREATE EXTENSION IF NOT EXISTS vector;' | pnpm exec prisma db execute --stdin --schema prisma/schema.prisma
+
 exec prisma migrate deploy
