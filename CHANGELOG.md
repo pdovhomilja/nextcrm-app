@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.34.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.4...v0.34.0) (2026-10-13)
+
+
+### Added
+
+* **odoo-connector:** fill missing owners on existing accounts ([e50d478](https://github.com/pdovhomilja/nextcrm-app/commit/e50d4784fab3ab363a64e2422d9033dcde6846b4))
+* **odoo-connector:** fill missing owners on existing accounts ([23e3e4f](https://github.com/pdovhomilja/nextcrm-app/commit/23e3e4f85434fc6cd14ddb9737748ff8712492fa))
+
 ## [0.33.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.3...v0.33.4) (2026-10-12)
 
 
