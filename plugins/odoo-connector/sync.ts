@@ -79,7 +79,11 @@ async function syncCustomer(r: Run, p: OdooPartner): Promise<void> {
     accountId = (await ctx.data.accounts.create({ ...fields, assigned_to: owner, status: "Active" })).id as string;
   } else {
     accountId = match.accountId;
-    const diff = changedFields((await ctx.data.accounts.get(accountId)) ?? {}, fields);
+    const current = (await ctx.data.accounts.get(accountId)) ?? {};
+    const diff: Record<string, unknown> = changedFields(current, fields);
+    // An account without an owner takes the Odoo salesperson's CRM user; an owner set in the CRM is never replaced.
+    const owner = !current.assigned_to && ctx.settings.fillOwners ? await ownerFor(r, p.user_id) : null;
+    if (owner) diff.assigned_to = owner;
     if (!Object.keys(diff).length) r.counts.unchanged++;
     else {
       r.counts.updated++;
@@ -87,7 +91,7 @@ async function syncCustomer(r: Run, p: OdooPartner): Promise<void> {
       await ctx.data.accounts.update(accountId, diff);
     }
     if (dry) return;
-    salesperson = (await ctx.store.get<AccountLink>(K.account(accountId)))?.salesperson ?? null;
+    salesperson = current.assigned_to || owner ? null : p.user_id ? p.user_id[1] : null;
   }
   await ctx.store.set(K.partner(p.id), { accountId });
   await ctx.store.set(K.account(accountId), { partnerId: p.id, syncedAt: r.now.toISOString(), salesperson, odooPriceList: p.property_product_pricelist || null } satisfies AccountLink);

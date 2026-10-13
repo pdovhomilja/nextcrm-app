@@ -115,3 +115,24 @@ it("re-matches when a linked account was deleted in the CRM (Review Focus 5)", a
   await runSync(ctx, client, new Date(now.getTime() + 60_000));
   expect(accounts.filter((a) => a.deletedAt == null)).toHaveLength(1);
 });
+
+it("fills a missing owner on an existing account from the Odoo salesperson; keeps a set owner", async () => {
+  const accounts: RecordData[] = [
+    { id: "a1", name: "Co 1", company_id: "27082440", billing_country: "CZ", deletedAt: null, assigned_to: null },
+    { id: "a2", name: "Co 2", company_id: "27082441", billing_country: "CZ", deletedAt: null, assigned_to: "someone" },
+  ];
+  const { ctx, client } = mk([company(1, { company_registry: "27082440" }), company(2, { company_registry: "27082441" })], accounts);
+  await runSync(ctx, client, now);
+  expect(accounts.find((a) => a.id === "a1")?.assigned_to).toBe("u-rep");
+  expect(accounts.find((a) => a.id === "a2")?.assigned_to).toBe("someone");
+  expect((await ctx.store.get<AccountLink>(K.account("a1")))?.salesperson).toBeNull();
+});
+
+it("leaves existing accounts unowned when fillOwners is off, and shows the current salesperson for Needs owner", async () => {
+  const accounts: RecordData[] = [{ id: "a1", name: "Co 1", company_id: "27082440", billing_country: "CZ", deletedAt: null, assigned_to: null }];
+  const { ctx, client } = mk([company(1, { company_registry: "27082440", user_id: [10, "New Rep"] })], accounts, { fillOwners: false });
+  await ctx.store.set(K.account("a1"), { partnerId: 1, syncedAt: now.toISOString(), salesperson: "Old Rep", odooPriceList: null } satisfies AccountLink);
+  await runSync(ctx, client, now);
+  expect(accounts[0].assigned_to).toBeNull();
+  expect((await ctx.store.get<AccountLink>(K.account("a1")))?.salesperson).toBe("New Rep");
+});
