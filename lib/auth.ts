@@ -7,6 +7,7 @@ import { ac, admin, manager, user } from "@/lib/auth-permissions";
 import { newUserNotify } from "@/lib/new-user-notify";
 import { OTP_EXPIRES_SECONDS, sendOtpEmail } from "@/lib/auth-otp-mail";
 import { getBetterAuthTrustedOrigins } from "@/lib/auth-base-url";
+import { getBootstrapAdminEmail } from "@/lib/bootstrap-admin-config";
 
 const googleClientId = process.env.GOOGLE_ID || process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET;
@@ -17,9 +18,7 @@ const isGoogleConfigured = Boolean(
   googleClientSecret !== "your-google-client-secret"
 );
 const isDemo = process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io";
-const bootstrapAdminEmail = (
-  process.env.BOOTSTRAP_ADMIN_EMAIL || "jayandraa5@gmail.com"
-).trim().toLowerCase();
+const bootstrapAdminEmail = getBootstrapAdminEmail();
 
 export const auth = betterAuth({
   database: prismaAdapter(prismadb, { provider: "postgresql" }),

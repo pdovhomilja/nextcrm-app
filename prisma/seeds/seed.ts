@@ -4,6 +4,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "dotenv";
 import path from "path";
 
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
 // CRM Config seed data
@@ -17,6 +18,7 @@ import leadTypesData from "../initial-data/crm_Lead_Types.json";
 
 import { seedCurrencies } from "./currencies";
 import { seedInvoices } from "./invoices";
+import { seedBootstrapAdmin } from "./bootstrap-admin";
 
 const connectionString = process.env.DATABASE_URL!;
 const pool = new Pool({ connectionString });
@@ -145,6 +147,8 @@ async function main() {
   // CRM Lead Types (has @unique on name — can use upsert)
   await upsertByName(prisma.crm_Lead_Types, leadTypesData);
   console.log("Lead Types seeded");
+
+  await seedBootstrapAdmin(prisma);
 
   // Test User for E2E Testing
   const testUserEmail = process.env.TEST_USER_EMAIL || "test@nextcrm.app";
