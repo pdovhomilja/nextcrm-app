@@ -30,17 +30,22 @@ export function Nav({ links }: NavProps) {
           <Link
             href={link.href}
             className={cn(
-              "relative flex h-9 w-full items-center justify-center rounded-lg transition-colors",
+              "relative flex h-9 w-full items-center gap-2 rounded-lg px-2 transition-colors",
+              "justify-center sm:justify-start",
               active
                 ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
                 : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
             )}
           >
             <link.icon className="h-4 w-4 shrink-0" />
+            <span className="hidden min-w-0 flex-1 truncate text-xs font-medium sm:inline">
+              {link.title}
+            </span>
             {link.label && (
               <span
                 className={cn(
-                  "absolute -right-0.5 -top-0.5 min-w-[1rem] rounded-full px-1 text-[9px] font-bold leading-4 tabular-nums",
+                  "min-w-[1.125rem] rounded-full px-1 text-[9px] font-bold leading-4 tabular-nums sm:ml-auto",
+                  "absolute -right-0.5 -top-0.5 sm:static",
                   active ? "bg-primary-foreground text-primary" : "bg-muted text-muted-foreground"
                 )}
               >

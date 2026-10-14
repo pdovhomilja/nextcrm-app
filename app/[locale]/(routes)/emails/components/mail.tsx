@@ -163,24 +163,25 @@ export function MailComponent({
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div className="flex h-full min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
-        <aside className="flex w-[4.75rem] shrink-0 flex-col border-r border-border/40 bg-muted/20">
-          <div className="p-1.5">
+      <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-1 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
+        <aside className="flex w-[4.5rem] shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-border/40 bg-muted/30 sm:w-44">
+          <div className="p-2">
             <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} />
           </div>
           <Separator className="opacity-50" />
           {activeAccountId && (
-            <div className="p-1.5">
+            <div className="p-2">
               <ComposeModal
                 accountId={activeAccountId}
                 mailboxAddress={activeMailboxAddress}
                 trigger={
                   <Button
-                    size="icon"
-                    className="h-9 w-full rounded-lg shadow-sm"
+                    size="sm"
+                    className="h-9 w-full gap-2 rounded-lg shadow-sm sm:px-3"
                     aria-label="Compose"
                   >
-                    <PenLine className="h-4 w-4" />
+                    <PenLine className="h-4 w-4 shrink-0" />
+                    <span className="hidden truncate text-xs sm:inline">Compose</span>
                   </Button>
                 }
               />
@@ -194,12 +195,13 @@ export function MailComponent({
             const layoutArray = Object.values(layout);
             document.cookie = `react-resizable-panels:layout:mail=${JSON.stringify(layoutArray)}`;
           }}
-          className="h-full min-h-0 min-w-0 flex-1"
+          className="h-full min-h-0 min-w-0 w-0 flex-1 overflow-hidden"
         >
         <ResizablePanel
           defaultSize={`${defaultLayout[0]}%`}
-          minSize="26%"
-          className="flex min-h-0 min-w-0 flex-col border-r border-border/40 bg-background"
+          minSize="22%"
+          maxSize="55%"
+          className="flex min-h-0 min-w-0 flex-col overflow-hidden border-r border-border/40 bg-background"
         >
           <div className="flex shrink-0 items-center gap-2 border-b border-border/30 px-4 py-2.5">
             <h2 className="text-sm font-semibold tracking-tight">
@@ -275,7 +277,7 @@ export function MailComponent({
         <ResizableHandle withHandle className="bg-border/30" />
         <ResizablePanel
           defaultSize={`${defaultLayout[1]}%`}
-          minSize="32%"
+          minSize="28%"
           className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-background"
         >
           <MailDisplay

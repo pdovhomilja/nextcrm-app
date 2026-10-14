@@ -132,8 +132,8 @@ export function MailDisplay({
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col bg-background">
-      <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border/40 bg-background px-3 py-2">
-        <div className="flex items-center gap-0.5">
+      <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border/40 bg-background px-2 py-2 sm:px-3">
+        <div className="flex min-w-0 shrink items-center gap-0.5">
           {mailboxView === "trash" ? (
             <>
               <Tooltip>
@@ -245,7 +245,7 @@ export function MailDisplay({
           )}
         </div>
 
-        <div className="ml-auto flex items-center gap-0.5">
+        <div className="ml-auto flex shrink-0 items-center gap-0.5">
           <ComposeModal
             accountId={activeAccountId ?? ""}
             mailboxAddress={mailboxAddress}

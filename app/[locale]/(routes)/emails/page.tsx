@@ -74,6 +74,17 @@ const EmailRoute = async ({
       } else {
         validatedLayout = FALLBACK_LAYOUT;
       }
+      if (validatedLayout) {
+        const sum = validatedLayout[0] + validatedLayout[1];
+        if (!Number.isFinite(sum) || sum <= 0) {
+          validatedLayout = FALLBACK_LAYOUT;
+        } else if (Math.abs(sum - 100) > 2) {
+          validatedLayout = [
+            Math.round((validatedLayout[0] / sum) * 1000) / 10,
+            Math.round((validatedLayout[1] / sum) * 1000) / 10,
+          ];
+        }
+      }
     } catch {
       validatedLayout = FALLBACK_LAYOUT;
     }

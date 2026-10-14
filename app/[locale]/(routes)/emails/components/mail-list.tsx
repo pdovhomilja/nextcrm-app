@@ -7,7 +7,6 @@ import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { MAILBOX_PAGE_SIZE } from "@/lib/email/mailbox-constants";
 import type { Mail } from "@/app/[locale]/(routes)/emails/data";
 import { useMail } from "@/app/[locale]/(routes)/emails/use-mail";
@@ -58,8 +57,8 @@ export function MailList({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <ScrollArea className="h-full min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]]:h-full">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="flex flex-col gap-0.5 p-2 pr-3">
           {items.length === 0 && (
             <p className="px-2 py-8 text-center text-sm text-muted-foreground">No messages</p>
@@ -120,8 +119,8 @@ export function MailList({
             </div>
           ))}
         </div>
-      </ScrollArea>
-      <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border/40 bg-muted/20 px-3 py-2">
+      </div>
+      <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border/40 bg-background px-3 py-2 shadow-[0_-1px_0_0_hsl(var(--border)/0.4)]">
         <Button
           variant="outline"
           size="sm"
