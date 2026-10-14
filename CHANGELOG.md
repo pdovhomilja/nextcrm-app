@@ -5,6 +5,19 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.35.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.34.0...v0.35.0) (2026-10-14)
+
+
+### Added
+
+* **mcp:** lead description, campaign, referral, status/source/type ([#390](https://github.com/pdovhomilja/nextcrm-app/issues/390)) ([437d3ab](https://github.com/pdovhomilja/nextcrm-app/commit/437d3abbf1beea6592df28382cd4744e8b2ecef3))
+
+
+### Fixed
+
+* **compose:** bare ${VAR:?} for required vars in docker-compose-coolify.yml ([064d7b5](https://github.com/pdovhomilja/nextcrm-app/commit/064d7b5c6c04096f6d1949312dfd10623930ef60))
+* **compose:** bare ${VAR:?} for required vars in docker-compose-coolify.yml ([63068ca](https://github.com/pdovhomilja/nextcrm-app/commit/63068ca3a107696283cd134fbdf137d2fbc724dc))
+
 ## [0.34.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.4...v0.34.0) (2026-10-13)
 
 
