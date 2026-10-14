@@ -6,7 +6,7 @@ export default async function EmailsLayout({ children }: { children: React.React
   return (
     <div
       data-emails-shell
-      className="emails-shell flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+      className="emails-shell flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
     >
       {children}
     </div>

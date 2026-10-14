@@ -1,84 +1,12 @@
 "use client";
 
-import * as React from "react";
-
-const IFRAME_STYLES = `
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 100% !important;
-    max-width: 100% !important;
-    background: #ffffff;
-    box-sizing: border-box;
-  }
-  *, *::before, *::after { box-sizing: border-box; }
-  body {
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    padding: clamp(12px, 2vw, 28px);
-    line-height: 1.55;
-    color: #18181b;
-    font-size: clamp(13px, 1.6vw, 15px);
-    word-wrap: break-word;
-    overflow-x: hidden;
-  }
-  img, table, video, iframe { max-width: 100% !important; height: auto !important; }
-  table { width: 100% !important; border-collapse: collapse; }
-  center, .email-container, .wrapper, [align="center"] > table {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  a { color: #0369a1; }
-  blockquote {
-    margin: 14px 0;
-    padding: 12px 14px;
-    border-left: 3px solid #0ea5e9;
-    background: #f4f4f5;
-    border-radius: 0 10px 10px 0;
-  }
-`;
+import { EmailHtmlBody } from "@/app/[locale]/(routes)/emails/components/EmailHtmlBody";
 
 type Props = {
   bodyHtml: string;
 };
 
-/** Full-width HTML body — no nested card; parent pane handles scroll. */
+/** @deprecated Use EmailHtmlBody — kept as alias for imports. */
 export function EmailHtmlFrame({ bodyHtml }: Props) {
-  const iframeRef = React.useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = React.useState(400);
-
-  const srcDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${IFRAME_STYLES}</style></head><body>${bodyHtml}</body></html>`;
-
-  const measure = React.useCallback(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
-    try {
-      const doc = iframe.contentDocument;
-      const body = doc?.body;
-      const html = doc?.documentElement;
-      if (!body || !html) return;
-      const next = Math.max(body.scrollHeight, html.scrollHeight, body.offsetHeight);
-      setHeight(Math.min(Math.max(next + 12, 160), 12000));
-    } catch {
-      /* sandbox */
-    }
-  }, []);
-
-  React.useEffect(() => {
-    measure();
-  }, [bodyHtml, measure]);
-
-  return (
-    <div className="w-full min-w-0 max-w-full bg-white">
-      <iframe
-        ref={iframeRef}
-        srcDoc={srcDoc}
-        sandbox="allow-popups allow-popups-to-escape-sandbox"
-        referrerPolicy="no-referrer"
-        title="Email body"
-        onLoad={measure}
-        className="block w-full min-w-0 max-w-full border-0 bg-white"
-        style={{ height: `${height}px`, width: "100%" }}
-      />
-    </div>
-  );
+  return <EmailHtmlBody bodyHtml={bodyHtml} />;
 }

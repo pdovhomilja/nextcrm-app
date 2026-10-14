@@ -153,13 +153,12 @@
     @apply mx-auto w-full max-w-[1600px] flex-1 px-3 py-5 sm:px-6 sm:py-6 lg:px-8;
   }
 
-  /* E-mails: fixed chrome height — scroll only inside list/reading panes */
-  :root {
-    --app-header-height: 3.25rem;
-    --emails-pane-height: calc(100dvh - var(--app-header-height));
+  /* E-mails: flex viewport — scroll only inside list/reading panes */
+  body:has([data-emails-shell]) {
+    overflow: hidden;
   }
 
-  body:has([data-emails-shell]) {
+  html:has([data-emails-shell]) {
     overflow: hidden;
   }
 
@@ -170,22 +169,18 @@
   }
 
   .group\/sidebar-wrapper:has([data-emails-shell]) > main {
-    @apply min-h-0 min-w-0 flex-1 overflow-hidden;
+    @apply flex h-full max-h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden;
   }
 
   .app-main-scroll:has([data-emails-shell]) {
-    height: var(--emails-pane-height);
-    max-height: var(--emails-pane-height);
-    @apply min-h-0 flex-1 overflow-hidden;
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden;
   }
 
   .app-content-wrap:has([data-emails-shell]) {
-    @apply flex h-full min-h-0 max-w-none flex-1 flex-col overflow-hidden px-2 py-2 sm:px-3 sm:py-2;
+    @apply flex min-h-0 max-w-none flex-1 flex-col overflow-hidden px-2 py-2 sm:px-3 sm:py-2;
   }
 
   .emails-shell {
-    height: var(--emails-pane-height);
-    max-height: var(--emails-pane-height);
     @apply flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden;
   }
 
@@ -197,10 +192,33 @@
   }
 
   [data-emails-shell] [data-panel] {
+    display: flex;
+    flex-direction: column;
     height: 100%;
     min-height: 0;
     min-width: 0;
     overflow: hidden;
+  }
+
+  .email-html-body {
+    @apply w-full min-w-0 max-w-none bg-white text-zinc-900;
+    padding: clamp(12px, 2vw, 28px);
+    line-height: 1.55;
+    font-size: clamp(13px, 1.6vw, 15px);
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .email-html-body img,
+  .email-html-body table,
+  .email-html-body video,
+  .email-html-body iframe {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .email-html-body table {
+    width: 100% !important;
   }
 
   .app-main-scroll:has([data-emails-shell]) > footer {

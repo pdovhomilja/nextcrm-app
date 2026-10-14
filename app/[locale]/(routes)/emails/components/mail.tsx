@@ -297,7 +297,7 @@ export function MailComponent({
           <Nav links={navLinks} />
         </aside>
 
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:hidden">
+        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:hidden">
           {mobileReadOpen && selectedMail ? (
             <MailDisplay
               mail={selectedMail}
@@ -329,23 +329,25 @@ export function MailComponent({
           defaultSize={`${defaultLayout[0]}%`}
           minSize="22%"
           maxSize="52%"
-          className="flex min-h-0 min-w-0 flex-col overflow-hidden border-r border-border/40 bg-background"
+          className="min-h-0 min-w-0 overflow-hidden border-r border-border/40 bg-background"
         >
-          {listPane}
+          <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">{listPane}</div>
         </ResizablePanel>
         <ResizableHandle withHandle className="bg-border/30" />
         <ResizablePanel
           id={READ_PANEL_ID}
           defaultSize={`${defaultLayout[1]}%`}
           minSize="35%"
-          className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-background"
+          className="min-h-0 min-w-0 overflow-hidden bg-background"
         >
-          <MailDisplay
-            mail={selectedMail}
-            activeAccountId={activeAccountId}
-            mailboxAddress={activeMailboxAddress}
-            mailboxView={mailboxView}
-          />
+          <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
+            <MailDisplay
+              mail={selectedMail}
+              activeAccountId={activeAccountId}
+              mailboxAddress={activeMailboxAddress}
+              mailboxView={mailboxView}
+            />
+          </div>
         </ResizablePanel>
       </ResizablePanelGroup>
       </div>

@@ -11,7 +11,7 @@ import {
 import { stripHtmlToPlain } from "@/lib/email/compose-helpers";
 import type { ParsedQuoteHeader } from "@/lib/email/parse-on-wrote-label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { EmailHtmlFrame } from "@/app/[locale]/(routes)/emails/components/EmailHtmlFrame";
+import { EmailHtmlBody } from "@/app/[locale]/(routes)/emails/components/EmailHtmlBody";
 
 type Props = {
   bodyText?: string | null;
@@ -132,7 +132,7 @@ export function EmailConversationBody({
     parts.length > 1 || plainTextHasQuoteMarkers(plain) || parts.some((p) => p.kind !== "message");
 
   if (bodyHtml?.trim() && !useThreadUi) {
-    return <EmailHtmlFrame bodyHtml={bodyHtml} />;
+    return <EmailHtmlBody bodyHtml={bodyHtml} />;
   }
 
   if (parts.length === 0) {

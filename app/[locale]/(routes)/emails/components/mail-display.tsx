@@ -134,7 +134,7 @@ export function MailDisplay({
       : undefined;
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col bg-background">
+    <div className="grid h-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden bg-background">
       <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border/40 bg-background px-2 py-2 sm:px-3">
         <div className="flex min-w-0 shrink items-center gap-0.5">
           {onBack && (
@@ -329,7 +329,7 @@ export function MailDisplay({
       </div>
 
       {mail ? (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden">
           {fullEmail ? (
             <>
               <EmailMessageHeader
@@ -341,7 +341,7 @@ export function MailDisplay({
                 isUnread={!mail.isRead}
                 className="shrink-0 bg-background"
               />
-              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-background px-0">
+              <div className="min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-muted/20 dark:bg-muted/10">
                 <EmailConversationBody
                   bodyText={fullEmail.bodyText}
                   bodyHtml={fullEmail.bodyHtml}
@@ -353,7 +353,7 @@ export function MailDisplay({
               </div>
             </>
           ) : (
-            <div className="flex flex-1 flex-col">
+            <div className="flex min-h-0 flex-col overflow-hidden">
               <div className="animate-pulse space-y-3 border-b border-border/40 px-5 py-4">
                 <div className="h-6 w-3/4 max-w-md rounded-md bg-muted" />
                 <div className="flex gap-3">
@@ -369,7 +369,7 @@ export function MailDisplay({
           )}
         </div>
       ) : (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">
+        <div className="flex min-h-0 flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">
           <MailOpen className="h-10 w-10 opacity-30" />
           <p className="text-sm">Select a message</p>
         </div>
