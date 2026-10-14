@@ -2,6 +2,14 @@ import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { prismadb } from "@/lib/prisma";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
+import {
+  requireAuthenticated,
+  accountReadScopeWhere,
+  contactReadScopeWhere,
+  contractReadScopeWhere,
+  leadReadScopeWhere,
+  opportunityReadScopeWhere,
+} from "@/lib/authz";
 
 const getCrmConfigData = unstable_cache(
   async () => {
@@ -53,7 +61,10 @@ const getCrmConfigData = unstable_cache(
   { revalidate: 300, tags: ["crm-config"] }
 );
 
+// Entity lists are scoped to the caller (GHSA-q96c-2vj9-8v7f): a `user` gets
+// only records they own, created or reach via an account in their scope.
 export const getAllCrmData = cache(async () => {
+  const user = await requireAuthenticated();
   const [
     configData,
     accounts,
@@ -64,11 +75,11 @@ export const getAllCrmData = cache(async () => {
     campaigns,
   ] = await Promise.all([
     getCrmConfigData(),
-    prismadb.crm_Accounts.findMany({ where: { deletedAt: null } }),
-    prismadb.crm_Opportunities.findMany({ where: { deletedAt: null } }),
-    prismadb.crm_Leads.findMany({ where: { deletedAt: null } }),
-    prismadb.crm_Contacts.findMany({ where: { deletedAt: null } }),
-    prismadb.crm_Contracts.findMany({ where: { deletedAt: null } }),
+    prismadb.crm_Accounts.findMany({ where: accountReadScopeWhere(user) }),
+    prismadb.crm_Opportunities.findMany({ where: opportunityReadScopeWhere(user) }),
+    prismadb.crm_Leads.findMany({ where: leadReadScopeWhere(user) }),
+    prismadb.crm_Contacts.findMany({ where: contactReadScopeWhere(user) }),
+    prismadb.crm_Contracts.findMany({ where: contractReadScopeWhere(user) }),
     prismadb.crm_campaigns.findMany({ where: { deletedAt: null } }),
   ]);
 

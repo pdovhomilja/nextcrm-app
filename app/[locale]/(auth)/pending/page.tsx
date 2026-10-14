@@ -5,12 +5,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import TryAgain from "./components/TryAgain";
 import { Users } from "@prisma/client";
+import { getBootstrapAdminEmail } from "@/lib/bootstrap-admin-config";
 
 const PendingPage = async () => {
   const session = await getSessionAnyStatus();
-  const bootstrapAdminEmail = (
-    process.env.BOOTSTRAP_ADMIN_EMAIL || "jayandraa5@gmail.com"
-  ).trim().toLowerCase();
+  const bootstrapAdminEmail = getBootstrapAdminEmail();
 
   // Repair the configured bootstrap account if it was created before the
   // bootstrap rule existed or was left in PENDING state.

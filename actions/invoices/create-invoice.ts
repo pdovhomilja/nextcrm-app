@@ -2,7 +2,7 @@
 
 import { prismadb } from "@/lib/prisma";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
@@ -15,9 +15,10 @@ import { serializeDecimals } from "@/lib/serialize-decimals";
 export async function createInvoice(raw: unknown) {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("invoices", "create");
   } catch (e) {
     if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    if (e instanceof AuthorizationError) throw new Error("You don't have permission to do this.");
     throw e;
   }
   const input = createInvoiceSchema.parse(raw);

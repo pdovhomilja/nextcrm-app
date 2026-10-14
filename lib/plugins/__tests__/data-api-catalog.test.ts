@@ -19,12 +19,12 @@ import { createDataApi } from "@/lib/plugins/data-api";
 
 const f = { name: "Cup", sku: "S1", description: null, type: "PRODUCT" as const, status: "ACTIVE" as const, unit_price: "1", unit_cost: null, currency: "CZK", tax_rate: null, unit: null, categoryRef: null };
 
-it("is SDK 0.2.4 (additive)", () => expect(SDK_VERSION).toBe("0.2.4"));
+it("is SDK 0.2.5 (additive)", () => expect(SDK_VERSION).toBe("0.2.5"));
 
 it("needs products:write for external product and category upserts", async () => {
   await expect(createDataApi("demo", ["products:read"]).products.upsertExternal("1", f)).rejects.toThrow("products:write");
-  await createDataApi("demo", ["products:write"]).products.upsertExternal("1", f);
-  expect(writes.upsertExternalProduct).toHaveBeenCalledWith("demo", "1", f);
+  await createDataApi("demo", ["products:write"]).products.upsertExternal("1", f, { adoptBySku: true });
+  expect(writes.upsertExternalProduct).toHaveBeenCalledWith("demo", "1", f, { adoptBySku: true });
   await createDataApi("demo", ["products:write"]).productCategories.upsertExternal("7", { name: "Tea", parentRef: null });
   expect(writes.upsertExternalCategory).toHaveBeenCalledWith("demo", "7", { name: "Tea", parentRef: null });
 });

@@ -71,7 +71,7 @@ export const columns: ColumnDef<Account>[] = [
     cell: ({ row }) => (
       <div className="w-[150px]">
         {row.original.contacts?.map(
-          (contact: any) => contact.first_name + " " + contact.last_name
+          (contact: any) => [contact.first_name, contact.last_name].filter(Boolean).join(" ")
         )}
       </div>
     ),

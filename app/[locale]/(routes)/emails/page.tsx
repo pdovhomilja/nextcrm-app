@@ -169,16 +169,14 @@ const EmailRoute = async ({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex flex-wrap items-end justify-between gap-2 px-0.5">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-            {t("emails")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Inbox, unread, spam, archive, and trash — fast and lightweight.
-          </p>
-        </div>
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 px-0.5">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+          {t("emails")}
+        </h1>
+        <p className="text-xs text-muted-foreground sm:text-sm">
+          Inbox · sent · search
+        </p>
       </div>
       {activeAccountId && (
         <Suspense fallback={null}>

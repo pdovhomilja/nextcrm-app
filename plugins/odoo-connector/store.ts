@@ -24,6 +24,11 @@ export const K = {
   sending: (id: string) => `sending:${id}`,           // → claim, one sender per order
   sendPaused: "meta:sendPaused",                      // → { at, reason } after Odoo refused access
   created: "meta:created",                            // → CreatedRecord[] newest first, at most 20
+  odooOrder: (id: number) => `odooOrder:${id}`,       // → { orderId } the CRM order of an Odoo order, sent or imported
+  importFailed: (id: number) => `importFailed:${id}`, // → ImportFailed while an Odoo order cannot be imported
+  customer: (accountId: string) => `customer:${accountId}`, // → CustomerInfo for the account tab
+  imported: "meta:imported",                          // → { lastRun } orders imported on the last run
+  indexed: "meta:indexed",                            // → { at } the 0.4.0 order index was built from order: links
 };
 
 export interface AccountLink {
@@ -63,7 +68,7 @@ export interface RunSummary {
   conflicts: number;
   failed: number;
   catalog?: CatalogCounts;
-  orders?: { checked: number; moved: number };
+  orders?: { checked: number; moved: number; imported?: number };
   error?: string;
 }
 
@@ -74,7 +79,18 @@ export interface OrderLink {
   invoices: { number: string; type: string; date: string | null; due: string | null; amount: number; residual: number; paymentState: string }[];
   created: ("customer" | "delivery")[];
   checkedAt: string;
+  done?: boolean;          // PAID or CANCELLED in the CRM: no longer read
+  back?: string;           // the earlier status Odoo went back to, logged once
+  missingNotified?: boolean;
+  imported?: boolean;      // came from Odoo (part 3b)
+  partnerId?: number;      // the Odoo customer at import
+  writeDate?: string;      // Odoo write_date when the lines were last copied
+  movedNotified?: boolean; // the Odoo order now belongs to another customer; admins told
+  missing?: number;        // product lines left out because the product is not in the CRM (0.4.1; absent on 0.4.0 imports)
 }
 export interface SendState { attempts: number; lastError: string | null; waitingSince: string | null; stuckNotified?: boolean }
 export interface FailedState { reason: string; at: string }
 export interface CreatedRecord { at: string; kind: "customer" | "delivery"; odooId: number; name: string; orderNumber: string }
+export interface ImportFailed { name: string; reason: string; at: string }
+export interface OpenInvoice { number: string; type: "out_invoice" | "out_refund"; date: string | null; due: string | null; currency: string; amount: number; residual: number }
+export interface CustomerInfo { at: string; invoices: OpenInvoice[]; totals: { year: number; currency: string; amount: number }[] }

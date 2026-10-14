@@ -131,7 +131,7 @@ Every handler, hook and component receives `ctx`:
 
 A plugin that syncs a catalog from another system writes only **external** rows, keyed by that system's id (`ref`). Users cannot edit external products, categories or price lists in the CRM. Decimals are passed as strings.
 
-- `products.upsertExternal(ref, fields)` creates or updates the external product with that ref (name, sku, description, type, status, unit_price, unit_cost, currency, tax_rate, unit, categoryRef) and returns `{ id, created }`. An SKU used by another product fails the call.
+- `products.upsertExternal(ref, fields, opts?)` creates or updates the external product with that ref (name, sku, description, type, status, unit_price, unit_cost, currency, tax_rate, unit, categoryRef) and returns `{ id, created, adopted? }`. An SKU used by another product fails the call, unless you pass `{ adoptBySku: true }` and that product was created in the CRM and is not deleted: then it becomes your external product with the same id (orders and rules keep pointing at it), the change is audited, and the call returns `adopted: true`. Another plugin's product is never taken over. Since SDK 0.2.5.
 - `products.findExternal()` lists external products as `{ id, ref, status }`.
 - `productCategories.upsertExternal(ref, { name, parentRef })` creates or updates an external category; the parent must already exist.
 - `priceLists.findExternal()` lists external price lists.

@@ -46,6 +46,7 @@ import {
 } from "@/actions/emails/mailbox-actions";
 import { ComposeModal } from "@/app/[locale]/(routes)/emails/components/ComposeModal";
 import { EmailConversationBody } from "@/app/[locale]/(routes)/emails/components/EmailConversationBody";
+import { EmailMessageHeader } from "@/app/[locale]/(routes)/emails/components/EmailMessageHeader";
 import type { MailboxView } from "@/lib/email/mailbox-views";
 import { cn } from "@/lib/utils";
 
@@ -120,9 +121,18 @@ export function MailDisplay({
 
   const iconBtn = "h-8 w-8 rounded-full text-muted-foreground hover:text-foreground";
 
+  const toLabel =
+    fullEmail &&
+    Array.isArray(fullEmail.toRecipients) &&
+    fullEmail.toRecipients.length > 0
+      ? (fullEmail.toRecipients as { name?: string; email: string }[])
+          .map((r) => r.name ?? r.email)
+          .join(", ")
+      : undefined;
+
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="flex flex-wrap items-center gap-1 border-b border-border/40 px-2 py-1.5">
+    <div className="flex h-full min-h-0 flex-col bg-muted/5">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b border-border/40 bg-background/95 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="flex items-center gap-0.5">
           {mailboxView === "trash" ? (
             <>
@@ -304,39 +314,44 @@ export function MailDisplay({
       </div>
 
       {mail ? (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="border-b border-border/40 px-4 py-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="min-w-0 flex-1 text-base font-semibold leading-snug">
-                {fullEmail?.subject ?? "(no subject)"}
-              </h2>
-              {!mail.isRead && (
-                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                  Unread
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="min-h-0 flex-1 overflow-auto bg-muted/5">
-            {fullEmail ? (
-              <EmailConversationBody
-                bodyText={fullEmail.bodyText}
-                bodyHtml={fullEmail.bodyHtml}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {fullEmail ? (
+            <>
+              <EmailMessageHeader
+                subject={fullEmail.subject ?? "(no subject)"}
                 fromName={fullEmail.fromName}
                 fromEmail={fullEmail.fromEmail}
                 sentAt={fullEmail.sentAt}
-                toLabel={
-                  Array.isArray(fullEmail.toRecipients) && fullEmail.toRecipients.length > 0
-                    ? (fullEmail.toRecipients as { name?: string; email: string }[])
-                        .map((r) => r.name ?? r.email)
-                        .join(", ")
-                    : undefined
-                }
+                toLabel={toLabel}
+                isUnread={!mail.isRead}
+                className="shrink-0 bg-background"
               />
-            ) : (
-              <p className="p-4 text-sm text-muted-foreground">Loading…</p>
-            )}
-          </div>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                <EmailConversationBody
+                  bodyText={fullEmail.bodyText}
+                  bodyHtml={fullEmail.bodyHtml}
+                  fromName={fullEmail.fromName}
+                  fromEmail={fullEmail.fromEmail}
+                  sentAt={fullEmail.sentAt}
+                  toLabel={toLabel}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-1 flex-col">
+              <div className="animate-pulse space-y-3 border-b border-border/40 px-5 py-4">
+                <div className="h-6 w-3/4 max-w-md rounded-md bg-muted" />
+                <div className="flex gap-3">
+                  <div className="h-10 w-10 rounded-full bg-muted" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-48 rounded bg-muted" />
+                    <div className="h-3 w-32 rounded bg-muted" />
+                  </div>
+                </div>
+              </div>
+              <p className="p-5 text-sm text-muted-foreground">Loading message…</p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">

@@ -6,7 +6,7 @@ import { InputType, ReturnType } from "./types";
 import { createSafeAction } from "@/lib/create-safe-action";
 import { writeAuditLog } from "@/lib/audit-log";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteContract,
   AuthenticationError,
   AuthorizationError,
@@ -23,9 +23,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("contracts", "delete");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "User not logged in." };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
   try {

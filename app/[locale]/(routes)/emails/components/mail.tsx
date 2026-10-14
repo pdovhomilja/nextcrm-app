@@ -172,7 +172,7 @@ export function MailComponent({
           const layoutArray = Object.values(layout);
           document.cookie = `react-resizable-panels:layout=${JSON.stringify(layoutArray)}`;
         }}
-        className="flex h-full min-h-[72vh] flex-row overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-b from-card to-card/80 shadow-sm"
+        className="flex h-[min(78dvh,calc(100dvh-11rem))] min-h-[520px] flex-row overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm"
       >
         <ResizablePanel
           defaultSize={`${defaultLayout[0]}%`}
@@ -216,8 +216,8 @@ export function MailComponent({
           minSize="22%"
           className="flex min-h-0 flex-col border-r border-border/40 bg-background/95"
         >
-          <div className="flex items-center gap-2 px-4 py-3">
-            <h2 className="text-base font-semibold tracking-tight">
+          <div className="flex shrink-0 items-center gap-2 border-b border-border/30 px-4 py-2.5">
+            <h2 className="text-sm font-semibold tracking-tight">
               {MAILBOX_VIEW_LABELS[mailboxView]}
             </h2>
             {mailboxView === "inbox" && (
@@ -240,7 +240,7 @@ export function MailComponent({
               </Tabs>
             )}
           </div>
-          <div className="px-4 pb-3">
+          <div className="shrink-0 px-3 pb-2 pt-2">
             <MailSearchBar />
           </div>
           {selectedIds.length > 0 && (

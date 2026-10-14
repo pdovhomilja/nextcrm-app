@@ -3,6 +3,7 @@
 
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn(),
+  requireFeature: () => jest.requireMock("@/lib/authz").requireAuthenticated(),
   assertCanWriteContact: jest.fn(),
   assertCanWriteAccount: jest.fn(),
   assertCanWriteOpportunity: jest.fn(),

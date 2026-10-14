@@ -22,7 +22,8 @@ export function useLiveSummary(initial?: LiveSummary) {
     queryKey: ["live-summary"],
     queryFn: fetchLiveSummary,
     initialData: initial,
-    refetchInterval: 4_000,
+    staleTime: 12_000,
+    refetchInterval: 12_000,
     refetchIntervalInBackground: false,
   });
 }

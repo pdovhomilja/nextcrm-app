@@ -7,7 +7,7 @@ import { createSafeAction } from "@/lib/create-safe-action";
 import { writeAuditLog } from "@/lib/audit-log";
 import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 import {
-  requireAuthenticated,
+  requireFeature,
   assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
@@ -37,9 +37,10 @@ const handler = async (data: InputType): Promise<ReturnType> => {
 
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("contracts", "create");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "User not logged in." };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
   try {

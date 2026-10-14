@@ -7,6 +7,7 @@ import {
   KeyRound,
   Mail,
   Settings,
+  ShieldCheck,
   Users,
   FileText,
 } from "lucide-react";
@@ -56,6 +57,7 @@ export default async function AdminPage() {
         <AdminLink href="/admin/email-accounts" icon={Mail} title="Email mailboxes" desc="Team inboxes, SMTP / Resend relay" />
         <AdminLink href="/admin/currencies" icon={Coins} title="Currencies & FX" desc="INR, USD, EUR rates & auto conversion" />
         <AdminLink href="/admin/users" icon={Users} title="Users & roles" desc="Who can access admin features" />
+        <AdminLink href="/admin/permissions" icon={ShieldCheck} title="Permissions" desc="Feature access by role, group, and person" />
         <AdminLink href="/admin/llm-keys" icon={KeyRound} title="AI & API keys" desc="LLM and integration secrets" />
         <AdminLink href="/admin/crm-settings" icon={Settings} title="CRM settings" desc="Pipeline, defaults, modules" />
         <AdminLink href="/admin/invoices/settings" icon={FileText} title="Invoices & letterhead" desc="PDF branding (proposals / quotes next)" />

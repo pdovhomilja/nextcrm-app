@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
-import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import { requireFeature, AuthenticationError, AuthorizationError } from "@/lib/authz";
 
 export const createAccount = async (data: {
   name: string;
@@ -36,9 +36,10 @@ export const createAccount = async (data: {
   // sufficient — no object-level write assert needed.
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireFeature("accounts", "create");
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    if (e instanceof AuthorizationError) return { error: "You don't have permission to do this." };
     throw e;
   }
 

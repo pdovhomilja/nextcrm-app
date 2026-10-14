@@ -25,7 +25,12 @@ async function readDbKey(): Promise<{ id?: string; key: string | null }> {
   if (!row || !stored) return { id: row?.id, key: null };
 
   if (stored.startsWith(ENCRYPTED_PREFIX)) {
-    return { id: row.id, key: decrypt(stored.slice(ENCRYPTED_PREFIX.length)) };
+    try {
+      return { id: row.id, key: decrypt(stored.slice(ENCRYPTED_PREFIX.length)) };
+    } catch (error) {
+      console.error("[RESEND_KEY_DECRYPT]", error);
+      return { id: row.id, key: null };
+    }
   }
 
   // Legacy plain-text value: encrypt it in place. If EMAIL_ENCRYPTION_KEY is

@@ -25,6 +25,22 @@ import getDocumentsMenuItem from "./menu-items/Documents";
 import getInvoicesMenuItem from "./menu-items/Invoices";
 import getAdministrationMenuItem from "./menu-items/Administration";
 import getCampaignsMenuItem from "./menu-items/Campaigns";
+import type { NavItem } from "./nav-main";
+import { featureForPath, type PermissionMatrix } from "@/lib/authz/permissions";
+
+function canViewUrl(url: string | undefined, permissions?: PermissionMatrix) {
+  if (!url || !permissions) return true;
+  const feature = featureForPath(url);
+  return !feature || permissions[feature].view;
+}
+
+function filterNavByPermissions(items: NavItem[], permissions?: PermissionMatrix): NavItem[] {
+  return items.flatMap((item) => {
+    if (!item.items) return canViewUrl(item.url, permissions) ? [item] : [];
+    const visible = item.items.filter((sub) => canViewUrl(sub.url, permissions));
+    return visible.length ? [{ ...item, items: visible }] : [];
+  });
+}
 
 /**
  * AppSidebar Component - Task Groups 1.2, 2.2-2.7, 3.1, 5.3, 5.4
@@ -85,6 +101,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   session: Session;
   pluginNav?: { title: string; url: string }[];
   appName: string;
+  permissions?: PermissionMatrix;
 }
 
 export function AppSidebar({
@@ -92,12 +109,13 @@ export function AppSidebar({
   session,
   pluginNav,
   appName,
+  permissions,
   ...props
 }: AppSidebarProps) {
   const { state } = useSidebar();
   const isExpanded = state === "expanded";
 
-  const navItems = [
+  const allNavItems = [
     getDashboardMenuItem({ title: dict?.dashboard || "Dashboard" }),
     getCrmMenuItem({ localizations: dict.crm, role: session?.user?.role ?? undefined }),
     getCampaignsMenuItem({
@@ -117,6 +135,7 @@ export function AppSidebar({
     getDocumentsMenuItem({ title: dict?.documents || "Documents" }),
     getInvoicesMenuItem({ title: dict?.invoices || "Invoices" }),
   ];
+  const navItems = filterNavByPermissions(allNavItems, permissions);
 
   if (pluginNav?.length) {
     navItems.push({ title: dict?.plugins || "Plugins", icon: Puzzle, items: pluginNav });

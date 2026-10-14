@@ -1,6 +1,6 @@
 {
   "name": "nextcrm-app",
-  "version": "0.31.0",
+  "version": "0.33.3",
   "private": true,
   "engines": {
     "node": ">=22.12.0",
@@ -20,8 +20,9 @@
     "db:guard": "sh scripts/assert-local-db.sh",
     "db:migrate": "pnpm db:guard && prisma migrate deploy",
     "db:seed": "pnpm db:guard && SEED_DEMO_DATA=1 prisma db seed",
+    "bootstrap:admin": "tsx scripts/bootstrap-admin.ts",
     "db:reset": "pnpm db:guard && docker compose -f docker-compose.dev.yml rm -sfv postgres && docker volume rm -f nextcrm-dev_postgres_dev_data && pnpm db:up && pnpm db:wait && pnpm db:migrate && pnpm db:seed",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && sh scripts/prisma-migrate-deploy.sh && next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "migrate:mongo-to-postgres": "pnpm exec tsx scripts/migrate-mongo-to-postgres.ts",

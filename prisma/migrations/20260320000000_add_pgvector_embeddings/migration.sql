@@ -1,5 +1,5 @@
--- Enable pgvector extension (commented out for local Postgres without pgvector C extension)
--- CREATE EXTENSION IF NOT EXISTS vector;
+-- Required on Supabase (enable “vector” in Dashboard → Database → Extensions if needed).
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Accounts embeddings
 CREATE TABLE "crm_Embeddings_Accounts" (
