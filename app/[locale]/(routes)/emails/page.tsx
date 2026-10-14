@@ -52,7 +52,7 @@ const EmailRoute = async ({
   const layoutMail = (await cookies()).get("react-resizable-panels:layout:mail");
   const layoutLegacy = (await cookies()).get("react-resizable-panels:layout");
 
-  const FALLBACK_LAYOUT = [36, 64];
+  const FALLBACK_LAYOUT = [38, 62];
   let validatedLayout: number[] | undefined;
 
   const rawLayout = layoutMail?.value ?? layoutLegacy?.value;
@@ -176,7 +176,7 @@ const EmailRoute = async ({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       {activeAccountId && (
         <Suspense fallback={null}>
           <EmailComposeFromQuery
@@ -185,7 +185,7 @@ const EmailRoute = async ({
           />
         </Suspense>
       )}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <Suspense fallback={<EmailsSkeleton />}>
         <MailComponent
           accounts={connectedAccounts}

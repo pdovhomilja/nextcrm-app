@@ -48,13 +48,35 @@ export function MailComponent({
   page,
   totalPages,
   total,
-  defaultLayout = [34, 66],
+  defaultLayout = [38, 62],
 }: MailProps) {
+  const LIST_PANEL_ID = "mail-list";
+  const READ_PANEL_ID = "mail-read";
+
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = React.useState(false);
   const [mail, setMail] = useMail();
+  const [mobileReadOpen, setMobileReadOpen] = React.useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  const isLargeScreen = React.useSyncExternalStore(
+    (subscribe) => {
+      const mq = window.matchMedia("(min-width: 1024px)");
+      mq.addEventListener("change", subscribe);
+      return () => mq.removeEventListener("change", subscribe);
+    },
+    () => window.matchMedia("(min-width: 1024px)").matches,
+    () => true
+  );
+
+  const groupDefaultLayout = React.useMemo(
+    () => ({
+      [LIST_PANEL_ID]: defaultLayout[0],
+      [READ_PANEL_ID]: defaultLayout[1],
+    }),
+    [defaultLayout]
+  );
   const activeMailboxAddress =
     accounts.find((a) => a.id === activeAccountId)?.username ?? "";
 
@@ -73,6 +95,14 @@ export function MailComponent({
   React.useEffect(() => {
     setSelectedIds((prev) => prev.filter((id) => mails.some((m) => m.id === id)));
   }, [mails]);
+
+  React.useEffect(() => {
+    if (isLargeScreen) setMobileReadOpen(false);
+  }, [isLargeScreen]);
+
+  React.useEffect(() => {
+    if (!isLargeScreen && mail.selected) setMobileReadOpen(true);
+  }, [mail.selected, isLargeScreen]);
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -160,9 +190,86 @@ export function MailComponent({
     },
   ];
 
+  const selectedMail = mails.find((item) => item.id === mail.selected) || null;
+
+  const listPane = (
+    <div className="grid h-full min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden">
+      <div className="flex shrink-0 items-center gap-2 border-b border-border/30 px-3 py-2.5 sm:px-4">
+        <h2 className="text-sm font-semibold tracking-tight">
+          {MAILBOX_VIEW_LABELS[mailboxView]}
+        </h2>
+        {mailboxView === "inbox" && (
+          <Tabs
+            value={listFilter}
+            onValueChange={(v) => setListFilter(v as "all" | "unread")}
+            className="ml-auto"
+          >
+            <TabsList className="h-8 rounded-full bg-muted/50 p-0.5">
+              <TabsTrigger value="all" className="rounded-full px-3 text-xs">
+                All
+              </TabsTrigger>
+              <TabsTrigger value="unread" className="rounded-full px-3 text-xs">
+                Unread
+                {mailboxCounts.inboxUnread > 0 && (
+                  <span className="ml-1 text-primary">{mailboxCounts.inboxUnread}</span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+      </div>
+      <div className="shrink-0 px-3 pb-2 pt-2">
+        <MailSearchBar />
+      </div>
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-border/40 px-3 py-2 sm:px-4">
+          <span className="text-xs text-muted-foreground">{selectedIds.length} selected</span>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="h-7 text-xs"
+            disabled={bulkBusy}
+            onClick={() => runBulk(() => bulkSetRead(selectedIds, true))}
+          >
+            Mark read
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="h-7 text-xs"
+            disabled={bulkBusy}
+            onClick={() => runBulk(() => bulkSetRead(selectedIds, false))}
+          >
+            Mark unread
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="h-7 text-xs"
+            disabled={bulkBusy}
+            onClick={() => runBulk(() => bulkTrash(selectedIds))}
+          >
+            Trash
+          </Button>
+        </div>
+      )}
+      <Separator className="opacity-50" />
+      <div className="min-h-0 overflow-hidden">
+        <MailList
+          items={filteredMails}
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          selectedIds={selectedIds}
+          onSelectedIdsChange={setSelectedIds}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-1 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
         <aside className="flex w-[4.5rem] shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-border/40 bg-muted/30 sm:w-44">
           <div className="p-2">
@@ -189,99 +296,52 @@ export function MailComponent({
           )}
           <Nav links={navLinks} />
         </aside>
+
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden lg:hidden">
+          {mobileReadOpen && selectedMail ? (
+            <MailDisplay
+              mail={selectedMail}
+              activeAccountId={activeAccountId}
+              mailboxAddress={activeMailboxAddress}
+              mailboxView={mailboxView}
+              onBack={() => setMobileReadOpen(false)}
+            />
+          ) : (
+            listPane
+          )}
+        </div>
+
         <ResizablePanelGroup
+          id="mail-layout-group"
           orientation="horizontal"
-          onLayoutChange={(layout) => {
-            const layoutArray = Object.values(layout);
-            document.cookie = `react-resizable-panels:layout:mail=${JSON.stringify(layoutArray)}`;
+          defaultLayout={groupDefaultLayout}
+          onLayoutChanged={(layout) => {
+            const list = layout[LIST_PANEL_ID];
+            const read = layout[READ_PANEL_ID];
+            if (typeof list === "number" && typeof read === "number") {
+              document.cookie = `react-resizable-panels:layout:mail=${JSON.stringify([list, read])}`;
+            }
           }}
-          className="h-full min-h-0 min-w-0 w-0 flex-1 overflow-hidden"
+          className="hidden h-full min-h-0 min-w-0 w-0 flex-1 overflow-hidden lg:flex"
         >
         <ResizablePanel
+          id={LIST_PANEL_ID}
           defaultSize={`${defaultLayout[0]}%`}
           minSize="22%"
-          maxSize="55%"
+          maxSize="52%"
           className="flex min-h-0 min-w-0 flex-col overflow-hidden border-r border-border/40 bg-background"
         >
-          <div className="flex shrink-0 items-center gap-2 border-b border-border/30 px-4 py-2.5">
-            <h2 className="text-sm font-semibold tracking-tight">
-              {MAILBOX_VIEW_LABELS[mailboxView]}
-            </h2>
-            {mailboxView === "inbox" && (
-              <Tabs
-                value={listFilter}
-                onValueChange={(v) => setListFilter(v as "all" | "unread")}
-                className="ml-auto"
-              >
-                <TabsList className="h-8 rounded-full bg-muted/50 p-0.5">
-                  <TabsTrigger value="all" className="rounded-full px-3 text-xs">
-                    All
-                  </TabsTrigger>
-                  <TabsTrigger value="unread" className="rounded-full px-3 text-xs">
-                    Unread
-                    {mailboxCounts.inboxUnread > 0 && (
-                      <span className="ml-1 text-primary">{mailboxCounts.inboxUnread}</span>
-                    )}
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            )}
-          </div>
-          <div className="shrink-0 px-3 pb-2 pt-2">
-            <MailSearchBar />
-          </div>
-          {selectedIds.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 border-b border-border/40 px-4 py-2">
-              <span className="text-xs text-muted-foreground">{selectedIds.length} selected</span>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="h-7 text-xs"
-                disabled={bulkBusy}
-                onClick={() => runBulk(() => bulkSetRead(selectedIds, true))}
-              >
-                Mark read
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="h-7 text-xs"
-                disabled={bulkBusy}
-                onClick={() => runBulk(() => bulkSetRead(selectedIds, false))}
-              >
-                Mark unread
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                className="h-7 text-xs"
-                disabled={bulkBusy}
-                onClick={() => runBulk(() => bulkTrash(selectedIds))}
-              >
-                Trash
-              </Button>
-            </div>
-          )}
-          <Separator className="opacity-50" />
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            <MailList
-              items={filteredMails}
-              page={page}
-              totalPages={totalPages}
-              total={total}
-              selectedIds={selectedIds}
-              onSelectedIdsChange={setSelectedIds}
-            />
-          </div>
+          {listPane}
         </ResizablePanel>
         <ResizableHandle withHandle className="bg-border/30" />
         <ResizablePanel
+          id={READ_PANEL_ID}
           defaultSize={`${defaultLayout[1]}%`}
-          minSize="28%"
+          minSize="35%"
           className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-background"
         >
           <MailDisplay
-            mail={mails.find((item) => item.id === mail.selected) || null}
+            mail={selectedMail}
             activeAccountId={activeAccountId}
             mailboxAddress={activeMailboxAddress}
             mailboxView={mailboxView}

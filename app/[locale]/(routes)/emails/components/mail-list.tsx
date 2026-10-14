@@ -57,8 +57,8 @@ export function MailList({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+    <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] overflow-hidden">
+      <div className="min-h-0 overflow-y-auto overscroll-contain">
         <div className="flex flex-col gap-0.5 p-2 pr-3">
           {items.length === 0 && (
             <p className="px-2 py-8 text-center text-sm text-muted-foreground">No messages</p>

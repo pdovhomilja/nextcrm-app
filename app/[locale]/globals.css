@@ -153,10 +153,19 @@
     @apply mx-auto w-full max-w-[1600px] flex-1 px-3 py-5 sm:px-6 sm:py-6 lg:px-8;
   }
 
-  /* E-mails: lock to viewport; scroll only inside list/reading panes */
+  /* E-mails: fixed chrome height — scroll only inside list/reading panes */
+  :root {
+    --app-header-height: 3.25rem;
+    --emails-pane-height: calc(100dvh - var(--app-header-height));
+  }
+
+  body:has([data-emails-shell]) {
+    overflow: hidden;
+  }
+
   .group\/sidebar-wrapper:has([data-emails-shell]) {
-    height: 100svh;
-    max-height: 100svh;
+    height: 100dvh;
+    max-height: 100dvh;
     overflow: hidden;
   }
 
@@ -165,15 +174,33 @@
   }
 
   .app-main-scroll:has([data-emails-shell]) {
+    height: var(--emails-pane-height);
+    max-height: var(--emails-pane-height);
     @apply min-h-0 flex-1 overflow-hidden;
   }
 
   .app-content-wrap:has([data-emails-shell]) {
-    @apply flex min-h-0 max-w-none flex-1 flex-col overflow-hidden px-2 py-2 sm:px-3 sm:py-2;
+    @apply flex h-full min-h-0 max-w-none flex-1 flex-col overflow-hidden px-2 py-2 sm:px-3 sm:py-2;
   }
 
   .emails-shell {
-    @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden;
+    height: var(--emails-pane-height);
+    max-height: var(--emails-pane-height);
+    @apply flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden;
+  }
+
+  [data-emails-shell] [data-group] {
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+    min-width: 0;
+  }
+
+  [data-emails-shell] [data-panel] {
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .app-main-scroll:has([data-emails-shell]) > footer {

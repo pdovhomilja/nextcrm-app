@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   Archive,
   ArchiveRestore,
+  ChevronLeft,
   Forward,
   MailOpen,
   MoreVertical,
@@ -55,6 +56,7 @@ interface MailDisplayProps {
   activeAccountId: string | null;
   mailboxAddress?: string;
   mailboxView: MailboxView;
+  onBack?: () => void;
 }
 
 export function MailDisplay({
@@ -62,6 +64,7 @@ export function MailDisplay({
   activeAccountId,
   mailboxAddress = "",
   mailboxView,
+  onBack,
 }: MailDisplayProps) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -134,6 +137,18 @@ export function MailDisplay({
     <div className="flex h-full min-h-0 min-w-0 flex-col bg-background">
       <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-border/40 bg-background px-2 py-2 sm:px-3">
         <div className="flex min-w-0 shrink items-center gap-0.5">
+          {onBack && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="mr-1 h-8 gap-1 px-2 text-xs lg:hidden"
+              onClick={onBack}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Inbox
+            </Button>
+          )}
           {mailboxView === "trash" ? (
             <>
               <Tooltip>
@@ -326,7 +341,7 @@ export function MailDisplay({
                 isUnread={!mail.isRead}
                 className="shrink-0 bg-background"
               />
-              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-background">
+              <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-background px-0">
                 <EmailConversationBody
                   bodyText={fullEmail.bodyText}
                   bodyHtml={fullEmail.bodyHtml}

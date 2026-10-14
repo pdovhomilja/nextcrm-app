@@ -3,18 +3,30 @@
 import * as React from "react";
 
 const IFRAME_STYLES = `
-  html, body { margin: 0; padding: 0; background: #ffffff; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #ffffff;
+    box-sizing: border-box;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
   body {
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    padding: 24px 28px 32px;
+    padding: clamp(12px, 2vw, 28px);
     line-height: 1.55;
     color: #18181b;
-    font-size: 14px;
+    font-size: clamp(13px, 1.6vw, 15px);
     word-wrap: break-word;
     overflow-x: hidden;
   }
-  img, table { max-width: 100% !important; height: auto !important; }
-  table { border-collapse: collapse; }
+  img, table, video, iframe { max-width: 100% !important; height: auto !important; }
+  table { width: 100% !important; border-collapse: collapse; }
+  center, .email-container, .wrapper, [align="center"] > table {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
   a { color: #0369a1; }
   blockquote {
     margin: 14px 0;
@@ -56,15 +68,17 @@ export function EmailHtmlFrame({ bodyHtml }: Props) {
   }, [bodyHtml, measure]);
 
   return (
-    <iframe
-      ref={iframeRef}
-      srcDoc={srcDoc}
-      sandbox="allow-popups allow-popups-to-escape-sandbox"
-      referrerPolicy="no-referrer"
-      title="Email body"
-      onLoad={measure}
-      className="block w-full min-w-0 border-0 bg-white"
-      style={{ height: `${height}px` }}
-    />
+    <div className="w-full min-w-0 max-w-full bg-white">
+      <iframe
+        ref={iframeRef}
+        srcDoc={srcDoc}
+        sandbox="allow-popups allow-popups-to-escape-sandbox"
+        referrerPolicy="no-referrer"
+        title="Email body"
+        onLoad={measure}
+        className="block w-full min-w-0 max-w-full border-0 bg-white"
+        style={{ height: `${height}px`, width: "100%" }}
+      />
+    </div>
   );
 }
