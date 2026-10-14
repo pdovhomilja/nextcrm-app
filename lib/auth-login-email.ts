@@ -18,10 +18,19 @@ export async function resolveLoginIdentity(rawEmail: string): Promise<LoginIdent
     return { error: "Enter a valid email address." };
   }
 
-  const user = await prismadb.users.findFirst({
-    where: { OR: [{ email: typed }, { workEmail: typed }] },
-    select: { email: true, userStatus: true },
-  });
+  let user: { email: string; userStatus: string | null } | null;
+  try {
+    user = await prismadb.users.findFirst({
+      where: { OR: [{ email: typed }, { workEmail: typed }] },
+      select: { email: true, userStatus: true },
+    });
+  } catch (error) {
+    console.error("[resolveLoginIdentity] workEmail lookup failed, retrying email only", error);
+    user = await prismadb.users.findFirst({
+      where: { email: typed },
+      select: { email: true, userStatus: true },
+    });
+  }
 
   if (!user?.email) {
     return {

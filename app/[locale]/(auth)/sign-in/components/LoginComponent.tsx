@@ -75,8 +75,10 @@ export function LoginComponent() {
           ? "We sent the same code again. Check your inbox and spam folder."
           : "Verification code sent. Check your inbox and spam folder."
       );
-    } catch {
-      toast.error("Failed to send verification code.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to send verification code.";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

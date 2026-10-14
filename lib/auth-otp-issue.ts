@@ -36,73 +36,84 @@ function generateOtp() {
  * A resend within the expiry window emails that same code again.
  */
 export async function issueSignInOtp(rawEmail: string): Promise<IssueSignInOtpResult> {
-  const identity = await resolveLoginIdentity(rawEmail);
-  if ("error" in identity) return identity;
-
-  const { authEmail, deliverTo } = identity;
-  const identifier = signInOtpIdentifier(authEmail);
-  const now = new Date();
-  const existing = await prismadb.verification.findFirst({
-    where: { identifier },
-    orderBy: { createdAt: "desc" },
-  });
-  const parsed = existing ? parseStoredOtp(existing.value) : null;
-  const reusable = Boolean(
-    existing &&
-      parsed &&
-      existing.expiresAt > now &&
-      parsed.attempts < MAX_ATTEMPTS
-  );
-
-  if (reusable && existing) {
-    const sentAt = existing.updatedAt ?? existing.createdAt;
-    if (sentAt) {
-      const elapsedSeconds = (now.getTime() - sentAt.getTime()) / 1000;
-      if (elapsedSeconds < OTP_RESEND_COOLDOWN_SECONDS) {
-        const retryAfterSeconds = Math.max(
-          1,
-          Math.ceil(OTP_RESEND_COOLDOWN_SECONDS - elapsedSeconds)
-        );
-        return {
-          error: `A code was just sent. Wait ${retryAfterSeconds}s, then check your inbox and spam folder.`,
-          retryAfterSeconds,
-        };
-      }
-    }
+  if (typeof rawEmail !== "string" || !rawEmail.trim()) {
+    return { error: "Enter a valid email address." };
   }
-
-  const otp = reusable && parsed ? parsed.otp : generateOtp();
 
   try {
-    await sendOtpEmail(deliverTo, otp);
+    const identity = await resolveLoginIdentity(rawEmail);
+    if ("error" in identity) return identity;
+
+    const { authEmail, deliverTo } = identity;
+    const identifier = signInOtpIdentifier(authEmail);
+    const now = new Date();
+    const existing = await prismadb.verification.findFirst({
+      where: { identifier },
+      orderBy: { createdAt: "desc" },
+    });
+    const parsed = existing ? parseStoredOtp(existing.value) : null;
+    const reusable = Boolean(
+      existing &&
+        parsed &&
+        existing.expiresAt > now &&
+        parsed.attempts < MAX_ATTEMPTS
+    );
+
+    if (reusable && existing) {
+      const sentAt = existing.updatedAt ?? existing.createdAt;
+      if (sentAt) {
+        const elapsedSeconds = (now.getTime() - sentAt.getTime()) / 1000;
+        if (elapsedSeconds < OTP_RESEND_COOLDOWN_SECONDS) {
+          const retryAfterSeconds = Math.max(
+            1,
+            Math.ceil(OTP_RESEND_COOLDOWN_SECONDS - elapsedSeconds)
+          );
+          return {
+            error: `A code was just sent. Wait ${retryAfterSeconds}s, then check your inbox and spam folder.`,
+            retryAfterSeconds,
+          };
+        }
+      }
+    }
+
+    const otp = reusable && parsed ? parsed.otp : generateOtp();
+
+    try {
+      await sendOtpEmail(deliverTo, otp);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not send the verification email.";
+      return { error: message };
+    }
+
+    const expiresAt = new Date(now.getTime() + OTP_EXPIRES_SECONDS * 1000);
+
+    if (reusable && existing) {
+      await prismadb.verification.update({
+        where: { id: existing.id },
+        data: { expiresAt, updatedAt: now },
+      });
+      await prismadb.verification.deleteMany({
+        where: { identifier, id: { not: existing.id } },
+      });
+    } else {
+      await prismadb.verification.deleteMany({ where: { identifier } });
+      await prismadb.verification.create({
+        data: {
+          identifier,
+          value: `${otp}:0`,
+          expiresAt,
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+    }
+
+    return { ok: true, retryAfterSeconds: OTP_RESEND_COOLDOWN_SECONDS, authEmail };
   } catch (error) {
+    console.error("[issueSignInOtp]", error);
     const message =
-      error instanceof Error ? error.message : "Could not send the verification email.";
+      error instanceof Error ? error.message : "Could not send the verification code.";
     return { error: message };
   }
-
-  const expiresAt = new Date(now.getTime() + OTP_EXPIRES_SECONDS * 1000);
-
-  if (reusable && existing) {
-    await prismadb.verification.update({
-      where: { id: existing.id },
-      data: { expiresAt, updatedAt: now },
-    });
-    await prismadb.verification.deleteMany({
-      where: { identifier, id: { not: existing.id } },
-    });
-  } else {
-    await prismadb.verification.deleteMany({ where: { identifier } });
-    await prismadb.verification.create({
-      data: {
-        identifier,
-        value: `${otp}:0`,
-        expiresAt,
-        createdAt: now,
-        updatedAt: now,
-      },
-    });
-  }
-
-  return { ok: true, retryAfterSeconds: OTP_RESEND_COOLDOWN_SECONDS, authEmail };
 }
