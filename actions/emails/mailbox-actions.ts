@@ -17,6 +17,7 @@ import {
   setCachedMailboxCounts,
   setCachedMailboxList,
 } from "@/lib/email/mailbox-cache";
+import { EmailFolder } from "@prisma/client";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
 import type {
   MailboxCounts,
