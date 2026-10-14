@@ -16,6 +16,7 @@ import {
   generateCampaignHeroImage,
   injectHeroImageIntoHtml,
 } from "@/lib/llm/openrouter-image";
+import { getConfiguredLlmProviders } from "@/lib/llm/availability";
 
 export type GenerateTemplateOptions = {
   mode?: AiQualityMode;
@@ -118,10 +119,21 @@ export const generateTemplate = async (
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[generate-template]", msg, e);
     if (/No LLM available/i.test(msg)) {
+      const configured = await getConfiguredLlmProviders(user.id);
+      const attemptsMatch = msg.match(/Attempts:\s*(.+)$/i);
+      const attempts = attemptsMatch?.[1]?.trim();
+      if (configured.length === 0) {
+        return {
+          ok: false,
+          error:
+            "No AI keys found at runtime. Add OPENROUTER_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY on Vercel (Production), then redeploy — not only Preview.",
+        };
+      }
       return {
         ok: false,
-        error:
-          "No AI key available. Add OPENROUTER_API_KEY (and/or GROQ, GEMINI, OPENAI) in Vercel → Environment Variables, then redeploy.",
+        error: attempts
+          ? `AI keys are set (${configured.join(", ")}) but every provider failed. ${attempts}. Try Quality: Good, or fix invalid/expired keys on Vercel.`
+          : `AI keys are set (${configured.join(", ")}) but all providers failed. Redeploy after env changes, or try Quality: Good.`,
       };
     }
     if (/429|rate|quota/i.test(msg)) {

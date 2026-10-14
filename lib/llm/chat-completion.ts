@@ -16,9 +16,15 @@ type OpenAiStyleResponse = {
 };
 
 async function readAssistantText(response: Response): Promise<string> {
-  const data = (await response.json()) as OpenAiStyleResponse;
+  const data = (await response.json()) as OpenAiStyleResponse & {
+    message?: string;
+  };
   if (!response.ok) {
-    throw new Error(data.error?.message ?? response.statusText);
+    const detail =
+      data.error?.message ??
+      (typeof data.message === "string" ? data.message : undefined) ??
+      `${response.status} ${response.statusText}`;
+    throw new Error(detail);
   }
   const text = data.choices?.[0]?.message?.content?.trim();
   if (!text) throw new Error("Empty model response");
@@ -66,7 +72,7 @@ async function resolveProviderKey(
 ): Promise<string | null> {
   switch (provider) {
     case "openrouter":
-      return envSecret("OPENROUTER_API_KEY") ?? null;
+      return envSecret("OPENROUTER_API_KEY") ?? envSecret("OPENROUTER_KEY") ?? null;
     case "gemini":
       return envSecret("GEMINI_API_KEY") ?? envSecret("GOOGLE_GENERATIVE_AI_API_KEY") ?? null;
     case "groq":
@@ -199,9 +205,11 @@ export async function completeChat(options: {
     }
   }
 
+  const attempts = errors.length ? errors.join(" | ") : "";
   throw new Error(
-    `No LLM available for ${task}. Set OPENROUTER_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, or OPENAI (env or Profile → LLMs).` +
-      (errors.length ? ` Attempts: ${errors.join(" | ")}` : "")
+    attempts
+      ? `No LLM available for ${task}. Attempts: ${attempts}`
+      : `No LLM available for ${task}. Set OPENROUTER_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, or OPENAI (env or Profile → LLMs), then redeploy.`
   );
 }
 
