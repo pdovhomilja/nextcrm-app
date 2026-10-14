@@ -107,15 +107,6 @@ export async function getMailboxEmails(
   }
 }
 
-export type MailboxCounts = {
-  inboxUnread: number;
-  inboxTotal: number;
-  starred: number;
-  spam: number;
-  archive: number;
-  trash: number;
-};
-
 export async function getMailboxCounts(accountId: string): Promise<MailboxCounts> {
   try {
     const userId = await requireSession();
