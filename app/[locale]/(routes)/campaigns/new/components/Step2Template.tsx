@@ -60,12 +60,16 @@ export function Step2Template({
         mode: aiMode,
         includeHeroImage,
       });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
       setHtml(result.html);
       setJson(result.json);
       setSubject(result.subject);
     } catch (e: unknown) {
       setError(
-        e instanceof Error ? e.message : "Generation failed"
+        e instanceof Error ? e.message : "Generation failed unexpectedly."
       );
     } finally {
       setIsGenerating(false);

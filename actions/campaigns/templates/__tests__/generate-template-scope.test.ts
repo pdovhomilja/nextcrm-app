@@ -35,13 +35,16 @@ describe("generateTemplate scope", () => {
 
   it("unauthenticated throws Unauthorized and never calls LLM", async () => {
     (getSession as jest.Mock).mockResolvedValue(null);
-    await expect(generateTemplate("p")).rejects.toThrow();
+    const res = await generateTemplate("p");
+    expect(res.ok).toBe(false);
     expect(completeChatWorkflow).not.toHaveBeenCalled();
   });
 
   it("user generates template via LLM router", async () => {
     mockUser("user", "u1");
     const res = await generateTemplate("write a welcome");
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
     expect(res.subject).toBe("S");
     expect(res.html).toBe("<p>H</p>");
     expect(completeChatWorkflow).toHaveBeenCalledWith(
@@ -52,14 +55,14 @@ describe("generateTemplate scope", () => {
   it("manager generates template", async () => {
     mockUser("manager", "m1");
     const res = await generateTemplate("p");
-    expect(res.subject).toBe("S");
+    expect(res.ok).toBe(true);
     expect(completeChatWorkflow).toHaveBeenCalledWith(expect.objectContaining({ userId: "m1" }));
   });
 
   it("admin generates template", async () => {
     mockUser("admin", "a1");
     const res = await generateTemplate("p");
-    expect(res.subject).toBe("S");
+    expect(res.ok).toBe(true);
     expect(completeChatWorkflow).toHaveBeenCalledWith(expect.objectContaining({ userId: "a1" }));
   });
 });

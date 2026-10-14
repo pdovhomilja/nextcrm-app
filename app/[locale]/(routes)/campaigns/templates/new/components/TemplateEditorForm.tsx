@@ -67,6 +67,10 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
         mode: aiMode,
         includeHeroImage,
       });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
       setContentHtml(result.html);
       setContentJson(result.json);
       if (result.subject && !subject) {

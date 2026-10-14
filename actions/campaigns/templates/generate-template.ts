@@ -22,73 +22,117 @@ export type GenerateTemplateOptions = {
   includeHeroImage?: boolean;
 };
 
+export type GenerateTemplateResult =
+  | { ok: true; html: string; json: object; subject: string }
+  | { ok: false; error: string };
+
+const MAX_HTML_LENGTH = 350_000;
+
+function shrinkHtmlForAction(html: string): string {
+  if (html.length <= MAX_HTML_LENGTH) return html;
+  return html.replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/gi, "").slice(0, MAX_HTML_LENGTH);
+}
+
 export const generateTemplate = async (
   prompt: string,
   options?: GenerateTemplateOptions
-): Promise<{
-  html: string;
-  json: object;
-  subject: string;
-}> => {
+): Promise<GenerateTemplateResult> => {
+  const trimmed = prompt.trim();
+  if (!trimmed) {
+    return { ok: false, error: "Describe the email you want to generate." };
+  }
+
   let user;
   try {
     user = await requireAuthenticated();
   } catch (e) {
-    if (e instanceof AuthenticationError) throw new Error("Unauthorized");
-    throw e;
-  }
-
-  const mode = parseQualityMode(options?.mode);
-  const modeConfig = QUALITY_MODE_CONFIG[mode];
-  const includeHeroImage = Boolean(options?.includeHeroImage) && mode !== "fast";
-
-  const { content, provider, stages } = await completeChatWorkflow({
-    task: "campaign-email",
-    userId: user.id,
-    userBrief: prompt,
-    mode,
-    messages: [
-      { role: "system", content: campaignEmailSystemPrompt(modeConfig.htmlStyle) },
-      { role: "user", content: prompt },
-    ],
-  });
-
-  if (stages.length > 0) {
-    console.info("[generate-template] LLM workflow:", stages.join(" → "));
-  }
-
-  let jsonText = content;
-  const refined = await refineCampaignEmailJson({
-    userId: user.id,
-    draftJson: content,
-    userPrompt: prompt,
-    force: modeConfig.refineJson,
-  });
-  if (refined) jsonText = refined;
-
-  let parsed: { subject: string; html: string };
-  try {
-    parsed = parseJsonObject<{ subject: string; html: string }>(jsonText);
-  } catch {
-    throw new Error(
-      `Model returned invalid JSON (${provider}, mode=${mode}). Try Better/Best or add OPENAI_API_KEY.`
-    );
-  }
-
-  let html = parsed.html ?? "";
-
-  if (includeHeroImage) {
-    const imagePrompt = `Professional email marketing hero banner, no text in image: ${prompt.slice(0, 500)}`;
-    const imageSrc = await generateCampaignHeroImage({ prompt: imagePrompt, mode });
-    if (imageSrc) {
-      html = injectHeroImageIntoHtml(html, imageSrc, parsed.subject || "Campaign hero");
-      console.info("[generate-template] hero image injected via OpenRouter");
+    if (e instanceof AuthenticationError) {
+      return { ok: false, error: "Unauthorized — sign in again." };
     }
+    console.error("[generate-template] auth", e);
+    return { ok: false, error: "Could not verify your session." };
   }
 
-  return {
-    subject: parsed.subject ?? "",
-    html,
-    json: {},
-  };
+  try {
+    const mode = parseQualityMode(options?.mode);
+    const modeConfig = QUALITY_MODE_CONFIG[mode];
+    const includeHeroImage = Boolean(options?.includeHeroImage) && mode !== "fast";
+
+    const { content, provider, stages } = await completeChatWorkflow({
+      task: "campaign-email",
+      userId: user.id,
+      userBrief: trimmed,
+      mode,
+      messages: [
+        { role: "system", content: campaignEmailSystemPrompt(modeConfig.htmlStyle) },
+        { role: "user", content: trimmed },
+      ],
+    });
+
+    if (stages.length > 0) {
+      console.info("[generate-template] LLM workflow:", stages.join(" → "));
+    }
+
+    let jsonText = content;
+    const refined = await refineCampaignEmailJson({
+      userId: user.id,
+      draftJson: content,
+      userPrompt: trimmed,
+      force: modeConfig.refineJson,
+    });
+    if (refined) jsonText = refined;
+
+    let parsed: { subject: string; html: string };
+    try {
+      parsed = parseJsonObject<{ subject: string; html: string }>(jsonText);
+    } catch {
+      return {
+        ok: false,
+        error: `AI returned invalid JSON (${provider}, ${mode}). Try Good/Better/Best or add OPENAI_API_KEY on Vercel.`,
+      };
+    }
+
+    let html = parsed.html ?? "";
+    if (!html.trim()) {
+      return { ok: false, error: "AI returned empty HTML. Try a clearer prompt or another quality mode." };
+    }
+
+    if (includeHeroImage) {
+      const imagePrompt = `Professional email marketing hero banner, no text in image: ${trimmed.slice(0, 500)}`;
+      const imageSrc = await generateCampaignHeroImage({ prompt: imagePrompt, mode });
+      if (imageSrc) {
+        html = injectHeroImageIntoHtml(html, imageSrc, parsed.subject || "Campaign hero");
+        console.info("[generate-template] hero image injected via OpenRouter");
+      }
+    }
+
+    html = shrinkHtmlForAction(html);
+
+    return {
+      ok: true,
+      subject: parsed.subject ?? "",
+      html,
+      json: {},
+    };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("[generate-template]", msg, e);
+    if (/No LLM available/i.test(msg)) {
+      return {
+        ok: false,
+        error:
+          "No AI key available. Add OPENROUTER_API_KEY (and/or GROQ, GEMINI, OPENAI) in Vercel → Environment Variables, then redeploy.",
+      };
+    }
+    if (/429|rate|quota/i.test(msg)) {
+      return {
+        ok: false,
+        error: "AI rate limit hit. Wait a minute, switch to Good/Better mode, or add another provider key.",
+      };
+    }
+    return {
+      ok: false,
+      error: msg || "AI generation failed. Check Vercel function logs for details.",
+    };
+  }
 };
