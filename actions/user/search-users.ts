@@ -1,6 +1,7 @@
 "use server";
 import { getSession } from "@/lib/auth-server";
 
+import { withSearchCache } from "@/lib/cache/search-cache";
 import { prismadb } from "@/lib/prisma";
 
 const PAGE_SIZE_MAX = 100;
@@ -20,23 +21,32 @@ export async function searchUsers({
   const safeTake = Math.min(PAGE_SIZE_MAX, Math.max(1, take));
   const safeSkip = Math.max(0, skip);
 
-  const where = {
-    userStatus: "ACTIVE" as const,
-    ...(search
-      ? { name: { contains: search, mode: "insensitive" as const } }
-      : {}),
+  const userId = session.user.id as string;
+  const cacheParts = {
+    search: search.trim().toLowerCase(),
+    skip: safeSkip,
+    take: safeTake,
   };
 
-  const [users, total] = await prismadb.$transaction([
-    prismadb.users.findMany({
-      where,
-      select: { id: true, name: true, avatar: true },
-      orderBy: { name: "asc" },
-      skip: safeSkip,
-      take: safeTake,
-    }),
-    prismadb.users.count({ where }),
-  ]);
+  return withSearchCache(userId, "users", cacheParts, 60, async () => {
+    const where = {
+      userStatus: "ACTIVE" as const,
+      ...(search
+        ? { name: { contains: search, mode: "insensitive" as const } }
+        : {}),
+    };
 
-  return { users, total, hasMore: safeSkip + safeTake < total };
+    const [users, total] = await prismadb.$transaction([
+      prismadb.users.findMany({
+        where,
+        select: { id: true, name: true, avatar: true },
+        orderBy: { name: "asc" },
+        skip: safeSkip,
+        take: safeTake,
+      }),
+      prismadb.users.count({ where }),
+    ]);
+
+    return { users, total, hasMore: safeSkip + safeTake < total };
+  });
 }

@@ -49,37 +49,33 @@ const EmailRoute = async ({
   const t = await getTranslations("ModuleMenu");
   const params = await searchParams;
 
-  const layout = (await cookies()).get("react-resizable-panels:layout");
-  const collapsed = (await cookies()).get("react-resizable-panels:collapsed");
+  const layoutMail = (await cookies()).get("react-resizable-panels:layout:mail");
+  const layoutLegacy = (await cookies()).get("react-resizable-panels:layout");
 
-  // Parse layout with validation - ensure left panel is visible
-  const FALLBACK_LAYOUT = [20, 35, 45];
+  const FALLBACK_LAYOUT = [36, 64];
   let validatedLayout: number[] | undefined;
 
-  if (layout) {
+  const rawLayout = layoutMail?.value ?? layoutLegacy?.value;
+  if (rawLayout) {
     try {
-      const parsed = JSON.parse(layout.value);
+      const parsed = JSON.parse(rawLayout);
       if (
         Array.isArray(parsed) &&
-        parsed.length === 3 &&
-        parsed.every((n: number) => typeof n === "number" && n > 0) &&
-        parsed[0] >= 18
+        parsed.length === 2 &&
+        parsed.every((n: number) => typeof n === "number" && n > 0)
       ) {
         validatedLayout = parsed;
+      } else if (
+        Array.isArray(parsed) &&
+        parsed.length === 3 &&
+        parsed.every((n: number) => typeof n === "number" && n > 0)
+      ) {
+        validatedLayout = [parsed[1], parsed[2]];
       } else {
         validatedLayout = FALLBACK_LAYOUT;
       }
     } catch {
       validatedLayout = FALLBACK_LAYOUT;
-    }
-  }
-
-  let defaultCollapsed: boolean | undefined = undefined;
-  if (collapsed) {
-    try {
-      defaultCollapsed = JSON.parse(collapsed.value);
-    } catch {
-      defaultCollapsed = undefined;
     }
   }
 
@@ -169,14 +165,12 @@ const EmailRoute = async ({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <div className="flex flex-wrap items-baseline justify-between gap-2 px-0.5">
-        <h1 className="text-lg font-semibold tracking-tight text-foreground sm:text-xl">
+    <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+      <div className="flex shrink-0 flex-wrap items-baseline justify-between gap-2 px-0.5">
+        <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
           {t("emails")}
         </h1>
-        <p className="text-xs text-muted-foreground sm:text-sm">
-          Inbox · sent · search
-        </p>
+        <p className="text-xs text-muted-foreground">Inbox · sent · search</p>
       </div>
       {activeAccountId && (
         <Suspense fallback={null}>
@@ -186,6 +180,7 @@ const EmailRoute = async ({
           />
         </Suspense>
       )}
+      <div className="flex min-h-0 flex-1 flex-col">
       <Suspense fallback={<EmailsSkeleton />}>
         <MailComponent
           accounts={connectedAccounts}
@@ -195,11 +190,11 @@ const EmailRoute = async ({
           mailboxCounts={mailboxCounts}
           page={emailsResult.page}
           totalPages={emailsResult.totalPages}
+          total={emailsResult.total}
           defaultLayout={validatedLayout}
-          defaultCollapsed={defaultCollapsed}
-          navCollapsedSize={8}
         />
       </Suspense>
+      </div>
     </div>
   );
 };

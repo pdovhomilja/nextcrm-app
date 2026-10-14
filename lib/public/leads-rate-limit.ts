@@ -1,5 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+
+import { getUpstashRedis } from "@/lib/cache/upstash-redis";
 
 const ENDPOINT = "public-leads";
 
@@ -7,12 +8,13 @@ let limiter: Ratelimit | null | undefined;
 
 function getLimiter(): Ratelimit | null {
   if (limiter !== undefined) return limiter;
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  const redis = getUpstashRedis();
+  if (!redis) {
     limiter = null;
     return null;
   }
   limiter = new Ratelimit({
-    redis: Redis.fromEnv(),
+    redis,
     limiter: Ratelimit.slidingWindow(30, "1 m"),
     prefix: `ratelimit:${ENDPOINT}`,
   });

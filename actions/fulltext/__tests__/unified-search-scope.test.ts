@@ -1,3 +1,7 @@
+jest.mock("@/lib/cache/search-cache", () => ({
+  getSearchCache: jest.fn().mockResolvedValue(null),
+  setSearchCache: jest.fn().mockResolvedValue(undefined),
+}));
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/inngest/lib/embedding-utils", () => ({
   generateEmbedding: jest.fn().mockRejectedValue(new Error("no embedding")),

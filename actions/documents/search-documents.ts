@@ -10,6 +10,7 @@ import {
   generateEmbedding,
   toVectorLiteral,
 } from "@/inngest/lib/embedding-utils";
+import { withSearchCache } from "@/lib/cache/search-cache";
 
 export interface DocumentSearchResult {
   id: string;
@@ -31,6 +32,19 @@ export async function searchDocuments(
   }
   if (!query || query.trim().length < 2) return [];
 
+  return withSearchCache(
+    user.id,
+    "documents",
+    { q: query.trim().toLowerCase() },
+    90,
+    async () => searchDocumentsUncached(user, query)
+  );
+}
+
+async function searchDocumentsUncached(
+  user: Awaited<ReturnType<typeof requireAuthenticated>>,
+  query: string
+): Promise<DocumentSearchResult[]> {
   // Keyword search — scope OR (visibility/ownership) goes at top level;
   // user-supplied search OR moves into AND so it cannot replace the scope OR.
   const kwResults = await prismadb.documents.findMany({

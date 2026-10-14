@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/tooltip";
 
 interface NavProps {
-  isCollapsed: boolean;
   links: {
     title: string;
     label?: string;
@@ -21,29 +20,28 @@ interface NavProps {
   }[];
 }
 
-export function Nav({ links, isCollapsed }: NavProps) {
+/** Icon-only mailbox nav for the fixed narrow sidebar. */
+export function Nav({ links }: NavProps) {
   return (
-    <nav className="flex flex-col gap-0.5 px-2 py-2">
+    <nav className="flex flex-col gap-0.5 px-1.5 py-1.5">
       {links.map((link) => {
         const active = link.variant === "default";
         const inner = (
           <Link
             href={link.href}
             className={cn(
-              "group flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm font-medium transition-all",
+              "relative flex h-9 w-full items-center justify-center rounded-lg transition-colors",
               active
                 ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-              isCollapsed && "justify-center px-2"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
             )}
           >
-            <link.icon className={cn("h-4 w-4 shrink-0", active && "opacity-95")} />
-            {!isCollapsed && <span className="truncate">{link.title}</span>}
-            {!isCollapsed && link.label && (
+            <link.icon className="h-4 w-4 shrink-0" />
+            {link.label && (
               <span
                 className={cn(
-                  "ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums",
-                  active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+                  "absolute -right-0.5 -top-0.5 min-w-[1rem] rounded-full px-1 text-[9px] font-bold leading-4 tabular-nums",
+                  active ? "bg-primary-foreground text-primary" : "bg-muted text-muted-foreground"
                 )}
               >
                 {link.label}
@@ -52,21 +50,17 @@ export function Nav({ links, isCollapsed }: NavProps) {
           </Link>
         );
 
-        if (isCollapsed) {
-          return (
-            <Tooltip key={link.title} delayDuration={0}>
-              <TooltipTrigger asChild>{inner}</TooltipTrigger>
-              <TooltipContent side="right" className="flex items-center gap-2">
-                {link.title}
-                {link.label && (
-                  <span className="text-muted-foreground">{link.label}</span>
-                )}
-              </TooltipContent>
-            </Tooltip>
-          );
-        }
-
-        return <div key={link.title}>{inner}</div>;
+        return (
+          <Tooltip key={link.title} delayDuration={0}>
+            <TooltipTrigger asChild>{inner}</TooltipTrigger>
+            <TooltipContent side="right" className="flex items-center gap-2 text-xs">
+              {link.title}
+              {link.label && (
+                <span className="text-muted-foreground">{link.label}</span>
+              )}
+            </TooltipContent>
+          </Tooltip>
+        );
       })}
     </nav>
   );

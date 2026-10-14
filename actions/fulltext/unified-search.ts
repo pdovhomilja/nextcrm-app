@@ -6,6 +6,9 @@ import {
 } from "@/inngest/lib/embedding-utils";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 import { getReportScope } from "@/lib/authz/scopes/report-scope";
+import { getSearchCache, setSearchCache } from "@/lib/cache/search-cache";
+
+const UNIFIED_SEARCH_CACHE_TTL = 120;
 
 export interface SearchResult {
   id: string;
@@ -56,6 +59,18 @@ export async function unifiedSearch(
   }
   if (!query || query.trim().length < 2)
     return { error: "Query must be at least 2 characters" };
+
+  const cacheParts = {
+    q: query.trim().toLowerCase(),
+    locale,
+    role: String(user.role ?? ""),
+  };
+  const cached = await getSearchCache<UnifiedSearchResults>(
+    user.id,
+    "unified",
+    cacheParts
+  );
+  if (cached) return cached;
 
   const scope = getReportScope(user);
 
@@ -427,7 +442,18 @@ export async function unifiedSearch(
       }))
     );
 
-    return { accounts, contacts, leads, opportunities, projects, tasks, users, documents };
+    const payload = {
+      accounts,
+      contacts,
+      leads,
+      opportunities,
+      projects,
+      tasks,
+      users,
+      documents,
+    };
+    await setSearchCache(user.id, "unified", cacheParts, payload, UNIFIED_SEARCH_CACHE_TTL);
+    return payload;
   } catch (error) {
     console.error("[UNIFIED_SEARCH]", error);
     return { error: "Search failed" };

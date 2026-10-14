@@ -153,6 +153,24 @@
     @apply mx-auto w-full max-w-[1600px] flex-1 px-3 py-5 sm:px-6 sm:py-6 lg:px-8;
   }
 
+  /* E-mails: fill viewport; scroll only inside list/reading panes */
+  .app-main-scroll:has([data-emails-shell]) {
+    @apply overflow-hidden;
+  }
+
+  .app-content-wrap:has([data-emails-shell]) {
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden py-3 sm:py-4;
+  }
+
+  .emails-shell {
+    min-height: calc(100dvh - 4.25rem);
+    max-height: calc(100dvh - 4.25rem);
+  }
+
+  .app-main-scroll:has([data-emails-shell]) > footer {
+    display: none;
+  }
+
   .header-icon-btn {
     @apply h-9 w-9 rounded-xl text-muted-foreground transition-colors hover:bg-accent hover:text-foreground;
   }

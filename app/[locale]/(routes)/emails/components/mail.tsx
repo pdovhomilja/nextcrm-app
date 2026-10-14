@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { Archive, Inbox, Send, ShieldAlert, Star, Trash2 } from "lucide-react";
+import { Archive, Inbox, PenLine, Send, ShieldAlert, Star, Trash2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { AccountSwitcher } from "@/app/[locale]/(routes)/emails/components/account-switcher";
@@ -16,7 +16,6 @@ import {
   MAILBOX_VIEW_LABELS,
   type MailboxView,
 } from "@/lib/email/mailbox-views";
-import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -36,9 +35,8 @@ interface MailProps {
   mailboxCounts: MailboxCounts;
   page: number;
   totalPages: number;
+  total: number;
   defaultLayout: number[] | undefined;
-  defaultCollapsed?: boolean;
-  navCollapsedSize: number;
 }
 
 export function MailComponent({
@@ -49,11 +47,9 @@ export function MailComponent({
   mailboxCounts,
   page,
   totalPages,
-  defaultLayout = [18, 34, 48],
-  defaultCollapsed = false,
-  navCollapsedSize,
+  total,
+  defaultLayout = [36, 64],
 }: MailProps) {
-  const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = React.useState(false);
   const [mail, setMail] = useMail();
@@ -166,53 +162,42 @@ export function MailComponent({
 
   return (
     <TooltipProvider delayDuration={0}>
-      <ResizablePanelGroup
-        orientation="horizontal"
-        onLayoutChange={(layout) => {
-          const layoutArray = Object.values(layout);
-          document.cookie = `react-resizable-panels:layout=${JSON.stringify(layoutArray)}`;
-        }}
-        className="flex h-[min(78dvh,calc(100dvh-11rem))] min-h-[520px] flex-row overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm"
-      >
-        <ResizablePanel
-          defaultSize={`${defaultLayout[0]}%`}
-          collapsedSize={`${navCollapsedSize}%`}
-          collapsible
-          minSize="12%"
-          maxSize="26%"
-          onResize={(panelSize) => {
-            const collapsed = panelSize.asPercentage <= navCollapsedSize;
-            if (collapsed !== isCollapsed) {
-              setIsCollapsed(collapsed);
-              document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(collapsed)}`;
-            }
-          }}
-          className={cn(
-            "border-r border-border/40 bg-muted/20",
-            isCollapsed && "transition-all duration-300 ease-in-out"
-          )}
-        >
-          <div className="p-2.5">
-            <AccountSwitcher
-              isCollapsed={isCollapsed}
-              accounts={accounts}
-              activeAccountId={activeAccountId}
-            />
+      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
+        <aside className="flex w-[4.75rem] shrink-0 flex-col border-r border-border/40 bg-muted/20">
+          <div className="p-1.5">
+            <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} />
           </div>
           <Separator className="opacity-50" />
-          {activeAccountId && !isCollapsed && (
-            <div className="p-2.5">
+          {activeAccountId && (
+            <div className="p-1.5">
               <ComposeModal
                 accountId={activeAccountId}
                 mailboxAddress={activeMailboxAddress}
+                trigger={
+                  <Button
+                    size="icon"
+                    className="h-9 w-full rounded-lg shadow-sm"
+                    aria-label="Compose"
+                  >
+                    <PenLine className="h-4 w-4" />
+                  </Button>
+                }
               />
             </div>
           )}
-          <Nav isCollapsed={isCollapsed} links={navLinks} />
-        </ResizablePanel>
-        <ResizableHandle withHandle className="bg-border/30" />
+          <Nav links={navLinks} />
+        </aside>
+        <ResizablePanelGroup
+          orientation="horizontal"
+          onLayoutChange={(layout) => {
+            const layoutArray = Object.values(layout);
+            document.cookie = `react-resizable-panels:layout:mail=${JSON.stringify(layoutArray)}`;
+          }}
+          className="flex h-full min-h-0 min-w-0 flex-1 flex-row"
+        >
         <ResizablePanel
-          defaultSize={`${defaultLayout[1]}%`}
+          defaultSize={`${defaultLayout[0]}%`}
           minSize="22%"
           className="flex min-h-0 flex-col border-r border-border/40 bg-background/95"
         >
@@ -281,6 +266,7 @@ export function MailComponent({
               items={filteredMails}
               page={page}
               totalPages={totalPages}
+              total={total}
               selectedIds={selectedIds}
               onSelectedIdsChange={setSelectedIds}
             />
@@ -288,7 +274,7 @@ export function MailComponent({
         </ResizablePanel>
         <ResizableHandle withHandle className="bg-border/30" />
         <ResizablePanel
-          defaultSize={`${defaultLayout[2]}%`}
+          defaultSize={`${defaultLayout[1]}%`}
           minSize="28%"
           className="min-h-0 bg-background"
         >
@@ -300,6 +286,8 @@ export function MailComponent({
           />
         </ResizablePanel>
       </ResizablePanelGroup>
+      </div>
+      </div>
     </TooltipProvider>
   );
 }

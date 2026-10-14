@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { cn } from "@/lib/utils";
+import { mailboxShortLabel } from "@/lib/email/mailbox-display-name";
 import {
   Select,
   SelectContent,
@@ -14,19 +15,15 @@ import {
 import type { ConnectedAccount } from "@/app/[locale]/(routes)/emails/data";
 
 interface AccountSwitcherProps {
-  isCollapsed: boolean;
   accounts: ConnectedAccount[];
   activeAccountId?: string | null;
 }
 
-export function AccountSwitcher({
-  isCollapsed,
-  accounts,
-  activeAccountId,
-}: AccountSwitcherProps) {
+export function AccountSwitcher({ accounts, activeAccountId }: AccountSwitcherProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedAccount = activeAccountId ?? accounts[0]?.id ?? "";
+  const active = accounts.find((account) => account.id === selectedAccount);
 
   function switchAccount(id: string) {
     const p = new URLSearchParams(searchParams.toString());
@@ -34,28 +31,37 @@ export function AccountSwitcher({
     router.push(`?${p.toString()}`);
   }
 
+  const shortLabel = mailboxShortLabel(active?.label ?? "Mail");
+
+  if (accounts.length <= 1) {
+    return (
+      <div
+        className="flex h-8 w-full items-center justify-center rounded-md bg-muted/50 px-1.5 text-xs font-medium text-foreground"
+        title={active?.label ?? active?.username}
+      >
+        <span className="truncate">{shortLabel}</span>
+      </div>
+    );
+  }
+
   return (
     <Select value={selectedAccount} onValueChange={switchAccount}>
       <SelectTrigger
         className={cn(
-          "flex flex-1 items-center gap-2 [&>span]:line-clamp-1 [&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:gap-1 [&>span]:truncate [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",
-          isCollapsed &&
-            "flex h-8 w-8 items-center justify-center p-0 [&>span]:w-auto [&>svg]:hidden"
+          "h-8 w-full gap-1 px-2 text-xs font-medium",
+          "[&>span]:line-clamp-1 [&>span]:truncate"
         )}
         aria-label="Select account"
       >
-        <SelectValue placeholder="Select an account">
-          <span className={cn("ml-2", isCollapsed && "hidden")}>
-            {accounts.find((account) => account.id === selectedAccount)?.label}
-          </span>
+        <SelectValue placeholder="Mail">
+          <span className="truncate">{shortLabel}</span>
         </SelectValue>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent align="start" className="max-w-[min(100vw-2rem,18rem)]">
         {accounts.map((account) => (
-          <SelectItem key={account.id} value={account.id}>
-            <div className="flex items-center gap-3">
-              {account.label} ({account.username})
-            </div>
+          <SelectItem key={account.id} value={account.id} className="text-xs">
+            <span className="truncate">{mailboxShortLabel(account.label)}</span>
+            <span className="ml-1 text-muted-foreground">({account.username})</span>
           </SelectItem>
         ))}
       </SelectContent>
