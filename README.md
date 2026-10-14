@@ -282,6 +282,18 @@ We use Tremor charts as a tool for creating charts in NextCRM
 
 Read the docs at [docs.nextcrm.app](https://docs.nextcrm.app): user guide, admin guide and developer guide. Source lives in [`apps/docs`](apps/docs).
 
+## Public website lead intake
+
+Server-to-server endpoint for the marketing site (`vensailabs.in`) to push contact-form submissions into CRM leads.
+
+- **URL:** `POST https://crm.vensailabs.in/api/public/leads`
+- **Auth:** `Authorization: Bearer <WEBSITE_LEADS_API_KEY>` (must match `CRM_LEADS_API_KEY` on the website)
+- **Idempotency:** header `Idempotency-Key` must equal JSON field `externalId` (same UUID)
+- **Body:** JSON (max 32 KB) — `externalId`, `source`, `submittedAt`, `name`, `company`, `email`, `phone`, `country`, `serviceRequired`, `projectType`, optional `budgetRange`, `description`
+- **Responses:** `201` `{ "ok": true, "leadId": "…" }` on create; `200` with same shape when `externalId` already exists; `400` validation; `401` bad/missing key; `429` rate limited; `500` server error
+
+No CORS — intended for backend calls only, not browsers.
+
 ## Installation
 
 <details><summary><b>Show instructions</b></summary>

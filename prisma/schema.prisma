@@ -100,6 +100,7 @@ model crm_Leads {
   lead_type       crm_Lead_Types?    @relation("lead_type_relation", fields: [lead_type_id], references: [id])
   refered_by        String?
   campaign          String?
+  externalId        String?            @unique
   assigned_to       String?            @db.Uuid
   assigned_to_user  Users?             @relation("LeadAssignedTo", fields: [assigned_to], references: [id])
   accountsIDs       String?            @db.Uuid
