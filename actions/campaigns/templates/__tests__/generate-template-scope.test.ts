@@ -4,11 +4,15 @@ jest.mock("@/lib/prisma", () => ({
     users: { findUnique: jest.fn() },
   },
 }));
-jest.mock("@/lib/api-keys", () => ({ getApiKey: jest.fn() }));
+jest.mock("@/lib/llm", () => ({
+  completeChatWorkflow: jest.fn(),
+  parseJsonObject: jest.fn(),
+  refineCampaignEmailJson: jest.fn(),
+}));
 
 import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
-import { getApiKey } from "@/lib/api-keys";
+import { completeChatWorkflow, parseJsonObject, refineCampaignEmailJson } from "@/lib/llm";
 import { generateTemplate } from "@/actions/campaigns/templates/generate-template";
 
 const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
@@ -16,50 +20,46 @@ const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
   (prismadb.users.findUnique as jest.Mock).mockResolvedValue({ id, role });
 };
 
-const mockFetchOk = () => {
-  (global as any).fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    json: async () => ({
-      choices: [{ message: { content: JSON.stringify({ subject: "S", html: "<p>H</p>" }) } }],
-    }),
-  });
-};
-
 describe("generateTemplate scope", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (getApiKey as jest.Mock).mockResolvedValue("sk-test");
+    (completeChatWorkflow as jest.Mock).mockResolvedValue({
+      content: JSON.stringify({ subject: "S", html: "<p>H</p>" }),
+      provider: "openrouter",
+      model: "test",
+      stages: ["draft:openrouter/test"],
+    });
+    (parseJsonObject as jest.Mock).mockReturnValue({ subject: "S", html: "<p>H</p>" });
+    (refineCampaignEmailJson as jest.Mock).mockResolvedValue(null);
   });
 
-  it("unauthenticated throws Unauthorized and never calls fetch", async () => {
+  it("unauthenticated throws Unauthorized and never calls LLM", async () => {
     (getSession as jest.Mock).mockResolvedValue(null);
-    (global as any).fetch = jest.fn();
     await expect(generateTemplate("p")).rejects.toThrow();
-    expect((global as any).fetch).not.toHaveBeenCalled();
+    expect(completeChatWorkflow).not.toHaveBeenCalled();
   });
 
-  it("user generates template; getApiKey called with user.id", async () => {
+  it("user generates template via LLM router", async () => {
     mockUser("user", "u1");
-    mockFetchOk();
     const res = await generateTemplate("write a welcome");
     expect(res.subject).toBe("S");
     expect(res.html).toBe("<p>H</p>");
-    expect(getApiKey).toHaveBeenCalledWith("OPENAI", "u1");
+    expect(completeChatWorkflow).toHaveBeenCalledWith(
+      expect.objectContaining({ task: "campaign-email", userId: "u1" })
+    );
   });
 
   it("manager generates template", async () => {
     mockUser("manager", "m1");
-    mockFetchOk();
     const res = await generateTemplate("p");
     expect(res.subject).toBe("S");
-    expect(getApiKey).toHaveBeenCalledWith("OPENAI", "m1");
+    expect(completeChatWorkflow).toHaveBeenCalledWith(expect.objectContaining({ userId: "m1" }));
   });
 
   it("admin generates template", async () => {
     mockUser("admin", "a1");
-    mockFetchOk();
     const res = await generateTemplate("p");
     expect(res.subject).toBe("S");
-    expect(getApiKey).toHaveBeenCalledWith("OPENAI", "a1");
+    expect(completeChatWorkflow).toHaveBeenCalledWith(expect.objectContaining({ userId: "a1" }));
   });
 });

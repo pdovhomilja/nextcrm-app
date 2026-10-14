@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TipTapEditor } from "@/components/campaigns/TipTapEditor";
 import { generateTemplate } from "@/actions/campaigns/templates/generate-template";
+import { AiGenerateControls } from "@/components/campaigns/AiGenerateControls";
+import type { AiQualityMode } from "@/lib/llm/quality-modes";
 
 type Template = {
   id: string;
@@ -44,6 +46,8 @@ export function Step2Template({
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     initialData.template_id ?? ""
   );
+  const [aiMode, setAiMode] = useState<AiQualityMode>("good");
+  const [includeHeroImage, setIncludeHeroImage] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
 
@@ -52,7 +56,10 @@ export function Step2Template({
     setIsGenerating(true);
     setError("");
     try {
-      const result = await generateTemplate(prompt);
+      const result = await generateTemplate(prompt, {
+        mode: aiMode,
+        includeHeroImage,
+      });
       setHtml(result.html);
       setJson(result.json);
       setSubject(result.subject);
@@ -101,6 +108,12 @@ export function Step2Template({
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Describe your email campaign..."
             rows={3}
+          />
+          <AiGenerateControls
+            mode={aiMode}
+            onModeChange={setAiMode}
+            includeHeroImage={includeHeroImage}
+            onIncludeHeroImageChange={setIncludeHeroImage}
           />
           <Button
             type="button"

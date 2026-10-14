@@ -11,6 +11,8 @@ import { createTemplate } from "@/actions/campaigns/templates/create-template";
 import { updateTemplate } from "@/actions/campaigns/templates/update-template";
 import { generateTemplate } from "@/actions/campaigns/templates/generate-template";
 import { previewTemplate } from "@/actions/campaigns/templates/preview-template";
+import { AiGenerateControls } from "@/components/campaigns/AiGenerateControls";
+import type { AiQualityMode } from "@/lib/llm/quality-modes";
 
 type InitialData = {
   name: string;
@@ -45,6 +47,8 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   const [aiPrompt, setAiPrompt] = useState("");
+  const [aiMode, setAiMode] = useState<AiQualityMode>("good");
+  const [includeHeroImage, setIncludeHeroImage] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +63,10 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
     setIsGenerating(true);
     setError(null);
     try {
-      const result = await generateTemplate(aiPrompt);
+      const result = await generateTemplate(aiPrompt, {
+        mode: aiMode,
+        includeHeroImage,
+      });
       setContentHtml(result.html);
       setContentJson(result.json);
       if (result.subject && !subject) {
@@ -177,6 +184,12 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
             rows={3}
           />
         </div>
+        <AiGenerateControls
+          mode={aiMode}
+          onModeChange={setAiMode}
+          includeHeroImage={includeHeroImage}
+          onIncludeHeroImageChange={setIncludeHeroImage}
+        />
         <Button
           type="button"
           variant="secondary"

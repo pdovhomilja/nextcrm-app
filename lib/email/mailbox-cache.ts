@@ -1,4 +1,8 @@
-import { getUpstashRedis } from "@/lib/cache/upstash-redis";
+import {
+  getUpstashRedis,
+  recordRedisCacheFailure,
+  recordRedisCacheSuccess,
+} from "@/lib/cache/upstash-redis";
 
 const PREFIX = "mailbox:v1";
 const LIST_TTL_SECONDS = 45;
@@ -24,8 +28,10 @@ export async function getMailboxCacheGeneration(
   if (!client) return 0;
   try {
     const v = await client.get<number>(genKey(userId, accountId));
+    recordRedisCacheSuccess();
     return typeof v === "number" ? v : 0;
-  } catch {
+  } catch (error) {
+    recordRedisCacheFailure(error);
     return 0;
   }
 }
@@ -53,8 +59,11 @@ export async function getCachedMailboxList<T>(
   const client = getRedis();
   if (!client) return null;
   try {
-    return (await client.get<T>(listKey(userId, accountId, gen, keyParts))) ?? null;
+    const value = (await client.get<T>(listKey(userId, accountId, gen, keyParts))) ?? null;
+    recordRedisCacheSuccess();
+    return value;
   } catch (error) {
+    recordRedisCacheFailure(error);
     console.error("[mailbox-cache] get list", error);
     return null;
   }
@@ -71,7 +80,9 @@ export async function setCachedMailboxList(
   if (!client) return;
   try {
     await client.set(listKey(userId, accountId, gen, keyParts), value, { ex: LIST_TTL_SECONDS });
+    recordRedisCacheSuccess();
   } catch (error) {
+    recordRedisCacheFailure(error);
     console.error("[mailbox-cache] set list", error);
   }
 }
@@ -80,8 +91,11 @@ export async function getCachedMailboxCounts<T>(userId: string, accountId: strin
   const client = getRedis();
   if (!client) return null;
   try {
-    return (await client.get<T>(countsKey(userId, accountId))) ?? null;
+    const value = (await client.get<T>(countsKey(userId, accountId))) ?? null;
+    recordRedisCacheSuccess();
+    return value;
   } catch (error) {
+    recordRedisCacheFailure(error);
     console.error("[mailbox-cache] get counts", error);
     return null;
   }
@@ -92,7 +106,9 @@ export async function setCachedMailboxCounts(userId: string, accountId: string, 
   if (!client) return;
   try {
     await client.set(countsKey(userId, accountId), value, { ex: COUNTS_TTL_SECONDS });
+    recordRedisCacheSuccess();
   } catch (error) {
+    recordRedisCacheFailure(error);
     console.error("[mailbox-cache] set counts", error);
   }
 }
@@ -104,7 +120,9 @@ export async function invalidateMailboxCache(userId: string, accountId: string) 
   try {
     await client.incr(genKey(userId, accountId));
     await client.del(countsKey(userId, accountId));
+    recordRedisCacheSuccess();
   } catch (error) {
+    recordRedisCacheFailure(error);
     console.error("[mailbox-cache] invalidate", error);
   }
 }
