@@ -4,7 +4,7 @@
  * | CRM feature              | Stack                          | Wired in code        |
  * |--------------------------|--------------------------------|----------------------|
  * | Campaign email AI        | Workflow: chain → Gemini polish| generate-template    |
- * | Mailbox compose (soon)   | quick-copy chain               | —                    |
+ * | Mailbox compose AI       | quick-copy chain               | generate-compose-email |
  * | Long proposal copy       | gemini-first chain             | —                    |
  * | Search embeddings        | OpenAI text-embedding-3-small| inngest / openai.ts  |
  * | Contact enrichment       | OpenAI + Firecrawl             | enrich routes        |

@@ -92,3 +92,43 @@ The HTML must use inline CSS only (email-client safe). Include a clear hero area
 
   return `${base}\n${styleBlock[htmlStyle]}`;
 }
+
+export type MailboxComposeMode = "new" | "reply" | "reply-all" | "forward";
+
+export type ComposeAiAction = "draft" | "improve" | "shorten" | "formal" | "friendly";
+
+export function mailboxComposeSystemPrompt(
+  htmlStyle: QualityModeConfig["htmlStyle"],
+  composeMode: MailboxComposeMode
+): string {
+  const tone =
+    composeMode === "new"
+      ? "Write a clear outbound business email."
+      : composeMode === "forward"
+        ? "Write a short forward introduction (1–2 sentences) before the forwarded content the user will paste below."
+        : "Write only the new reply text (do not repeat quoted thread). Be concise and professional.";
+
+  return `You are an expert business email assistant. ${tone}
+Return ONLY valid JSON: {"subject":"...","html":"..."}
+Rules:
+- HTML: simple TipTap-friendly tags only (<p>, <strong>, <em>, <ul>, <li>, <a href="">). No tables unless necessary. No outer <html> wrapper.
+- subject: omit or empty string if the user already has a subject and this is a reply/forward.
+- Do not invent facts; use only context provided.
+- Sign off with a neutral closing (e.g. Best regards) and a placeholder for the sender name if unknown.
+Style: ${htmlStyle === "minimal" ? "plain and direct" : htmlStyle === "standard" ? "polished but brief" : "warm and professional"}.`;
+}
+
+export function composeActionInstruction(action: ComposeAiAction): string {
+  switch (action) {
+    case "improve":
+      return "Improve grammar, clarity, and tone. Keep meaning and length similar.";
+    case "shorten":
+      return "Make it shorter while keeping key points.";
+    case "formal":
+      return "Make the tone more formal and professional.";
+    case "friendly":
+      return "Make the tone warmer and more friendly while staying professional.";
+    default:
+      return "Draft the email from the user's instructions.";
+  }
+}

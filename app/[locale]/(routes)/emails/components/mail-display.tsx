@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   Forward,
   MailOpen,
+  Sparkles,
   MoreVertical,
   Reply,
   ReplyAll,
@@ -261,6 +262,31 @@ export function MailDisplay({
         </div>
 
         <div className="ml-auto flex shrink-0 items-center gap-0.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">
+                <ComposeModal
+                  accountId={activeAccountId ?? ""}
+                  mailboxAddress={mailboxAddress}
+                  mode="reply"
+                  replyTo={composeMail}
+                  initialAiPrompt="Write a professional reply that addresses their message clearly and politely."
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={iconBtn}
+                      disabled={!mail || !canCompose}
+                      aria-label="Reply with AI"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Reply with AI</TooltipContent>
+          </Tooltip>
           <ComposeModal
             accountId={activeAccountId ?? ""}
             mailboxAddress={mailboxAddress}

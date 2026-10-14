@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, forwardRef, useEffect } from "react";
+import { useState, forwardRef, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,10 @@ import {
   buildReplyAllRecipients,
   emailPlainBody,
   plainTextToComposeHtml,
+  stripHtmlToPlain,
 } from "@/lib/email/compose-helpers";
+import { EmailAiWriter } from "@/components/email/EmailAiWriter";
+import type { MailboxComposeMode } from "@/lib/llm/quality-modes";
 
 type Mode = "new" | "reply" | "reply-all" | "forward";
 
@@ -36,6 +39,8 @@ type Props = {
   onClose?: () => void;
   /** When true, dialog is opened programmatically (no trigger button). */
   headless?: boolean;
+  /** Pre-fill AI instructions (e.g. from “AI reply”). */
+  initialAiPrompt?: string;
 };
 
 function initialFields(
@@ -94,6 +99,7 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
     onSent,
     onClose,
     headless = false,
+    initialAiPrompt = "",
   }: Props,
   ref
 ) {
@@ -107,6 +113,7 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [bodyHtml, setBodyHtml] = useState("<p></p>");
+  const quotePlainRef = useRef("");
 
   useEffect(() => {
     if (!open) return;
@@ -116,8 +123,28 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
     setSubject(fields.subject);
     setBody(fields.body);
     setBodyHtml(plainTextToComposeHtml(fields.body));
+    if (mode === "reply" || mode === "reply-all") {
+      quotePlainRef.current = replyTo ? quoteOriginal(replyTo) : "";
+    } else if (mode === "forward") {
+      quotePlainRef.current = replyTo ? buildForwardedBody(replyTo) : "";
+    } else {
+      quotePlainRef.current = "";
+    }
     setError(null);
   }, [open, mode, replyTo, mailboxAddress, initialTo]);
+
+  function applyAiDraft(result: { subject: string; html: string }) {
+    if (result.subject.trim()) {
+      if (mode === "new" || !subject.trim()) setSubject(result.subject.trim());
+    }
+    const quoteHtml =
+      quotePlainRef.current.trim().length > 0
+        ? plainTextToComposeHtml(`\n\n${quotePlainRef.current}`)
+        : "";
+    const mergedHtml = `${result.html}${quoteHtml}`;
+    setBodyHtml(mergedHtml);
+    setBody(stripHtmlToPlain(mergedHtml));
+  }
 
   async function handleSend() {
     setSending(true);
@@ -196,6 +223,20 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
               <Label>Subject</Label>
               <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
             </div>
+            <EmailAiWriter
+              key={`ai-${open}-${initialAiPrompt}`}
+              defaultPrompt={initialAiPrompt}
+              context={{
+                composeMode: mode as MailboxComposeMode,
+                to,
+                subject,
+                existingBodyPlain: stripHtmlToPlain(bodyHtml),
+                threadFrom: replyTo?.fromEmail ?? replyTo?.fromName ?? undefined,
+                threadSubject: replyTo?.subject ?? undefined,
+                threadBodySnippet: replyTo ? emailPlainBody(replyTo).slice(0, 2500) : undefined,
+              }}
+              onGenerated={applyAiDraft}
+            />
             <div className="space-y-1">
               <Label>Message</Label>
               <EmailComposeEditor
