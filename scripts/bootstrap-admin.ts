@@ -8,17 +8,34 @@ import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import path from "path";
 
-import { preparePgPoolConnectionString, resolvePgSslConfig } from "@/lib/database-url";
+import {
+  preparePgPoolConnectionString,
+  resolveMigrateDatabaseUrl,
+  resolvePgSslConfig,
+  resolveRuntimeDatabaseUrl,
+} from "@/lib/database-url";
 import { seedBootstrapAdmin } from "@/prisma/seeds/bootstrap-admin";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 
-async function main() {
-  const raw = process.env.DATABASE_URL?.trim();
-  if (!raw) {
-    throw new Error("DATABASE_URL is not set (use .env or export it).");
+function resolveBootstrapDatabaseUrl(): string {
+  const explicit = process.env.DATABASE_URL?.trim();
+  if (explicit) return explicit;
+  try {
+    return resolveRuntimeDatabaseUrl();
+  } catch {
+    return resolveMigrateDatabaseUrl();
   }
+}
+
+async function main() {
+  if (process.env.BOOTSTRAP_ADMIN_SKIP === "1") {
+    console.log("[bootstrap-admin] Skipped (BOOTSTRAP_ADMIN_SKIP=1)");
+    return;
+  }
+
+  const raw = resolveBootstrapDatabaseUrl();
   const connectionString = preparePgPoolConnectionString(raw);
   const ssl = resolvePgSslConfig(raw);
   const pool = new Pool({

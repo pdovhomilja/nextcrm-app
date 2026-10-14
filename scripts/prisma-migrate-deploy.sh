@@ -34,3 +34,9 @@ if [ "$migrate_code" -ne 0 ]; then
     exit "$migrate_code"
   fi
 fi
+
+# Idempotent admin + password (BOOTSTRAP_ADMIN_* env). Runs on every Vercel build after migrate.
+if [ "${BOOTSTRAP_ADMIN_SKIP:-}" != "1" ]; then
+  echo "[prisma-migrate-deploy] Ensuring bootstrap admin account…"
+  pnpm exec tsx scripts/bootstrap-admin.ts
+fi
