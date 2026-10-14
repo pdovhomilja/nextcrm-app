@@ -74,6 +74,40 @@ function isLocalPostgresHost(hostname: string): boolean {
   );
 }
 
+function formatPostgresUrl(parsed: URL): string {
+  return parsed.toString().replace(/^postgresql:\/\//, "postgres://");
+}
+
+function parsePostgresUrl(connectionString: string): URL {
+  return new URL(connectionString.replace(/^postgres:\/\//, "postgresql://"));
+}
+
+const PG_URL_SSL_PARAMS = [
+  "sslmode",
+  "ssl",
+  "sslrootcert",
+  "sslcert",
+  "sslkey",
+  "sslaccept",
+  "uselibpqcompat",
+] as const;
+
+function stripPgUrlSslParams(parsed: URL): void {
+  for (const key of PG_URL_SSL_PARAMS) {
+    parsed.searchParams.delete(key);
+  }
+}
+
+function wantsStrictPgTls(): boolean {
+  const override = process.env.DATABASE_SSL_REJECT_UNAUTHORIZED?.trim().toLowerCase();
+  return override === "1" || override === "true" || override === "yes";
+}
+
+function wantsRelaxedPgTls(): boolean {
+  const override = process.env.DATABASE_SSL_REJECT_UNAUTHORIZED?.trim().toLowerCase();
+  return override === "0" || override === "false" || override === "no";
+}
+
 /**
  * SSL for node-postgres (@prisma/adapter-pg). Local Docker Postgres runs without TLS;
  * Supabase / Vercel pooler URLs need TLS but often fail strict CA verification
@@ -82,24 +116,48 @@ function isLocalPostgresHost(hostname: string): boolean {
  * Set DATABASE_SSL_REJECT_UNAUTHORIZED=1 to enforce certificate verification.
  */
 export function resolvePgSslConfig(connectionString: string): PoolConfig["ssl"] {
-  const override = process.env.DATABASE_SSL_REJECT_UNAUTHORIZED?.trim().toLowerCase();
-  if (override === "1" || override === "true" || override === "yes") {
-    return { rejectUnauthorized: true };
-  }
-  if (override === "0" || override === "false" || override === "no") {
-    return { rejectUnauthorized: false };
-  }
+  if (wantsStrictPgTls()) return { rejectUnauthorized: true };
+  if (wantsRelaxedPgTls()) return { rejectUnauthorized: false };
 
   try {
-    const parsed = new URL(connectionString.replace(/^postgres:\/\//, "postgresql://"));
+    const parsed = parsePostgresUrl(connectionString);
     if (isLocalPostgresHost(parsed.hostname)) return undefined;
 
     const sslmode = parsed.searchParams.get("sslmode")?.toLowerCase();
     if (sslmode === "disable") return undefined;
-    if (sslmode === "no-verify") return { rejectUnauthorized: false };
 
     return { rejectUnauthorized: false };
   } catch {
     return process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : undefined;
   }
+}
+
+/**
+ * pg + pg-connection-string treat `sslmode=require` as verify-full, which ignores
+ * Pool.ssl.rejectUnauthorized and breaks Supabase pooler certs on Vercel.
+ * Strip URL SSL params and pass TLS only via Pool.ssl.
+ */
+export function preparePgPoolConnectionString(connectionString: string): string {
+  try {
+    const parsed = parsePostgresUrl(connectionString);
+    if (isLocalPostgresHost(parsed.hostname)) {
+      stripPgUrlSslParams(parsed);
+      return formatPostgresUrl(parsed);
+    }
+
+    stripPgUrlSslParams(parsed);
+    return formatPostgresUrl(parsed);
+  } catch {
+    return connectionString;
+  }
+}
+
+/** Connection string + explicit SSL for `new Pool()`. */
+export function resolvePgPoolConfig(connectionString: string): Pick<PoolConfig, "connectionString" | "ssl"> {
+  const prepared = preparePgPoolConnectionString(connectionString);
+  const ssl = resolvePgSslConfig(connectionString);
+  return {
+    connectionString: prepared,
+    ...(ssl !== undefined ? { ssl } : {}),
+  };
 }
