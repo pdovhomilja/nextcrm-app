@@ -165,13 +165,7 @@ const EmailRoute = async ({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-      <div className="flex shrink-0 flex-wrap items-baseline justify-between gap-2 px-0.5">
-        <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
-          {t("emails")}
-        </h1>
-        <p className="text-xs text-muted-foreground">Inbox · sent · search</p>
-      </div>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {activeAccountId && (
         <Suspense fallback={null}>
           <EmailComposeFromQuery
@@ -180,7 +174,7 @@ const EmailRoute = async ({
           />
         </Suspense>
       )}
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <Suspense fallback={<EmailsSkeleton />}>
         <MailComponent
           accounts={connectedAccounts}

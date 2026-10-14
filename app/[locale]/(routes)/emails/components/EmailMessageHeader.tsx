@@ -44,7 +44,7 @@ export function EmailMessageHeader({
   const when = formatWhen(sentAt ?? null);
 
   return (
-    <header className={cn("space-y-4 border-b border-border/40 px-5 py-4", className)}>
+    <header className={cn("shrink-0 space-y-4 border-b border-border/40 px-5 py-4 sm:px-6", className)}>
       <div className="flex flex-wrap items-start gap-2 gap-y-1">
         <h1 className="min-w-0 flex-1 text-lg font-semibold leading-snug tracking-tight sm:text-xl">
           {subject || "(no subject)"}

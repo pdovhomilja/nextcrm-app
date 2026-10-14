@@ -48,7 +48,7 @@ export function MailComponent({
   page,
   totalPages,
   total,
-  defaultLayout = [36, 64],
+  defaultLayout = [34, 66],
 }: MailProps) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = React.useState(false);
@@ -162,8 +162,8 @@ export function MailComponent({
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
         <aside className="flex w-[4.75rem] shrink-0 flex-col border-r border-border/40 bg-muted/20">
           <div className="p-1.5">
             <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} />
@@ -194,12 +194,12 @@ export function MailComponent({
             const layoutArray = Object.values(layout);
             document.cookie = `react-resizable-panels:layout:mail=${JSON.stringify(layoutArray)}`;
           }}
-          className="flex h-full min-h-0 min-w-0 flex-1 flex-row"
+          className="h-full min-h-0 min-w-0 flex-1"
         >
         <ResizablePanel
           defaultSize={`${defaultLayout[0]}%`}
-          minSize="22%"
-          className="flex min-h-0 flex-col border-r border-border/40 bg-background/95"
+          minSize="26%"
+          className="flex min-h-0 min-w-0 flex-col border-r border-border/40 bg-background"
         >
           <div className="flex shrink-0 items-center gap-2 border-b border-border/30 px-4 py-2.5">
             <h2 className="text-sm font-semibold tracking-tight">
@@ -261,7 +261,7 @@ export function MailComponent({
             </div>
           )}
           <Separator className="opacity-50" />
-          <div className="min-h-0 flex-1">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
             <MailList
               items={filteredMails}
               page={page}
@@ -275,8 +275,8 @@ export function MailComponent({
         <ResizableHandle withHandle className="bg-border/30" />
         <ResizablePanel
           defaultSize={`${defaultLayout[1]}%`}
-          minSize="28%"
-          className="min-h-0 bg-background"
+          minSize="32%"
+          className="flex min-h-0 min-w-0 flex-col overflow-hidden bg-background"
         >
           <MailDisplay
             mail={mails.find((item) => item.id === mail.selected) || null}

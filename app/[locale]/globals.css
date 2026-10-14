@@ -155,16 +155,15 @@
 
   /* E-mails: fill viewport; scroll only inside list/reading panes */
   .app-main-scroll:has([data-emails-shell]) {
-    @apply overflow-hidden;
+    @apply min-h-0 flex-1 overflow-hidden;
   }
 
   .app-content-wrap:has([data-emails-shell]) {
-    @apply flex min-h-0 flex-1 flex-col overflow-hidden py-3 sm:py-4;
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden px-2 py-2 sm:px-4 sm:py-3;
   }
 
   .emails-shell {
-    min-height: calc(100dvh - 4.25rem);
-    max-height: calc(100dvh - 4.25rem);
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden;
   }
 
   .app-main-scroll:has([data-emails-shell]) > footer {

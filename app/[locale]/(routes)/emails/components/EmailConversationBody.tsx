@@ -145,8 +145,8 @@ export function EmailConversationBody({
   );
 
   return (
-    <div className="pb-6">
-      <div className="mx-auto max-w-3xl px-5 py-5 sm:px-6">
+    <div className="pb-8">
+      <div className="px-5 py-5 sm:px-8 sm:py-6">
         <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/95">{latestBody || "(No content)"}</p>
       </div>
 

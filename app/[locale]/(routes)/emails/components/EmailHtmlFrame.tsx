@@ -6,7 +6,7 @@ const IFRAME_STYLES = `
   html, body { margin: 0; padding: 0; background: #ffffff; }
   body {
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    padding: 20px 24px 28px;
+    padding: 24px 28px 32px;
     line-height: 1.55;
     color: #18181b;
     font-size: 14px;
@@ -29,9 +29,10 @@ type Props = {
   bodyHtml: string;
 };
 
+/** Full-width HTML body — no nested card; parent pane handles scroll. */
 export function EmailHtmlFrame({ bodyHtml }: Props) {
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = React.useState(320);
+  const [height, setHeight] = React.useState(400);
 
   const srcDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>${IFRAME_STYLES}</style></head><body>${bodyHtml}</body></html>`;
 
@@ -44,7 +45,7 @@ export function EmailHtmlFrame({ bodyHtml }: Props) {
       const html = doc?.documentElement;
       if (!body || !html) return;
       const next = Math.max(body.scrollHeight, html.scrollHeight, body.offsetHeight);
-      setHeight(Math.min(Math.max(next + 8, 120), 8000));
+      setHeight(Math.min(Math.max(next + 12, 160), 12000));
     } catch {
       /* sandbox */
     }
@@ -55,19 +56,15 @@ export function EmailHtmlFrame({ bodyHtml }: Props) {
   }, [bodyHtml, measure]);
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6">
-      <div className="overflow-hidden rounded-xl border border-border/50 bg-white shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-        <iframe
-          ref={iframeRef}
-          srcDoc={srcDoc}
-          sandbox="allow-popups allow-popups-to-escape-sandbox"
-          referrerPolicy="no-referrer"
-          title="Email body"
-          onLoad={measure}
-          className="block w-full border-0 bg-white"
-          style={{ height: `${height}px` }}
-        />
-      </div>
-    </div>
+    <iframe
+      ref={iframeRef}
+      srcDoc={srcDoc}
+      sandbox="allow-popups allow-popups-to-escape-sandbox"
+      referrerPolicy="no-referrer"
+      title="Email body"
+      onLoad={measure}
+      className="block w-full min-w-0 border-0 bg-white"
+      style={{ height: `${height}px` }}
+    />
   );
 }

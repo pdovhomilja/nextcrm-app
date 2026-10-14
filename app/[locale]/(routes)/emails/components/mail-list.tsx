@@ -59,8 +59,8 @@ export function MailList({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="flex flex-col gap-0.5 p-2">
+      <ScrollArea className="h-full min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]]:h-full">
+        <div className="flex flex-col gap-0.5 p-2 pr-3">
           {items.length === 0 && (
             <p className="px-2 py-8 text-center text-sm text-muted-foreground">No messages</p>
           )}
@@ -110,7 +110,7 @@ export function MailList({
                 </div>
                 <div
                   className={cn(
-                    "truncate text-xs text-muted-foreground",
+                    "line-clamp-2 text-xs leading-snug text-muted-foreground break-words",
                     !item.isRead && "font-medium text-foreground/90"
                   )}
                 >
