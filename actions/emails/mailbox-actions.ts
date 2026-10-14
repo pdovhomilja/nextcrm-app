@@ -17,32 +17,12 @@ import {
   setCachedMailboxCounts,
   setCachedMailboxList,
 } from "@/lib/email/mailbox-cache";
-import { EmailFolder } from "@prisma/client";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
-
-export { MAILBOX_PAGE_SIZE };
-
-/** List row shape for mailbox UI (matches emails/data Mail list fields). */
-export type MailboxListItem = {
-  id: string;
-  subject: string | null;
-  fromName: string | null;
-  fromEmail: string | null;
-  sentAt: Date | null;
-  isRead: boolean;
-  folder: EmailFolder;
-  isSpam: boolean;
-  isArchived: boolean;
-  isStarred: boolean;
-};
-
-export type MailboxEmailsResult = {
-  emails: MailboxListItem[];
-  total: number;
-  page: number;
-  totalPages: number;
-  view: MailboxView;
-};
+import type {
+  MailboxCounts,
+  MailboxEmailsResult,
+  MailboxListItem,
+} from "@/lib/email/mailbox-types";
 
 async function requireSession() {
   const session = await getSession();

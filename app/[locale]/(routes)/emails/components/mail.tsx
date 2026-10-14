@@ -11,7 +11,7 @@ import { MailSearchBar } from "@/app/[locale]/(routes)/emails/components/MailSea
 import { Nav } from "@/app/[locale]/(routes)/emails/components/nav";
 import type { ConnectedAccount, Mail } from "@/app/[locale]/(routes)/emails/data";
 import { useMail } from "@/app/[locale]/(routes)/emails/use-mail";
-import type { MailboxCounts } from "@/actions/emails/mailbox-actions";
+import type { MailboxCounts } from "@/lib/email/mailbox-types";
 import {
   MAILBOX_VIEW_LABELS,
   type MailboxView,
