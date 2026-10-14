@@ -10,7 +10,7 @@ import {
 
 export type IntakeWebsiteLeadResult =
   | { ok: true; leadId: string; created: boolean }
-  | { error: string; status: number; fields?: Record<string, string[]> };
+  | { ok: false; error: string; status: number; fields?: Record<string, string[]> };
 
 async function resolveNewLeadStatusId(): Promise<string | undefined> {
   const row = await prismadb.crm_Lead_Statuses.findFirst({
@@ -104,6 +104,6 @@ export async function intakeWebsiteLead(
       if (dup) return { ok: true, leadId: dup.id, created: false };
     }
     console.error("[intakeWebsiteLead]", error);
-    return { error: "Internal error", status: 500 };
+    return { ok: false, error: "Internal error", status: 500 };
   }
 }
