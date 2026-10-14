@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { Pool, type PoolConfig } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
-import { resolveRuntimeDatabaseUrl } from "@/lib/database-url";
+import { resolvePgSslConfig, resolveRuntimeDatabaseUrl } from "@/lib/database-url";
 
 declare global {
   var cachedPrisma: PrismaClient | undefined;
@@ -12,8 +12,10 @@ declare global {
 function poolConfig(connectionString: string): PoolConfig {
   const isServerless = process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCTION_NAME;
   const max = Number.parseInt(process.env.PG_POOL_MAX ?? (isServerless ? "2" : "10"), 10);
+  const ssl = resolvePgSslConfig(connectionString);
   return {
     connectionString,
+    ...(ssl !== undefined ? { ssl } : {}),
     max: Number.isFinite(max) && max > 0 ? max : 2,
     idleTimeoutMillis: 20_000,
     connectionTimeoutMillis: 10_000,
