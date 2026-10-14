@@ -149,5 +149,7 @@ export async function invalidateMailboxCacheForEmails(ids: string[], userId: str
     select: { emailAccountId: true },
   });
   const accounts = new Set(rows.map((r) => r.emailAccountId));
-  await Promise.all([...accounts].map((accountId) => invalidateMailboxCache(userId, accountId)));
+  await Promise.all(
+    Array.from(accounts).map((accountId) => invalidateMailboxCache(userId, accountId))
+  );
 }

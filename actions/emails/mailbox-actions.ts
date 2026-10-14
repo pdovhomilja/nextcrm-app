@@ -22,6 +22,28 @@ import { serializeDecimalsList } from "@/lib/serialize-decimals";
 
 export { MAILBOX_PAGE_SIZE };
 
+/** List row shape for mailbox UI (matches emails/data Mail list fields). */
+export type MailboxListItem = {
+  id: string;
+  subject: string | null;
+  fromName: string | null;
+  fromEmail: string | null;
+  sentAt: Date | null;
+  isRead: boolean;
+  folder: EmailFolder;
+  isSpam: boolean;
+  isArchived: boolean;
+  isStarred: boolean;
+};
+
+export type MailboxEmailsResult = {
+  emails: MailboxListItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+  view: MailboxView;
+};
+
 async function requireSession() {
   const session = await getSession();
   if (!session?.user?.id) throw new Error("Unauthorized");
@@ -40,7 +62,7 @@ export async function getMailboxEmails(
   page: number,
   search?: string,
   unreadOnly?: boolean
-) {
+): Promise<MailboxEmailsResult> {
   try {
     const userId = await requireSession();
     const view = parseMailboxView(viewRaw);
@@ -54,13 +76,12 @@ export async function getMailboxEmails(
       unreadOnly: Boolean(unreadOnly),
     };
 
-    const cached = await getCachedMailboxList<{
-      emails: ReturnType<typeof serializeDecimalsList>;
-      total: number;
-      page: number;
-      totalPages: number;
-      view: MailboxView;
-    }>(userId, accountId, cacheGen, cacheKey);
+    const cached = await getCachedMailboxList<MailboxEmailsResult>(
+      userId,
+      accountId,
+      cacheGen,
+      cacheKey
+    );
     if (cached) return cached;
 
     const where = mailboxViewWhere(userId, accountId, view, {
@@ -91,8 +112,8 @@ export async function getMailboxEmails(
     ]);
 
     const total = Math.min(rawCount, MAILBOX_MAX_COUNT);
-    const result = {
-      emails: serializeDecimalsList(emails),
+    const result: MailboxEmailsResult = {
+      emails: serializeDecimalsList<MailboxListItem>(emails),
       total,
       page: safePage,
       totalPages: total === 0 ? 0 : Math.ceil(total / MAILBOX_PAGE_SIZE),
