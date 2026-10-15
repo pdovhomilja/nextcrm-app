@@ -184,7 +184,6 @@ async function main() {
     });
   }
   console.log("Additional CRM team users seeded.");
-
   // Demo CRM dataset for e2e tests — the update/detail specs act on the
   // first table row and need at least one record per entity. Idempotent:
   // created only when missing (matched by name/email). Gated so a manual

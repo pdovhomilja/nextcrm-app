@@ -41,7 +41,7 @@ const AccountsView = ({ data, crmData }: AccountsViewProps) => {
   const { industries } = crmData;
 
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <div>

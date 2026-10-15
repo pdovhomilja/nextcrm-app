@@ -41,7 +41,7 @@ const LeadsView = ({ data, crmData, accountId }: LeadsViewProps) => {
   const t = useTranslations("CrmPage");
 
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <div>

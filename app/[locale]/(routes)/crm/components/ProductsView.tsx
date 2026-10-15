@@ -25,7 +25,7 @@ interface ProductsViewProps {
 
 const ProductsView = ({ data, categories, currencies }: ProductsViewProps) => {
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader className="pb-3">
         <div className="flex justify-between">
           <CardTitle>

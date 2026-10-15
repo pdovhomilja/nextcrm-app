@@ -7,7 +7,7 @@ import { getProductCategories } from "@/actions/crm/products/get-product-categor
 import ProductsView from "../components/ProductsView";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
 
-const ProductsPage = async () => {
+async function ProductsContent() {
   const [products, categories, crmData] = await Promise.all([
     getProductsFull(),
     getProductCategories(),
@@ -17,23 +17,30 @@ const ProductsPage = async () => {
   const serializedProducts = serializeDecimalsList(products);
 
   return (
+    <ProductsView
+      data={serializedProducts}
+      categories={categories}
+      currencies={crmData.currencies.map((c: { code: string; name: string; symbol: string }) => ({
+        code: c.code,
+        name: c.name,
+        symbol: c.symbol,
+      }))}
+    />
+  );
+}
+
+const ProductsPage = async () => {
+  return (
     <Container
       title="Products"
       description="Manage your product and service catalog"
     >
       <Suspense fallback={<CrmTableSkeleton />}>
-        <ProductsView
-          data={serializedProducts}
-          categories={categories}
-          currencies={crmData.currencies.map((c: { code: string; name: string; symbol: string }) => ({
-            code: c.code,
-            name: c.name,
-            symbol: c.symbol,
-          }))}
-        />
+        <ProductsContent />
       </Suspense>
     </Container>
   );
 };
 
 export default ProductsPage;
+
