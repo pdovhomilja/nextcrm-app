@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 
-const HCTPL_LOGO_URL = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/hctpl-logo-MGmowsi8I3RvpJLdjM4RplJB2PDgoV.png";
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +27,8 @@ import getAdministrationMenuItem from "./menu-items/Administration";
 import getCampaignsMenuItem from "./menu-items/Campaigns";
 import type { NavItem } from "./nav-main";
 import { featureForPath, type PermissionMatrix } from "@/lib/authz/permissions";
+
+const VENSAI_LABS_LOGO = "/images/vensai-labs-logo.jpg";
 
 function canViewUrl(url: string | undefined, permissions?: PermissionMatrix) {
   if (!url || !permissions) return true;
@@ -162,13 +164,14 @@ export function AppSidebar({
             isExpanded ? "gap-x-4" : "justify-center",
           )}
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20 shadow-sm">
-            {/* The logo is served from the supplied branded asset URL. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={HCTPL_LOGO_URL}
-              alt="HCTPL"
-              className="h-full w-full object-contain"
+          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-background ring-1 ring-border/70 shadow-sm">
+            <Image
+              src={VENSAI_LABS_LOGO}
+              alt="VenSai Labs"
+              fill
+              className="object-cover"
+              sizes="40px"
+              priority
             />
           </div>
 
