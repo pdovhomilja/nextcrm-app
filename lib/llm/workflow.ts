@@ -22,9 +22,9 @@ async function geminiPolish(options: {
   draft: string;
   userBrief: string;
 }): Promise<string | null> {
-  const jsonDraft =
-    options.task === "campaign-email" &&
-    (options.draft.trim().startsWith("{") || options.draft.includes('"html"'));
+  const isJson =
+    options.draft.trim().startsWith("{") || options.draft.includes('"html"');
+  const isCampaign = options.task === "campaign-email";
 
   try {
     const result = await completeChat({
@@ -33,8 +33,10 @@ async function geminiPolish(options: {
       messages: [
         {
           role: "system",
-          content: jsonDraft
-            ? 'Improve this marketing email JSON. Keep merge tags. Return ONLY valid JSON: {"subject":"...","html":"..."}'
+          content: isJson
+            ? isCampaign
+              ? 'Improve this marketing email JSON. Keep merge tags. Return ONLY valid JSON: {"subject":"...","html":"..."}'
+              : 'Improve this 1-to-1 CRM business email JSON. Polish clarity, tone, and conciseness while strictly preserving all facts, names, and JSON structure. Return ONLY valid JSON: {"subject":"...","html":"..."}'
             : "Improve clarity and professional tone. Keep the same language and intent. Output only the improved text, no commentary.",
         },
         {

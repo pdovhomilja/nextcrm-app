@@ -135,8 +135,8 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
   }, [open, mode, replyTo, mailboxAddress, initialTo]);
 
   function applyAiDraft(result: { subject: string; html: string }) {
-    if (result.subject.trim()) {
-      if (mode === "new" || !subject.trim()) setSubject(result.subject.trim());
+    if (result.subject.trim() && !subject.trim()) {
+      setSubject(result.subject.trim());
     }
     const quoteHtml =
       quotePlainRef.current.trim().length > 0
