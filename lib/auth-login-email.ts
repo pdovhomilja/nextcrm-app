@@ -18,18 +18,25 @@ export async function resolveLoginIdentity(rawEmail: string): Promise<LoginIdent
     return { error: "Enter a valid email address." };
   }
 
-  let user: { email: string; userStatus: string | null } | null;
+  let user: { email: string; userStatus: string | null } | null = null;
   try {
-    user = await prismadb.users.findFirst({
-      where: { OR: [{ email: typed }, { workEmail: typed }] },
-      select: { email: true, userStatus: true },
-    });
-  } catch (error) {
-    console.error("[resolveLoginIdentity] workEmail lookup failed, retrying email only", error);
-    user = await prismadb.users.findFirst({
-      where: { email: typed },
-      select: { email: true, userStatus: true },
-    });
+    try {
+      user = await prismadb.users.findFirst({
+        where: { OR: [{ email: typed }, { workEmail: typed }] },
+        select: { email: true, userStatus: true },
+      });
+    } catch (workEmailError) {
+      console.warn("[resolveLoginIdentity] workEmail lookup failed, retrying email only", workEmailError);
+      user = await prismadb.users.findFirst({
+        where: { email: typed },
+        select: { email: true, userStatus: true },
+      });
+    }
+  } catch (dbError) {
+    console.error("[resolveLoginIdentity] Database connection failed:", dbError);
+    return {
+      error: "Cannot connect to the database. Please make sure PostgreSQL or Supabase is connected in .env.",
+    };
   }
 
   if (!user?.email) {
