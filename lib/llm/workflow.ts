@@ -22,6 +22,10 @@ async function geminiPolish(options: {
   draft: string;
   userBrief: string;
 }): Promise<string | null> {
+  const jsonDraft =
+    options.task === "campaign-email" &&
+    (options.draft.trim().startsWith("{") || options.draft.includes('"html"'));
+
   try {
     const result = await completeChat({
       task: options.task,
@@ -29,8 +33,9 @@ async function geminiPolish(options: {
       messages: [
         {
           role: "system",
-          content:
-            "Improve clarity and professional tone. Keep the same language and intent. Output only the improved text, no commentary.",
+          content: jsonDraft
+            ? 'Improve this marketing email JSON. Keep merge tags. Return ONLY valid JSON: {"subject":"...","html":"..."}'
+            : "Improve clarity and professional tone. Keep the same language and intent. Output only the improved text, no commentary.",
         },
         {
           role: "user",

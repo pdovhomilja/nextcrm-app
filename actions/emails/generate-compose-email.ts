@@ -1,11 +1,8 @@
 "use server";
 
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
-import {
-  completeChatWorkflow,
-  parseJsonObject,
-  refineCampaignEmailJson,
-} from "@/lib/llm";
+import { completeChatWorkflow, refineCampaignEmailJson } from "@/lib/llm";
+import { parseCampaignEmailJson } from "@/lib/llm/parse-content";
 import {
   composeActionInstruction,
   mailboxComposeSystemPrompt,
@@ -116,17 +113,17 @@ export async function generateComposeEmail(
     });
     if (refined) jsonText = refined;
 
-    let parsed: { subject?: string; html?: string };
+    let parsed: { subject: string; html: string };
     try {
-      parsed = parseJsonObject<{ subject: string; html: string }>(jsonText);
+      parsed = parseCampaignEmailJson(jsonText, prompt || "Email");
     } catch {
       return {
         ok: false,
-        error: `AI returned invalid JSON (${provider}, ${mode}). Try Good quality or another provider key.`,
+        error: `AI returned unusable output (${provider}, ${mode}). Try Good quality or another provider key.`,
       };
     }
 
-    let html = (parsed.html ?? "").trim();
+    let html = parsed.html.trim();
     if (!html) {
       return { ok: false, error: "AI returned empty content. Try a clearer prompt." };
     }

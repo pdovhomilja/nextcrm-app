@@ -3,9 +3,9 @@
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 import {
   completeChatWorkflow,
-  parseJsonObject,
   refineCampaignEmailJson,
 } from "@/lib/llm";
+import { parseCampaignEmailJson } from "@/lib/llm/parse-content";
 import {
   campaignEmailSystemPrompt,
   parseQualityMode,
@@ -85,11 +85,11 @@ export const generateTemplate = async (
 
     let parsed: { subject: string; html: string };
     try {
-      parsed = parseJsonObject<{ subject: string; html: string }>(jsonText);
+      parsed = parseCampaignEmailJson(jsonText, trimmed);
     } catch {
       return {
         ok: false,
-        error: `AI returned invalid JSON (${provider}, ${mode}). Try Good/Better/Best or add OPENAI_API_KEY on Vercel.`,
+        error: `AI returned unusable output (${provider}, ${mode}). Try Better/Best or a shorter prompt.`,
       };
     }
 
