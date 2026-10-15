@@ -3,7 +3,7 @@ import { getAppName } from "@/lib/app-name";
 /** VenSai Labs brand tokens — single source for CRM, email, and AI-generated content. */
 export const VENSAI_BRAND = {
   companyName: "VenSai Labs",
-  legalName: "Hari Cornucopia Tech Pvt. Ltd.",
+  legalName: "Vijetha Softwares Pvt. Ltd.",
   tagline: "Freelance talent. Real solutions.",
   servicesLine: "Build · Design · Automate · Scale",
   website: "https://vensailabs.in",

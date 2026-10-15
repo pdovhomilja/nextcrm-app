@@ -1,6 +1,7 @@
 import getNextVersion from "@/actions/system/get-next-version";
 import Link from "next/link";
 import { version } from "@/package.json";
+import { VENSAI_BRAND } from "@/lib/brand/vensai";
 
 const Footer = async () => {
   const nextVersion = await getNextVersion();
@@ -13,7 +14,7 @@ const Footer = async () => {
         VenSai CRM <span className="font-normal text-muted-foreground">v{version}</span>
       </Link>
       <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center sm:justify-end">
-        <span className="hidden sm:inline">Hari Cornucopia Tech Pvt. Ltd.</span>
+        <span className="hidden sm:inline">{VENSAI_BRAND.legalName}</span>
         <span className="hidden text-border sm:inline">·</span>
         <span className="rounded-md bg-muted/80 px-1.5 py-0.5 font-mono text-[10px]">
           {nextVersion.substring(1, 7) || process.env.NEXT_PUBLIC_NEXT_VERSION}
