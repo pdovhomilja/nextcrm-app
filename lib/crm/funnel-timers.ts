@@ -52,7 +52,7 @@ export function cadenceSchedule(
   const t2 = new Date(t1.getTime() + s.cadenceTouch2OffsetDays * DAY);
   const t3 = new Date(t2.getTime() + s.cadenceTouch3OffsetDays * DAY);
   const t4 = new Date(t3.getTime() + s.cadenceTouch4OffsetDays * DAY);
-  const t5 = new Date(t3.getTime() + s.cadenceTouch5OffsetDays * DAY);
+  const t5 = new Date(t4.getTime() + s.cadenceTouch5OffsetDays * DAY);
   return [
     {
       touch: 1, date: t1, kind: "call",
