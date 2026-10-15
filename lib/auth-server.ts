@@ -21,7 +21,12 @@ export async function getSession() {
  * /inactive pages); never use it to authorize anything.
  */
 export async function getSessionAnyStatus() {
-  return auth.api.getSession({
-    headers: await headers(),
-  });
+  try {
+    return await auth.api.getSession({
+      headers: await headers(),
+    });
+  } catch (error) {
+    console.warn("[auth-server] Failed to retrieve session from database:", error);
+    return null;
+  }
 }
