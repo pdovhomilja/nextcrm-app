@@ -25,6 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Calendar, Plane, Users, Video } from "lucide-react";
+import { TeamMemberInvitePicker } from "./TeamMemberInvitePicker";
 
 const KIND_META: Record<
   ScheduleKind,
@@ -149,6 +150,16 @@ function CreateScheduleDialog({
 
   const meta = KIND_META[kind];
 
+  React.useEffect(() => {
+    if (!open) {
+      setSelected([]);
+      setTitle("");
+      setDescription("");
+      setStart("");
+      setEnd("");
+    }
+  }, [open]);
+
   async function submit() {
     setBusy(true);
     try {
@@ -200,22 +211,12 @@ function CreateScheduleDialog({
           {kind !== "LEAVE" && (
             <div>
               <Label>Invite teammates</Label>
-              <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border p-2 text-sm">
-                {team.map((m) => (
-                  <label key={m.id} className="flex items-center gap-2 py-0.5">
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(m.id)}
-                      onChange={(e) =>
-                        setSelected((prev) =>
-                          e.target.checked ? [...prev, m.id] : prev.filter((id) => id !== m.id)
-                        )
-                      }
-                    />
-                    {m.name}
-                  </label>
-                ))}
-              </div>
+              <TeamMemberInvitePicker
+                className="mt-1"
+                team={team}
+                selected={selected}
+                onChange={setSelected}
+              />
             </div>
           )}
           <div>

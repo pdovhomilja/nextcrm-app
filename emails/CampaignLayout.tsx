@@ -3,30 +3,30 @@ import {
   Body,
   Container,
   Head,
-  Hr,
   Html,
-  Link,
   Section,
   Tailwind,
-  Text,
 } from "@react-email/components";
+
+import { VENSAI_BRAND } from "@/lib/brand/vensai";
+import { VensaiEmailFooter } from "@/emails/components/VensaiEmailFooter";
+import { VensaiEmailHeader } from "@/emails/components/VensaiEmailHeader";
 
 interface CampaignLayoutProps {
   contentHtml: string;
   unsubscribeUrl: string;
 }
 
-// TipTap content arrives as raw HTML, so its tags are styled via the
-// embedded stylesheet below rather than Tailwind classes.
 const contentStyles = `
-  .campaign-content p { margin: 0 0 16px; font-size: 14px; line-height: 24px; color: #1f2937; }
-  .campaign-content h1 { margin: 24px 0 16px; font-size: 24px; line-height: 32px; color: #111827; }
-  .campaign-content h2 { margin: 24px 0 12px; font-size: 20px; line-height: 28px; color: #111827; }
-  .campaign-content h3 { margin: 20px 0 12px; font-size: 16px; line-height: 24px; color: #111827; }
-  .campaign-content a { color: #2563eb; text-decoration: underline; }
-  .campaign-content ul, .campaign-content ol { margin: 0 0 16px; padding-left: 24px; font-size: 14px; line-height: 24px; color: #1f2937; }
-  .campaign-content blockquote { margin: 0 0 16px; padding-left: 16px; border-left: 3px solid #e5e7eb; color: #4b5563; }
-  .campaign-content hr { border: none; border-top: 1px solid #e5e7eb; margin: 24px 0; }
+  .campaign-content p { margin: 0 0 16px; font-size: 14px; line-height: 24px; color: ${VENSAI_BRAND.colors.text}; }
+  .campaign-content h1 { margin: 24px 0 16px; font-size: 24px; line-height: 32px; color: ${VENSAI_BRAND.colors.navy}; }
+  .campaign-content h2 { margin: 24px 0 12px; font-size: 20px; line-height: 28px; color: ${VENSAI_BRAND.colors.navy}; }
+  .campaign-content h3 { margin: 20px 0 12px; font-size: 16px; line-height: 24px; color: ${VENSAI_BRAND.colors.navy}; }
+  .campaign-content a { color: ${VENSAI_BRAND.colors.primaryDark}; text-decoration: underline; }
+  .campaign-content ul, .campaign-content ol { margin: 0 0 16px; padding-left: 24px; font-size: 14px; line-height: 24px; color: ${VENSAI_BRAND.colors.text}; }
+  .campaign-content blockquote { margin: 0 0 16px; padding-left: 16px; border-left: 3px solid ${VENSAI_BRAND.colors.primary}; color: ${VENSAI_BRAND.colors.muted}; }
+  .campaign-content hr { border: none; border-top: 1px solid ${VENSAI_BRAND.colors.border}; margin: 24px 0; }
+  .campaign-content .btn, .campaign-content a[style*="background"] { background-color: ${VENSAI_BRAND.colors.primary} !important; color: #fff !important; border-radius: 8px; padding: 12px 24px; text-decoration: none !important; display: inline-block; }
 `;
 
 export const CampaignLayout = ({
@@ -39,28 +39,31 @@ export const CampaignLayout = ({
         <style>{contentStyles}</style>
       </Head>
       <Tailwind>
-        <Body className="bg-[#f4f4f5] my-auto mx-auto font-sans">
-          <Container className="bg-white border border-solid border-slate-200 rounded-md my-[40px] mx-auto p-[32px] max-w-[600px]">
+        <Body
+          style={{
+            backgroundColor: VENSAI_BRAND.colors.canvas,
+            fontFamily: VENSAI_BRAND.email.fontFamily,
+            margin: 0,
+          }}
+        >
+          <Container
+            style={{
+              backgroundColor: VENSAI_BRAND.colors.white,
+              border: `1px solid ${VENSAI_BRAND.colors.border}`,
+              borderRadius: 8,
+              margin: "40px auto",
+              padding: 32,
+              maxWidth: VENSAI_BRAND.email.maxWidth,
+            }}
+          >
+            <VensaiEmailHeader showTagline />
             <Section>
               <div
                 className="campaign-content"
                 dangerouslySetInnerHTML={{ __html: contentHtml }}
               />
             </Section>
-            <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
-            <Section>
-              <Text className="text-slate-500 text-xs leading-[20px]">
-                You are receiving this email from{" "}
-                <strong>{process.env.NEXT_PUBLIC_APP_NAME ?? "VenSai CRM"}</strong>
-                .{" "}
-                <Link
-                  href={unsubscribeUrl}
-                  className="text-slate-500 underline"
-                >
-                  Unsubscribe
-                </Link>
-              </Text>
-            </Section>
+            <VensaiEmailFooter unsubscribeUrl={unsubscribeUrl} variant="marketing" />
           </Container>
         </Body>
       </Tailwind>

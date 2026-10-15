@@ -3,7 +3,7 @@ jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findUnique: jest.fn() },
     boards: { count: jest.fn(), create: jest.fn() },
-    sections: { create: jest.fn() },
+    sections: { createMany: jest.fn() },
   },
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
@@ -31,7 +31,7 @@ describe("createProject scope", () => {
     mockUser("u1");
     (prismadb.boards.count as jest.Mock).mockResolvedValue(0);
     (prismadb.boards.create as jest.Mock).mockResolvedValue({ id: "b1" });
-    (prismadb.sections.create as jest.Mock).mockResolvedValue({ id: "s1" });
+    (prismadb.sections.createMany as jest.Mock).mockResolvedValue({ count: 5 });
     const res = await createProject({ title: "t", description: "d", visibility: "private" });
     expect(res).toEqual({ data: { id: "b1" } });
     const args = (prismadb.boards.create as jest.Mock).mock.calls[0][0];

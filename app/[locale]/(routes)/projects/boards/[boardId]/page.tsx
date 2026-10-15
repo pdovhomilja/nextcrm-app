@@ -9,6 +9,7 @@ import { getBoardSections } from "@/actions/projects/get-board-sections";
 import DeleteProjectDialog from "./dialogs/DeleteProject";
 import { getKanbanData } from "@/actions/projects/get-kanban-data";
 import Kanban from "./components/Kanban";
+import { ApplyScrumTemplateButton } from "./components/ApplyScrumTemplateButton";
 import { getBoards } from "@/actions/projects/get-boards";
 import { getSession } from "@/lib/auth-server";
 import { Lock } from "lucide-react";
@@ -35,27 +36,20 @@ const BoardPage = async (props: BoardDetailProps) => {
       title={board?.board?.title}
       description={board?.board?.description}
       visibility={board?.board?.visibility}
+      className="min-h-0"
     >
-      <div className="flex justify-between py-5 w-full">
-        <div className="space-x-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+        <div className="flex flex-wrap items-center gap-2">
           <NewSectionDialog boardId={boardId} />
-          <NewTaskInProjectDialog
+          <NewTaskInProjectDialog boardId={boardId} sections={sections} />
+          <ApplyScrumTemplateButton
             boardId={boardId}
-            sections={sections}
+            sectionCount={kanbanData.sections?.length ?? 0}
           />
         </div>
-        <div>
-          <DeleteProjectDialog
-            boardId={boardId}
-            boardName={board.board.title}
-          />
-        </div>
+        <DeleteProjectDialog boardId={boardId} boardName={board.board.title} />
       </div>
-      <Kanban
-        data={kanbanData.sections}
-        boardId={boardId}
-        boards={boards}
-      />
+      <Kanban data={kanbanData.sections} boardId={boardId} boards={boards} />
     </Container>
   );
 };

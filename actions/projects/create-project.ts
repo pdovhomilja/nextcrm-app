@@ -2,6 +2,7 @@
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireFeature, AuthenticationError, AuthorizationError } from "@/lib/authz";
+import { SCRUM_BOARD_SECTIONS } from "@/lib/projects/board-templates";
 
 export const createProject = async (data: {
   title: string;
@@ -37,13 +38,13 @@ export const createProject = async (data: {
       },
     });
 
-    await prismadb.sections.create({
-      data: {
+    await prismadb.sections.createMany({
+      data: SCRUM_BOARD_SECTIONS.map((title, position) => ({
         v: 0,
         board: newBoard.id,
-        title: "Backlog",
-        position: 0,
-      },
+        title,
+        position,
+      })),
     });
 
     revalidatePath("/[locale]/(routes)/projects", "page");

@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import {
   Sidebar,
   SidebarContent,
@@ -27,8 +27,6 @@ import getAdministrationMenuItem from "./menu-items/Administration";
 import getCampaignsMenuItem from "./menu-items/Campaigns";
 import type { NavItem } from "./nav-main";
 import { featureForPath, type PermissionMatrix } from "@/lib/authz/permissions";
-
-const VENSAI_LABS_LOGO = "/images/vensai-labs-logo.jpg";
 
 function canViewUrl(url: string | undefined, permissions?: PermissionMatrix) {
   if (!url || !permissions) return true;
@@ -164,28 +162,18 @@ export function AppSidebar({
             isExpanded ? "gap-x-4" : "justify-center",
           )}
         >
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-background ring-1 ring-border/70 shadow-sm">
-            <Image
-              src={VENSAI_LABS_LOGO}
-              alt="VenSai Labs"
-              fill
-              className="object-cover"
-              sizes="40px"
-              priority
-            />
-          </div>
-
-          <div
-            className={cn(
-              "origin-left overflow-hidden whitespace-nowrap transition-all",
-              !isExpanded ? "w-0 opacity-0" : "w-auto opacity-100",
-            )}
-          >
-            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              Workspace
-            </p>
-            <h1 className="text-base font-semibold tracking-tight text-foreground">{appName}</h1>
-          </div>
+          <BrandLogo
+            size="md"
+            showWordmark={isExpanded}
+            subtitle="workspace"
+            className={cn(!isExpanded && "justify-center")}
+          />
+          {!isExpanded && (
+            <span className="sr-only">{appName}</span>
+          )}
+          {isExpanded && (
+            <h1 className="sr-only">{appName}</h1>
+          )}
         </div>
       </SidebarHeader>
 

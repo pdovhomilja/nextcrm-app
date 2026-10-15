@@ -1,3 +1,4 @@
+import { vensaiEmailBrandPromptBlock } from "@/lib/brand/email-ai-guidelines";
 import type { LlmProviderId } from "@/lib/llm/tasks";
 
 export type AiQualityMode = "fast" | "good" | "better" | "best";
@@ -90,7 +91,7 @@ The HTML must use inline CSS only (email-client safe). Include a clear hero area
       "Layout: boutique newsletter — elegant serif/sans pairing, subtle borders, testimonial quote block, highlighted offer box, premium spacing and micro-copy.",
   };
 
-  return `${base}\n${styleBlock[htmlStyle]}`;
+  return `${base}\n${vensaiEmailBrandPromptBlock()}\n${styleBlock[htmlStyle]}`;
 }
 
 export type MailboxComposeMode = "new" | "reply" | "reply-all" | "forward";
@@ -115,7 +116,8 @@ Rules:
 - subject: omit or empty string if the user already has a subject and this is a reply/forward.
 - Do not invent facts; use only context provided.
 - Sign off with a neutral closing (e.g. Best regards) and a placeholder for the sender name if unknown.
-Style: ${htmlStyle === "minimal" ? "plain and direct" : htmlStyle === "standard" ? "polished but brief" : "warm and professional"}.`;
+Style: ${htmlStyle === "minimal" ? "plain and direct" : htmlStyle === "standard" ? "polished but brief" : "warm and professional"}.
+${vensaiEmailBrandPromptBlock()}`;
 }
 
 export function composeActionInstruction(action: ComposeAiAction): string {

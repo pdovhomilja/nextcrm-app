@@ -52,7 +52,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { SCRUM_BOARD_SECTIONS } from "@/lib/projects/board-templates";
 import AlertModal from "@/components/modals/alert-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DialogHeader } from "@/components/ui/dialog-document-view";
@@ -106,106 +109,107 @@ function TaskItem({ task, onDelete, onDone, onEdit, router }: any) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const title = task.title === "" || !task.title ? "Untitled" : task.title;
+  const dueMs = task.dueDateAt ? new Date(task.dueDateAt).getTime() : null;
+  const priorityClass =
+    task.priority === "high"
+      ? "text-red-600"
+      : task.priority === "normal"
+        ? "text-amber-600"
+        : task.priority === "low"
+          ? "text-emerald-600"
+          : "text-muted-foreground";
+
   return (
-    <div
+    <Card
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      className="flex flex-col overflow-hidden items-start justify-center text-xs p-3 mb-2  rounded-md border  shadow-md cursor-grab active:cursor-grabbing"
+      className="mb-2 w-full cursor-grab border-border/80 shadow-sm active:cursor-grabbing"
     >
-      <div className="flex flex-row justify-between mx-auto w-full py-1">
-        <h2 className="grow font-bold text-sm ">
-          {task.title === "" ? "Untitled" : task.title}
-        </h2>
-        <div className="ml-1">
-          {task?.dueDateAt &&
-            task.taskStatus != "COMPLETE" &&
-            task.dueDateAt < currentTime && (
-              <HoverCard>
-                <HoverCardTrigger>
-                  <ExclamationTriangleIcon className="w-4 h-4 text-red-500" />
-                </HoverCardTrigger>
-                <HoverCardContent>
-                  Attention! This task is overdue!
-                </HoverCardContent>
-              </HoverCard>
-            )}
-          {task.taskStatus === "COMPLETE" && (
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 p-3 pb-2">
+        <CardTitle className="text-sm font-semibold leading-snug">{title}</CardTitle>
+        <div className="flex shrink-0 items-center gap-1">
+          {dueMs && task.taskStatus !== "COMPLETE" && dueMs < currentTime && (
             <HoverCard>
               <HoverCardTrigger>
-                <Check className="w-4 h-4 text-green-500" />
+                <ExclamationTriangleIcon className="h-4 w-4 text-red-500" />
               </HoverCardTrigger>
-              <HoverCardContent>This task is done!</HoverCardContent>
+              <HoverCardContent>This task is overdue.</HoverCardContent>
             </HoverCard>
           )}
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild className="w-[25px] ml-1 ">
-            <DotsHorizontalIcon className="w-4 h-4 text-slate-600 pl-2" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[200px]">
-            <DropdownMenuItem
-              className="gap-2"
-              onClick={() => router.push(`/projects/tasks/viewtask/${task.id}`)}
-            >
-              <EyeIcon className="w-4 h-4 opacity-50" />
-              View
-            </DropdownMenuItem>
-            {task.taskStatus !== "COMPLETE" && (
-              <DropdownMenuItem className="gap-2" onClick={() => onEdit(task)}>
-                <Pencil className="w-4 h-4 opacity-50" />
-                Edit
-              </DropdownMenuItem>
-            )}
-            {task.taskStatus !== "COMPLETE" && (
+          {task.taskStatus === "COMPLETE" && (
+            <Check className="h-4 w-4 text-emerald-600" aria-label="Done" />
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="rounded p-1 hover:bg-muted">
+                <DotsHorizontalIcon className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[200px]">
               <DropdownMenuItem
                 className="gap-2"
-                onClick={() => onDone(task.id)}
+                onClick={() => router.push(`/projects/tasks/viewtask/${task.id}`)}
               >
-                <Check className="w-4 h-4 opacity-50" />
-                Mark as done
+                <EyeIcon className="h-4 w-4 opacity-50" />
+                View
               </DropdownMenuItem>
-            )}
-            <DropdownMenuItem className="gap-2" onClick={() => onDelete(task)}>
-              <TrashIcon className="w-4 h-4 opacity-50" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="py-1">
-        Due date: {moment(task.dueDateAt).format("YYYY-MM-DD")}
-      </div>
-      <div className="my-2">
-        <p
-          className={
-            task.priority === "normal"
-              ? `text-yellow-500`
-              : task.priority === "high"
-              ? `text-red-500`
-              : task.priority === "low"
-              ? `text-green-500`
-              : `text-slate-600`
-          }
-        >
-          Priorita: {task.priority}
-        </p>
-      </div>
-      <HoverCard>
-        <HoverCardTrigger className="line-clamp-2 mb-2">
-          {task.content}
-        </HoverCardTrigger>
-        <HoverCardContent>{task.content}</HoverCardContent>
-      </HoverCard>
-    </div>
+              {task.taskStatus !== "COMPLETE" && (
+                <DropdownMenuItem className="gap-2" onClick={() => onEdit(task)}>
+                  <Pencil className="h-4 w-4 opacity-50" />
+                  Edit
+                </DropdownMenuItem>
+              )}
+              {task.taskStatus !== "COMPLETE" && (
+                <DropdownMenuItem className="gap-2" onClick={() => onDone(task.id)}>
+                  <Check className="h-4 w-4 opacity-50" />
+                  Mark as done
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem className="gap-2" onClick={() => onDelete(task)}>
+                <TrashIcon className="h-4 w-4 opacity-50" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2 p-3 pt-0 text-xs text-muted-foreground">
+        {dueMs ? (
+          <p>
+            Due{" "}
+            <span className={dueMs < currentTime && task.taskStatus !== "COMPLETE" ? "text-red-600" : ""}>
+              {moment(task.dueDateAt).format("MMM D, YYYY")}
+            </span>
+          </p>
+        ) : null}
+        {task.priority ? (
+          <p className={priorityClass}>Priority: {task.priority}</p>
+        ) : null}
+        {task.content ? (
+          <HoverCard>
+            <HoverCardTrigger className="line-clamp-3 text-left text-foreground/80">
+              {task.content}
+            </HoverCardTrigger>
+            <HoverCardContent className="max-w-sm">{task.content}</HoverCardContent>
+          </HoverCard>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 
 function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
-  const { setNodeRef } = useDroppable({ id });
+  const { setNodeRef, isOver } = useDroppable({ id });
   return (
-    <div ref={setNodeRef} className="min-h-[50px]">
+    <div
+      ref={setNodeRef}
+      className={`min-h-[120px] flex-1 rounded-md transition-colors ${
+        isOver ? "bg-primary/5 ring-1 ring-primary/20" : ""
+      }`}
+    >
       {children}
     </div>
   );
@@ -503,7 +507,7 @@ const Kanban = (props: any) => {
         onConfirm={onDeleteSection}
         loading={isLoadingSection}
       />
-      <div className="overflow-scroll flex flex-col space-y-2  ">
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
         <Dialog
           open={sectionOpenDialog}
           onOpenChange={() => setSectionOpenDialog(false)}
@@ -544,8 +548,17 @@ const Kanban = (props: any) => {
           </SheetContent>
         </Sheet>
 
-        <div className="p-2 text-xs">
-          <p>{data?.length} Sections</p>
+        {data?.length <= 2 ? (
+          <div className="rounded-lg border border-dashed border-border/80 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            This board is still minimal. Use{" "}
+            <strong className="font-medium text-foreground">Add Scrum columns</strong> in the toolbar
+            to add {SCRUM_BOARD_SECTIONS.join(", ")} — same layout as the CRM pipeline board.
+          </div>
+        ) : null}
+
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Badge variant="secondary">{data?.length ?? 0} columns</Badge>
+          <span>Drag cards between columns · click + to add a task</span>
         </div>
 
         <DndContext
@@ -555,92 +568,99 @@ const Kanban = (props: any) => {
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex flex-row items-start  ">
+          <div className="flex min-h-[min(70vh,720px)] w-full gap-3 overflow-x-auto pb-4">
             {data?.map((section: any) => (
-              <div
-                className="flex flex-col items-center justify-center  h-full w-80 "
+              <Card
                 key={section.id}
+                className="flex h-full w-[min(100%,320px)] min-w-[280px] shrink-0 flex-col overflow-hidden bg-muted/20"
               >
-                <div className="flex flex-col  w-full h-full px-2 ">
-                  <div className="flex flex-col items-center justify-center py-2   ">
-                    <div className="flex flex-row items-center justify-between w-full border ">
-                      <input
-                        type="text"
-                        className="  pl-2  px-1 py-1 rounded-md m-2  "
-                        placeholder={section?.title}
-                        onChange={(e) =>
-                          updateSectionTitleHandler(e, section.id)
-                        }
-                      />
-                      <div className="flex items-center justify-end pr-2">
-                        <span className="border rounded-full px-2 m-2">
-                          {section?.tasks?.length}
-                        </span>
-
-                        <TrashIcon
-                          className="w-4 h-4"
-                          onClick={() => {
-                            setSectionId(section.id);
-                            setOpenSectionAlert(true);
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <div className="flex flex-row items-center justify-center space-x-5 py-2  w-full">
-                        <button
-                          className="w-80 border justify-center items-center flex flex-row "
-                          onClick={() => createTask(section.id)}
-                        >
-                          <PlusIcon className="w-6 h-6" />
-                        </button>
-                      </div>
-                    </div>
+                <CardHeader className="space-y-0 border-b border-border/60 p-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      defaultValue={section?.title}
+                      className="min-w-0 flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-sm font-semibold"
+                      placeholder="Column name"
+                      onChange={(e) => updateSectionTitleHandler(e, section.id)}
+                    />
+                    <Badge variant="outline">{section?.tasks?.length ?? 0}</Badge>
+                    <button
+                      type="button"
+                      className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      aria-label="Delete column"
+                      onClick={() => {
+                        setSectionId(section.id);
+                        setOpenSectionAlert(true);
+                      }}
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
                   </div>
-
+                </CardHeader>
+                <CardContent className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3">
                   <SortableContext
                     items={section.tasks.map((t: Task) => t.id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <DroppableColumn id={section.id}>
-                      {section.tasks?.map((task: any) => (
-                        <TaskItem
-                          key={task.id}
-                          task={task}
-                          onDelete={() => {
-                            setSelectedTask(task);
-                            setOpen(true);
-                          }}
-                          onDone={onDone}
-                          onEdit={() => {
-                            setUpdateOpenSheet(true);
-                            setSelectedTask(task);
-                          }}
-                          router={router}
-                        />
-                      ))}
+                      {section.tasks?.length ? (
+                        section.tasks.map((task: any) => (
+                          <TaskItem
+                            key={task.id}
+                            task={task}
+                            onDelete={() => {
+                              setSelectedTask(task);
+                              setOpen(true);
+                            }}
+                            onDone={onDone}
+                            onEdit={() => {
+                              setUpdateOpenSheet(true);
+                              setSelectedTask(task);
+                            }}
+                            router={router}
+                          />
+                        ))
+                      ) : (
+                        <p className="py-6 text-center text-xs text-muted-foreground">
+                          No tasks yet
+                        </p>
+                      )}
                     </DroppableColumn>
                   </SortableContext>
-                </div>
-              </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-auto w-full gap-2 border-dashed"
+                    onClick={() => createTask(section.id)}
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                    Add task
+                  </Button>
+                </CardContent>
+              </Card>
             ))}
-          </div>
-          <div className="flex justify-center items-center pl-3 h-16">
-            <PlusCircle
-              className="w-8 h-8 text-slate-600 cursor-pointer"
-              onClick={() => {
-                setSectionOpenDialog(true);
-              }}
-            />
+
+            <button
+              type="button"
+              className="flex h-[min(70vh,720px)] w-14 shrink-0 flex-col items-center justify-center rounded-lg border border-dashed border-border/80 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+              onClick={() => setSectionOpenDialog(true)}
+              aria-label="Add column"
+            >
+              <PlusCircle className="h-8 w-8" />
+              <span className="mt-1 text-[10px] font-medium uppercase tracking-wide">Column</span>
+            </button>
           </div>
 
           <DragOverlay>
             {activeTask ? (
-              <div className="flex flex-col overflow-hidden items-start justify-center text-xs p-3 mb-2  rounded-md border  shadow-md opacity-80 bg-white">
-                <h2 className="font-bold text-sm">
-                  {activeTask.title === "" ? "Untitled" : activeTask.title}
-                </h2>
-              </div>
+              <Card className="w-[280px] opacity-90 shadow-lg">
+                <CardHeader className="p-3">
+                  <CardTitle className="text-sm">
+                    {activeTask.title === "" || !activeTask.title ? "Untitled" : activeTask.title}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
             ) : null}
           </DragOverlay>
         </DndContext>

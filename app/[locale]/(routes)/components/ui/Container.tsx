@@ -1,5 +1,6 @@
 import Heading from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 import React from "react";
 
 interface ContainerProps {
@@ -7,6 +8,7 @@ interface ContainerProps {
   description: string;
   visibility?: string;
   children: React.ReactNode;
+  className?: string;
 }
 
 const Container = ({
@@ -14,9 +16,10 @@ const Container = ({
   description,
   visibility,
   children,
+  className,
 }: ContainerProps) => {
   return (
-    <div className="flex flex-col flex-1 h-full w-full">
+    <div className={cn("flex h-full w-full flex-1 flex-col", className)}>
       <Heading
         title={title}
         description={description}

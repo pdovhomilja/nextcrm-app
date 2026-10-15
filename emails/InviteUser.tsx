@@ -1,21 +1,8 @@
-import {
-  Body,
-  Button,
-  Container,
-  Column,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Row,
-  Section,
-  Tailwind,
-  Text,
-} from "@react-email/components";
+import { Button, Heading, Hr, Link, Section, Text } from "@react-email/components";
 import * as React from "react";
+
+import { getProductName, VENSAI_BRAND } from "@/lib/brand/vensai";
+import { VensaiEmailShell } from "@/emails/components/VensaiEmailShell";
 
 interface VercelInviteUserEmailProps {
   username: string;
@@ -23,92 +10,77 @@ interface VercelInviteUserEmailProps {
   userLanguage: string;
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-
 export const InviteUserEmail = ({
   username,
   invitedByUsername,
   userLanguage,
 }: VercelInviteUserEmailProps) => {
+  const appName = getProductName();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const previewText =
     userLanguage === "en"
-      ? `You have been invited by ${invitedByUsername} to VenSai CRM`
-      : `Byl jste pozván uživatelem ${invitedByUsername} do aplikace VenSai CRM`;
+      ? `You have been invited by ${invitedByUsername} to ${appName}`
+      : `Byl jste pozván uživatelem ${invitedByUsername} do aplikace ${appName}`;
 
   return (
-    <Html>
-      <Head />
-      <Preview>{previewText}</Preview>
-      <Tailwind>
-        <Body className="bg-white my-auto mx-auto font-sans">
-          <Container className="border border-solid border-slate-300 rounded-md my-[40px] mx-auto p-[20px] w-[465px]">
-            <Heading className="text-black text-2xl font-normal text-center p-0 my-[30px] mx-0">
-              {userLanguage === "en"
-                ? "  You have been invited to cooperate on something special"
-                : "Byl(a) jste pozván(a) ke spolupráci na něčem úžasném"}
-            </Heading>
-            <Text className="text-black text-sm leading-[24px]">
-              {userLanguage === "en"
-                ? `Hello ${username},`
-                : `Dobrý den ${username},`}
-            </Text>
-            <Text className="text-black text-sm leading-[24px]">
-              <strong>{invitedByUsername}</strong>
-              {/*   (
-            <Link
-                href={`mailto:${invitedByEmail}`}
-                className="text-blue-600 no-underline"
-              >
-                {invitedByEmail}
-              </Link>   )*/}
-              {userLanguage === "en"
-                ? ` has invited you to the`
-                : ` Vás pozval ke spolupráci na`}
-            </Text>
-            <Text>
-              <strong>{process.env.NEXT_PUBLIC_APP_NAME}</strong> app:
-              <strong>{process.env.NEXT_PUBLIC_APP_URL}</strong>.
-            </Text>
-            <Text className="text-black text-sm leading-[24px]">
-              {userLanguage === "en"
-                ? `To accept this invitation, click the button below and sign in with your email address.`
-                : `Pro přijetí této pozvánky klikněte na tlačítko níže a přihlaste se pomocí své e-mailové adresy.`}
-            </Text>
-
-            <Section className="text-center mt-[32px] mb-[32px]">
-              <Button
-                className="bg-slate-800 rounded-md text-white  py-3 px-4 text-xs font-semibold no-underline text-center"
-                href={process.env.NEXT_PUBLIC_APP_URL}
-              >
-                {userLanguage === "en" ? "Join the team" : "Připojit se"}
-              </Button>
-            </Section>
-            <Text className="text-black text-sm leading-[24px]">
-              {userLanguage === "en"
-                ? `
-              or copy and paste this URL into your browser:`
-                : `     nebo zkopírujte a vložte tento odkaz do svého prohlížeče:`}{" "}
-              <Link
-                href={process.env.NEXT_PUBLIC_APP_URL}
-                className="text-blue-600 no-underline"
-              >
-                {process.env.NEXT_PUBLIC_APP_URL}
-              </Link>
-            </Text>
-            <Hr className="border border-solid border-[#eaeaea] my-[26px] mx-0 w-full" />
-            <Text className="text-slate-500 text-muted-foreground text-xs leading-[24px]">
-              {userLanguage === "en"
-                ? `This invitation was intended for `
-                : `Toto pozvání bylo určeno pro `}
-              <span className="text-black">{username}. </span>
-              {userLanguage === "en"
-                ? "If you were not expecting this invitation, you can ignore this email. If you are concerned about your account's safety, please reply to this email to get in touch with us."
-                : "Pokud jste toto pozvání neočekávali, můžete tento e-mail ignorovat. Pokud se obáváte o bezpečnost svého účtu, odpovězte na tento e-mail, abyste se s námi spojili."}
-            </Text>
-          </Container>
-        </Body>
-      </Tailwind>
-    </Html>
+    <VensaiEmailShell preview={previewText}>
+      <Heading
+        style={{
+          margin: "0 0 20px",
+          fontSize: 22,
+          fontWeight: 600,
+          color: VENSAI_BRAND.colors.navy,
+          textAlign: "center" as const,
+        }}
+      >
+        {userLanguage === "en"
+          ? "You have been invited to cooperate on something special"
+          : "Byl(a) jste pozván(a) ke spolupráci na něčem úžasném"}
+      </Heading>
+      <Text style={{ fontSize: 14, lineHeight: "24px", color: VENSAI_BRAND.colors.text }}>
+        {userLanguage === "en" ? `Hello ${username},` : `Dobrý den ${username},`}
+      </Text>
+      <Text style={{ fontSize: 14, lineHeight: "24px", color: VENSAI_BRAND.colors.text }}>
+        <strong>{invitedByUsername}</strong>
+        {userLanguage === "en" ? ` has invited you to the ` : ` Vás pozval ke spolupráci na `}
+        <strong>{appName}</strong> app: <strong>{appUrl}</strong>.
+      </Text>
+      <Text style={{ fontSize: 14, lineHeight: "24px", color: VENSAI_BRAND.colors.text }}>
+        {userLanguage === "en"
+          ? `To accept this invitation, click the button below and sign in with your email address.`
+          : `Pro přijetí této pozvánky klikněte na tlačítko níže a přihlaste se pomocí své e-mailové adresy.`}
+      </Text>
+      <Section style={{ margin: "32px 0", textAlign: "center" as const }}>
+        <Button
+          href={appUrl}
+          style={{
+            backgroundColor: VENSAI_BRAND.colors.primary,
+            borderRadius: 8,
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 600,
+            padding: "12px 24px",
+            textDecoration: "none",
+          }}
+        >
+          {userLanguage === "en" ? "Join the team" : "Připojit se"}
+        </Button>
+      </Section>
+      <Text style={{ fontSize: 14, lineHeight: "24px", color: VENSAI_BRAND.colors.text }}>
+        {userLanguage === "en" ? "Or copy and paste this URL into your browser:" : "Nebo zkopírujte a vložte tento odkaz do svého prohlížeče:"}{" "}
+        <Link href={appUrl} style={{ color: VENSAI_BRAND.colors.primaryDark }}>
+          {appUrl}
+        </Link>
+      </Text>
+      <Hr style={{ borderColor: VENSAI_BRAND.colors.border, margin: "26px 0" }} />
+      <Text style={{ fontSize: 11, lineHeight: "18px", color: VENSAI_BRAND.colors.muted }}>
+        {userLanguage === "en" ? `This invitation was intended for ` : `Toto pozvání bylo určeno pro `}
+        <span style={{ color: VENSAI_BRAND.colors.text }}>{username}. </span>
+        {userLanguage === "en"
+          ? "If you were not expecting this invitation, you can ignore this email."
+          : "Pokud jste toto pozvání neočekávali, můžete tento e-mail ignorovat."}
+      </Text>
+    </VensaiEmailShell>
   );
 };
 

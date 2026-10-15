@@ -7,14 +7,18 @@ interface HeadingProps {
 }
 
 const Heading = ({ title, description, visibility }: HeadingProps) => {
+  const desc = description?.trim();
+  const showDescription =
+    Boolean(desc) && desc!.toLowerCase() !== title.trim().toLowerCase();
+
   return (
     <div className="space-y-1.5">
       <h2 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
         {title}
         {visibility === "private" ? <Lock className="h-5 w-5 text-muted-foreground" /> : null}
       </h2>
-      {description ? (
-        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+      {showDescription ? (
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{desc}</p>
       ) : null}
     </div>
   );

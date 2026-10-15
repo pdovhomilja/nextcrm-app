@@ -24,6 +24,7 @@ import {
 } from "@/lib/email/compose-helpers";
 import { EmailAiWriter } from "@/components/email/EmailAiWriter";
 import type { MailboxComposeMode } from "@/lib/llm/quality-modes";
+import { getDefaultEmailSignatureHtml } from "@/lib/brand/vensai";
 
 type Mode = "new" | "reply" | "reply-all" | "forward";
 
@@ -141,7 +142,8 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
       quotePlainRef.current.trim().length > 0
         ? plainTextToComposeHtml(`\n\n${quotePlainRef.current}`)
         : "";
-    const mergedHtml = `${result.html}${quoteHtml}`;
+    const signatureHtml = mode === "new" ? getDefaultEmailSignatureHtml() : "";
+    const mergedHtml = `${result.html}${signatureHtml}${quoteHtml}`;
     setBodyHtml(mergedHtml);
     setBody(stripHtmlToPlain(mergedHtml));
   }
