@@ -20,7 +20,7 @@ export function groqModelsToTry(): string[] {
       .filter(Boolean);
   }
   const single = defaultModel("groq");
-  const defaults = [...DEFAULT_GROQ_MODELS];
+  const defaults: string[] = [...DEFAULT_GROQ_MODELS];
   if (single && !defaults.includes(single)) {
     return [single, ...defaults.filter((m) => m !== single)];
   }

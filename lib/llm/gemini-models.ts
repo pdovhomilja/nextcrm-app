@@ -17,7 +17,7 @@ export function geminiModelsToTry(): string[] {
       .filter(Boolean);
   }
   const single = defaultModel("gemini");
-  const defaults = [...DEFAULT_GEMINI_MODELS];
+  const defaults: string[] = [...DEFAULT_GEMINI_MODELS];
   if (single && !defaults.includes(single)) {
     return [single, ...defaults.filter((m) => m !== single)];
   }
