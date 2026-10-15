@@ -2,7 +2,9 @@ import { getApiKey } from "@/lib/api-keys";
 import { envSecret } from "@/lib/env-secret";
 import { providerChainForTask } from "@/lib/llm/chains";
 import { modelForTask } from "@/lib/llm/models";
-import { openRouterModelsToTry, primaryOpenRouterModel } from "@/lib/llm/openrouter-free-models";
+import { geminiModelsToTry } from "@/lib/llm/gemini-models";
+import { groqModelsToTry } from "@/lib/llm/groq-models";
+import { openRouterModelsToTry } from "@/lib/llm/openrouter-free-models";
 import type { LlmProviderId, LlmTask } from "@/lib/llm/tasks";
 
 export type ChatMessage = {
@@ -84,6 +86,31 @@ async function resolveProviderKey(
   }
 }
 
+function isRetryableModelError(message: string): boolean {
+  return /429|402|404|400|rate|quota|capacity|unavailable|not found|no endpoints|does not exist|do not have access|invalid model/i.test(
+    message
+  );
+}
+
+async function tryModelsInOrder(params: {
+  models: string[];
+  call: (model: string) => Promise<string>;
+}): Promise<{ text: string; model: string }> {
+  let lastError: Error | null = null;
+  for (const m of params.models) {
+    try {
+      const text = await params.call(m);
+      return { text, model: m };
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e));
+      if (!isRetryableModelError(lastError.message) || params.models.length === 1) {
+        throw lastError;
+      }
+    }
+  }
+  throw lastError ?? new Error("All models failed");
+}
+
 async function invokeProvider(
   provider: LlmProviderId,
   task: LlmTask,
@@ -92,15 +119,15 @@ async function invokeProvider(
   temperature: number,
   signal: AbortSignal,
   modelOverride?: string
-): Promise<string> {
+): Promise<{ content: string; modelUsed: string }> {
   const model = modelOverride ?? modelForTask(provider, task);
   switch (provider) {
     case "openrouter": {
       const models = modelOverride ? [modelOverride] : openRouterModelsToTry();
-      let lastError: Error | null = null;
-      for (const m of models) {
-        try {
-          return await callOpenAiCompatible({
+      const { text, model: modelUsed } = await tryModelsInOrder({
+        models,
+        call: (m) =>
+          callOpenAiCompatible({
             url: "https://openrouter.ai/api/v1/chat/completions",
             apiKey,
             model: m,
@@ -108,28 +135,28 @@ async function invokeProvider(
             temperature,
             signal,
             extraHeaders: openRouterHeaders(),
-          });
-        } catch (e) {
-          lastError = e instanceof Error ? e : new Error(String(e));
-          const retryable = /429|402|404|rate|quota|capacity|unavailable|not found|no endpoints/i.test(
-            lastError.message
-          );
-          if (!retryable || models.length === 1) throw lastError;
-        }
-      }
-      throw lastError ?? new Error("OpenRouter failed");
-    }
-    case "groq":
-      return callOpenAiCompatible({
-        url: "https://api.groq.com/openai/v1/chat/completions",
-        apiKey,
-        model,
-        messages,
-        temperature,
-        signal,
+          }),
       });
-    case "openai":
-      return callOpenAiCompatible({
+      return { content: text, modelUsed };
+    }
+    case "groq": {
+      const models = modelOverride ? [modelOverride] : groqModelsToTry();
+      const { text, model: modelUsed } = await tryModelsInOrder({
+        models,
+        call: (m) =>
+          callOpenAiCompatible({
+            url: "https://api.groq.com/openai/v1/chat/completions",
+            apiKey,
+            model: m,
+            messages,
+            temperature,
+            signal,
+          }),
+      });
+      return { content: text, modelUsed };
+    }
+    case "openai": {
+      const text = await callOpenAiCompatible({
         url: "https://api.openai.com/v1/chat/completions",
         apiKey,
         model,
@@ -137,15 +164,24 @@ async function invokeProvider(
         temperature,
         signal,
       });
-    case "gemini":
-      return callOpenAiCompatible({
-        url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-        apiKey,
-        model,
-        messages,
-        temperature,
-        signal,
+      return { content: text, modelUsed: model };
+    }
+    case "gemini": {
+      const models = modelOverride ? [modelOverride] : geminiModelsToTry();
+      const { text, model: modelUsed } = await tryModelsInOrder({
+        models,
+        call: (m) =>
+          callOpenAiCompatible({
+            url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+            apiKey,
+            model: m,
+            messages,
+            temperature,
+            signal,
+          }),
       });
+      return { content: text, modelUsed };
+    }
     default: {
       const _exhaustive: never = provider;
       throw new Error(`Unknown provider: ${_exhaustive}`);
@@ -183,7 +219,7 @@ export async function completeChat(options: {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const content = await invokeProvider(
+      const { content, modelUsed } = await invokeProvider(
         provider,
         task,
         apiKey,
@@ -191,11 +227,7 @@ export async function completeChat(options: {
         temperature,
         controller.signal
       );
-      const model =
-        provider === "openrouter"
-          ? primaryOpenRouterModel()
-          : modelForTask(provider, task);
-      return { content, provider, model };
+      return { content, provider, model: modelUsed };
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       errors.push(`${provider}: ${msg}`);
@@ -227,7 +259,7 @@ export async function refineCampaignEmailJson(options: {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20_000);
   try {
-    return await invokeProvider(
+    const { content } = await invokeProvider(
       "openai",
       "campaign-email",
       openaiKey,
@@ -245,6 +277,7 @@ export async function refineCampaignEmailJson(options: {
       0.4,
       controller.signal
     );
+    return content;
   } catch {
     return null;
   } finally {

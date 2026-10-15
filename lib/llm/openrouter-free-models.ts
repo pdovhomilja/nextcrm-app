@@ -6,12 +6,12 @@ import { defaultModel } from "@/lib/llm/models";
  * Verify ids on https://openrouter.ai/models?q=free — slugs change occasionally.
  */
 export const DEFAULT_OPENROUTER_FREE_MODELS = [
-  "google/gemini-2.0-flash-exp:free",
   "meta-llama/llama-3.3-70b-instruct:free",
   "qwen/qwen-2.5-72b-instruct:free",
-  "google/gemini-2.0-flash-lite-preview-02-05:free",
   "mistralai/mistral-small-3.1-24b-instruct:free",
   "deepseek/deepseek-r1-distill-llama-70b:free",
+  "google/gemini-2.0-flash-exp:free",
+  "google/gemini-2.0-flash-lite-preview-02-05:free",
 ] as const;
 
 /**

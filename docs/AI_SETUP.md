@@ -25,14 +25,18 @@ Hero images use OpenRouter `POST /api/v1/images` (default model `google/gemini-2
 
 **Free text models** (copy exact ids from your OpenRouter “Free” filter):
 
-**Built-in default try-order** (no env needed):
+**Groq** (Oct 2026): `llama-3.1-8b-instant` is retired — app tries `openai/gpt-oss-20b`, `qwen/qwen3.8-27b`, `openai/gpt-oss-120b`. Override with `LLM_GROQ_MODELS`.
 
-1. `google/gemini-2.0-flash-exp:free`
-2. `meta-llama/llama-3.3-70b-instruct:free`
-3. `qwen/qwen-2.5-72b-instruct:free`
-4. `google/gemini-2.0-flash-lite-preview-02-05:free`
-5. `mistralai/mistral-small-3.1-24b-instruct:free`
-6. `deepseek/deepseek-r1-distill-llama-70b:free`
+**Gemini**: tries `gemini-2.5-flash`, then `gemini-2.0-flash`, `gemini-1.5-flash`. Override with `LLM_GEMINI_MODELS`.
+
+**OpenRouter free — built-in try-order** (no env needed):
+
+1. `meta-llama/llama-3.3-70b-instruct:free`
+2. `qwen/qwen-2.5-72b-instruct:free`
+3. `mistralai/mistral-small-3.1-24b-instruct:free`
+4. `deepseek/deepseek-r1-distill-llama-70b:free`
+5. `google/gemini-2.0-flash-exp:free` (when available on free tier)
+6. `google/gemini-2.0-flash-lite-preview-02-05:free`
 
 Override or extend via:
 

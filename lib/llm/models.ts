@@ -1,9 +1,9 @@
 import type { LlmProviderId, LlmTask } from "@/lib/llm/tasks";
 
 const BASE_MODELS: Record<LlmProviderId, string> = {
-  openrouter: "google/gemini-2.0-flash-exp:free",
-  groq: "llama-3.1-8b-instant",
-  gemini: "gemini-2.0-flash",
+  openrouter: "meta-llama/llama-3.3-70b-instruct:free",
+  groq: "openai/gpt-oss-20b",
+  gemini: "gemini-2.5-flash",
   openai: "gpt-4o-mini",
 };
 
