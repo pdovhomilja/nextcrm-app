@@ -50,7 +50,22 @@ const rateSchema = z.object({
 export async function getCurrencies(): Promise<CurrencyValue[]> {
   const denied = await ensureAdmin();
   if (denied) throw new Error(denied.error);
-  const currencies = await prismadb.currency.findMany({ orderBy: { code: "asc" } });
+
+  let currencies = await prismadb.currency.findMany({ orderBy: { code: "asc" } });
+
+  // Auto-seed global catalog if not yet populated
+  if (currencies.length < 50) {
+    try {
+      const { syncAllCurrenciesFromCurrencyApi } = await import(
+        "@/lib/currency/currencyapi"
+      );
+      await syncAllCurrenciesFromCurrencyApi();
+      currencies = await prismadb.currency.findMany({ orderBy: { code: "asc" } });
+    } catch (e) {
+      console.error("[currencies] Auto-seed failed:", e);
+    }
+  }
+
   return currencies.map((c) => ({
     code: c.code,
     name: c.name,
@@ -59,6 +74,55 @@ export async function getCurrencies(): Promise<CurrencyValue[]> {
     isDefault: c.isDefault,
   }));
 }
+
+export async function bulkToggleCurrencies(enableAll: boolean) {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
+
+  if (enableAll) {
+    await prismadb.currency.updateMany({
+      data: { isEnabled: true },
+    });
+  } else {
+    // Keep default currency enabled
+    await prismadb.currency.updateMany({
+      where: { isDefault: false },
+      data: { isEnabled: false },
+    });
+  }
+  revalidatePath("/", "layout");
+}
+
+export async function getCurrencyApiInfo() {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
+
+  const { getCurrencyApiKey, fetchCurrencyApiStatus } = await import(
+    "@/lib/currency/currencyapi"
+  );
+  const key = await getCurrencyApiKey();
+  const status = await fetchCurrencyApiStatus();
+
+  return {
+    hasKey: Boolean(key && key.length > 5),
+    maskedKey: key ? `${key.slice(0, 8)}...${key.slice(-4)}` : "",
+    status,
+  };
+}
+
+export async function saveCurrencyApiKey(key: string) {
+  const denied = await ensureAdmin();
+  if (denied) throw new Error(denied.error);
+
+  const cleanKey = key.trim();
+  await prismadb.crm_SystemSettings.upsert({
+    where: { key: "currencyapi_key" },
+    update: { value: cleanKey },
+    create: { key: "currencyapi_key", value: cleanKey },
+  });
+  revalidatePath("/", "layout");
+}
+
 
 export async function getExchangeRatesAdmin(): Promise<ExchangeRateValue[]> {
   const denied = await ensureAdmin();
