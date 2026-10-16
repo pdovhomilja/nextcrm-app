@@ -7,7 +7,14 @@ const nextConfig = {
   output: "standalone",
   serverExternalPackages: ["pdf-parse", "pdfjs-dist"],
   experimental: {
-    optimizePackageImports: ["lucide-react", "date-fns", "@radix-ui/react-icons"],
+    optimizePackageImports: [
+      "lucide-react",
+      "date-fns",
+      "@radix-ui/react-icons",
+      "@tanstack/react-table",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-dialog",
+    ],
   },
   images: {
     remotePatterns: [

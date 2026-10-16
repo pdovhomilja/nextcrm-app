@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, Settings } from "lucide-react";
-import { MailComponent } from "./components/mail";
+import { MailLazy } from "./components/MailLazy";
 import { EmailComposeFromQuery } from "./components/EmailComposeFromQuery";
 import Container from "../components/ui/Container";
 import EmailsSkeleton from "@/components/skeletons/emails-skeleton";
@@ -187,7 +187,7 @@ const EmailRoute = async ({
       )}
       <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <Suspense fallback={<EmailsSkeleton />}>
-        <MailComponent
+        <MailLazy
           accounts={connectedAccounts}
           mails={emailsResult.emails}
           activeAccountId={activeAccountId ?? null}

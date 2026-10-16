@@ -12,7 +12,7 @@ export function useChatMessagesLive(roomKey: string, enabled = true) {
     queryKey: chatMessagesKey(roomKey),
     queryFn: () => getChatMessages(roomKey),
     enabled: Boolean(roomKey) && enabled,
-    refetchInterval: 2_500,
+    refetchInterval: 5_000,
     refetchIntervalInBackground: false,
   });
 }

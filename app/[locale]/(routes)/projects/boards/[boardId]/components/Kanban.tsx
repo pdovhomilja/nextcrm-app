@@ -1,6 +1,6 @@
 "use client";
 
-import moment from "moment";
+import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { Check, EyeIcon, Pencil, PlusCircle, PlusIcon } from "lucide-react";
@@ -181,7 +181,7 @@ function TaskItem({ task, onDelete, onDone, onEdit, router }: any) {
           <p>
             Due{" "}
             <span className={dueMs < currentTime && task.taskStatus !== "COMPLETE" ? "text-red-600" : ""}>
-              {moment(task.dueDateAt).format("MMM D, YYYY")}
+              {format(new Date(task.dueDateAt), "MMM d, yyyy")}
             </span>
           </p>
         ) : null}

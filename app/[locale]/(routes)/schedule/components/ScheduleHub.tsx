@@ -55,8 +55,28 @@ export function ScheduleHub({ isManager }: { isManager: boolean }) {
 
   React.useEffect(() => {
     void refresh();
-    const t = setInterval(() => void refresh(), 30_000);
-    return () => clearInterval(t);
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const start = () => {
+      interval = setInterval(() => void refresh(), 120_000);
+    };
+    const stop = () => {
+      if (interval) clearInterval(interval);
+      interval = undefined;
+    };
+    start();
+    const onVisibility = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        void refresh();
+        start();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [refresh]);
 
   return (

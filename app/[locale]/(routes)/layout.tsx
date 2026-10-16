@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
 import { HeaderLive } from "./components/HeaderLive";
-import { EmailsLiveRefresh } from "./components/EmailsLiveRefresh";
 import Footer from "./components/Footer";
 
 import { Metadata } from "next";
@@ -114,13 +113,10 @@ export default async function AppLayout({
   const { getPluginNavItems } = await import("@/lib/plugins/nav");
   const { mapLegacyRole } = await import("@/lib/authz/roles");
   const { getLocale } = await import("next-intl/server");
-  const pluginNav = await getPluginNavItems(mapLegacyRole(user?.role), (await getLocale()) as "en" | "cz" | "de" | "uk");
-  const { getHeaderNotifications } = await import("@/actions/notifications/header-notifications");
-  const { getChatUnreadCount } = await import("@/actions/chat/unread");
   const { getUserPermissions } = await import("@/lib/authz/feature-access");
-  const [headerNotifications, chatUnreadCount, permissions] = await Promise.all([
-    getHeaderNotifications(),
-    getChatUnreadCount(),
+  const locale = (await getLocale()) as "en" | "cz" | "de" | "uk";
+  const [pluginNav, permissions] = await Promise.all([
+    getPluginNavItems(mapLegacyRole(user?.role), locale),
     getUserPermissions(session.user.id as string, session.user.role),
   ]);
 
@@ -146,14 +142,13 @@ export default async function AppLayout({
             role: session.user.role,
           }}
           initialLive={{
-            emailUnreadCount: headerNotifications.emailUnreadCount,
-            chatUnreadCount,
-            notificationCount: headerNotifications.totalCount,
-            items: headerNotifications.items,
-            at: new Date().toISOString(),
+            emailUnreadCount: 0,
+            chatUnreadCount: 0,
+            notificationCount: 0,
+            items: [],
+            at: null,
           }}
         />
-        <EmailsLiveRefresh />
         {/*
           Task Group 3.3: Footer Relocation
           - Footer has been moved inside the scrollable content area

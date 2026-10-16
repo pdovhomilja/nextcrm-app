@@ -17,13 +17,16 @@ async function fetchLiveSummary(): Promise<LiveSummary> {
   return res.json() as Promise<LiveSummary>;
 }
 
-export function useLiveSummary(initial?: LiveSummary) {
+/** Header badges — polled lightly; not loaded on every RSC navigation. */
+export function useLiveSummary(placeholder?: LiveSummary) {
   return useQuery({
     queryKey: ["live-summary"],
     queryFn: fetchLiveSummary,
-    initialData: initial,
-    staleTime: 12_000,
-    refetchInterval: 12_000,
+    placeholderData: placeholder,
+    staleTime: 45_000,
+    refetchInterval: 45_000,
     refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 }

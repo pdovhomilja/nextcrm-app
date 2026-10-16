@@ -1,18 +1,27 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Feedback from "./Feedback";
-import FulltextSearch from "./FulltextSearch";
 import { HeaderMailButton } from "./HeaderMailButton";
 import { HeaderNotifications } from "./HeaderNotifications";
 import { HeaderChatPanel } from "./HeaderChatPanel";
-import dynamic from "next/dynamic";
+import { HeaderProfileMenu } from "./HeaderProfileMenu";
 
 const CrmAssistantSheet = dynamic(
   () =>
     import("@/components/assistant/CrmAssistantSheet").then((m) => m.CrmAssistantSheet),
   { ssr: false, loading: () => null }
 );
-import { HeaderProfileMenu } from "./HeaderProfileMenu";
+
+const FulltextSearch = dynamic(() => import("./FulltextSearch"), {
+  ssr: false,
+  loading: () => <div className="h-9 w-full max-w-md animate-pulse rounded-xl bg-muted/60" />,
+});
+
+const CommandComponent = dynamic(
+  () => import("@/components/CommandComponent").then((m) => m.CommandComponent),
+  { ssr: false, loading: () => null }
+);
 import type { HeaderNotificationItem } from "@/actions/notifications/header-notifications";
 import type { LiveSummary } from "@/hooks/use-live-summary";
 import { useLiveSummary } from "@/hooks/use-live-summary";
@@ -21,8 +30,6 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { SetLanguage } from "@/components/SetLanguage";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { CommandComponent } from "@/components/CommandComponent";
-
 type HeaderUser = {
   id: string;
   name?: string | null;
