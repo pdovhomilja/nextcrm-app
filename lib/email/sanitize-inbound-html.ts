@@ -1,6 +1,25 @@
 import sanitizeHtml from "sanitize-html";
 
-/** Inbound MIME HTML — allow typical marketing/newsletter markup. */
+function cleanStyleString(style: string): string {
+  return style
+    .replace(/position\s*:\s*fixed/gi, "position: relative")
+    .replace(/(-webkit-)?backdrop-filter\s*:[^;]+;?/gi, "")
+    .replace(/filter\s*:[^;]*blur\([^)]*\)[^;]*;?/gi, "")
+    .replace(/inset\s*:[^;]+;?/gi, "");
+}
+
+function cleanStyleBlocks(html: string): string {
+  return html.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, (_, css) => {
+    const cleanedCss = css
+      .replace(/position\s*:\s*fixed/gi, "position: relative")
+      .replace(/(-webkit-)?backdrop-filter\s*:[^;}]+;?/gi, "")
+      .replace(/filter\s*:[^;}*]*blur\([^)]*\)[^;}*]*;?/gi, "")
+      .replace(/inset\s*:[^;}]+;?/gi, "");
+    return `<style>${cleanedCss}</style>`;
+  });
+}
+
+/** Inbound MIME HTML — allow typical marketing/newsletter markup safely. */
 export const INBOUND_EMAIL_SANITIZE: sanitizeHtml.IOptions = {
   allowedTags: [
     "html",
@@ -58,10 +77,29 @@ export const INBOUND_EMAIL_SANITIZE: sanitizeHtml.IOptions = {
     col: ["span", "width", "style"],
     colgroup: ["span", "width", "style"],
   },
+  transformTags: {
+    "*": (tagName, attribs) => {
+      if (attribs.style) {
+        attribs.style = cleanStyleString(attribs.style);
+      }
+      return { tagName, attribs };
+    },
+    a: (tagName, attribs) => {
+      attribs.target = "_blank";
+      attribs.rel = "noopener noreferrer";
+      if (attribs.style) {
+        attribs.style = cleanStyleString(attribs.style);
+      }
+      return { tagName, attribs };
+    },
+  },
   allowedSchemes: ["http", "https", "mailto", "data"],
-  allowVulnerableTags: false,
+  allowVulnerableTags: true,
 };
 
 export function sanitizeInboundEmailHtml(html: string): string {
-  return sanitizeHtml(html, INBOUND_EMAIL_SANITIZE);
+  if (!html) return "";
+  const cleanedInput = cleanStyleBlocks(html);
+  return sanitizeHtml(cleanedInput, INBOUND_EMAIL_SANITIZE);
 }
+

@@ -367,7 +367,7 @@ export function MailDisplay({
                 isUnread={!mail.isRead}
                 className="shrink-0 bg-background"
               />
-              <div className="min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-muted/20 dark:bg-muted/10">
+              <div className="relative isolate min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-muted/20 dark:bg-muted/10">
                 <EmailConversationBody
                   bodyText={fullEmail.bodyText}
                   bodyHtml={fullEmail.bodyHtml}

@@ -201,8 +201,11 @@
   }
 
   .email-html-body {
-    @apply w-full min-w-0 max-w-none bg-white text-zinc-900;
-    padding: clamp(12px, 2vw, 28px);
+    @apply relative w-full min-w-0 max-w-none bg-white text-zinc-900;
+    contain: paint layout;
+    isolation: isolate;
+    position: relative;
+    padding: 0;
     line-height: 1.55;
     font-size: clamp(13px, 1.6vw, 15px);
     word-wrap: break-word;
