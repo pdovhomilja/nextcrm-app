@@ -2446,21 +2446,115 @@ enum VentureAppKind {
   custom
 }
 
-/// Connected venture apps (Rofyt and future products) — credentials and env stored encrypted.
+enum VentureLifecycleStatus {
+  registered
+  domain_assigned
+  deploying
+  reachable
+  provisioning_ready
+  failed
+}
+
+enum VentureTargetHealth {
+  unknown
+  reachable
+  unreachable
+  tls_error
+  provisioning_unavailable
+}
+
+enum VentureProvisioningStatus {
+  not_configured
+  pending
+  succeeded
+  failed
+  already_exists
+}
+
+/// VenSai Labs venture registry (control plane metadata in CRM).
 model VentureApp {
-  id                  String         @id @default(uuid()) @db.Uuid
-  slug                String         @unique
+  id                  String                 @id @default(uuid()) @db.Uuid
+  slug                String                 @unique
   name                String
-  kind                VentureAppKind @default(custom)
+  kind                VentureAppKind         @default(custom)
+  description         String?                @db.Text
+  assignedSubdomain   String?
+  lifecycleStatus     VentureLifecycleStatus @default(registered)
   adminEmail          String?
   adminPasswordHash   String?
-  envEncrypted        String?        @db.Text
+  envEncrypted        String?                @db.Text
   externalUrl         String?
-  notes               String?        @db.Text
+  notes               String?                @db.Text
   statsJson           Json?
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-  createdBy           String?        @db.Uuid
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  createdBy           String?                @db.Uuid
+
+  targets             VentureApplicationTarget[]
+  provisioningOps     ProvisioningOperation[]
 
   @@index([kind])
+  @@index([lifecycleStatus])
+}
+
+model VentureApplicationTarget {
+  id                           String                    @id @default(uuid()) @db.Uuid
+  ventureId                    String                    @db.Uuid
+  targetKey                    String
+  displayName                  String
+  applicationType              String
+  deploymentUrl                String
+  healthPath                   String                    @default("/api/health")
+  healthStatus                 VentureTargetHealth       @default(unknown)
+  provisioningStatus           VentureProvisioningStatus @default(not_configured)
+  administratorEmail           String?
+  provisioningSecretEncrypted  String?                   @db.Text
+  lastConnectionTestAt         DateTime?
+  lastProvisioningAttemptAt    DateTime?
+  lastProvisioningSuccessAt    DateTime?
+  createdAt                    DateTime                  @default(now())
+  updatedAt                    DateTime                  @updatedAt
+
+  venture       VentureApp            @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+  auditLogs     ProvisioningAuditLog[]
+  operations    ProvisioningOperation[]
+
+  @@unique([ventureId, targetKey])
+  @@index([ventureId])
+}
+
+model ProvisioningOperation {
+  id                String    @id @default(uuid()) @db.Uuid
+  ventureId         String    @db.Uuid
+  targetId          String    @db.Uuid
+  initiatedByUserId String    @db.Uuid
+  operationType     String
+  idempotencyKey    String    @unique
+  status            String
+  correlationId     String
+  sanitizedResult   Json?
+  startedAt         DateTime  @default(now())
+  completedAt       DateTime?
+
+  venture VentureApp               @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+  target  VentureApplicationTarget @relation(fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@index([targetId])
+  @@index([ventureId])
+}
+
+model ProvisioningAuditLog {
+  id                String   @id @default(uuid()) @db.Uuid
+  targetId          String   @db.Uuid
+  initiatedByUserId String?  @db.Uuid
+  operation         String
+  outcome           String
+  correlationId     String?
+  sanitizedMessage  String?  @db.Text
+  createdAt         DateTime @default(now())
+
+  target VentureApplicationTarget @relation(fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@index([targetId])
+  @@index([createdAt])
 }
