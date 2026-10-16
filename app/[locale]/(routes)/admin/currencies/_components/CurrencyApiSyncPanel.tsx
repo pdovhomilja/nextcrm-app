@@ -77,7 +77,9 @@ export function CurrencyApiSyncPanel({ apiInfo }: { apiInfo: CurrencyApiSyncPane
           toast.error(res.error || "Frankfurter sync failed");
           return;
         }
-        toast.success(`Updated ${res.updated} rates from Frankfurter (free API)`);
+        toast.success(
+          `Updated ${res.updated} rates from Frankfurter across supported ECB currencies`
+        );
       } catch (err: any) {
         toast.error(err?.message || "Sync failed");
       }
@@ -161,7 +163,7 @@ export function CurrencyApiSyncPanel({ apiInfo }: { apiInfo: CurrencyApiSyncPane
           onClick={handleSyncFrankfurter}
           className="text-xs h-8 text-muted-foreground hover:text-foreground"
         >
-          Frankfurter (free)
+          Frankfurter (30 currencies)
         </Button>
 
         <Dialog open={keyModalOpen} onOpenChange={setKeyModalOpen}>
