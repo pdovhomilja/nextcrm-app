@@ -76,13 +76,14 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 - **crm_update_contact** — Update an existing CRM contact by ID (accepts `assigned_to` to reassign, `account` to link/unlink a parent account)
 - **crm_delete_contact** — Soft-delete a CRM contact by ID (sets deletedAt timestamp)
 
-### Leads (6 tools)
+### Leads (7 tools)
 
+- **crm_list_lead_options** — List the lead statuses, sources and types configured in this CRM (id + name)
 - **crm_list_leads** — List CRM leads assigned to the authenticated user
 - **crm_get_lead** — Get a single CRM lead by ID
 - **crm_search_leads** — Search leads by name, company, or email (substring match)
-- **crm_create_lead** — Create a new CRM lead
-- **crm_update_lead** — Update an existing CRM lead by ID (accepts `assigned_to` to reassign the owner)
+- **crm_create_lead** — Create a new CRM lead (accepts `description`, `campaign`, `refered_by`, and `lead_status_id` / `lead_source_id` / `lead_type_id` from `crm_list_lead_options`)
+- **crm_update_lead** — Update an existing CRM lead by ID (accepts `assigned_to` to reassign the owner, the same detail fields as create; `null` clears status, source or type)
 - **crm_delete_lead** — Soft-delete a CRM lead by ID (sets deletedAt timestamp)
 
 ### Opportunities (6 tools)

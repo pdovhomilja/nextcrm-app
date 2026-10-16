@@ -29,6 +29,7 @@ Install it under **Admin → Plugins → Odoo connector**.
 | `dryRun` | on | While on, the sync only writes to the plugin log what it would create or change, and the scheduled sync is paused: use **Sync now**. |
 | `priceLists` | empty | The Odoo price lists to import: their Odoo ids, separated by commas, for example `242, 245`. See [Catalog](#catalog). |
 | `sendOrders` | off | Send orders in READY to Odoo as draft sale orders. While off, the connector never writes to Odoo. |
+| `fillOwners` | on | Give an existing account without an owner the CRM user of its Odoo salesperson. See [Owners](#owners). |
 | `timeZone` | `UTC` | The time zone the plugin's screens and emails show times in, for example `Europe/Prague`. |
 
 The secret `apiKey` holds the Odoo user's API key. It is stored encrypted.
@@ -50,13 +51,15 @@ When two or more accounts match in step 2 or 3, or the matching account is alrea
 
 ## Owners
 
-A new account gets an owner when the customer's salesperson in Odoo has the same email (upper or lower case does not matter) as an active CRM user. Otherwise the account has no owner and appears on the **Needs owner** page (under Plugins in the menu, for managers and admins), with the Odoo salesperson's name. A sync never changes the owner of an account that already exists.
+An account gets an owner when the customer's salesperson in Odoo has the same email (upper or lower case does not matter) as an active CRM user. The plugin takes the Odoo user's email, or the login when the email is empty. Otherwise the account has no owner and appears on the **Needs owner** page (under Plugins in the menu, for managers and admins), with the Odoo salesperson's name.
+
+New accounts get the owner when the sync creates them. With `fillOwners` on, an existing account without an owner gets one the next time its customer changes in Odoo, for example when you create the salesperson's CRM user and then reassign or edit the customer in Odoo. A sync never replaces an owner that is already set. The new owner starts the account's protection like any other assignment.
 
 ## What Odoo controls
 
 Odoo wins for these account fields: name, registration number, VAT number, billing street, city, postal code, region, country, email and phone. When a customer changes in Odoo, the next sync writes these fields to the account, even if someone edited them in the CRM. A field that is empty in Odoo never clears a value filled in the CRM.
 
-The sync never touches anything else: the owner of an existing account, the shipping address, the price list, notes, activities and all other fields. The account's **Odoo** panel shows the link to the Odoo partner and when it was last synced.
+The sync never touches anything else: an owner already set in the CRM, the shipping address, the price list, notes, activities and all other fields. The account's **Odoo** panel shows the link to the Odoo partner and when it was last synced.
 
 ## Archived customers
 

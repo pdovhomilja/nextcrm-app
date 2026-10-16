@@ -5,6 +5,35 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.35.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.34.0...v0.35.0) (2026-10-14)
+
+
+### Added
+
+* **mcp:** lead description, campaign, referral, status/source/type ([#390](https://github.com/pdovhomilja/nextcrm-app/issues/390)) ([437d3ab](https://github.com/pdovhomilja/nextcrm-app/commit/437d3abbf1beea6592df28382cd4744e8b2ecef3))
+
+
+### Fixed
+
+* **compose:** bare ${VAR:?} for required vars in docker-compose-coolify.yml ([064d7b5](https://github.com/pdovhomilja/nextcrm-app/commit/064d7b5c6c04096f6d1949312dfd10623930ef60))
+* **compose:** bare ${VAR:?} for required vars in docker-compose-coolify.yml ([63068ca](https://github.com/pdovhomilja/nextcrm-app/commit/63068ca3a107696283cd134fbdf137d2fbc724dc))
+
+## [0.34.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.4...v0.34.0) (2026-10-13)
+
+
+### Added
+
+* **odoo-connector:** fill missing owners on existing accounts ([e50d478](https://github.com/pdovhomilja/nextcrm-app/commit/e50d4784fab3ab363a64e2422d9033dcde6846b4))
+* **odoo-connector:** fill missing owners on existing accounts ([23e3e4f](https://github.com/pdovhomilja/nextcrm-app/commit/23e3e4f85434fc6cd14ddb9737748ff8712492fa))
+
+## [0.33.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.3...v0.33.4) (2026-10-12)
+
+
+### Fixed
+
+* one approval mail per manager; plugin form no longer re-sends a saved secret ([dc83aed](https://github.com/pdovhomilja/nextcrm-app/commit/dc83aedc6f701ab45399d215e9188d4c058061ad))
+* one approval mail per manager; plugin form no longer re-sends a saved secret ([cd751f1](https://github.com/pdovhomilja/nextcrm-app/commit/cd751f17ee3300b26a4cf04a2a5b7b35f5544216))
+
 ## [0.33.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.33.2...v0.33.3) (2026-10-12)
 
 

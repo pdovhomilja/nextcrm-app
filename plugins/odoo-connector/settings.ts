@@ -12,6 +12,7 @@ export const settingsSchema = z.object({
   dryRun: z.boolean().default(true),
   priceLists: z.string().default(""),
   sendOrders: z.boolean().default(false),
+  fillOwners: z.boolean().default(true),
   timeZone: z.string().refine(validZone, "An IANA time zone, e.g. Europe/Prague").default("UTC"),
 });
 export const secretsSchema = z.object({ apiKey: z.string().min(1) });

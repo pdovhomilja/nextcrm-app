@@ -10,6 +10,8 @@
 #
 # Required (deploy fails without them): POSTGRES_PASSWORD,
 # MINIO_ROOT_PASSWORD, BETTER_AUTH_SECRET, EMAIL_ENCRYPTION_KEY.
+# They are written as bare ${VAR:?}: Coolify pre-fills a missing variable
+# with the text after `:?`, so a message there would become the value.
 # NEXTCRM_VERSION is optional: the release tag to run (default latest).
 # INNGEST_SIGNING_KEY / INNGEST_EVENT_KEY are optional: when unset, the app
 # generates them on first start and keeps them in the app_data volume.
@@ -29,7 +31,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-nextcrm}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_DB: ${POSTGRES_DB:-nextcrm}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -52,7 +54,7 @@ services:
       - "9000"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-nextcrm}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?}
     volumes:
       - minio_data:/data
     networks:
@@ -115,8 +117,8 @@ services:
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-NextCRM}
       NEXT_PUBLIC_APP_URL: ${APP_URL:-http://localhost:3000}
       BETTER_AUTH_URL: ${APP_URL:-http://localhost:3000}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET}
-      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY:?set EMAIL_ENCRYPTION_KEY}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
+      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY:?}
 
       # MinIO (MINIO_PUBLIC_URL = the URL browsers use to upload and fetch
       # files; presigned upload URLs are signed for it)

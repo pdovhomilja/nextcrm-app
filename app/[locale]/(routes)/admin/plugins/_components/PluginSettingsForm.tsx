@@ -41,7 +41,7 @@ export function PluginSettingsForm({ pluginId, mode, fields, secretFields, value
     start(async () => {
       const action = mode === "install" ? installPluginAction : savePluginSettingsAction;
       const res = await action(pluginId, coerce(), secrets);
-      if (res.ok) toast.success(t("saved")); else toast.error(res.error ?? "Error");
+      if (res.ok) { setSecrets({}); toast.success(t("saved")); } else toast.error(res.error ?? "Error");
     });
 
   return (
