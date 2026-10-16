@@ -54,14 +54,15 @@ export async function ensureRofytVenture() {
 
   await ensureDefaultTargetsForVenture(venture.id, key);
 
-  const erpUrl = process.env.ROFYT_ERP_URL?.trim();
-  const adminUrl = process.env.ROFYT_ADMIN_URL?.trim();
-  if (erpUrl || adminUrl) {
-    await syncVentureTargetDeploymentUrls(venture.id, {
-      ...(erpUrl ? { erp: erpUrl } : {}),
-      ...(adminUrl ? { admin: adminUrl } : {}),
-    });
-  }
+  const erpUrl = process.env.ROFYT_ERP_URL?.trim() || defaultErpUrl(key);
+  const adminUrl =
+    process.env.ROFYT_ADMIN_URL?.trim() ||
+    process.env.VENTURE_ADMIN_PORTAL_URL?.trim() ||
+    "https://admin.vensailabs.in";
+  await syncVentureTargetDeploymentUrls(venture.id, {
+    erp: erpUrl,
+    admin: adminUrl,
+  });
 
   return venture;
 }

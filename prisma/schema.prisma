@@ -2471,6 +2471,12 @@ enum VentureProvisioningStatus {
   already_exists
 }
 
+enum VentureDatabaseConnectionStatus {
+  unknown
+  connected
+  failed
+}
+
 /// VenSai Labs venture registry (control plane metadata in CRM).
 model VentureApp {
   id                  String                 @id @default(uuid()) @db.Uuid
@@ -2484,6 +2490,9 @@ model VentureApp {
   adminPasswordHash   String?
   envEncrypted        String?                @db.Text
   externalUrl         String?
+  databaseUrl         String?                        @db.Text
+  databaseConnectionStatus VentureDatabaseConnectionStatus @default(unknown)
+  lastDatabaseConnectionTestAt DateTime?
   gitRepositoryUrl    String?
   extensionsJson      Json?
   notes               String?                @db.Text

@@ -138,10 +138,7 @@ export function AppSidebar({
   ];
   if (session?.user?.role === "admin" || session?.user?.role === "manager") {
     allNavItems.push(
-      getVenturesMenuItem({
-        title: "Ventures",
-        includeNew: session?.user?.role === "admin",
-      })
+      getVenturesMenuItem({ title: "Ventures" })
     );
   }
   const navItems = filterNavByPermissions(allNavItems, permissions);

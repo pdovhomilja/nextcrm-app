@@ -54,10 +54,13 @@ export default async function RofytVenturePage() {
           <VentureSettingsPanel
             ventureId={venture.id}
             description={venture.description}
+            assignedSubdomain={venture.assignedSubdomain}
             gitRepositoryUrl={venture.gitRepositoryUrl}
             adminEmail={venture.adminEmail}
             envPreview={envPreview}
             externalUrl={venture.externalUrl}
+            databaseUrl={venture.databaseUrl}
+            databaseConnectionStatus={venture.databaseConnectionStatus}
             notes={venture.notes}
             adminPortalUrl={adminTarget?.deploymentUrl ?? null}
             adminProvisioningStatus={adminTarget?.provisioningStatus ?? null}

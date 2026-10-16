@@ -1,25 +1,16 @@
 import { Rocket } from "lucide-react";
 
-import { BUILTIN_VENTURE_APPS } from "@/lib/ventures/catalog";
 import { NavItem } from "../nav-main";
 
 type Props = {
   title: string;
-  includeNew?: boolean;
 };
 
-export const getVenturesMenuItem = ({ title, includeNew }: Props): NavItem => {
+export const getVenturesMenuItem = ({ title }: Props): NavItem => {
   return {
     title,
+    url: "/ventures",
     icon: Rocket,
-    items: [
-      { title: "Overview", url: "/ventures" },
-      ...BUILTIN_VENTURE_APPS.map((app) => ({
-        title: app.name,
-        url: app.href,
-      })),
-      ...(includeNew ? [{ title: "New venture", url: "/ventures/new" }] : []),
-    ],
   };
 };
 
