@@ -95,8 +95,15 @@ export function EmailAiWriter({ context, onGenerated, className, defaultPrompt =
     setBusy(true);
     setError(null);
     try {
+      const userPrompt = prompt.trim();
+      const combinedPrompt = promptOverride
+        ? userPrompt
+          ? `${promptOverride} ${userPrompt}`
+          : promptOverride
+        : userPrompt;
+
       const result = await generateComposeEmail({
-        prompt: promptOverride ?? prompt,
+        prompt: combinedPrompt,
         action,
         mode: context.composeMode,
         qualityMode: quality,
@@ -177,7 +184,7 @@ export function EmailAiWriter({ context, onGenerated, className, defaultPrompt =
           <Button
             type="button"
             className="w-full gap-2 sm:w-auto"
-            disabled={busy || !prompt.trim()}
+            disabled={busy || (!prompt.trim() && !context.existingBodyPlain?.trim())}
             onClick={() => run("draft")}
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
