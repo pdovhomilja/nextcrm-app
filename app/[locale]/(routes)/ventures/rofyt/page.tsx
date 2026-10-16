@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { getRofytStatsIfAuthorized } from "@/actions/ventures/rofyt-stats";
 import { getVentureBySlug } from "@/actions/ventures/list-ventures";
+import { VentureDetailCard } from "@/components/ventures/VentureDetailCard";
 import { RofytDashboard } from "@/components/ventures/RofytDashboard";
 import { VentureSettingsPanel } from "@/components/ventures/VentureSettingsPanel";
 import { VenturesLockButton } from "@/components/ventures/VenturesLockButton";
@@ -37,10 +38,21 @@ export default async function RofytVenturePage() {
         <VenturesLockButton />
       </div>
       <div className="space-y-8">
+        <VentureDetailCard
+          name={venture.name}
+          slug={venture.slug}
+          description={venture.description}
+          assignedSubdomain={venture.assignedSubdomain}
+          gitRepositoryUrl={venture.gitRepositoryUrl}
+          externalUrl={venture.externalUrl}
+          lifecycleStatus={venture.lifecycleStatus}
+        />
         {stats ? <RofytDashboard stats={stats} /> : null}
         {role === "admin" ? (
           <VentureSettingsPanel
             ventureId={venture.id}
+            description={venture.description}
+            gitRepositoryUrl={venture.gitRepositoryUrl}
             adminEmail={venture.adminEmail}
             envPreview={envPreview}
             externalUrl={venture.externalUrl}

@@ -1,27 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { VentureAppKind } from "@prisma/client";
-import { z } from "zod";
+import { VentureAppKind, VentureLifecycleStatus } from "@prisma/client";
 
 import { requireRole, AuthorizationError } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
+import {
+  createVentureInputSchema,
+  emptyVentureExtensions,
+} from "@/lib/ventures/create-venture-schema";
 import { encryptVentureEnv } from "@/lib/ventures/env-store";
+import { ensureDefaultTargetsForVenture } from "@/lib/ventures/ensure-targets";
 import { hashVenturePassword } from "@/lib/ventures/password";
-
-const schema = z.object({
-  name: z.string().min(2).max(120),
-  slug: z
-    .string()
-    .min(2)
-    .max(64)
-    .regex(/^[a-z0-9-]+$/, "Use lowercase letters, numbers, and hyphens only"),
-  adminEmail: z.string().email().optional().or(z.literal("")),
-  adminPassword: z.string().min(8).max(200).optional().or(z.literal("")),
-  envContent: z.string().max(100_000).optional(),
-  externalUrl: z.string().url().optional().or(z.literal("")),
-  notes: z.string().max(5000).optional(),
-});
+import { erpHostForKey, normalizeVentureKey } from "@/lib/ventures/subdomain";
 
 async function requireAdmin() {
   try {
@@ -33,30 +24,45 @@ async function requireAdmin() {
   }
 }
 
-export async function createVenture(input: z.infer<typeof schema>) {
+export async function createVenture(input: unknown) {
   const user = await requireAdmin();
-  const data = schema.parse(input);
+  const parsed = createVentureInputSchema.safeParse(input);
+  if (!parsed.success) {
+    const first = parsed.error.issues[0]?.message ?? "Invalid venture data.";
+    return { error: first };
+  }
+  const data = parsed.data;
+  const slug = normalizeVentureKey(data.slug);
 
-  const slugTaken = await prismadb.ventureApp.findUnique({ where: { slug: data.slug } });
-  if (slugTaken) return { error: "A venture with this slug already exists." };
+  const slugTaken = await prismadb.ventureApp.findUnique({ where: { slug } });
+  if (slugTaken) return { error: "A venture with this key already exists." };
 
-  const password = data.adminPassword?.trim();
-  const envPlain = data.envContent ?? "";
+  const gitTaken = await prismadb.ventureApp.findFirst({
+    where: { gitRepositoryUrl: data.gitRepositoryUrl },
+  });
+  if (gitTaken) return { error: "This Git repository is already linked to another venture." };
 
-  await prismadb.ventureApp.create({
+  const venture = await prismadb.ventureApp.create({
     data: {
       name: data.name.trim(),
-      slug: data.slug,
+      slug,
       kind: VentureAppKind.custom,
-      adminEmail: data.adminEmail?.trim() || null,
-      adminPasswordHash: password ? await hashVenturePassword(password) : null,
-      envEncrypted: encryptVentureEnv(envPlain),
-      externalUrl: data.externalUrl?.trim() || null,
-      notes: data.notes?.trim() || null,
+      description: data.description,
+      assignedSubdomain: erpHostForKey(slug),
+      lifecycleStatus: VentureLifecycleStatus.domain_assigned,
+      gitRepositoryUrl: data.gitRepositoryUrl,
+      extensionsJson: emptyVentureExtensions(),
+      adminEmail: data.adminEmail,
+      adminPasswordHash: await hashVenturePassword(data.adminPassword),
+      envEncrypted: encryptVentureEnv(data.envContent),
+      externalUrl: data.externalUrl,
+      notes: data.notes,
       createdBy: user.id,
     },
   });
 
+  await ensureDefaultTargetsForVenture(venture.id, slug);
+
   revalidatePath("/[locale]/(routes)/ventures", "page");
-  return { success: true as const };
+  return { success: true as const, slug };
 }

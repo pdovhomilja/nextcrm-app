@@ -29,7 +29,8 @@ export default async function VenturesPage() {
     >
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Each venture can store its own admin login and encrypted <code className="text-xs">.env</code>.
+          Each venture requires a Git repository URL, subdomain, admin login, and encrypted{" "}
+          <code className="text-xs">.env</code> before it is fully registered.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <VenturesLockButton />
@@ -62,7 +63,12 @@ export default async function VenturesPage() {
             <Card key={v.id}>
               <CardHeader>
                 <CardTitle>{v.name}</CardTitle>
-                <CardDescription>{v.adminEmail ?? "No admin email yet"}</CardDescription>
+                <CardDescription className="space-y-1">
+                  <span className="block">{v.assignedSubdomain ?? v.slug}</span>
+                  <span className="block truncate text-xs">
+                    {v.gitRepositoryUrl ?? "Git repository not set"}
+                  </span>
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button asChild variant="outline" size="sm">

@@ -6,15 +6,25 @@ import { z } from "zod";
 import { requireRole, AuthorizationError } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { encryptVentureEnv } from "@/lib/ventures/env-store";
+import { isValidGitRepositoryUrl, normalizeGitRepositoryUrl } from "@/lib/ventures/git-repo";
 import { hashVenturePassword } from "@/lib/ventures/password";
 
 const schema = z.object({
   id: z.string().uuid(),
-  adminEmail: z.string().email().optional().or(z.literal("")),
+  description: z.string().trim().min(10, "Description is required.").max(2000),
+  gitRepositoryUrl: z
+    .string()
+    .trim()
+    .min(1, "Git repository URL is required.")
+    .refine(isValidGitRepositoryUrl, {
+      message: "Enter a valid GitHub, GitLab, or Bitbucket repository URL.",
+    })
+    .transform(normalizeGitRepositoryUrl),
+  adminEmail: z.string().trim().email("Administrator email is required."),
   adminPassword: z.string().min(8).max(200).optional().or(z.literal("")),
-  envContent: z.string().max(100_000).optional(),
-  externalUrl: z.string().url().optional().or(z.literal("")),
-  notes: z.string().max(5000).optional(),
+  envContent: z.string().trim().min(1, "Environment contents are required.").max(100_000),
+  externalUrl: z.string().trim().url("Primary app URL must be valid."),
+  notes: z.string().trim().min(1, "Project notes are required.").max(5000),
 });
 
 async function requireAdmin() {
@@ -26,23 +36,35 @@ async function requireAdmin() {
   }
 }
 
-export async function updateVenture(input: z.infer<typeof schema>) {
+export async function updateVenture(input: unknown) {
   await requireAdmin();
-  const data = schema.parse(input);
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) {
+    const first = parsed.error.issues[0]?.message ?? "Invalid venture data.";
+    return { error: first };
+  }
+  const data = parsed.data;
+
+  const gitTaken = await prismadb.ventureApp.findFirst({
+    where: {
+      gitRepositoryUrl: data.gitRepositoryUrl,
+      NOT: { id: data.id },
+    },
+  });
+  if (gitTaken) return { error: "This Git repository is already linked to another venture." };
 
   const password = data.adminPassword?.trim();
-  const envPlain = data.envContent;
 
   await prismadb.ventureApp.update({
     where: { id: data.id },
     data: {
-      adminEmail: data.adminEmail?.trim() || null,
+      description: data.description,
+      gitRepositoryUrl: data.gitRepositoryUrl,
+      adminEmail: data.adminEmail,
       ...(password ? { adminPasswordHash: await hashVenturePassword(password) } : {}),
-      ...(envPlain !== undefined
-        ? { envEncrypted: encryptVentureEnv(envPlain) }
-        : {}),
-      externalUrl: data.externalUrl?.trim() || null,
-      notes: data.notes?.trim() || null,
+      envEncrypted: encryptVentureEnv(data.envContent),
+      externalUrl: data.externalUrl,
+      notes: data.notes,
     },
   });
 

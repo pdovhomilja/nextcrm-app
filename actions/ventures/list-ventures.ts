@@ -9,8 +9,12 @@ export type VentureListItem = {
   slug: string;
   name: string;
   kind: string;
+  description: string | null;
+  assignedSubdomain: string | null;
+  gitRepositoryUrl: string | null;
   adminEmail: string | null;
   externalUrl: string | null;
+  lifecycleStatus: string;
   updatedAt: Date;
 };
 
@@ -34,8 +38,12 @@ export async function listVentures(): Promise<VentureListItem[]> {
       slug: true,
       name: true,
       kind: true,
+      description: true,
+      assignedSubdomain: true,
+      gitRepositoryUrl: true,
       adminEmail: true,
       externalUrl: true,
+      lifecycleStatus: true,
       updatedAt: true,
     },
   });

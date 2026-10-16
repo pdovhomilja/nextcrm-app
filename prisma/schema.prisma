@@ -2484,6 +2484,8 @@ model VentureApp {
   adminPasswordHash   String?
   envEncrypted        String?                @db.Text
   externalUrl         String?
+  gitRepositoryUrl    String?
+  extensionsJson      Json?
   notes               String?                @db.Text
   statsJson           Json?
   createdAt           DateTime               @default(now())

@@ -3,45 +3,16 @@
 import { VentureAppKind, VentureLifecycleStatus } from "@prisma/client";
 
 import { prismadb } from "@/lib/prisma";
-import { ROFYT_SLUG } from "@/lib/ventures/catalog";
-import { adminHostForKey, defaultAdminUrl, defaultErpUrl, erpHostForKey } from "@/lib/ventures/subdomain";
-
-const DEFAULT_TARGETS = [
-  {
-    targetKey: "erp",
-    displayName: "ROFYT ERP",
-    applicationType: "erp",
-    urlEnv: "ROFYT_ERP_URL",
-    defaultUrl: (key: string) => defaultErpUrl(key),
-  },
-  {
-    targetKey: "admin",
-    displayName: "ROFYT Admin Portal",
-    applicationType: "admin_portal",
-    urlEnv: "ROFYT_ADMIN_URL",
-    defaultUrl: (key: string) => defaultAdminUrl(key),
-  },
-] as const;
-
-async function ensureDefaultTargets(ventureId: string, key: string) {
-  for (const spec of DEFAULT_TARGETS) {
-    const envUrl = process.env[spec.urlEnv]?.trim();
-    const deploymentUrl = envUrl || spec.defaultUrl(key);
-    await prismadb.ventureApplicationTarget.upsert({
-      where: {
-        ventureId_targetKey: { ventureId, targetKey: spec.targetKey },
-      },
-      create: {
-        ventureId,
-        targetKey: spec.targetKey,
-        displayName: spec.displayName,
-        applicationType: spec.applicationType,
-        deploymentUrl,
-      },
-      update: {},
-    });
-  }
-}
+import { ROFYT_DEFAULT_GIT_REPOSITORY_URL, ROFYT_SLUG } from "@/lib/ventures/catalog";
+import { emptyVentureExtensions } from "@/lib/ventures/create-venture-schema";
+import { ensureDefaultTargetsForVenture } from "@/lib/ventures/ensure-targets";
+import { normalizeGitRepositoryUrl } from "@/lib/ventures/git-repo";
+import {
+  adminHostForKey,
+  defaultAdminUrl,
+  defaultErpUrl,
+  erpHostForKey,
+} from "@/lib/ventures/subdomain";
 
 /** Ensures ROFYT venture + default ERP/Admin targets exist (does not deploy apps). */
 export async function ensureRofytVenture() {
@@ -52,6 +23,10 @@ export async function ensureRofytVenture() {
     process.env.BOOTSTRAP_ADMIN_EMAIL?.trim() ||
     null;
 
+  const gitRaw =
+    process.env.ROFYT_GIT_REPOSITORY_URL?.trim() || ROFYT_DEFAULT_GIT_REPOSITORY_URL;
+  const gitRepositoryUrl = normalizeGitRepositoryUrl(gitRaw);
+
   const venture = await prismadb.ventureApp.upsert({
     where: { slug: key },
     create: {
@@ -61,6 +36,8 @@ export async function ensureRofytVenture() {
       description: "Car rental ERP — VenSai Labs venture",
       assignedSubdomain,
       lifecycleStatus: VentureLifecycleStatus.domain_assigned,
+      gitRepositoryUrl,
+      extensionsJson: emptyVentureExtensions(),
       adminEmail,
       externalUrl: process.env.ROFYT_EXTERNAL_URL?.trim() || defaultErpUrl(key),
       notes: `ERP: ${defaultErpUrl(key)} · Admin: ${defaultAdminUrl(key)} (${adminHostForKey(key)})`,
@@ -68,9 +45,10 @@ export async function ensureRofytVenture() {
     update: {
       assignedSubdomain,
       lifecycleStatus: VentureLifecycleStatus.domain_assigned,
+      gitRepositoryUrl,
     },
   });
 
-  await ensureDefaultTargets(venture.id, key);
+  await ensureDefaultTargetsForVenture(venture.id, key);
   return venture;
 }
