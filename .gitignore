@@ -82,3 +82,4 @@ v8-compile-cache-*/
 /docs/internal/
 /docs/superpowers/plans/*aqunama*
 /docs/superpowers/specs/*aqunama*
+.env*

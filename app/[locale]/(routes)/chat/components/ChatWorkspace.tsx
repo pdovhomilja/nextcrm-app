@@ -25,6 +25,7 @@ type Props = {
   meetRoom: string;
   currentUserId: string;
   initialCallOpen?: boolean;
+  initialDraft?: string;
   isGeneral?: boolean;
   peerName?: string;
 };
@@ -61,6 +62,7 @@ export function ChatWorkspace({
   meetRoom,
   currentUserId,
   initialCallOpen = false,
+  initialDraft,
   isGeneral = false,
   peerName,
 }: Props) {
@@ -76,11 +78,18 @@ export function ChatWorkspace({
   const composerRef = React.useRef<HTMLTextAreaElement>(null);
   const bottomRef = React.useRef<HTMLDivElement>(null);
 
+  const appliedDraftRef = React.useRef<string | null>(null);
+
   React.useEffect(() => {
     setMeetHint(initialCallOpen);
-    setDraft("");
     setPendingFile(null);
-  }, [initialCallOpen, roomKey]);
+    if (initialDraft?.trim() && appliedDraftRef.current !== `${roomKey}:${initialDraft}`) {
+      appliedDraftRef.current = `${roomKey}:${initialDraft}`;
+      setDraft(initialDraft.trim());
+    } else if (!initialDraft?.trim()) {
+      setDraft("");
+    }
+  }, [initialCallOpen, roomKey, initialDraft]);
 
   React.useEffect(() => {
     void markChatRoomRead(roomKey);

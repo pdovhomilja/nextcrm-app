@@ -40,8 +40,10 @@ type Props = {
   onClose?: () => void;
   /** When true, dialog is opened programmatically (no trigger button). */
   headless?: boolean;
-  /** Pre-fill AI instructions (e.g. from “AI reply”). */
+  /** Pre-fill AI instructions (e.g. from “AI reply” or assistant). */
   initialAiPrompt?: string;
+  /** Run AI generate once when the dialog opens (assistant deep link). */
+  autoGenerateAi?: boolean;
 };
 
 function initialFields(
@@ -101,6 +103,7 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
     onClose,
     headless = false,
     initialAiPrompt = "",
+    autoGenerateAi = false,
   }: Props,
   ref
 ) {
@@ -226,11 +229,12 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
               <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
             </div>
             <EmailAiWriter
-              key={`ai-${open}-${initialAiPrompt}`}
+              key={`ai-${open}-${initialAiPrompt}-${autoGenerateAi}`}
               defaultPrompt={initialAiPrompt}
+              autoGenerate={autoGenerateAi && open}
               context={{
                 composeMode: mode as MailboxComposeMode,
-                to,
+                to: to.trim() || initialTo?.trim() || "",
                 subject,
                 existingBodyPlain: stripHtmlToPlain(bodyHtml),
                 threadFrom: replyTo?.fromEmail ?? replyTo?.fromName ?? undefined,

@@ -8,7 +8,7 @@ import { ChatShell } from "./components/ChatShell";
 export default async function ChatPage({
   searchParams,
 }: {
-  searchParams: Promise<{ room?: string; userId?: string; call?: string }>;
+  searchParams: Promise<{ room?: string; userId?: string; call?: string; draft?: string }>;
 }) {
   const session = await getSession();
   if (!session?.user?.id) redirect("/sign-in");
@@ -45,6 +45,7 @@ export default async function ChatPage({
       displayName={displayName}
       meetRoom={meetRoom}
       initialCallOpen={params.call === "1"}
+      initialDraft={params.draft ? decodeURIComponent(params.draft) : undefined}
     />
   );
 }

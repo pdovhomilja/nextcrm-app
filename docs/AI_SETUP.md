@@ -6,6 +6,7 @@
 |---------|-----------|--------|
 | **Campaign email generate** | Groq → OpenRouter (free) → Gemini → OpenAI, then optional **Gemini polish** + **OpenAI JSON refine** | Main copywriting workflow |
 | **Mailbox compose / reply** | Same stack via `quick-copy` task (`generate-compose-email`) | E-mails → Compose, Reply, ✨ AI reply |
+| **VenSai Assistant** (header ✨) | Text: Groq → OpenRouter → Gemini chain; **images:** Gemini vision (`GEMINI_API_KEY`) | Opens compose, team DM, or app routes from natural language |
 | **Search / Cmd+K vectors** | OpenAI embeddings only | Do not swap without a migration |
 | **Contact enrichment** | OpenAI + Firecrawl | Admin / Profile keys |
 | **Target enrichment (browser)** | Anthropic + E2B | Heavy research |

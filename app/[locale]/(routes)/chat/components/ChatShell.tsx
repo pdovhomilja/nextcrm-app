@@ -19,6 +19,7 @@ type Props = {
   displayName: string;
   meetRoom: string;
   initialCallOpen?: boolean;
+  initialDraft?: string;
 };
 
 function MemberAvatar({ name, id, size = "md" }: { name: string; id: string; size?: "sm" | "md" }) {
@@ -44,6 +45,7 @@ export function ChatShell({
   displayName,
   meetRoom,
   initialCallOpen,
+  initialDraft,
 }: Props) {
   const [query, setQuery] = React.useState("");
   const q = query.trim().toLowerCase();
@@ -162,6 +164,7 @@ export function ChatShell({
             meetRoom={meetRoom}
             currentUserId={currentUserId}
             initialCallOpen={initialCallOpen}
+            initialDraft={initialDraft}
             peerName={activeMember?.name}
             isGeneral={isGeneral}
           />

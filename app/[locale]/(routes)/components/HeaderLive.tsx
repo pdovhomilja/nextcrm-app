@@ -5,6 +5,13 @@ import FulltextSearch from "./FulltextSearch";
 import { HeaderMailButton } from "./HeaderMailButton";
 import { HeaderNotifications } from "./HeaderNotifications";
 import { HeaderChatPanel } from "./HeaderChatPanel";
+import dynamic from "next/dynamic";
+
+const CrmAssistantSheet = dynamic(
+  () =>
+    import("@/components/assistant/CrmAssistantSheet").then((m) => m.CrmAssistantSheet),
+  { ssr: false, loading: () => null }
+);
 import { HeaderProfileMenu } from "./HeaderProfileMenu";
 import type { HeaderNotificationItem } from "@/actions/notifications/header-notifications";
 import type { LiveSummary } from "@/hooks/use-live-summary";
@@ -44,6 +51,7 @@ export function HeaderLive({ user, initialLive }: Props) {
       </div>
 
       <div className="flex shrink-0 items-center gap-0.5 rounded-2xl border border-border/50 bg-muted/25 p-0.5 sm:gap-1 sm:p-1">
+        <CrmAssistantSheet />
         <HeaderMailButton unreadCount={live.emailUnreadCount} />
         <HeaderChatPanel unreadCount={live.chatUnreadCount} />
         <HeaderNotifications totalCount={live.notificationCount} items={live.items} />

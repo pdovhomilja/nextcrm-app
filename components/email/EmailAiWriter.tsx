@@ -38,6 +38,8 @@ type Props = {
   onGenerated: (result: { subject: string; html: string }) => void;
   className?: string;
   defaultPrompt?: string;
+  /** When true with a defaultPrompt, runs Generate once on mount (assistant → compose). */
+  autoGenerate?: boolean;
 };
 
 const QUICK_PROMPTS: { label: string; action: ComposeAiAction; prompt: string; modes?: MailboxComposeMode[] }[] = [
@@ -80,16 +82,27 @@ const QUICK_PROMPTS: { label: string; action: ComposeAiAction; prompt: string; m
   },
 ];
 
-export function EmailAiWriter({ context, onGenerated, className, defaultPrompt = "" }: Props) {
+export function EmailAiWriter({
+  context,
+  onGenerated,
+  className,
+  defaultPrompt = "",
+  autoGenerate = false,
+}: Props) {
   const [prompt, setPrompt] = React.useState(defaultPrompt);
   const [quality, setQuality] = React.useState<AiQualityMode>("good");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [open, setOpen] = React.useState(Boolean(defaultPrompt.trim()));
+  const autoRanRef = React.useRef(false);
 
   React.useEffect(() => {
     if (defaultPrompt.trim()) setPrompt(defaultPrompt);
   }, [defaultPrompt]);
+
+  React.useEffect(() => {
+    autoRanRef.current = false;
+  }, [defaultPrompt, autoGenerate]);
 
   async function run(action: ComposeAiAction, promptOverride?: string) {
     setBusy(true);
@@ -123,6 +136,14 @@ export function EmailAiWriter({ context, onGenerated, className, defaultPrompt =
       setBusy(false);
     }
   }
+
+  React.useEffect(() => {
+    if (!autoGenerate || !defaultPrompt.trim() || autoRanRef.current) return;
+    autoRanRef.current = true;
+    setOpen(true);
+    void run("draft", defaultPrompt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional one-shot on assistant open
+  }, [autoGenerate, defaultPrompt]);
 
   const chips = QUICK_PROMPTS.filter(
     (c) => !c.modes || c.modes.includes(context.composeMode)
