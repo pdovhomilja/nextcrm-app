@@ -25,7 +25,6 @@ import getDocumentsMenuItem from "./menu-items/Documents";
 import getInvoicesMenuItem from "./menu-items/Invoices";
 import getAdministrationMenuItem from "./menu-items/Administration";
 import getCampaignsMenuItem from "./menu-items/Campaigns";
-import getVenturesMenuItem from "./menu-items/Ventures";
 import type { NavItem } from "./nav-main";
 import { featureForPath, type PermissionMatrix } from "@/lib/authz/permissions";
 
@@ -136,11 +135,6 @@ export function AppSidebar({
     getDocumentsMenuItem({ title: dict?.documents || "Documents" }),
     getInvoicesMenuItem({ title: dict?.invoices || "Invoices" }),
   ];
-  if (session?.user?.role === "admin" || session?.user?.role === "manager") {
-    allNavItems.push(
-      getVenturesMenuItem({ title: "Ventures" })
-    );
-  }
   const navItems = filterNavByPermissions(allNavItems, permissions);
 
   if (pluginNav?.length) {
