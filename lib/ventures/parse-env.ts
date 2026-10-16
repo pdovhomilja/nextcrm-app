@@ -69,7 +69,7 @@ export function normalizeEnvEntriesForEditor(
     ordered.push({ key, value: map.get(key) ?? "" });
     map.delete(key);
   }
-  for (const [key, value] of [...map.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+  for (const [key, value] of Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b))) {
     ordered.push({ key, value });
   }
   return ordered;

@@ -79,7 +79,7 @@ export async function createVenture(input: unknown) {
     slug,
     seedMessage: seed.seeded
       ? `${seed.message} Sign in at ${seed.adminPortalUrl}/login`
-      : seed.skipped
+      : "skipped" in seed && seed.skipped
         ? undefined
         : seed.message,
   };

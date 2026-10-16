@@ -19,7 +19,12 @@ export type SeedAdminResult =
   | { seeded: false; message: string };
 
 function adminTargetFor(
-  targets: { targetKey: string; applicationType: string; deploymentUrl: string }[],
+  targets: {
+    id: string;
+    targetKey: string;
+    applicationType: string;
+    deploymentUrl: string;
+  }[],
 ) {
   return (
     targets.find((t) => t.targetKey === "admin") ??
@@ -169,6 +174,20 @@ export async function seedVentureAdminPortal(input: {
       lastConnectionTestAt: completedAt,
     },
   });
+
+  if (data.status === "failed") {
+    await prismadb.provisioningAuditLog.create({
+      data: {
+        targetId: target.id,
+        initiatedByUserId: input.initiatedByUserId,
+        operation: "seed_admin",
+        outcome: "failed",
+        correlationId,
+        sanitizedMessage: data.message,
+      },
+    });
+    return { seeded: false, message: data.message };
+  }
 
   await prismadb.provisioningAuditLog.create({
     data: {
