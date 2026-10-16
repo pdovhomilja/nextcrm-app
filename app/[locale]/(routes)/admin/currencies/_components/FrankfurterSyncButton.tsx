@@ -16,7 +16,9 @@ export function FrankfurterSyncButton() {
         toast.error(res.error ?? "Sync failed");
         return;
       }
-      toast.success(`Updated ${res.updated} rates from Frankfurter (EUR, USD, INR)`);
+      toast.success(
+        `Updated ${res.updated} rates from Frankfurter across supported ECB currencies`
+      );
     } finally {
       setLoading(false);
     }
