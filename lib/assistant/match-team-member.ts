@@ -37,15 +37,18 @@ export function findTeamMemberByMention(text: string, team: TeamMember[]): TeamM
 
 /** Text to pre-fill chat composer after opening a DM. */
 export function extractChatDraftFromCommand(text: string, memberName: string): string {
-  const about = text.match(/\babout\s+(.+)/is);
+  const about = text.match(/\babout\s+([\s\S]+)/i);
   if (about?.[1]) return about[1].trim();
 
   const tell = text.match(
-    new RegExp(`(?:tell|ask|message|ping)\\s+${escapeRegExp(memberName)}\\s+(?:to\\s+)?(.+)`, "is")
+    new RegExp(
+      `(?:tell|ask|message|ping)\\s+${escapeRegExp(memberName)}\\s+(?:to\\s+)?([\\s\\S]+)`,
+      "i"
+    )
   );
   if (tell?.[1]) return tell[1].trim();
 
-  const say = text.match(/\bsay\s+(.+)/is);
+  const say = text.match(/\bsay\s+([\s\S]+)/i);
   if (say?.[1]) return say[1].trim();
 
   return "";

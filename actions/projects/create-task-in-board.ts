@@ -125,7 +125,7 @@ export const createTaskInBoard = async (data: {
             where: { id: boardId },
           });
 
-          if (notifyRecipient?.email) {
+          if (notifyRecipient?.email && boardData) {
             await resend.emails.send({
               from:
                 process.env.NEXT_PUBLIC_APP_NAME +
