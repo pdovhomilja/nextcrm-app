@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 
-import { getVentureBySlug } from "@/actions/ventures/list-ventures";
+import { getVentureAdminTarget, getVentureBySlug } from "@/actions/ventures/list-ventures";
 import { VentureDetailCard } from "@/components/ventures/VentureDetailCard";
 import { VentureSettingsPanel } from "@/components/ventures/VentureSettingsPanel";
 import { decryptVentureEnv } from "@/lib/ventures/env-store";
@@ -22,6 +22,7 @@ export default async function VentureDetailPage({ params }: Props) {
   if (!venture || venture.kind !== "custom") notFound();
 
   const envPreview = decryptVentureEnv(venture.envEncrypted);
+  const adminTarget = await getVentureAdminTarget(venture.id);
 
   return (
     <Container title={venture.name} description="Venture control plane — repository, domains, and credentials.">
@@ -43,6 +44,8 @@ export default async function VentureDetailPage({ params }: Props) {
           envPreview={envPreview}
           externalUrl={venture.externalUrl}
           notes={venture.notes}
+          adminPortalUrl={adminTarget?.deploymentUrl ?? null}
+          adminProvisioningStatus={adminTarget?.provisioningStatus ?? null}
         />
       </div>
     </Container>

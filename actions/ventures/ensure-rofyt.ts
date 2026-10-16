@@ -5,7 +5,10 @@ import { VentureAppKind, VentureLifecycleStatus } from "@prisma/client";
 import { prismadb } from "@/lib/prisma";
 import { ROFYT_DEFAULT_GIT_REPOSITORY_URL, ROFYT_SLUG } from "@/lib/ventures/catalog";
 import { emptyVentureExtensions } from "@/lib/ventures/create-venture-schema";
-import { ensureDefaultTargetsForVenture } from "@/lib/ventures/ensure-targets";
+import {
+  ensureDefaultTargetsForVenture,
+  syncVentureTargetDeploymentUrls,
+} from "@/lib/ventures/ensure-targets";
 import { normalizeGitRepositoryUrl } from "@/lib/ventures/git-repo";
 import {
   adminHostForKey,
@@ -50,5 +53,15 @@ export async function ensureRofytVenture() {
   });
 
   await ensureDefaultTargetsForVenture(venture.id, key);
+
+  const erpUrl = process.env.ROFYT_ERP_URL?.trim();
+  const adminUrl = process.env.ROFYT_ADMIN_URL?.trim();
+  if (erpUrl || adminUrl) {
+    await syncVentureTargetDeploymentUrls(venture.id, {
+      ...(erpUrl ? { erp: erpUrl } : {}),
+      ...(adminUrl ? { admin: adminUrl } : {}),
+    });
+  }
+
   return venture;
 }

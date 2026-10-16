@@ -8,6 +8,7 @@ import { prismadb } from "@/lib/prisma";
 import { encryptVentureEnv } from "@/lib/ventures/env-store";
 import { isValidGitRepositoryUrl, normalizeGitRepositoryUrl } from "@/lib/ventures/git-repo";
 import { hashVenturePassword } from "@/lib/ventures/password";
+import { seedVentureAdminPortal } from "@/lib/ventures/provision-admin";
 
 const schema = z.object({
   id: z.string().uuid(),
@@ -37,7 +38,7 @@ async function requireAdmin() {
 }
 
 export async function updateVenture(input: unknown) {
-  await requireAdmin();
+  const user = await requireAdmin();
   const parsed = schema.safeParse(input);
   if (!parsed.success) {
     const first = parsed.error.issues[0]?.message ?? "Invalid venture data.";
@@ -55,6 +56,9 @@ export async function updateVenture(input: unknown) {
 
   const password = data.adminPassword?.trim();
 
+  const existing = await prismadb.ventureApp.findUnique({ where: { id: data.id } });
+  if (!existing) return { error: "Venture not found." };
+
   await prismadb.ventureApp.update({
     where: { id: data.id },
     data: {
@@ -68,6 +72,23 @@ export async function updateVenture(input: unknown) {
     },
   });
 
+  let seedMessage: string | undefined;
+  if (password) {
+    const seed = await seedVentureAdminPortal({
+      ventureId: data.id,
+      ventureSlug: existing.slug,
+      adminEmail: data.adminEmail,
+      adminPasswordPlain: password,
+      envPlain: data.envContent,
+      initiatedByUserId: user.id,
+    });
+    if (seed.seeded) {
+      seedMessage = `${seed.message} Sign in at ${seed.adminPortalUrl}/login`;
+    } else if (!seed.skipped) {
+      seedMessage = seed.message;
+    }
+  }
+
   revalidatePath("/[locale]/(routes)/ventures", "page");
-  return { success: true as const };
+  return { success: true as const, seedMessage };
 }

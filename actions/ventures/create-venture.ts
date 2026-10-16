@@ -12,6 +12,7 @@ import {
 import { encryptVentureEnv } from "@/lib/ventures/env-store";
 import { ensureDefaultTargetsForVenture } from "@/lib/ventures/ensure-targets";
 import { hashVenturePassword } from "@/lib/ventures/password";
+import { seedVentureAdminPortal } from "@/lib/ventures/provision-admin";
 import { erpHostForKey, normalizeVentureKey } from "@/lib/ventures/subdomain";
 
 async function requireAdmin() {
@@ -63,6 +64,23 @@ export async function createVenture(input: unknown) {
 
   await ensureDefaultTargetsForVenture(venture.id, slug);
 
+  const seed = await seedVentureAdminPortal({
+    ventureId: venture.id,
+    ventureSlug: slug,
+    adminEmail: data.adminEmail,
+    adminPasswordPlain: data.adminPassword,
+    envPlain: data.envContent,
+    initiatedByUserId: user.id,
+  });
+
   revalidatePath("/[locale]/(routes)/ventures", "page");
-  return { success: true as const, slug };
+  return {
+    success: true as const,
+    slug,
+    seedMessage: seed.seeded
+      ? `${seed.message} Sign in at ${seed.adminPortalUrl}/login`
+      : seed.skipped
+        ? undefined
+        : seed.message,
+  };
 }

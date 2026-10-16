@@ -34,3 +34,22 @@ export async function ensureDefaultTargetsForVenture(ventureId: string, key: str
     });
   }
 }
+
+/** Point targets at live URLs (custom domain or Vercel) without changing keys. */
+export async function syncVentureTargetDeploymentUrls(
+  ventureId: string,
+  urls: { erp?: string; admin?: string },
+) {
+  if (urls.erp?.trim()) {
+    await prismadb.ventureApplicationTarget.updateMany({
+      where: { ventureId, targetKey: "erp" },
+      data: { deploymentUrl: urls.erp.trim().replace(/\/+$/, "") },
+    });
+  }
+  if (urls.admin?.trim()) {
+    await prismadb.ventureApplicationTarget.updateMany({
+      where: { ventureId, targetKey: "admin" },
+      data: { deploymentUrl: urls.admin.trim().replace(/\/+$/, "") },
+    });
+  }
+}

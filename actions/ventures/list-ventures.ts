@@ -56,3 +56,15 @@ export async function getVentureBySlug(slug: string) {
   await ensureRofytVenture();
   return prismadb.ventureApp.findUnique({ where: { slug } });
 }
+
+export async function getVentureAdminTarget(ventureId: string) {
+  return prismadb.ventureApplicationTarget.findFirst({
+    where: { ventureId, targetKey: "admin" },
+    select: {
+      deploymentUrl: true,
+      provisioningStatus: true,
+      administratorEmail: true,
+      lastProvisioningSuccessAt: true,
+    },
+  });
+}

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getRofytStatsIfAuthorized } from "@/actions/ventures/rofyt-stats";
-import { getVentureBySlug } from "@/actions/ventures/list-ventures";
+import { getVentureAdminTarget, getVentureBySlug } from "@/actions/ventures/list-ventures";
 import { VentureDetailCard } from "@/components/ventures/VentureDetailCard";
 import { RofytDashboard } from "@/components/ventures/RofytDashboard";
 import { VentureSettingsPanel } from "@/components/ventures/VentureSettingsPanel";
@@ -28,6 +28,8 @@ export default async function RofytVenturePage() {
   const { stats } = await getRofytStatsIfAuthorized();
   const envPreview =
     role === "admin" ? decryptVentureEnv(venture.envEncrypted) : "";
+  const adminTarget =
+    role === "admin" ? await getVentureAdminTarget(venture.id) : null;
 
   return (
     <Container
@@ -57,6 +59,8 @@ export default async function RofytVenturePage() {
             envPreview={envPreview}
             externalUrl={venture.externalUrl}
             notes={venture.notes}
+            adminPortalUrl={adminTarget?.deploymentUrl ?? null}
+            adminProvisioningStatus={adminTarget?.provisioningStatus ?? null}
           />
         ) : null}
       </div>

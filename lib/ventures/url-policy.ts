@@ -22,8 +22,16 @@ function isBlockedIp(ip: string): boolean {
   return BLOCKED_IP_RANGES.some((re) => re.test(ip));
 }
 
+type UrlPolicyOpts = {
+  /** Allow this exact deployment origin (e.g. Vercel preview) while DNS is not on *.vensailabs.in yet. */
+  registeredDeploymentUrl?: string;
+};
+
 /** Validate CRM outbound URL for venture health/provisioning (SSRF guard). */
-export async function assertAllowedVentureTargetUrl(raw: string): Promise<URL> {
+export async function assertAllowedVentureTargetUrl(
+  raw: string,
+  opts?: UrlPolicyOpts,
+): Promise<URL> {
   let parsed: URL;
   try {
     parsed = new URL(raw);
@@ -31,8 +39,23 @@ export async function assertAllowedVentureTargetUrl(raw: string): Promise<URL> {
     throw new Error("Invalid target URL.");
   }
 
-  if (parsed.protocol !== "https:") {
-    throw new Error("Target URL must use HTTPS in production.");
+  const allowHttp =
+    process.env.NODE_ENV !== "production" &&
+    process.env.VENTURE_ALLOW_HTTP_TARGETS === "1";
+  if (parsed.protocol !== "https:" && !(allowHttp && parsed.protocol === "http:")) {
+    throw new Error("Target URL must use HTTPS.");
+  }
+
+  if (opts?.registeredDeploymentUrl?.trim()) {
+    try {
+      const reg = new URL(opts.registeredDeploymentUrl.trim());
+      if (parsed.origin === reg.origin) {
+        await assertHostNotBlocked(parsed.hostname);
+        return parsed;
+      }
+    } catch {
+      /* fall through to suffix rules */
+    }
   }
 
   if (parsed.username || parsed.password) {
@@ -42,12 +65,17 @@ export async function assertAllowedVentureTargetUrl(raw: string): Promise<URL> {
   const host = parsed.hostname.toLowerCase();
   const suffix = getVentureDomainSuffix();
   if (!host.endsWith(`.${suffix}`) && host !== suffix) {
-    throw new Error(`Target host must be under *.${suffix}.`);
+    throw new Error(`Target host must be under *.${suffix} or match the saved deployment URL.`);
   }
 
+  await assertHostNotBlocked(host);
+  return parsed;
+}
+
+async function assertHostNotBlocked(host: string): Promise<void> {
   if (isIP(host)) {
     if (isBlockedIp(host)) throw new Error("Target IP is not allowed.");
-    return parsed;
+    return;
   }
 
   const records = await lookup(host, { all: true });
@@ -56,6 +84,4 @@ export async function assertAllowedVentureTargetUrl(raw: string): Promise<URL> {
       throw new Error("Target resolves to a blocked address.");
     }
   }
-
-  return parsed;
 }
