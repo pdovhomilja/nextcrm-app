@@ -3,10 +3,10 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import { logoutRofytAdmin } from "@/actions/ventures/rofyt-login";
+import { logoutVenturesMaster } from "@/actions/ventures/ventures-master-auth";
 import { Button } from "@/components/ui/button";
 
-export function RofytLockButton() {
+export function VenturesLockButton() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -14,15 +14,16 @@ export function RofytLockButton() {
     <Button
       type="button"
       variant="outline"
+      size="sm"
       disabled={pending}
       onClick={() => {
         startTransition(async () => {
-          await logoutRofytAdmin();
+          await logoutVenturesMaster();
           router.refresh();
         });
       }}
     >
-      {pending ? "Locking…" : "Lock Rofyt"}
+      {pending ? "Locking…" : "Lock Ventures"}
     </Button>
   );
 }

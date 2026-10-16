@@ -6,9 +6,7 @@ import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
 import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
 import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
 import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
-import { hasRofytAdminSession } from "@/lib/ventures/rofyt-session";
-import { getVentureBySlug } from "@/actions/ventures/list-ventures";
-import { ROFYT_SLUG } from "@/lib/ventures/catalog";
+import { hasVenturesMasterSession } from "@/lib/ventures/ventures-master-session";
 
 async function requireVenturesAccess() {
   try {
@@ -33,10 +31,7 @@ export async function getRofytStatsIfAuthorized(): Promise<{
   stats: RofytStats | null;
 }> {
   await requireVenturesAccess();
-  const venture = await getVentureBySlug(ROFYT_SLUG);
-  if (!venture) return { unlocked: false, stats: null };
-
-  const unlocked = await hasRofytAdminSession(venture.id);
+  const unlocked = await hasVenturesMasterSession();
   if (!unlocked) return { unlocked: false, stats: null };
 
   const [accounts, leads, opportunities, activeUsers, projects] = await Promise.all([

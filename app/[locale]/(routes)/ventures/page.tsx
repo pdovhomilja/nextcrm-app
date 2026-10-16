@@ -6,6 +6,7 @@ import { BUILTIN_VENTURE_APPS } from "@/lib/ventures/catalog";
 import Container from "../components/ui/Container";
 import { getSession } from "@/lib/auth-server";
 import { Button } from "@/components/ui/button";
+import { VenturesLockButton } from "@/components/ventures/VenturesLockButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default async function VenturesPage() {
@@ -30,11 +31,14 @@ export default async function VenturesPage() {
         <p className="text-sm text-muted-foreground">
           Each venture can store its own admin login and encrypted <code className="text-xs">.env</code>.
         </p>
-        {role === "admin" ? (
-          <Button asChild>
-            <Link href="/ventures/new">New venture</Link>
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          <VenturesLockButton />
+          {role === "admin" ? (
+            <Button asChild>
+              <Link href="/ventures/new">New venture</Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

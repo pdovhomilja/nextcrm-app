@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { updateVenture } from "@/actions/ventures/update-venture";
-import { logoutRofytAdmin } from "@/actions/ventures/rofyt-login";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +15,6 @@ type Props = {
   envPreview: string;
   externalUrl: string | null;
   notes: string | null;
-  showLogout?: boolean;
 };
 
 export function VentureSettingsPanel({
@@ -25,7 +23,6 @@ export function VentureSettingsPanel({
   envPreview,
   externalUrl,
   notes,
-  showLogout,
 }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -84,26 +81,9 @@ export function VentureSettingsPanel({
           <Textarea id="notes" name="notes" rows={3} defaultValue={notes ?? ""} />
         </div>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit" disabled={pending}>
-            {pending ? "Saving…" : "Save venture settings"}
-          </Button>
-          {showLogout ? (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={pending}
-              onClick={() => {
-                startTransition(async () => {
-                  await logoutRofytAdmin();
-                  router.refresh();
-                });
-              }}
-            >
-              Lock Rofyt
-            </Button>
-          ) : null}
-        </div>
+        <Button type="submit" disabled={pending}>
+          {pending ? "Saving…" : "Save venture settings"}
+        </Button>
       </form>
     </div>
   );
