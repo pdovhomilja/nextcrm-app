@@ -37,6 +37,9 @@ import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
 import { checkAssistantRateLimit } from "@/lib/crm/assistant/rate-limit";
 import { POST } from "@/app/api/crm/assistant/inquiry/route";
+import { LEAD_SOURCE_BY_CHANNEL } from "@/lib/crm/assistant/record-inquiry";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 const db = prismadb as unknown as {
   crm_Assistant_Inquiries: { findUnique: jest.Mock; create: jest.Mock; deleteMany: jest.Mock };
@@ -280,6 +283,30 @@ describe("lead matching", () => {
       leadCreated: true,
       duplicate: false,
     });
+  });
+});
+
+describe("lead source", () => {
+  it("files a lead created from the website chat under AI Website Chat", async () => {
+    await POST(req(body()));
+    expect(db.crm_Lead_Sources.findUnique).toHaveBeenCalledWith({ where: { name: "AI Website Chat" } });
+  });
+
+  it("files a lead created from a phone call under AI Phone Assistant", async () => {
+    await POST(req(body({ source: "voice_call" })));
+    expect(db.crm_Lead_Sources.findUnique).toHaveBeenCalledWith({ where: { name: "AI Phone Assistant" } });
+  });
+
+  it("every channel's source name is created by the lead-sources migration", () => {
+    // createWebLead looks the source up by name; a name with no row silently leaves
+    // the lead with no source, so the mapping and the migration must agree.
+    const sql = readFileSync(
+      join(process.cwd(), "prisma/migrations/20261018120000_assistant_lead_sources/migration.sql"),
+      "utf8"
+    );
+    for (const name of Object.values(LEAD_SOURCE_BY_CHANNEL)) {
+      expect(sql).toContain(`('${name}')`);
+    }
   });
 });
 

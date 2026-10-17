@@ -143,8 +143,13 @@ under `[assistant-inquiry]`).
   a converted customer gets a new lead.
 - **No backfill.** A matched lead's empty phone/company aren't filled in from the call.
   The values are in the activity metadata.
-- **Lead source.** Chat uses the seeded `Web` source and voice uses `Other`. A dedicated
-  "AI Assistant" source would need a seed + migration.
+- **Lead source.** A lead the assistant *creates* gets **`AI Website Chat`** (chat) or
+  **`AI Phone Assistant`** (voice); a matched lead keeps its source. Both rows come from
+  migration `20261018120000_assistant_lead_sources`, which also re-tagged the leads the
+  assistants had created before (they were filed as `Web` / `Other`). The names live in
+  `LEAD_SOURCE_BY_CHANNEL` (`lib/crm/assistant/record-inquiry.ts`); a test fails if the
+  mapping and the migration disagree, because a name with no row leaves the lead with
+  **no source** (`createWebLead` looks it up by name and silently falls back to null).
 - **Phone matching is a sequential scan** over `crm_Leads` (regex on free-form text).
   That's fine at current volume; add a normalized, indexed phone column if leads reach
   six figures.

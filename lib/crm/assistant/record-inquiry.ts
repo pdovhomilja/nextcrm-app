@@ -7,9 +7,13 @@ import type { AssistantInquiry } from "./schema";
 // request (Vercel's function limit is 300s); it is reclaimed rather than 409ing forever.
 const STALE_CLAIM_MS = 6 * 60 * 1000;
 
-const LEAD_SOURCE_BY_CHANNEL: Record<AssistantInquiry["source"], string> = {
-  website_chat: "Web",
-  voice_call: "Other",
+// Each assistant channel has its own lead source, so leads from the AI chat and the AI
+// phone line can be told apart from web-form leads (and from each other) in reports.
+// The rows are created by migration 20261018120000_assistant_lead_sources; a name
+// with no row would leave the lead with no source at all (createWebLead looks it up).
+export const LEAD_SOURCE_BY_CHANNEL: Record<AssistantInquiry["source"], string> = {
+  website_chat: "AI Website Chat",
+  voice_call: "AI Phone Assistant",
 };
 
 const CHANNEL_LABEL: Record<AssistantInquiry["source"], string> = {

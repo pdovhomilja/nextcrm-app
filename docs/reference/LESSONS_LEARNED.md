@@ -1386,3 +1386,17 @@
 - **Related trap:** `crm_Leads.phone` is free-form text, so match phones on digits only
   (`regexp_replace(phone, '[^0-9]', '', 'g')`) and allow for US numbers stored with or
   without the leading `1`.
+
+### A lead source named in code but missing from `crm_Lead_Sources` silently saves the lead with no source
+
+- **Symptom:** leads from the AI phone line showed as "Unknown" (or `Other`) in the lead-source
+  report, and chat leads were indistinguishable from web-form leads (`Web`).
+- **Cause:** `crm_Leads.lead_source_id` is an FK to the admin-editable `crm_Lead_Sources` table,
+  and `createWebLead` resolves a source **by name**; when no row has that name it stores `null`
+  without an error. The assistant mapped its channels to generic names (`Web`, `Other`), and
+  whether those rows existed depended on how each database was seeded.
+- **Fix / rule:** give each programmatic channel its own source, create the row in a
+  **migration** (`INSERT … ON CONFLICT ("name") DO NOTHING`, so every environment has it — the
+  seed JSON only runs on fresh DBs), and keep a test that asserts every name the code uses
+  appears in that migration (`__tests__/crm/assistant/inquiry-route.test.ts`). Admins can
+  rename sources in CRM Settings, so a rename of these two must ship with a code change.
