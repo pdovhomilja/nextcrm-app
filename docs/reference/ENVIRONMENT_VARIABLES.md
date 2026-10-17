@@ -100,7 +100,7 @@ in this fork's code** (kept for merge-friendliness).
 
 | Variable | Scope | Required | Purpose | Format / example |
 |---|---|---|---|---|
-| `UPSTASH_REDIS_REST_URL` | Preview, Prod | No | Enrichment rate-limiting. Skipped when unset in non-prod. | `https://...upstash.io` |
+| `UPSTASH_REDIS_REST_URL` | Preview, Prod | No | Enrichment rate-limiting (skipped when unset in non-prod) and the assistant-inquiry endpoint limiter (fails open when unset/unreachable). | `https://...upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | Preview, Prod | When active | Required together with the URL (`Redis.fromEnv()`). | — |
 
 ### Background jobs (Inngest)
@@ -132,6 +132,7 @@ in this fork's code** (kept for merge-friendliness).
 | `E2B_ENRICHMENT_TEMPLATE` | All | No | E2B template; defaults to `nextcrm-enrichment`. | — |
 | `NEXTCRM_TOKEN` | All | Route | Bearer token guarding the public create-lead endpoints (route 500s if unset when used). | random secret |
 | `WEB_LEAD_ASSIGNEE_EMAIL` | All | No | User (by email) that public web-form leads are assigned to; falls back to `null` assignee if unmatched. Defaults to `shaun@radeengineering.com`. | `shaun@radeengineering.com` |
+| `ASSISTANT_TOKEN` | Preview, Prod | Route | Bearer token for the AI-assistant write endpoint `POST /api/crm/assistant/inquiry` (website chat + voice agent via n8n). **Separate from `NEXTCRM_TOKEN`** so it can be revoked independently; compared in constant time. **Fail-closed:** unset or shorter than 32 chars = every call 401s (no deploy breaks). Contract: `docs/reference/ASSISTANT_INQUIRY_API.md`. Generate with `openssl rand -hex 32`; the same value goes into the n8n credential. | 64-char hex |
 | `NEXTAUTH_URL` | All | No | Base URL for campaign unsubscribe links. | `https://crm.radeengineering.com` |
 | `MAIL_ALLOW_PRIVATE_HOSTS` | All | No | SSRF gate (`lib/net/host-guard.ts`), default off. **Never set in Preview/Production**: it would weaken the homepage source-harvest SSRF guard (a hosted-env fail-safe already blocks harvest when it is set there, but do not rely on that). | unset, or `true` (dev only) |
 | `NEXT_PUBLIC_PREVIEWS_BASE_URL` | Preview, Prod | No | Public base URL of the prospect-preview host (`/p/<slug>` is served under it). **Optional / fail-closed:** the homepage generate job (`inngest/functions/generate-homepage.ts`) builds `preview_url`/`screenshot_url` from it and leaves them `null` if unset (the page is still stored + `READY`; the drawer falls back to the relative `/p/<slug>` on the CRM host). **No new bucket/creds:** previews reuse the existing `MINIO_*` R2 bucket under a private `previews/` prefix, served only through the Next `/p/` route. | `https://previews.radeengineering.com` |

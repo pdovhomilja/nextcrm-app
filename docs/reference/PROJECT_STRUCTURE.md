@@ -66,6 +66,9 @@ app/[locale]/(routes)/campaigns/
                                 Generate homepage)
     GenerateEmailDrawer.tsx     prompt + template pick -> generate -> preview -> send
 app/api/crm/targets/unsubscribe/   public GET one-click opt-out (token -> do_not_email)
+app/api/crm/assistant/inquiry/   public POST for the AI chat/voice assistants (ASSISTANT_TOKEN;
+                                write-only, idempotent; logic in lib/crm/assistant/;
+                                contract docs/reference/ASSISTANT_INQUIRY_API.md)
 actions/crm/prompts/            prompt-library server actions (list, create, update,
                                 delete; mutations write crm_AuditLog "prompt" entries)
 actions/campaigns/templates/list-template-options.ts   scoped template picker options

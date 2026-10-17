@@ -1366,3 +1366,23 @@
   so the CDN serves the old object for up to about 15 minutes. The HTML itself is already new.
   **Rule:** verify with a cache-buster (`screenshot.png?v=<ts>`), not by re-fetching the bare URL.
 
+
+### Machine callers (n8n, agents, webhooks) retry, so make their writes idempotent with a claim that commits with the work
+
+- **Symptom (avoided here, seen in the web-lead route):** an endpoint called by an agent
+  or a workflow tool creates a second lead/activity whenever the caller retries after a
+  timeout or a 5xx.
+- **Cause:** retry-on-fail is the default posture of n8n, Vapi and webhooks. A
+  "check, then insert" without a unique constraint races when two retries land together.
+- **Fix / rule** (`lib/crm/assistant/record-inquiry.ts`):
+  1. Claim the caller's `idempotencyKey` by inserting into a table with a **unique**
+     index, and treat `P2002` as "someone else has it".
+  2. Mark the claim complete **inside the same transaction** as the final write.
+  3. On failure, **release** the incomplete claim so the retry can run.
+  4. Treat an incomplete claim older than the function timeout as stale and reclaim it;
+     a younger one returns a retryable `409`.
+
+  A Redis `SET NX` is not a substitute here, because Upstash is optional outside prod.
+- **Related trap:** `crm_Leads.phone` is free-form text, so match phones on digits only
+  (`regexp_replace(phone, '[^0-9]', '', 'g')`) and allow for US numbers stored with or
+  without the leading `1`.
