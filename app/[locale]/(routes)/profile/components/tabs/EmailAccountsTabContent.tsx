@@ -11,11 +11,13 @@ export async function EmailAccountsTabContent() {
   return (
     <div className="max-w-3xl space-y-4 py-2">
       <p className="text-sm text-muted-foreground">
-        Manage Resend mailboxes here. To read and send mail, use{" "}
+        Manage Resend mailboxes here. To read and send inside the CRM, use{" "}
         <Link href="/emails" className="font-medium text-primary underline-offset-4 hover:underline">
           E-mails
         </Link>{" "}
-        in the left sidebar (Inbox, Sent, Compose).
+        in the sidebar. On each active mailbox, open{" "}
+        <strong className="font-medium text-foreground">Use in Outlook, Gmail app, etc.</strong> for SMTP
+        credentials and setup steps for other apps.
       </p>
       {hasActiveMailbox && (
         <Button asChild className="gap-2">
