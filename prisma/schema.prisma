@@ -722,6 +722,24 @@ model crm_ActivityLinks {
   @@index([entityType, entityId, activityId])
 }
 
+// Fork-added (Rade): idempotency ledger for POST /api/crm/assistant/inquiry.
+// One row per assistant idempotencyKey; the unique key is the race-safe claim.
+// leadId/activityId are plain uuids (no relations) so upstream models stay untouched.
+model crm_Assistant_Inquiries {
+  id             String    @id @default(uuid()) @db.Uuid
+  idempotencyKey String    @unique
+  source         String
+  sessionId      String?
+  leadId         String?   @db.Uuid
+  activityId     String?   @db.Uuid
+  leadCreated    Boolean   @default(false)
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([leadId])
+  @@index([createdAt])
+}
+
 model Boards {
   id                String    @id @default(uuid()) @db.Uuid
   v                 Int       @map("__v")

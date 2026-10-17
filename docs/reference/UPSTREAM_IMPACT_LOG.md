@@ -903,3 +903,24 @@ components, and the new `status-options.ts` are all fork-owned.
 **Re-verify after any upstream merge:** `crm_Target_Email_Status` still contains `BOUNCED`, and the
 webhook test suite (`__tests__/campaigns/api/webhooks-resend.test.ts`) stays green — a bounce marks
 the email `BOUNCED` and flips the target `status=false, do_not_email=true`.
+
+---
+
+## feat/assistant-inquiry-schema + feat/assistant-inquiry-endpoint — AI-assistant inquiry endpoint  (PR: TBD)
+
+A narrow, write-only, idempotent `POST /api/crm/assistant/inquiry` for the public AI
+assistants (website chat + voice agent via n8n). It finds or creates a lead and logs a
+linked activity. **1 upstream-owned file** touched: `prisma/schema.prisma`. The route,
+`lib/crm/assistant/*`, tests and the contract doc are all new, fork-owned files.
+`lib/crm/create-web-lead.ts` is reused unchanged, and the `.env.example` key sits in
+the fork-appended block.
+
+| Upstream file | +/− | Insert-only? | What / where | Risk |
+|---|---|---|---|---|
+| `prisma/schema.prisma` | +18/−0 | **insert-only** | New fork model `crm_Assistant_Inquiries` (idempotency ledger) inserted between `crm_ActivityLinks` and `Boards`. **No relations**: `leadId`/`activityId` are plain uuids, so no back-relation field is added to upstream `crm_Leads`/`crm_Activities`. Migration `20261017120000_assistant_inquiries` (CREATE TABLE plus a unique and 2 plain indexes). | Very low (self-contained model; on conflict re-insert the block) |
+
+**Re-verify after any upstream merge:** `crm_Assistant_Inquiries` is still in the schema,
+and `__tests__/crm/assistant/` stays green. If upstream changes `crm_Leads` phone/email
+columns or `crm_Activities`/`crm_ActivityLinks` shape, re-check
+`lib/crm/assistant/record-inquiry.ts` (its raw SQL names `"crm_Leads"`, `phone`,
+`"deletedAt"`, `"createdAt"`).
