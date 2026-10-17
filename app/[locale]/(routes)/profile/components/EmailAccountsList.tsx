@@ -59,6 +59,7 @@ import {
   adminSetEmailAccountActive,
 } from "@/actions/admin/email-accounts";
 import type { getAdminEmailAccounts } from "@/actions/admin/email-accounts";
+import { MailboxExternalSetupPanel } from "./MailboxExternalSetupPanel";
 
 type ProfileAccount = Awaited<ReturnType<typeof getEmailAccounts>>[number];
 type AdminAccount = Awaited<ReturnType<typeof getAdminEmailAccounts>>[number];
@@ -217,6 +218,9 @@ export function EmailAccountsList(props: EmailAccountsListProps) {
                     <Clock className="h-3.5 w-3.5 shrink-0" />
                     Last activity {new Date(acc.lastSyncedAt).toLocaleString()}
                   </p>
+                )}
+                {!isAdmin && !legacy && acc.isActive && (
+                  <MailboxExternalSetupPanel accountId={acc.id} sendProvider={acc.sendProvider} />
                 )}
               </div>
             </div>
