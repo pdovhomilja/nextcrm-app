@@ -6,7 +6,7 @@ import {
   AuthenticationError,
 } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
-import { canReadInvoice, type InvoiceStatus } from "@/lib/invoices/permissions";
+import { invoiceReadScopeWhere } from "@/lib/invoices/permissions";
 import { getInvoicePdfPresignedUrl } from "@/lib/invoices/storage";
 
 export async function GET(
@@ -22,20 +22,13 @@ export async function GET(
     throw e;
   }
 
-  const invoice = await prismadb.invoices.findUnique({
-    where: { id: invoiceId },
-    select: { createdBy: true, status: true, pdfStorageKey: true },
+  // Same read scope as the invoice list: a partner can open the PDFs of
+  // his accounts' invoices; every invoice write still refuses him.
+  const invoice = await prismadb.invoices.findFirst({
+    where: { id: invoiceId, ...invoiceReadScopeWhere(user) },
+    select: { pdfStorageKey: true },
   });
   if (!invoice) return notFoundOrForbiddenResponse();
-
-  if (
-    !canReadInvoice(
-      { status: invoice.status as InvoiceStatus, createdBy: invoice.createdBy },
-      { id: user.id, role: user.role },
-    )
-  ) {
-    return notFoundOrForbiddenResponse();
-  }
 
   if (!invoice.pdfStorageKey) {
     return NextResponse.json(

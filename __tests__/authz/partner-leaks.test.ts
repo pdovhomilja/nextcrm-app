@@ -50,6 +50,8 @@ import { getDocumentsByOpportunityId } from "@/actions/documents/get-documents-b
 import { getAccountsByContactId } from "@/actions/crm/get-accounts-by-contactId";
 import { getAccountsByOpportunityId } from "@/actions/crm/get-accounts-by-opportunityId";
 import { getUserLeads } from "@/actions/crm/get-user-leads";
+import { getInvoicesByAccountId } from "@/actions/invoices/get-invoices-by-accountId";
+import { GET as getInvoicePdf } from "@/app/api/invoices/[invoiceId]/pdf/route";
 
 const tag = randomUUID().slice(0, 8);
 const id = () => randomUUID();
@@ -262,5 +264,24 @@ describe("account-child getters as a user", () => {
   it("a user cannot list another user's leads", async () => {
     signInAs(U.colleague);
     expect(nameOf(await getUserLeads(U.rep))).toEqual([]);
+  });
+});
+
+describe("invoices", () => {
+  const pdf = (invoiceId: string) =>
+    getInvoicePdf({} as never, { params: Promise.resolve({ invoiceId }) }).then((r) => r.status);
+
+  it("partner A: invoices of his accounts and their PDFs; nothing on the internal account", async () => {
+    signInAs(U.A);
+    expect(nameOf(await getInvoicesByAccountId(ACC.A))).toEqual(["invoice.A"]);
+    expect(nameOf(await getInvoicesByAccountId(ACC.internal))).toEqual([]);
+    expect({ A: await pdf(ids.invoice.A), aOwn: await pdf(ids.invoice.aOwn), internal: await pdf(ids.invoice.internal), B: await pdf(ids.invoice.B) })
+      .toEqual({ A: 307, aOwn: 307, internal: 404, B: 404 });
+  });
+
+  it("a user who can read the account sees only invoices he created (invoice read scope)", async () => {
+    signInAs(U.colleague);
+    expect(nameOf(await getInvoicesByAccountId(ACC.A))).toEqual([]);
+    expect(await pdf(ids.invoice.A)).toBe(404);
   });
 });
