@@ -10,7 +10,7 @@ import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import { getUserTasks } from "@/actions/projects/get-user-tasks";
 
-const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
+const mockUser = (role: "user" | "manager" | "admin" | "partner", id = "u1") => {
   (getSession as jest.Mock).mockResolvedValue({ user: { id } });
   (prismadb.users.findUnique as jest.Mock).mockResolvedValue({ id, role });
 };
@@ -44,5 +44,12 @@ describe("getUserTasks scope", () => {
     (prismadb.tasks.findMany as jest.Mock).mockResolvedValue([{ id: "t9" }]);
     const res = await getUserTasks("u2");
     expect(res).toEqual([{ id: "t9" }]);
+  });
+
+  it("partner (no read scope yet): gets nothing and never queries", async () => {
+    mockUser("partner", "p1");
+    const res = await getUserTasks("u2");
+    expect(res).toEqual([]);
+    expect(prismadb.tasks.findMany).not.toHaveBeenCalled();
   });
 });

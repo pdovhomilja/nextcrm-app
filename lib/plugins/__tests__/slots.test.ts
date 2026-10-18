@@ -30,3 +30,9 @@ it("finds pages by joined path and role", async () => {
 it("lists registry providers of enabled plugins", async () => {
   expect((await getCompanyRegistryProviders()).map((r) => r.provider.countries)).toEqual([["CZ"]]);
 });
+
+it("shows a partner no plugin tab, panel or page unless a plugin lists the role", async () => {
+  expect(await getAccountTabs("partner")).toEqual([]);
+  expect(await getAccountPanels("partner")).toEqual([]);
+  expect(await findPluginPage("p-one", ["a", "b"], "partner")).toBeNull();
+});

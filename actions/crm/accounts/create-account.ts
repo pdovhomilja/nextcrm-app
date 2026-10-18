@@ -55,6 +55,8 @@ export const createAccount = async (data: {
         assigned_to: data.assigned_to || user.id,
         industry: data.industry || undefined,
         pricelist_id: data.pricelist_id || undefined,
+        // The partner is set only through setAccountPartner (admin/manager).
+        partnerUserId: undefined,
         status: "Active",
       },
     });

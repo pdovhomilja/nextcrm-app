@@ -18,3 +18,5 @@ export const admin = ac.newRole({ user: [], session: [] });
 export const manager = ac.newRole({ user: [], session: [] });
 
 export const user = ac.newRole({ user: [], session: [] });
+
+export const partner = ac.newRole({ user: [], session: [] });

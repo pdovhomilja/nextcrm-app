@@ -2,6 +2,7 @@ import { prismadb } from "@/lib/prisma";
 import {
   requireAuthenticated,
   AuthenticationError,
+  isUnhandledRole,
 } from "@/lib/authz";
 import dayjs from "dayjs";
 
@@ -13,6 +14,8 @@ export const getTasksPastDue = async () => {
     if (e instanceof AuthenticationError) return undefined;
     throw e;
   }
+  // Any role without rules here (partner) gets nothing.
+  if (isUnhandledRole(user)) return undefined;
   const today = dayjs().startOf("day");
   const nextWeek = dayjs().add(7, "day").startOf("day");
   // user role: restrict to own tasks. manager/admin: global.

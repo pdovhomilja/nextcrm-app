@@ -29,6 +29,13 @@ describe("getSession", () => {
     await expect(getSession()).resolves.toBeNull();
   });
 
+  // Partners are kept out of the whole app until the partner app exists
+  // (spec ticket 4): like PENDING users, they count as signed out.
+  it("returns null for an ACTIVE partner", async () => {
+    apiGetSession.mockResolvedValue({ session: { id: "s1" }, user: { id: "p1", role: "partner", userStatus: "ACTIVE" } });
+    await expect(getSession()).resolves.toBeNull();
+  });
+
   it("returns null without a session", async () => {
     apiGetSession.mockResolvedValue(null);
     await expect(getSession()).resolves.toBeNull();

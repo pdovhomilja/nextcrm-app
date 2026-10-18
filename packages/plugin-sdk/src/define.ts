@@ -6,6 +6,7 @@ import {
 } from "./types";
 
 const ID = /^[a-z][a-z0-9-]{1,48}$/;
+// Default slot roles: the internal roles only. A partner sees a slot only when the plugin lists "partner".
 const ALL_ROLES: Role[] = ["user", "manager", "admin"];
 
 export const allow = (): RuleResult => ({ kind: "allow" });

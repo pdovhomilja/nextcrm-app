@@ -2,6 +2,7 @@ import { prismadb } from "@/lib/prisma";
 import {
   requireAuthenticated,
   AuthenticationError,
+  isUnhandledRole,
 } from "@/lib/authz";
 
 export const getUserTasks = async (userId: string) => {
@@ -17,6 +18,8 @@ export const getUserTasks = async (userId: string) => {
   if (user.role === "user" && userId !== user.id) {
     return [];
   }
+  // Any role without rules here (partner) gets nothing.
+  if (isUnhandledRole(user)) return [];
 
   const data = await prismadb.tasks.findMany({
     where: {

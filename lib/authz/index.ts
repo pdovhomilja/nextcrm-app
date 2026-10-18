@@ -88,5 +88,6 @@ export {
   assertCanReadTask,
   assertCanWriteTask,
 } from "./scopes/crm";
+export { isUnhandledRole } from "./scopes/unhandled-role";
 export type { ReportScope } from "./scopes/report-scope";
 export { getReportScope } from "./scopes/report-scope";

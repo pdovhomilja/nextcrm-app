@@ -213,7 +213,7 @@ A scheduled job with a 5-field cron expression, optionally prefixed with `TZ=<zo
 
 ### `x.accountTab({ id, title, component, roles? })` and `x.accountPanel({ id, component, roles? })`
 
-Adds a tab or a panel to the account detail page. `title` is a message key. `component` is a React Server Component that receives `{ accountId, ctx }`. `roles` defaults to all three roles.
+Adds a tab or a panel to the account detail page. `title` is a message key. `component` is a React Server Component that receives `{ accountId, ctx }`. `roles` defaults to `user`, `manager` and `admin`. A partner sees a plugin tab, panel or page only if the plugin lists `"partner"`.
 
 `x.orderPanel({ id, component, roles? })` and `x.productPanel({ id, component, roles? })` add a panel to the order or product detail page; the component receives `{ orderId, ctx }` or `{ productId, ctx }`.
 

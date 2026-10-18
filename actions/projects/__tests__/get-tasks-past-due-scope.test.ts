@@ -10,7 +10,7 @@ import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import { getTasksPastDue } from "@/actions/projects/get-tasks-past-due";
 
-const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
+const mockUser = (role: "user" | "manager" | "admin" | "partner", id = "u1") => {
   (getSession as jest.Mock).mockResolvedValue({ user: { id } });
   (prismadb.users.findUnique as jest.Mock).mockResolvedValue({ id, role });
 };
@@ -51,5 +51,12 @@ describe("getTasksPastDue scope", () => {
     const call = (prismadb.tasks.findMany as jest.Mock).mock.calls[0][0];
     const hasUserClause = call.where.AND.some((c: { user?: string }) => "user" in c);
     expect(hasUserClause).toBe(false);
+  });
+
+  it("partner (no read scope yet): gets nothing and never queries", async () => {
+    mockUser("partner", "p1");
+    const res = await getTasksPastDue();
+    expect(res).toBeUndefined();
+    expect(prismadb.tasks.findMany).not.toHaveBeenCalled();
   });
 });
