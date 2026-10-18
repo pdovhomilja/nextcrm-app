@@ -10,7 +10,7 @@ import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import { getUserOpportunities } from "@/actions/crm/get-user-opportunities";
 
-const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
+const mockUser = (role: "user" | "manager" | "admin" | "partner", id = "u1") => {
   (getSession as jest.Mock).mockResolvedValue({ user: { id } });
   (prismadb.users.findUnique as jest.Mock).mockResolvedValue({ id, role });
 };
@@ -50,5 +50,12 @@ describe("getUserOpportunities scope", () => {
     const call = (prismadb.crm_Opportunities.findMany as jest.Mock).mock.calls[0][0];
     expect(call.where.assigned_to).toBe("u9");
     expect(call.where.deletedAt).toBeNull();
+  });
+
+  it("partner (no read scope yet): gets nothing and never queries", async () => {
+    mockUser("partner", "p1");
+    const res = await getUserOpportunities("u2");
+    expect(res).toEqual([]);
+    expect(prismadb.crm_Opportunities.findMany).not.toHaveBeenCalled();
   });
 });

@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
 
-  if (category === "users" && user.role === "user") {
+  if (category === "users" && user.role !== "admin" && user.role !== "manager") {
     return forbiddenResponse();
   }
 

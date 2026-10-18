@@ -4,7 +4,8 @@ import type { z } from "zod";
 export const LOCALES = ["en", "cz", "de", "uk"] as const;
 export type Locale = (typeof LOCALES)[number];
 
-export type Role = "user" | "manager" | "admin";
+/** `partner` is an external user (a distributor); plugin slots never include him unless they list the role. */
+export type Role = "user" | "manager" | "admin" | "partner";
 
 export const ENTITIES = ["account", "contact", "lead", "opportunity", "order"] as const;
 export type Entity = (typeof ENTITIES)[number];

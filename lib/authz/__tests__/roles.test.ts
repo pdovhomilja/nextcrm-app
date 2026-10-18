@@ -1,8 +1,8 @@
 import { APP_ROLES, parseRole, mapLegacyRole } from "../roles";
 
 describe("APP_ROLES", () => {
-  it("contains exactly user, manager, admin", () => {
-    expect([...APP_ROLES].sort()).toEqual(["admin", "manager", "user"]);
+  it("contains exactly user, manager, admin, partner", () => {
+    expect([...APP_ROLES].sort()).toEqual(["admin", "manager", "partner", "user"]);
   });
 });
 
@@ -11,6 +11,7 @@ describe("parseRole", () => {
     expect(parseRole("user")).toBe("user");
     expect(parseRole("manager")).toBe("manager");
     expect(parseRole("admin")).toBe("admin");
+    expect(parseRole("partner")).toBe("partner");
   });
 
   it("returns null for unknown values", () => {
@@ -38,5 +39,11 @@ describe("mapLegacyRole", () => {
   it("passes canonical values through unchanged", () => {
     expect(mapLegacyRole("user")).toBe("user");
     expect(mapLegacyRole("manager")).toBe("manager");
+  });
+
+  // A partner must never be widened to "user": that would hand an outsider
+  // the colleague (owner-scoped) rules.
+  it("keeps partner as partner", () => {
+    expect(mapLegacyRole("partner")).toBe("partner");
   });
 });

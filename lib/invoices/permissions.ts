@@ -16,7 +16,8 @@ function isManagerOrAdmin(user: UserCtx): boolean {
 }
 
 function isOwnerOrPrivileged(invoice: InvoiceCtx, user: UserCtx): boolean {
-  return isManagerOrAdmin(user) || invoice.createdBy === user.id;
+  // Only the user role owns invoices; any other role (partner) gets nothing.
+  return isManagerOrAdmin(user) || (user.role === "user" && invoice.createdBy === user.id);
 }
 
 export function canReadInvoice(invoice: InvoiceCtx, user: UserCtx): boolean {

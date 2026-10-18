@@ -2,6 +2,7 @@ import { prismadb } from "@/lib/prisma";
 import {
   requireAuthenticated,
   AuthenticationError,
+  isUnhandledRole,
 } from "@/lib/authz";
 
 export const getUserOpportunities = async (userId: string) => {
@@ -18,6 +19,8 @@ export const getUserOpportunities = async (userId: string) => {
   if (user.role === "user" && userId !== user.id) {
     return [];
   }
+  // Any role without rules here (partner) gets nothing.
+  if (isUnhandledRole(user)) return [];
 
   const data = await prismadb.crm_Opportunities.findMany({
     where: {
