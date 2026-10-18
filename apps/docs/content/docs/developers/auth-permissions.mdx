@@ -25,11 +25,13 @@ There are four roles, stored in `Users.role` (enum `AppRole`):
 | `user` | Only records in their own scope | No |
 | `manager` | All business data | No |
 | `admin` | Everything | Yes (`/admin`, plugins, settings, users) |
-| `partner` | Nothing yet (see below) | No |
+| `partner` | Read-only: his partner accounts and his own company account, and their child records (see below) | No |
 
 `partner` is for external users such as a distributor. An admin or manager names an account's partner (`crm_Accounts.partnerUserId`, Partner card on the account page), and an admin sets the partner's own company account (`Users.partnerAccountId`, users table). Until the partner area is built, `getSession()` treats a partner as signed out (like a `PENDING` user), the app layout sends him to `/partner-pending`, and he cannot create API tokens or use MCP. When an admin changes a partner to another role, his partner links are cleared.
 
-**Deny by default.** The scope helpers have rules for the roles in `SCOPED_ROLES` (`lib/authz/roles.ts`: `user`, `manager`, `admin`). Any other role gets a `where` that matches no rows and is refused by every `assertCan…` helper. It never falls back to the `user` rules. `lib/authz/__tests__/deny-unhandled-role.test.ts` calls every exported scope helper with `partner` and an unknown role and fails if one of them returns data.
+The partner read scope (`lib/authz/scopes/partner.ts`, used by `scopes/crm.ts`, `scopes/orders.ts`, `scopes/report-scope.ts` and `invoiceReadScopeWhere` in `lib/invoices/permissions.ts`) covers accounts where `partnerUserId` is him plus his `partnerAccountId`, and contacts, leads, opportunities, contracts, orders, invoices, documents, CRM tasks and activities only through those accounts. Never through `createdBy`, `assigned_to`, watchers or `visibility: "public"`. The helpers check `role === "partner"` before using the link, so a `partnerUserId` left on a non-partner grants nothing. Every write assert still refuses a partner.
+
+**Deny by default.** The scope helpers have full rules for the roles in `SCOPED_ROLES` (`lib/authz/roles.ts`: `user`, `manager`, `admin`) and read rules for `partner`. Any other role gets a `where` that matches no rows (`NO_ROWS`) and is refused by every `assertCan…` helper. It never falls back to the `user` rules. `lib/authz/__tests__/deny-unhandled-role.test.ts` calls every exported scope helper: an unknown role must get nothing; `partner` must get a partner-shaped scope from the helpers listed in `PARTNER_READS` and nothing from the rest. `__tests__/authz/partner-read-scope.test.ts` checks the partner sets against Postgres.
 
 For the `user` role, "own scope" is defined per resource in `lib/authz/scopes/crm.ts`. For accounts, a user can see a record if they are `assigned_to`, `createdBy`, or a watcher. Contacts, leads, opportunities and contracts add rules for records linked to an account in scope.
 
@@ -48,7 +50,7 @@ All helpers are exported from `@/lib/authz`:
 | `requireAuthenticated()` | Get `{ id, role }` for the current user. Throws `AuthenticationError`. |
 | `requireRole(["admin"])` | Require one of the given roles. Throws `AuthorizationError`. |
 | `isAdmin(user)`, `isManagerOrAdmin(user)` | Branch on role. |
-| `isUnhandledRole(user)` | True for a role without scope rules (today: `partner`). Return nothing for it. |
+| `isUnhandledRole(user)` | True for a role outside `SCOPED_ROLES` (includes `partner`, so handle `partner` before it). Return nothing for it. |
 | `assertHandledRole(user)` (in `lib/authz/scopes/unhandled-role.ts`) | Throw `AuthorizationError` for such a role, at the top of a new assert. |
 | `accountReadScopeWhere(user)`, `leadReadScopeWhere(user)`, ... | Build a Prisma `where` for list queries. Includes `deletedAt: null`. |
 | `assertCanReadAccount(user, id)`, `assertCanWriteAccount(user, id)`, ... | Check one object. Throws `AuthorizationError`. |
@@ -132,7 +134,7 @@ Admin pages, admin actions and `/api/admin/*` routes call `requireRole(["admin"]
 
 - Never trust an ID from the client. Check it with an `assertCan…` helper or a scoped `where`.
 - Use the same helper for reads and writes in MCP tools, actions and routes, so all entry points behave the same.
-- A new scope helper must deny roles outside `SCOPED_ROLES` (return `NO_ROWS` or call `assertHandledRole`); the deny-by-default test picks up new exports automatically.
+- A new scope helper must deny roles outside `SCOPED_ROLES` (return `NO_ROWS` or call `assertHandledRole`); the deny-by-default test picks up new exports automatically and expects them to deny a partner unless listed in `PARTNER_READS`. Use `NO_ROWS`, not a bare `OR: []`: Prisma reads an empty `OR` inside `AND: [...]` as "all rows".
 - Add a test for the `user` role when you add or change a scope. The suites under `__tests__/` and `lib/authz/__tests__/` show the pattern.
 
 ## API tokens
