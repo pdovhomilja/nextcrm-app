@@ -6,8 +6,14 @@
 // assigned_to, watchers or public visibility. Callers must check
 // `user.role === "partner"` first: the link alone grants nothing.
 
+// His own company account is never one of his partner accounts, even if an
+// admin also names him its partner: it stays read-only.
 export function partnerAccountWhere(userId: string) {
-  return { deletedAt: null, partnerUserId: userId };
+  return {
+    deletedAt: null,
+    partnerUserId: userId,
+    NOT: { partner_own_users: { some: { id: userId } } },
+  };
 }
 
 export function partnerVisibleAccountWhere(userId: string) {

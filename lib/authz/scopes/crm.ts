@@ -5,6 +5,27 @@ import { isManagerOrAdmin } from "../roles";
 import { NO_ROWS, assertHandledRole, isUnhandledRole } from "./unhandled-role";
 import { partnerAccountWhere, partnerVisibleAccountWhere } from "./partner";
 
+// Partner writes (spec § Writes). A partner may create and edit contacts,
+// leads, opportunities, CRM tasks and activities on his partner accounts and
+// edit their ordinary fields. A write assert lets him through only when the
+// call site passes PARTNER_EDIT; deletes, restores and every other write leave
+// it out, so a partner is refused there by default.
+export interface WriteOptions {
+  partnerEdit?: boolean;
+}
+export const PARTNER_EDIT: WriteOptions = { partnerEdit: true };
+
+// Partner write check: refused without the opt-in, else the row must sit on
+// one of his partner accounts (never his own company account).
+async function partnerCanWrite(
+  user: AuthzUser,
+  opts: WriteOptions | undefined,
+  find: (account: ReturnType<typeof partnerAccountWhere>) => Promise<unknown>,
+): Promise<void> {
+  if (!opts?.partnerEdit) throw new AuthorizationError();
+  if (!(await find(partnerAccountWhere(user.id)))) throw new AuthorizationError();
+}
+
 type ContactWhere = NonNullable<
   Parameters<typeof prismadb.crm_Contacts.updateMany>[0]
 >["where"];
@@ -109,7 +130,16 @@ export async function assertCanReadContact(
 export async function assertCanWriteContact(
   user: AuthzUser,
   contactId: string,
+  opts?: WriteOptions,
 ): Promise<void> {
+  if (user.role === "partner") {
+    return partnerCanWrite(user, opts, (account) =>
+      prismadb.crm_Contacts.findFirst({
+        where: { id: contactId, deletedAt: null, assigned_accounts: account },
+        select: { id: true },
+      }),
+    );
+  }
   const row = await findContactInScope(user, contactId);
   if (!row) throw new AuthorizationError();
 }
@@ -264,7 +294,13 @@ export async function assertCanReadAccount(
 export async function assertCanWriteAccount(
   user: AuthzUser,
   accountId: string,
+  opts?: WriteOptions,
 ): Promise<void> {
+  if (user.role === "partner") {
+    return partnerCanWrite(user, opts, (account) =>
+      prismadb.crm_Accounts.findFirst({ where: { id: accountId, ...account }, select: { id: true } }),
+    );
+  }
   assertHandledRole(user);
   const where =
     isManagerOrAdmin(user)
@@ -430,7 +466,16 @@ export async function assertCanReadTargetList(
 export async function assertCanWriteLead(
   user: AuthzUser,
   leadId: string,
+  opts?: WriteOptions,
 ): Promise<void> {
+  if (user.role === "partner") {
+    return partnerCanWrite(user, opts, (account) =>
+      prismadb.crm_Leads.findFirst({
+        where: { id: leadId, deletedAt: null, assigned_accounts: account },
+        select: { id: true },
+      }),
+    );
+  }
   assertHandledRole(user);
   const where =
     isManagerOrAdmin(user)
@@ -443,7 +488,16 @@ export async function assertCanWriteLead(
 export async function assertCanWriteOpportunity(
   user: AuthzUser,
   opportunityId: string,
+  opts?: WriteOptions,
 ): Promise<void> {
+  if (user.role === "partner") {
+    return partnerCanWrite(user, opts, (account) =>
+      prismadb.crm_Opportunities.findFirst({
+        where: { id: opportunityId, deletedAt: null, assigned_account: account },
+        select: { id: true },
+      }),
+    );
+  }
   assertHandledRole(user);
   const where =
     isManagerOrAdmin(user)
@@ -486,7 +540,19 @@ export async function assertCanWriteTargetList(
 export async function assertCanWriteCrmTask(
   user: AuthzUser,
   taskId: string,
+  opts?: WriteOptions,
 ): Promise<void> {
+  if (user.role === "partner") {
+    return partnerCanWrite(user, opts, (account) =>
+      prismadb.crm_Accounts_Tasks.findFirst({
+        where: {
+          id: taskId,
+          OR: [{ crm_accounts: account }, { opportunity: { assigned_account: account } }],
+        },
+        select: { id: true },
+      }),
+    );
+  }
   assertHandledRole(user);
   const where =
     isManagerOrAdmin(user)
@@ -861,7 +927,16 @@ export async function assertCanWriteTask(
 export async function assertCanWriteActivity(
   user: AuthzUser,
   activityId: string,
+  opts?: WriteOptions,
 ): Promise<void> {
+  if (user.role === "partner") {
+    if (!opts?.partnerEdit) throw new AuthorizationError();
+    const links = await prismadb.crm_ActivityLinks.findMany({
+      where: { activityId, activity: { deletedAt: null } },
+      select: { entityType: true, entityId: true },
+    });
+    return assertPartnerCanLinkActivity(user, links);
+  }
   assertHandledRole(user);
   const activity = await prismadb.crm_Activities.findFirst({
     where: { id: activityId, deletedAt: null },
@@ -871,4 +946,31 @@ export async function assertCanWriteActivity(
   if (activity.createdBy && activity.createdBy === user.id) return;
   if (isManagerOrAdmin(user)) return;
   throw new AuthorizationError();
+}
+
+// A partner's activity must hang off his partner records only: at least one
+// link, and every link on an account, contact, lead or opportunity he may edit.
+export async function assertPartnerCanLinkActivity(
+  user: AuthzUser,
+  links: { entityType: string; entityId: string }[],
+): Promise<void> {
+  if (user.role !== "partner" || links.length === 0) throw new AuthorizationError();
+  for (const { entityType, entityId } of links) {
+    switch (entityType.toLowerCase()) {
+      case "account":
+        await assertCanWriteAccount(user, entityId, PARTNER_EDIT);
+        break;
+      case "contact":
+        await assertCanWriteContact(user, entityId, PARTNER_EDIT);
+        break;
+      case "lead":
+        await assertCanWriteLead(user, entityId, PARTNER_EDIT);
+        break;
+      case "opportunity":
+        await assertCanWriteOpportunity(user, entityId, PARTNER_EDIT);
+        break;
+      default:
+        throw new AuthorizationError();
+    }
+  }
 }

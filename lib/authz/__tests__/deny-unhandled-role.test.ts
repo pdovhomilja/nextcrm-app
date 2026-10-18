@@ -90,6 +90,13 @@ const PARTNER_WITH_OWN_ACCOUNT = new Set([
   "crm.contactReadScopeWhere", "crm.assertCanReadContact", "crm.filterAuthorizedContactIds",
   "orders.orderReadScopeWhere", "report.account", "report.contact", "invoiceReadScopeWhere",
 ]);
+// Partner writes: allowed only with PARTNER_EDIT, always through partnerUserId
+// (never his own company account). assertPartnerCanLinkActivity is the
+// activity-link check those writes share.
+const PARTNER_EDITS = new Set([
+  "crm.assertCanWriteAccount", "crm.assertCanWriteContact", "crm.assertCanWriteLead",
+  "crm.assertCanWriteOpportunity", "crm.assertCanWriteCrmTask",
+]);
 // assertCanReadActivityForEntity: partner reads activities of these entity types only.
 const PARTNER_ACTIVITY_TYPES = new Set(["account", "lead", "contact", "opportunity", "contract"]);
 
@@ -99,9 +106,12 @@ const NOT_FOR_PARTNERS = [
   "watchers", "visibility", "user", "ownerId", "sharedWith", "triggeredBy",
 ];
 
+// Keys a where filters on. An exclusion (`NOT`) grants nothing, so its keys
+// are skipped: partnerAccountWhere excludes his own account that way.
 function keysOf(value: unknown, out = new Set<string>()): Set<string> {
   if (value && typeof value === "object") {
     for (const [k, v] of Object.entries(value)) {
+      if (k === "NOT") continue;
       out.add(k);
       keysOf(v, out);
     }
@@ -128,6 +138,7 @@ function argsFor(name: string, user: AuthzUser): unknown[][] {
   if (name === "assertCanReadActivityForEntity") {
     return ACTIVITY_ENTITY_TYPES.map((t) => [user, t, "row-1"]);
   }
+  if (name === "assertPartnerCanLinkActivity") return [[user, [{ entityType: "account", entityId: "row-1" }]]];
   if (name === "assertCanWritePriceList") return [[user, { source: "CRM" }]];
   return [[user, "row-1"]];
 }
@@ -218,9 +229,24 @@ describe("partner: his own read scope, everything else denied", () => {
           ? PARTNER_ACTIVITY_TYPES.has(String(args[1]))
           : PARTNER_READS.has(label);
       if (reads) await expectPartnerRead(call_, fn, args, PARTNER_WITH_OWN_ACCOUNT.has(label));
+      else if (name === "assertPartnerCanLinkActivity") await expectPartnerRead(call_, fn, args, false);
       else await expectDenied(call_, call(fn, args));
     }
   });
+
+  // assertCanWriteActivity reads the activity's links first (no partner
+  // where of its own); its partner rule is proven against Postgres in
+  // __tests__/authz/partner-read-scope.test.ts.
+  it.each(helpers.filter(([label]) => /Write/.test(label) && label !== "crm.assertCanWriteActivity"))(
+    "%s with PARTNER_EDIT: partner-scoped if a partner edit, else still refused",
+    async (label, name, fn) => {
+      for (const [u, ...rest] of argsFor(name, user)) {
+        const args = [u, ...rest, { partnerEdit: true }];
+        if (PARTNER_EDITS.has(label)) await expectPartnerRead(label, fn, args, false);
+        else await expectDenied(label, call(fn, args));
+      }
+    },
+  );
 
   it("report scope: CRM fragments through his accounts; projects tasks, campaigns, directory: none", () => {
     const { allowUserDirectory, task, campaign, ...crmFragments } = getReportScope(user);
