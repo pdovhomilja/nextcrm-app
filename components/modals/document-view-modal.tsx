@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import ModalDocumentView from "../ui/modal-document-view";
-import Link from "next/link";
 
 interface AlertModalProps {
   isOpen: boolean;
@@ -36,8 +35,11 @@ const DocumentViewModal = ({
 
   console.log(document.document_file_mimeType, "mimeType");
 
+  // Files are private: always read through the authenticated route.
+  const fileUrl = `/api/documents/${document.id}/file`;
+
   if (imageTypes.includes(document.document_file_mimeType)) {
-    const imageUrl = document.document_file_url || "";
+    const imageUrl = document.id ? fileUrl : "";
     return (
       <ModalDocumentView isOpen={isOpen} onClose={onClose}>
         <div className="flex flex-col h-full ">
@@ -69,7 +71,7 @@ const DocumentViewModal = ({
               height: "100%",
             }}
             type="application/pdf"
-            src={document.document_file_url}
+            src={fileUrl}
           />
           <div className="pt-6 space-x-2 flex items-center justify-end w-full ">
             <Button disabled={loading} variant={"outline"} onClick={onClose}>
@@ -85,7 +87,7 @@ const DocumentViewModal = ({
         <div className="flex flex-col h-full ">
           This format can not be previewed. Please download the file to view it.
           <Button>
-            <Link href={document.document_file_url}> Download</Link>
+            <a href={fileUrl}> Download</a>
           </Button>
           <div className="pt-6 space-x-2 flex items-center justify-end w-full ">
             <Button disabled={loading} variant={"outline"} onClick={onClose}>
