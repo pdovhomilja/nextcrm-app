@@ -4,9 +4,16 @@ import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { minioPresignClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
 import { randomUUID } from "crypto";
-import type { AuthzUser } from "@/lib/authz";
-import { documentReadScopeWhere } from "@/lib/authz/scopes/crm";
+import { AuthorizationError, type AuthzUser } from "@/lib/authz";
 import { isUnhandledRole } from "@/lib/authz/scopes/unhandled-role";
+import {
+  documentReadScopeWhere,
+  assertCanWriteAccount,
+  assertCanWriteContact,
+  assertCanWriteLead,
+  assertCanWriteOpportunity,
+  assertCanWriteTask,
+} from "@/lib/authz/scopes/crm";
 import {
   paginationSchema,
   paginationArgs,
@@ -34,6 +41,25 @@ const ENTITY_FK_MAP: Record<string, string> = {
   opportunity: "opportunity_id",
   task: "task_id",
 };
+
+// Linking a document to a record is a write on that record.
+const ENTITY_WRITE_ASSERT: Record<string, (user: AuthzUser, id: string) => Promise<void>> = {
+  account: assertCanWriteAccount,
+  contact: assertCanWriteContact,
+  lead: assertCanWriteLead,
+  opportunity: assertCanWriteOpportunity,
+  task: assertCanWriteTask,
+};
+
+async function assertCanWriteLinkTarget(user: AuthzUser, entityType: string, entityId: string) {
+  if (!Object.hasOwn(ENTITY_WRITE_ASSERT, entityType)) validationError(`Invalid entity type: ${entityType}`);
+  try {
+    await ENTITY_WRITE_ASSERT[entityType](user, entityId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) forbidden();
+    throw e;
+  }
+}
 
 export const crmDocumentTools = [
   {
@@ -216,6 +242,7 @@ export const crmDocumentTools = [
       const table = ENTITY_LINK_MAP[args.entityType];
       const fk = ENTITY_FK_MAP[args.entityType];
       if (!table || !fk) validationError(`Invalid entity type: ${args.entityType}`);
+      await assertCanWriteLinkTarget(user, args.entityType, args.entityId);
 
       await (prismadb as any)[table].create({
         data: { document_id: args.document_id, [fk]: args.entityId },
@@ -251,6 +278,7 @@ export const crmDocumentTools = [
       const table = ENTITY_LINK_MAP[args.entityType];
       const fk = ENTITY_FK_MAP[args.entityType];
       if (!table || !fk) validationError(`Invalid entity type: ${args.entityType}`);
+      await assertCanWriteLinkTarget(user, args.entityType, args.entityId);
 
       await (prismadb as any)[table].delete({
         where: {
