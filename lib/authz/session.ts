@@ -1,6 +1,8 @@
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { AppRole, mapLegacyRole } from "./roles";
+
+export { isManagerOrAdmin } from "./roles";
 import { AuthenticationError, AuthorizationError } from "./errors";
 
 export interface AuthzUser {
@@ -34,8 +36,4 @@ export async function requireRole(
 
 export function isAdmin(user: AuthzUser): boolean {
   return user.role === "admin";
-}
-
-export function isManagerOrAdmin(user: AuthzUser): boolean {
-  return user.role === "manager" || user.role === "admin";
 }

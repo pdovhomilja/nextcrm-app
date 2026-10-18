@@ -1,4 +1,7 @@
 import type { AppRole } from "@/lib/authz";
+import { isManagerOrAdmin } from "@/lib/authz/roles";
+import { partnerAccountWhere } from "@/lib/authz/scopes/partner";
+import { NO_ROWS } from "@/lib/authz/scopes/unhandled-role";
 
 export type InvoiceStatus =
   | "DRAFT" | "ISSUED" | "SENT" | "PARTIALLY_PAID" | "PAID"
@@ -11,8 +14,14 @@ export function isInvoiceImmutable(status: InvoiceStatus): boolean {
   return status !== "DRAFT";
 }
 
-function isManagerOrAdmin(user: UserCtx): boolean {
-  return user.role === "manager" || user.role === "admin";
+// Invoice list/detail scope: a `user` reads invoices he created, managers and
+// admins read all (GHSA-q96c-2vj9-8v7f). A partner reads the invoices of his
+// accounts (read-only: every can* below refuses him). Other roles: none.
+export function invoiceReadScopeWhere(user: UserCtx): Record<string, unknown> {
+  if (isManagerOrAdmin(user)) return {};
+  if (user.role === "partner") return { account: partnerAccountWhere(user.id) };
+  if (user.role === "user") return { createdBy: user.id };
+  return { ...NO_ROWS };
 }
 
 function isOwnerOrPrivileged(invoice: InvoiceCtx, user: UserCtx): boolean {

@@ -1,12 +1,6 @@
 import { prismadb } from "@/lib/prisma";
-import { requireAuthenticated, type AuthzUser } from "@/lib/authz";
-
-// Same rule as canReadInvoice: a `user` reads only invoices they created,
-// managers and admins read all (GHSA-q96c-2vj9-8v7f).
-function invoiceReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") return {};
-  return { createdBy: user.id };
-}
+import { requireAuthenticated } from "@/lib/authz";
+import { invoiceReadScopeWhere } from "@/lib/invoices/permissions";
 
 export async function getInvoices() {
   const user = await requireAuthenticated();
