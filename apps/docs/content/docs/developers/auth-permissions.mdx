@@ -11,20 +11,25 @@ Authentication uses [Better Auth](https://www.better-auth.com/), configured in `
 - **User table:** Better Auth maps its user model to `Users`, with extra fields `role`, `userStatus`, `userLanguage` and `avatar`. IDs are UUIDs.
 - **Sessions:** 7 days, refreshed every 24 hours.
 - **New users:** the first user becomes an active `admin`. Later users start as `PENDING` and admins are notified. A pending or inactive user cannot use the app until an admin activates them.
-- **Admin plugin:** the Better Auth admin plugin is enabled with the roles `admin`, `manager` and `user` (`lib/auth-permissions.ts`). None of the roles is granted any of the plugin's permissions, so its `/api/auth/admin/*` endpoints are closed; user management uses the server actions in `actions/admin/users`.
+- **Admin plugin:** the Better Auth admin plugin is enabled with the roles `admin`, `manager`, `user` and `partner` (`lib/auth-permissions.ts`). None of the roles is granted any of the plugin's permissions, so its `/api/auth/admin/*` endpoints are closed; user management uses the server actions in `actions/admin/users`.
 - **Testing:** outside production the `testUtils` plugin captures OTPs. See [Local setup](/docs/developers/local-setup#sign-in-locally).
 
 On the server, `getSession()` from `lib/auth-server.ts` returns the Better Auth session for the current request, or `null` when the user is not `ACTIVE`. `getSessionAnyStatus()` skips that check and is only for the pages that route pending and inactive users. In feature code, use the `@/lib/authz` helpers below instead of reading the session directly.
 
 ## Roles
 
-There are three roles, stored in `Users.role` (enum `AppRole`):
+There are four roles, stored in `Users.role` (enum `AppRole`):
 
 | Role | Data visibility | Administration |
 | --- | --- | --- |
 | `user` | Only records in their own scope | No |
 | `manager` | All business data | No |
 | `admin` | Everything | Yes (`/admin`, plugins, settings, users) |
+| `partner` | Nothing yet (see below) | No |
+
+`partner` is for external users such as a distributor. An admin or manager names an account's partner (`crm_Accounts.partnerUserId`, Partner card on the account page), and an admin sets the partner's own company account (`Users.partnerAccountId`, users table). Until the partner area is built, `getSession()` treats a partner as signed out (like a `PENDING` user), the app layout sends him to `/partner-pending`, and he cannot create API tokens or use MCP. When an admin changes a partner to another role, his partner links are cleared.
+
+**Deny by default.** The scope helpers have rules for the roles in `SCOPED_ROLES` (`lib/authz/roles.ts`: `user`, `manager`, `admin`). Any other role gets a `where` that matches no rows and is refused by every `assertCan…` helper. It never falls back to the `user` rules. `lib/authz/__tests__/deny-unhandled-role.test.ts` calls every exported scope helper with `partner` and an unknown role and fails if one of them returns data.
 
 For the `user` role, "own scope" is defined per resource in `lib/authz/scopes/crm.ts`. For accounts, a user can see a record if they are `assigned_to`, `createdBy`, or a watcher. Contacts, leads, opportunities and contracts add rules for records linked to an account in scope.
 
@@ -43,6 +48,8 @@ All helpers are exported from `@/lib/authz`:
 | `requireAuthenticated()` | Get `{ id, role }` for the current user. Throws `AuthenticationError`. |
 | `requireRole(["admin"])` | Require one of the given roles. Throws `AuthorizationError`. |
 | `isAdmin(user)`, `isManagerOrAdmin(user)` | Branch on role. |
+| `isUnhandledRole(user)` | True for a role without scope rules (today: `partner`). Return nothing for it. |
+| `assertHandledRole(user)` (in `lib/authz/scopes/unhandled-role.ts`) | Throw `AuthorizationError` for such a role, at the top of a new assert. |
 | `accountReadScopeWhere(user)`, `leadReadScopeWhere(user)`, ... | Build a Prisma `where` for list queries. Includes `deletedAt: null`. |
 | `assertCanReadAccount(user, id)`, `assertCanWriteAccount(user, id)`, ... | Check one object. Throws `AuthorizationError`. |
 | `filterAuthorizedAccountIds(user, ids)`, ... | Reduce a list of IDs to the ones the user may touch (bulk actions). |
@@ -125,6 +132,7 @@ Admin pages, admin actions and `/api/admin/*` routes call `requireRole(["admin"]
 
 - Never trust an ID from the client. Check it with an `assertCan…` helper or a scoped `where`.
 - Use the same helper for reads and writes in MCP tools, actions and routes, so all entry points behave the same.
+- A new scope helper must deny roles outside `SCOPED_ROLES` (return `NO_ROWS` or call `assertHandledRole`); the deny-by-default test picks up new exports automatically.
 - Add a test for the `user` role when you add or change a scope. The suites under `__tests__/` and `lib/authz/__tests__/` show the pattern.
 
 ## API tokens
@@ -135,7 +143,7 @@ API tokens let external clients act as a user. They are used by the [MCP server]
 - Format: `nxtc__` followed by 48 hex characters.
 - Only the SHA-256 hash is stored (`ApiToken.tokenHash`), plus the first 8 characters for display. The raw token is shown once.
 - Each user can have at most 10 active tokens. A token can have an expiry date and can be revoked. Admins can revoke all tokens of a user (`revokeAllApiTokens`); deactivating a user does the same and also deletes their sessions.
-- `getMcpUser()` rejects a valid token whose owner is not `ACTIVE`.
+- `getMcpUser()` rejects a valid token whose owner is not `ACTIVE` or has the role `partner`. Partners cannot create tokens.
 - `lastUsedAt` is updated on each use.
 - A token carries the full permissions of its user. There are no per-token scopes.
 
