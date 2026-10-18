@@ -1,4 +1,5 @@
-import { S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 if (!process.env.MINIO_ENDPOINT) throw new Error("MINIO_ENDPOINT is not defined");
 if (!process.env.MINIO_ACCESS_KEY) throw new Error("MINIO_ACCESS_KEY is not defined");
@@ -33,6 +34,7 @@ function createClient(endpoint: string) {
 }
 
 export const MINIO_BUCKET = process.env.MINIO_BUCKET;
+export const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT;
 export const MINIO_PUBLIC_URL = minioPublicEndpoint();
 
 /** For server-side reads and writes (internal endpoint). */
@@ -45,3 +47,12 @@ export const minioClient = createClient(process.env.MINIO_ENDPOINT);
  */
 export const minioPresignClient =
   MINIO_PUBLIC_URL === process.env.MINIO_ENDPOINT ? minioClient : createClient(MINIO_PUBLIC_URL);
+
+/** Short-lived GET link for a private object. Hand it out only after an access check. */
+export function presignGet(key: string, expiresIn = 300): Promise<string> {
+  return getSignedUrl(
+    minioPresignClient,
+    new GetObjectCommand({ Bucket: MINIO_BUCKET, Key: key }),
+    { expiresIn },
+  );
+}

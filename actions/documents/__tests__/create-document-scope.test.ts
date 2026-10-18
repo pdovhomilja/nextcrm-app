@@ -2,9 +2,13 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findUnique: jest.fn() },
-    documents: { create: jest.fn(), findFirst: jest.fn() },
+    documents: { create: jest.fn(), findFirst: jest.fn(), count: jest.fn() },
     crm_Accounts: { findFirst: jest.fn() },
   },
+}));
+jest.mock("@/lib/minio", () => ({
+  MINIO_PUBLIC_URL: "https://files.example",
+  MINIO_BUCKET: "nextcrm",
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 jest.mock("@/inngest/client", () => ({
@@ -22,8 +26,7 @@ const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
 
 const baseInput = {
   name: "f.pdf",
-  url: "https://example.com/f.pdf",
-  key: "k1",
+  key: "documents/a.pdf",
   size: 10,
   mimeType: "application/pdf",
 };
@@ -65,5 +68,44 @@ describe("createDocument auth", () => {
     expect(where.id).toBe("a1");
     expect(where.OR).toBeUndefined();
     expect(prismadb.documents.create).toHaveBeenCalled();
+  });
+});
+
+describe("createDocument file key (client-supplied, checked on the server)", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("stores document_file_url derived from the key, not from the client", async () => {
+    mockUser("user", "u1");
+    (prismadb.documents.count as jest.Mock).mockResolvedValue(0);
+    (prismadb.documents.create as jest.Mock).mockResolvedValue({ id: "d1" });
+    await createDocument({ ...baseInput, url: "https://evil.example/x" } as any);
+    const data = (prismadb.documents.create as jest.Mock).mock.calls[0][0].data;
+    expect(data.key).toBe("documents/a.pdf");
+    expect(data.document_file_url).toBe("https://files.example/nextcrm/documents/a.pdf");
+  });
+
+  it("refuses a key outside the document folders", async () => {
+    mockUser("admin", "a1");
+    (prismadb.documents.count as jest.Mock).mockResolvedValue(0);
+    await expect(
+      createDocument({ ...baseInput, key: "invoices/i1.pdf" }),
+    ).rejects.toThrow("Invalid file");
+    expect(prismadb.documents.create).not.toHaveBeenCalled();
+  });
+
+  it("refuses another user's key (already referenced by a Documents row)", async () => {
+    mockUser("user", "attacker");
+    (prismadb.documents.count as jest.Mock).mockResolvedValue(1);
+    await expect(
+      createDocument({ ...baseInput, key: "documents/victim-uuid.pdf" }),
+    ).rejects.toThrow("Invalid file");
+    expect(prismadb.documents.create).not.toHaveBeenCalled();
+    const where = (prismadb.documents.count as jest.Mock).mock.calls[0][0].where;
+    expect(where).toEqual({
+      OR: [
+        { key: "documents/victim-uuid.pdf" },
+        { document_file_url: { endsWith: "/nextcrm/documents/victim-uuid.pdf" } },
+      ],
+    });
   });
 });
