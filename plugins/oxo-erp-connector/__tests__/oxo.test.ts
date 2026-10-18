@@ -18,7 +18,7 @@ it("maps errors: OXO ERP's code and message, status 0 when unreachable", async (
   const e = await client.post("/orders", {}).catch((x) => x);
   expect([e instanceof OxoError, e.status, e.code, e.message]).toEqual([true, 503, "writes_disabled", "OXO ERP error 503: Zápisy jsou vypnuté."]);
   oxo.down = true;
-  const d = await client.get("/price-lists").catch((x) => x);
+  const d = (await client.get("/price-lists").catch((x) => x)) as OxoError;
   expect([d.status, d.code]).toEqual([0, null]);
   expect([isAuthError(new OxoError("x", 401)), isAuthError(new OxoError("x", 403)), isAuthError(new OxoError("x", 503))]).toEqual([true, true, false]);
 });

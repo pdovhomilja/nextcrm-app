@@ -1,0 +1,107 @@
+{
+  "name": "Konektor OXO ERP",
+  "admin": {
+    "test": "Otestovat spojení",
+    "syncNow": "Synchronizovat teď",
+    "loadLists": "Načíst ceníky",
+    "queued": "Ve frontě: spustí se do 5 minut.",
+    "listsLoaded": "Načteno {count} ceníků z OXO ERP.",
+    "running": "Synchronizace už běží.",
+    "connected": "Spojeno s OXO ERP ({lists} aktivních ceníků).",
+    "dryRun": "Zkušební režim je zapnutý: synchronizace jen hlásí, co by změnila. Projděte zprávu níže a pak zkušební režim v nastavení vypněte.",
+    "lastRun": "Poslední běh",
+    "never": "zatím ne",
+    "nextRun": "Další běh",
+    "failed": "Selhalo: {error}",
+    "customerCounts": "Zákazníci: {linked} už propojeno, {number} podle IČO, {vat} podle DIČ, {name} podle názvu a PSČ, {created} nových, {updated} upraveno, {conflicts} konfliktů, {skipped} neaktivních, {failed} chyb",
+    "catalogCounts": "Katalog: kategorie {categoriesMatched} spárováno, {categoriesCreated} nových · produkty {productsUpdated} upraveno, {productsCreated} nových, {productsFailed} chyb · ceníky nahrazeno {listsReplaced} · ceníky účtů nastaveno {accountLists}",
+    "orderCounts": "Objednávky: {checked} zkontrolováno, {moved} posunuto, {imported} importováno, {updated} upraveno, {pending} čeká na zákazníka",
+    "listsMissing": "Ceníky, které OXO ERP nemá: {ids}",
+    "report": "Zpráva zkušebního běhu ({date})",
+    "nameLinks": "Propojeno podle názvu a PSČ (zkontrolujte)",
+    "createdRows": "Byly by založeny",
+    "conflicts": "Zákazníci, kterým odpovídá víc účtů",
+    "conflictsEmpty": "Žádné konflikty.",
+    "conflictsHelp": "Opravte data v CRM (slučte duplicitní účet nebo opravte IČO); další synchronizace zákazníka propojí.",
+    "reason": {
+      "number": "stejné IČO",
+      "vat": "stejné DIČ",
+      "name": "stejný název a PSČ",
+      "linked": "už propojený s jiným zákazníkem OXO ERP"
+    },
+    "catalog": "Katalog",
+    "priceListsHelp": "Ceníky vyberte v nastavení priceLists: ID ceníků z OXO ERP oddělená čárkou, např. 3, 7. Ceníky, ze kterých vycházejí, se přidají samy.",
+    "listsLoadedAt": "Ceníky v OXO ERP (načteno {date})",
+    "listsNotLoaded": "Klikněte na Načíst ceníky a uvidíte ceníky v OXO ERP.",
+    "skippedRules": "Pravidla, která CRM neumí použít",
+    "syncQueued": "Synchronizace je ve frontě.",
+    "orders": "Objednávky",
+    "ordersOff": "Odesílání objednávek je vypnuté. Zapněte sendOrders v nastavení a objednávky READY půjdou do OXO ERP.",
+    "ordersCounts": "Čeká na odeslání {waiting} · odesláno za 7 dní {sent} · chyb {failed}",
+    "ordersPaused": "Odesílání je pozastavené od {date}: {reason}. Až OXO ERP objednávky znovu přijímá, klikněte na Otestovat spojení.",
+    "pending": "{count} objednávek z OXO ERP čeká na propojení zákazníka"
+  },
+  "needsOwner": {
+    "title": "Účty z OXO ERP bez vlastníka",
+    "nav": "Bez vlastníka",
+    "help": "Otevřete účet a nastavte mu vlastníka; pak ze seznamu zmizí.",
+    "empty": "Každý propojený účet má vlastníka."
+  },
+  "panel": {
+    "linked": "Zákazník OXO ERP č. {id}",
+    "synced": "Naposledy synchronizováno {date}",
+    "fields": "OXO ERP řídí: název, IČO, DIČ, fakturační adresu, e-mail, telefon.",
+    "inactive": "V OXO ERP neaktivní.",
+    "priceList": "Ceník z OXO ERP: {name}",
+    "priceListMissing": "Ceník OXO ERP č. {id} není importovaný",
+    "addresses": "Dodací adresy"
+  },
+  "product": {
+    "linked": "Produkt OXO ERP č. {id}"
+  },
+  "order": {
+    "linked": "Objednávka OXO ERP {number}",
+    "state": "Stav v OXO ERP: {state}",
+    "delivery": {
+      "none": "neodesláno",
+      "partial": "částečně odesláno",
+      "full": "odesláno"
+    },
+    "deliveries": "Dodávky",
+    "belowList": "Pod ceníkovou cenou v OXO ERP: {lines}",
+    "waiting": "Čeká na OXO ERP od {date}",
+    "lastError": "Poslední chyba: {error}",
+    "failed": "Neodesláno: {reason}",
+    "missing": "V OXO ERP nenalezena",
+    "imported": "Importováno z OXO ERP"
+  },
+  "orders": {
+    "noAccount": "Účet objednávky nemá název",
+    "notOxoProduct": "Produkt {product} nepochází z OXO ERP",
+    "linesMissing": "{count} řádků nezobrazeno: produkty nejsou v CRM"
+  },
+  "mail": {
+    "failingSubject": "Synchronizace s OXO ERP selhává",
+    "failingText": "Synchronizace s OXO ERP selhala třikrát po sobě. Poslední chyba: {error}",
+    "pausedSubject": "OXO ERP nepřijímá objednávky",
+    "pausedText": "Odesílání objednávek do OXO ERP je pozastavené: {error}. Až OXO ERP objednávky znovu přijímá, klikněte na Otestovat spojení.",
+    "orderFailedSubject": "Objednávka {number} nebyla odeslána do OXO ERP",
+    "orderFailedText": "Objednávku {number} se nepodařilo odeslat do OXO ERP: {error}. Odstraňte příčinu a na objednávce klikněte na Zkusit znovu.",
+    "stuckSubject": "Objednávka {number} čeká na OXO ERP už den",
+    "stuckText": "Objednávka {number} čeká na odeslání do OXO ERP od {since}. Poslední chyba: {error}. Konektor to zkouší dál; zkontrolujte OXO ERP.",
+    "missingSubject": "Objednávka {number}: v OXO ERP nenalezena",
+    "missingText": "Konektor už v OXO ERP nenachází objednávku CRM {number}. Objednávka v CRM si nechává svůj stav; pokud byla odstraněna, zrušte ji ručně."
+  },
+  "tab": {
+    "title": "OXO ERP",
+    "notLinked": "Nepropojeno se zákazníkem OXO ERP",
+    "orders": "Objednávky",
+    "ordersEmpty": "Zatím žádné objednávky",
+    "number": "Číslo",
+    "oxo": "OXO ERP",
+    "date": "Datum",
+    "total": "Celkem",
+    "status": "Stav",
+    "delivery": "Dodání"
+  }
+}

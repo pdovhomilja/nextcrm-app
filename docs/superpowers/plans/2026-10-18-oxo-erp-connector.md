@@ -297,7 +297,7 @@ it("maps errors: OXO ERP's code and message, status 0 when unreachable", async (
   const e = await client.post("/orders", {}).catch((x) => x);
   expect([e instanceof OxoError, e.status, e.code, e.message]).toEqual([true, 503, "writes_disabled", "OXO ERP error 503: Zápisy jsou vypnuté."]);
   oxo.down = true;
-  const d = await client.get("/price-lists").catch((x) => x);
+  const d = (await client.get("/price-lists").catch((x) => x)) as OxoError;
   expect([d.status, d.code]).toEqual([0, null]);
   expect([isAuthError(new OxoError("x", 401)), isAuthError(new OxoError("x", 403)), isAuthError(new OxoError("x", 503))]).toEqual([true, true, false]);
 });
@@ -1253,14 +1253,14 @@ export async function syncCatalog({ ctx, client, dry, now }: { ctx: Ctx; client:
     wanted.add(id);
     for (const r of l.rules) if (r.base === "PRICE_LIST" && r.basePriceListId != null) want(r.basePriceListId);
   };
-  [...chosen, ...stored.keys()].forEach(want);
+  [...chosen, ...Array.from(stored.keys())].forEach(want);
   const deps = new Map(Array.from(wanted).map((id) => [id, snapshot.get(id)!.rules.filter((r) => r.base === "PRICE_LIST" && r.basePriceListId != null && wanted.has(r.basePriceListId)).map((r) => r.basePriceListId!)]));
   const { order, cyclic, tooDeep } = orderLists(deps, MAX_CHAIN);
   for (const id of cyclic) ctx.log.warn(`Price list ${id} skipped: its base lists form a cycle`);
   for (const id of tooDeep) ctx.log.warn(`Price list ${id} skipped: it builds on more than ${MAX_CHAIN - 1} other lists`);
   const productRefs = new Map(Array.from(known).map(([oxoId, k]) => [oxoId, k.ref]));
   const templates = new Map<number, string[]>();
-  for (const k of known.values()) if (k.templateId != null) templates.set(k.templateId, [...(templates.get(k.templateId) ?? []), k.ref]);
+  for (const k of Array.from(known.values())) if (k.templateId != null) templates.set(k.templateId, [...(templates.get(k.templateId) ?? []), k.ref]);
   const listRefs = new Map<number, string>();
   for (const id of order) {
     const l = snapshot.get(id)!;
@@ -1278,7 +1278,7 @@ export async function syncCatalog({ ctx, client, dry, now }: { ctx: Ctx; client:
     await ctx.store.set(K.pricelist(id), { priceListId, ref: ref(l), name: l.name, currency: l.currency, hash, syncedAt: now.toISOString(), isActive } satisfies PriceListLink);
   }
   // A stored list OXO ERP no longer returns (archived there) is deactivated once.
-  for (const [id, prev] of stored) {
+  for (const [id, prev] of Array.from(stored)) {
     if (snapshot.has(id) || !prev.isActive) continue;
     counts.listsReplaced++;
     if (dry) continue;
