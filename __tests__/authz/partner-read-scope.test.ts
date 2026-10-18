@@ -189,29 +189,46 @@ const scopes: [string, (u: AuthzUser) => Record<string, unknown>][] = [
   ["task", crmTaskReadScopeWhere],
 ];
 
+// Own company account (Pavel 2026-10-18): the account record, its contacts,
+// orders and invoices, read-only. Leads, opportunities, contracts, documents,
+// CRM tasks and activities on it stay hidden.
+const withOwn: [string, (u: AuthzUser) => Record<string, unknown>][] = scopes.filter(([e]) =>
+  ["account", "contact", "invoice", "order"].includes(e));
+const partnerOnly: [string, (u: AuthzUser) => Record<string, unknown>][] = scopes.filter(([e]) =>
+  ["lead", "opportunity", "contract", "task"].includes(e));
+
 describe("partner A", () => {
-  it.each(scopes)("%s: exactly A's account and his own company account", async (entity, scope) => {
+  it.each(withOwn)("%s: A's account and his own company account", async (entity, scope) => {
     expect(await visible(entity, scope(partnerA))).toEqual(["A", "aOwn"]);
   });
 
-  it("documents: A's, his own account's, and the one via a contact on A's account; no public or trap document", async () => {
-    expect(await visible("document", documentReadScopeWhere(partnerA))).toEqual(["A", "aOwn", "viaContactA"]);
+  it.each(partnerOnly)("%s: A's account only, not his own company account", async (entity, scope) => {
+    expect(await visible(entity, scope(partnerA))).toEqual(["A"]);
   });
 
-  it("activities: readable on A's and his own account, refused on the others", async () => {
+  it("documents: A's and the one via a contact on A's account; none on his own account, no public or trap document", async () => {
+    expect(await visible("document", documentReadScopeWhere(partnerA))).toEqual(["A", "viaContactA"]);
+  });
+
+  it("activities: readable on A's account only, refused on his own and the others", async () => {
     const result: Record<string, boolean> = {};
     for (const k of ACC_KEYS) {
       result[k] = await assertCanReadActivityForEntity(partnerA, "account", ACC[k]).then(() => true, () => false);
     }
-    expect(result).toEqual({ A: true, aOwn: true, B: false, internal: false, stale: false });
+    expect(result).toEqual({ A: true, aOwn: false, B: false, internal: false, stale: false });
   });
 
-  it("report scope gives the same account-bound sets; no projects, campaigns or directory", async () => {
+  it("activities on a contact of his own account are refused", async () => {
+    await expect(assertCanReadActivityForEntity(partnerA, "contact", ids.contact.aOwn)).rejects.toThrow("Forbidden");
+    await expect(assertCanReadActivityForEntity(partnerA, "contact", ids.contact.A)).resolves.toBeUndefined();
+  });
+
+  it("report scope gives the same sets; no projects, campaigns or directory", async () => {
     const s = getReportScope(partnerA);
     expect(await visible("account", s.account)).toEqual(["A", "aOwn"]);
     expect(await visible("contact", s.contact)).toEqual(["A", "aOwn"]);
-    expect(await visible("lead", s.lead)).toEqual(["A", "aOwn"]);
-    expect(await visible("opportunity", s.opportunity)).toEqual(["A", "aOwn"]);
+    expect(await visible("lead", s.lead)).toEqual(["A"]);
+    expect(await visible("opportunity", s.opportunity)).toEqual(["A"]);
     expect(s.task).toEqual(NO_ROWS);
     expect(s.campaign).toEqual(NO_ROWS);
     expect(s.allowUserDirectory).toBe(false);

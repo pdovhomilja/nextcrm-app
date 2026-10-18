@@ -82,6 +82,14 @@ const PARTNER_READS = new Set([
   "crm.crmTaskReadScopeWhere",
   "orders.orderReadScopeWhere",
 ]);
+// Reads that also reach his own company account (Pavel 2026-10-18: the
+// account record, its contacts, orders and invoices). Every other partner
+// scope is through partnerUserId only.
+const PARTNER_WITH_OWN_ACCOUNT = new Set([
+  "crm.accountReadScopeWhere", "crm.assertCanReadAccount", "crm.filterAuthorizedAccountIds",
+  "crm.contactReadScopeWhere", "crm.assertCanReadContact", "crm.filterAuthorizedContactIds",
+  "orders.orderReadScopeWhere", "report.account", "report.contact", "invoiceReadScopeWhere",
+]);
 // assertCanReadActivityForEntity: partner reads activities of these entity types only.
 const PARTNER_ACTIVITY_TYPES = new Set(["account", "lead", "contact", "opportunity", "contract"]);
 
@@ -101,10 +109,10 @@ function keysOf(value: unknown, out = new Set<string>()): Set<string> {
   return out;
 }
 
-function expectPartnerScoped(where: unknown, label: string) {
+function expectPartnerScoped(where: unknown, label: string, ownAccount = PARTNER_WITH_OWN_ACCOUNT.has(label)) {
   const keys = keysOf(where);
   expect({ label, partnerUserId: keys.has("partnerUserId"), ownAccount: keys.has("partner_own_users") })
-    .toEqual({ label, partnerUserId: true, ownAccount: true });
+    .toEqual({ label, partnerUserId: true, ownAccount });
   expect({ label, internal: NOT_FOR_PARTNERS.filter((k) => keys.has(k)) }).toEqual({ label, internal: [] });
   expect({ label, JSON: JSON.stringify(where).includes(ME) }).toEqual({ label, JSON: true });
 }
@@ -155,13 +163,13 @@ async function expectDenied(label: string, result: unknown) {
 
 // Allowed partner read: a where builder returns a partner scope; an assert or
 // filter resolves, and every where it sent to the DB is a partner scope.
-async function expectPartnerRead(label: string, fn: (...a: unknown[]) => unknown, args: unknown[]) {
+async function expectPartnerRead(label: string, fn: (...a: unknown[]) => unknown, args: unknown[], ownAccount: boolean) {
   mockWheres.length = 0;
   const result = call(fn, args);
-  if (!(result instanceof Promise)) return expectPartnerScoped(result, label);
+  if (!(result instanceof Promise)) return expectPartnerScoped(result, label, ownAccount);
   await expect(result).resolves.not.toBe(false);
   expect({ label, queries: mockWheres.length > 0 }).toEqual({ label, queries: true });
-  for (const where of mockWheres) expectPartnerScoped(where, label);
+  for (const where of mockWheres) expectPartnerScoped(where, label, ownAccount);
 }
 
 const modules = { crm, orders, pricing } as Record<string, Record<string, unknown>>;
@@ -209,7 +217,7 @@ describe("partner: his own read scope, everything else denied", () => {
         name === "assertCanReadActivityForEntity"
           ? PARTNER_ACTIVITY_TYPES.has(String(args[1]))
           : PARTNER_READS.has(label);
-      if (reads) await expectPartnerRead(call_, fn, args);
+      if (reads) await expectPartnerRead(call_, fn, args, PARTNER_WITH_OWN_ACCOUNT.has(label));
       else await expectDenied(call_, call(fn, args));
     }
   });

@@ -208,7 +208,7 @@ afterAll(async () => {
 describe("dashboard as partner A", () => {
   beforeEach(() => signInAs(U.A));
 
-  it("counters are his own counts: A's account and his own company account only", async () => {
+  it("counters are his own counts: A's account, plus his own company account for accounts, contacts and invoices", async () => {
     expect({
       accounts: await getAccountsCount(),
       contacts: await getContactCount(),
@@ -220,8 +220,8 @@ describe("dashboard as partner A", () => {
       storageMB: await getStorageSize(),
       revenue: await getExpectedRevenue(currency),
     }).toEqual({
-      accounts: 2, contacts: 2, leads: 2, opportunities: 2, contracts: 2,
-      documents: 3, invoices: 2, storageMB: 2, revenue: 200,
+      accounts: 2, contacts: 2, leads: 1, opportunities: 1, contracts: 1,
+      documents: 2, invoices: 2, storageMB: 1, revenue: 100,
     });
   });
 
@@ -330,7 +330,7 @@ describe("unified search", () => {
     expect({
       accounts: titles(r.accounts), documents: titles(r.documents),
       projects: r.projects.length, tasks: r.tasks.length, users: r.users.length,
-    }).toEqual({ accounts: ["A", "aOwn"], documents: ["A", "aOwn", "linkedA"], projects: 0, tasks: 0, users: 0 });
+    }).toEqual({ accounts: ["A", "aOwn"], documents: ["A", "linkedA"], projects: 0, tasks: 0, users: 0 });
   });
 
   it("control: a user finds the public board and public document", async () => {
@@ -358,14 +358,14 @@ describe("MCP read tools (same scopes as the UI)", () => {
   const mine = (names: string[]) => names.filter((n) => !n.startsWith("foreign:"));
 
   it("contracts: partner A his accounts', a user his readable accounts'; get is scoped", async () => {
-    expect(mine(await listed("crm_list_contracts", {}, partnerA))).toEqual(["contract.A", "contract.aOwn"]);
+    expect(mine(await listed("crm_list_contracts", {}, partnerA))).toEqual(["contract.A"]);
     expect(mine(await listed("crm_list_contracts", {}, colleague))).toEqual(["contract.A"]);
     expect(await found("crm_get_contract", { id: ids.contract.A }, partnerA)).toBe(true);
     expect(await found("crm_get_contract", { id: ids.contract.internal }, partnerA)).toBe(false);
   });
 
   it("documents: list, get and download use the document read scope", async () => {
-    expect(mine(await listed("crm_list_documents", {}, partnerA))).toEqual(["document.A", "document.aOwn", "document.linkedA"]);
+    expect(mine(await listed("crm_list_documents", {}, partnerA))).toEqual(["document.A", "document.linkedA"]);
     expect(mine(await listed("crm_list_documents", {}, colleague))).toEqual(["document.A", "document.public"]);
     expect(mine(await listed("crm_list_documents", { entityType: "account", entityId: ACC.A }, partnerA))).toEqual(["document.A"]);
     expect(await found("crm_get_document", { id: ids.document.A }, partnerA)).toBe(true);

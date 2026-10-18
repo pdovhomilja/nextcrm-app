@@ -3,7 +3,7 @@ import { AuthzUser } from "../session";
 import { AuthorizationError } from "../errors";
 import { isManagerOrAdmin } from "../roles";
 import { NO_ROWS, assertHandledRole, isUnhandledRole } from "./unhandled-role";
-import { partnerAccountWhere } from "./partner";
+import { partnerAccountWhere, partnerVisibleAccountWhere } from "./partner";
 
 type ContactWhere = NonNullable<
   Parameters<typeof prismadb.crm_Contacts.updateMany>[0]
@@ -240,7 +240,7 @@ export function accountReadScopeWhere(user: AuthzUser) {
     return { deletedAt: null };
   }
   if (user.role === "partner") {
-    return { deletedAt: null, OR: partnerAccountWhere(user.id).OR };
+    return { deletedAt: null, OR: partnerVisibleAccountWhere(user.id).OR };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
   return {
@@ -310,7 +310,7 @@ export function contactReadScopeWhere(user: AuthzUser) {
     return { deletedAt: null };
   }
   if (user.role === "partner") {
-    return { deletedAt: null, assigned_accounts: partnerAccountWhere(user.id) };
+    return { deletedAt: null, assigned_accounts: partnerVisibleAccountWhere(user.id) };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
   return {
@@ -659,7 +659,21 @@ export async function assertCanReadActivityForEntity(
   entityType: string,
   entityId: string,
 ): Promise<void> {
-  switch (entityType.toLowerCase()) {
+  const type = entityType.toLowerCase();
+  if (user.role === "partner" && (type === "account" || type === "contact")) {
+    // No activities on his own company account or its contacts.
+    const account = partnerAccountWhere(user.id);
+    const row =
+      type === "account"
+        ? await prismadb.crm_Accounts.findFirst({ where: { id: entityId, ...account }, select: { id: true } })
+        : await prismadb.crm_Contacts.findFirst({
+            where: { id: entityId, deletedAt: null, assigned_accounts: account },
+            select: { id: true },
+          });
+    if (!row) throw new AuthorizationError();
+    return;
+  }
+  switch (type) {
     case "account":
       return assertCanReadAccount(user, entityId);
     case "lead":
