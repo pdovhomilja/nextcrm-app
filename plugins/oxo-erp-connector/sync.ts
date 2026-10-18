@@ -1,6 +1,7 @@
 import { syncCatalog } from "./catalog";
 import { emptyRows, syncCustomers, zeroCustomers, type CustomerRun } from "./customers";
-import { oxoClient, type OxoClient } from "./oxo";
+import { syncOrderStatuses } from "./orders-status";
+import { isAuthError, oxoClient, type OxoClient } from "./oxo";
 import { msg, tell, type Ctx } from "./settings";
 import { K, type CatalogCounts, type OrderCounts, type RunSummary } from "./store";
 
@@ -39,7 +40,13 @@ export async function runSync(ctx: Ctx, client: OxoClient, now: Date): Promise<R
     const cat = await syncCatalog({ ctx, client, dry, now });
     catalog = cat.counts;
     let ordersTop: string | null = null;
-    // ORDERS: Tasks 7 and 8 add the status sweep and the import of OXO ERP orders here.
+    try {
+      Object.assign(orders, await syncOrderStatuses({ ctx, client, dry, now }));
+    } catch (e) {
+      if (isAuthError(e)) throw e;
+      ctx.log.error(`Order statuses failed: ${msg(e)}`);
+    }
+    // ORDERS IN: Task 8 adds the import of OXO ERP orders here.
     if (!dry) {
       if (customersTop) await ctx.store.set(K.cursor("customers"), { at: customersTop });
       if (cat.top) await ctx.store.set(K.cursor("products"), { at: cat.top });
