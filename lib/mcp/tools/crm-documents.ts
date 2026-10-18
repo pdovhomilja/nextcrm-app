@@ -4,9 +4,17 @@ import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { minioPresignClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
 import { randomUUID } from "crypto";
-import type { AuthzUser } from "@/lib/authz";
-import { documentReadScopeWhere } from "@/lib/authz/scopes/crm";
+import { AuthorizationError, type AuthzUser } from "@/lib/authz";
 import {
+  documentReadScopeWhere,
+  assertCanWriteAccount,
+  assertCanWriteContact,
+  assertCanWriteLead,
+  assertCanWriteOpportunity,
+  assertCanWriteTask,
+} from "@/lib/authz/scopes/crm";
+import {
+  forbidden,
   paginationSchema,
   paginationArgs,
   listResponse,
@@ -31,6 +39,15 @@ const ENTITY_FK_MAP: Record<string, string> = {
   lead: "lead_id",
   opportunity: "opportunity_id",
   task: "task_id",
+};
+
+// Linking a document to a record is a write on that record.
+const ENTITY_WRITE_ASSERT: Record<string, (user: AuthzUser, id: string) => Promise<void>> = {
+  account: assertCanWriteAccount,
+  contact: assertCanWriteContact,
+  lead: assertCanWriteLead,
+  opportunity: assertCanWriteOpportunity,
+  task: assertCanWriteTask,
 };
 
 export const crmDocumentTools = [
@@ -196,7 +213,8 @@ export const crmDocumentTools = [
     }),
     async handler(
       args: { document_id: string; entityType: string; entityId: string },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
       const doc = await prismadb.documents.findFirst({
         where: { id: args.document_id, created_by_user: userId },
@@ -206,6 +224,12 @@ export const crmDocumentTools = [
       const table = ENTITY_LINK_MAP[args.entityType];
       const fk = ENTITY_FK_MAP[args.entityType];
       if (!table || !fk) validationError(`Invalid entity type: ${args.entityType}`);
+      try {
+        await ENTITY_WRITE_ASSERT[args.entityType](user, args.entityId);
+      } catch (e) {
+        if (e instanceof AuthorizationError) forbidden();
+        throw e;
+      }
 
       await (prismadb as any)[table].create({
         data: { document_id: args.document_id, [fk]: args.entityId },

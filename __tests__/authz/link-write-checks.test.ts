@@ -102,3 +102,19 @@ describe("createActivity links", () => {
   });
 });
 
+describe("MCP crm_link_document", () => {
+  it("refuses linking the user's document to an account he cannot write", async () => {
+    await expect(linkDocument("account", ACC.other)).rejects.toThrow("FORBIDDEN");
+    expect(await prismadb.documentsToAccounts.count({ where: { document_id: DOC } })).toBe(0);
+  });
+
+  it("refuses linking to a lead he cannot write", async () => {
+    await expect(linkDocument("lead", LEAD.other)).rejects.toThrow("FORBIDDEN");
+  });
+
+  it("still links the user's document to his own account", async () => {
+    await expect(linkDocument("account", ACC.rep)).resolves.toEqual({
+      data: { document_id: DOC, entityType: "account", entityId: ACC.rep },
+    });
+  });
+});
