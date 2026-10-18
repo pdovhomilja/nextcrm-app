@@ -54,6 +54,10 @@ import { getInvoicesByAccountId } from "@/actions/invoices/get-invoices-by-accou
 import { searchUsers } from "@/actions/user/search-users";
 import { getUsers, getActiveUsers } from "@/actions/get-users";
 import { unifiedSearch } from "@/actions/fulltext/unified-search";
+import { crmContractTools } from "@/lib/mcp/tools/crm-contracts";
+import { crmDocumentTools } from "@/lib/mcp/tools/crm-documents";
+import { crmActivityTools } from "@/lib/mcp/tools/crm-activities";
+import type { AuthzUser } from "@/lib/authz";
 import { GET as getInvoicePdf } from "@/app/api/invoices/[invoiceId]/pdf/route";
 
 const tag = randomUUID().slice(0, 8);
@@ -323,5 +327,42 @@ describe("unified search", () => {
     if ("error" in r) throw new Error(r.error);
     expect({ projects: titles(r.projects), documents: titles(r.documents).includes("public") })
       .toEqual({ projects: ["board"], documents: true });
+  });
+});
+
+describe("MCP read tools (same scopes as the UI)", () => {
+  const tools = [...crmContractTools, ...crmDocumentTools, ...crmActivityTools];
+  const run = async (name: string, args: Record<string, unknown>, user: AuthzUser) => {
+    const tool = tools.find((t) => t.name === name)!;
+    return (tool.handler as any)({ limit: 50, offset: 0, ...args }, user.id, user);
+  };
+  const listed = async (name: string, args: Record<string, unknown>, user: AuthzUser) =>
+    nameOf((await run(name, args, user)).data);
+  const found = (name: string, args: Record<string, unknown>, user: AuthzUser) =>
+    run(name, args, user).then(() => true, (e) => (e.message === "NOT_FOUND" ? false : Promise.reject(e)));
+
+  const partnerA: AuthzUser = { id: U.A, role: "partner" };
+  const colleague: AuthzUser = { id: U.colleague, role: "user" };
+  const mine = (names: string[]) => names.filter((n) => !n.startsWith("foreign:"));
+
+  it("contracts: partner A his accounts', a user his readable accounts'; get is scoped", async () => {
+    expect(mine(await listed("crm_list_contracts", {}, partnerA))).toEqual(["contract.A", "contract.aOwn"]);
+    expect(mine(await listed("crm_list_contracts", {}, colleague))).toEqual(["contract.A"]);
+    expect(await found("crm_get_contract", { id: ids.contract.A }, partnerA)).toBe(true);
+    expect(await found("crm_get_contract", { id: ids.contract.internal }, partnerA)).toBe(false);
+  });
+
+  it("documents: list, get and download use the document read scope", async () => {
+    expect(mine(await listed("crm_list_documents", {}, partnerA))).toEqual(["document.A", "document.aOwn", "document.linkedA"]);
+    expect(mine(await listed("crm_list_documents", {}, colleague))).toEqual(["document.A", "document.public"]);
+    expect(mine(await listed("crm_list_documents", { entityType: "account", entityId: ACC.A }, partnerA))).toEqual(["document.A"]);
+    expect(await found("crm_get_document", { id: ids.document.A }, partnerA)).toBe(true);
+    expect(await found("crm_get_document", { id: ids.document.public }, partnerA)).toBe(false);
+    expect(await found("crm_get_download_url", { id: ids.document.public }, partnerA)).toBe(false);
+  });
+
+  it("activities by entity: everything on a readable entity, refused otherwise", async () => {
+    expect(mine(await listed("crm_list_activities", { entityType: "account", entityId: ACC.A }, partnerA))).toEqual(["activity.A"]);
+    expect(await found("crm_list_activities", { entityType: "account", entityId: ACC.internal }, partnerA)).toBe(false);
   });
 });

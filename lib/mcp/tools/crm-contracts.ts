@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import type { AuthzUser } from "@/lib/authz";
+import { contractReadScopeWhere } from "@/lib/authz/scopes/crm";
 import {
   paginationSchema,
   paginationArgs,
@@ -25,7 +27,7 @@ const lineItemSchema = z.object({
 export const crmContractTools = [
   {
     name: "crm_list_contracts",
-    description: "List CRM contracts (org-wide)",
+    description: "List CRM contracts visible to the authenticated user",
     schema: z.object({
       status: z.enum(["NOTSTARTED", "INPROGRESS", "SIGNED"]).optional(),
       account: z.string().uuid().optional(),
@@ -33,10 +35,11 @@ export const crmContractTools = [
     }),
     async handler(
       args: { status?: string; account?: string; limit: number; offset: number },
-      _userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
       const where = {
-        deletedAt: null,
+        ...contractReadScopeWhere(user),
         ...(args.status && { status: args.status as any }),
         ...(args.account && { account: args.account }),
       };
@@ -56,9 +59,9 @@ export const crmContractTools = [
     name: "crm_get_contract",
     description: "Get a single CRM contract by ID with line items",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, _userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const contract = await prismadb.crm_Contracts.findFirst({
-        where: { id: args.id, deletedAt: null },
+        where: { id: args.id, ...contractReadScopeWhere(user) },
         include: {
           lineItems: { orderBy: { sort_order: "asc" } },
           assigned_account: { select: { id: true, name: true } },

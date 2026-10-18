@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import type { AuthzUser } from "@/lib/authz";
+import { assertCanReadActivityForEntity } from "@/lib/authz/scopes/crm";
 import {
   paginationSchema,
   paginationArgs,
@@ -7,6 +9,7 @@ import {
   itemResponse,
   notFound,
   softDeleteData,
+  assertScopeOrNotFound,
 } from "../helpers";
 import { emitCalendarOutbound } from "@/lib/crm/calendar/outbound-emit";
 
@@ -19,7 +22,7 @@ export const crmActivityTools = [
   {
     name: "crm_list_activities",
     description:
-      "List CRM activities created by the authenticated user, optionally filtered by linked entity",
+      "List CRM activities created by the authenticated user, or all activities on a linked entity the user can read",
     schema: z.object({
       type: z.enum(["call", "meeting", "note", "email", "visit"]).optional(),
       status: z.enum(["scheduled", "completed", "cancelled"]).optional(),
@@ -36,10 +39,20 @@ export const crmActivityTools = [
         limit: number;
         offset: number;
       },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
+      // Like the record's activity feed in the UI: everything on an entity
+      // the caller can read. Without an entity, his own activities.
+      const byEntity = Boolean(args.entityType && args.entityId);
+      if (byEntity) {
+        await assertScopeOrNotFound(
+          () => assertCanReadActivityForEntity(user, args.entityType!, args.entityId!),
+          "Activity",
+        );
+      }
       const where: any = {
-        createdBy: userId,
+        ...(!byEntity && { createdBy: userId }),
         deletedAt: null,
         ...(args.type && { type: args.type as any }),
         ...(args.status && { status: args.status as any }),
