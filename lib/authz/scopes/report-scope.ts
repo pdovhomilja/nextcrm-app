@@ -1,5 +1,7 @@
 import type { AuthzUser } from "../session";
+import { isManagerOrAdmin } from "../roles";
 import { NO_ROWS, isUnhandledRole } from "./unhandled-role";
+import { partnerAccountWhere } from "./partner";
 
 export interface ReportScope {
   opportunity: Record<string, unknown>;
@@ -22,7 +24,21 @@ const EMPTY: ReportScope = {
 };
 
 export function getReportScope(user: AuthzUser): ReportScope {
-  if (user.role === "admin" || user.role === "manager") return EMPTY;
+  if (isManagerOrAdmin(user)) return EMPTY;
+  if (user.role === "partner") {
+    // CRM records through his accounts only; `task` is the projects module
+    // and campaigns are internal: none for a partner.
+    const account = partnerAccountWhere(user.id);
+    return {
+      opportunity: { assigned_account: account },
+      lead: { assigned_accounts: account },
+      account,
+      contact: { assigned_accounts: account },
+      task: { ...NO_ROWS },
+      campaign: { ...NO_ROWS },
+      allowUserDirectory: false,
+    };
+  }
   if (isUnhandledRole(user)) {
     return {
       opportunity: { ...NO_ROWS },

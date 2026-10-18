@@ -1,7 +1,9 @@
 import { prismadb } from "@/lib/prisma";
 import { AuthzUser } from "../session";
 import { AuthorizationError } from "../errors";
+import { isManagerOrAdmin } from "../roles";
 import { NO_ROWS, assertHandledRole, isUnhandledRole } from "./unhandled-role";
+import { partnerAccountWhere } from "./partner";
 
 type ContactWhere = NonNullable<
   Parameters<typeof prismadb.crm_Contacts.updateMany>[0]
@@ -11,7 +13,7 @@ type TargetWhere = NonNullable<
 >["where"];
 
 function contactScopedWhere(user: AuthzUser, contactId: string): ContactWhere {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { id: contactId };
   }
   // user role: own contact (assigned or creator).
@@ -25,7 +27,7 @@ function contactScopedWhere(user: AuthzUser, contactId: string): ContactWhere {
 }
 
 function targetScopedWhere(user: AuthzUser, targetId: string): TargetWhere {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { id: targetId };
   }
   return { id: targetId, created_by: user.id };
@@ -61,7 +63,7 @@ export async function tryScopedUpdateTarget(
 // Read path now uses contactReadScopeWhere (D2) which adds linked-account scope.
 async function findContactInScope(user: AuthzUser, contactId: string) {
   if (isUnhandledRole(user)) return null;
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return prismadb.crm_Contacts.findFirst({
       where: { id: contactId },
       select: { id: true },
@@ -81,7 +83,7 @@ async function findContactInScope(user: AuthzUser, contactId: string) {
 
 async function findTargetInScope(user: AuthzUser, targetId: string) {
   if (isUnhandledRole(user)) return null;
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return prismadb.crm_Targets.findFirst({
       where: { id: targetId },
       select: { id: true },
@@ -186,7 +188,7 @@ export async function assertCanCancelContactEnrichment(
     select: { id: true, triggeredBy: true },
   })) as { id: string; triggeredBy: string | null } | null;
   if (!row) throw new AuthorizationError();
-  if (user.role === "admin" || user.role === "manager") return;
+  if (isManagerOrAdmin(user)) return;
   if (row.triggeredBy !== user.id) throw new AuthorizationError();
 }
 
@@ -200,7 +202,7 @@ export async function assertCanCancelTargetEnrichment(
     select: { id: true, triggeredBy: true },
   })) as { id: string; triggeredBy: string | null } | null;
   if (!row) throw new AuthorizationError();
-  if (user.role === "admin" || user.role === "manager") return;
+  if (isManagerOrAdmin(user)) return;
   if (row.triggeredBy !== user.id) throw new AuthorizationError();
 }
 
@@ -210,7 +212,7 @@ export async function filterAuthorizedTargetIds(
 ): Promise<string[]> {
   if (targetIds.length === 0 || isUnhandledRole(user)) return [];
   const baseWhere =
-    user.role === "admin" || user.role === "manager"
+    isManagerOrAdmin(user)
       ? { id: { in: targetIds } }
       : { id: { in: targetIds }, created_by: user.id };
   const rows = await prismadb.crm_Targets.findMany({
@@ -234,8 +236,11 @@ export function accountUserScopeOR(userId: string) {
 // Manager/admin: { deletedAt: null }
 // User:           { deletedAt: null, OR: accountUserScopeOR(user.id) }
 export function accountReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { deletedAt: null };
+  }
+  if (user.role === "partner") {
+    return { deletedAt: null, OR: partnerAccountWhere(user.id).OR };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
   return {
@@ -262,7 +267,7 @@ export async function assertCanWriteAccount(
 ): Promise<void> {
   assertHandledRole(user);
   const where =
-    user.role === "admin" || user.role === "manager"
+    isManagerOrAdmin(user)
       ? { id: accountId }
       : {
           id: accountId,
@@ -282,8 +287,11 @@ export async function assertCanWriteAccount(
 
 // crm_Leads → crm_Accounts via `assigned_accounts` (FK accountsIDs).
 export function leadReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { deletedAt: null };
+  }
+  if (user.role === "partner") {
+    return { deletedAt: null, assigned_accounts: partnerAccountWhere(user.id) };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
   return {
@@ -298,8 +306,11 @@ export function leadReadScopeWhere(user: AuthzUser) {
 
 // crm_Contacts → crm_Accounts via `assigned_accounts` (FK accountsIDs).
 export function contactReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { deletedAt: null };
+  }
+  if (user.role === "partner") {
+    return { deletedAt: null, assigned_accounts: partnerAccountWhere(user.id) };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
   return {
@@ -314,8 +325,11 @@ export function contactReadScopeWhere(user: AuthzUser) {
 
 // crm_Opportunities → crm_Accounts via `assigned_account` (FK account).
 export function opportunityReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { deletedAt: null };
+  }
+  if (user.role === "partner") {
+    return { deletedAt: null, assigned_account: partnerAccountWhere(user.id) };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
   return {
@@ -330,8 +344,11 @@ export function opportunityReadScopeWhere(user: AuthzUser) {
 
 // crm_Contracts → crm_Accounts via `assigned_account` (FK account).
 export function contractReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { deletedAt: null };
+  }
+  if (user.role === "partner") {
+    return { deletedAt: null, assigned_account: partnerAccountWhere(user.id) };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
   return {
@@ -384,13 +401,13 @@ export async function assertCanReadContract(
 // ---------------------------------------------------------------------------
 
 export function targetReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") return { deletedAt: null };
+  if (isManagerOrAdmin(user)) return { deletedAt: null };
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
   return { deletedAt: null, created_by: user.id };
 }
 
 export function targetListReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") return { deletedAt: null };
+  if (isManagerOrAdmin(user)) return { deletedAt: null };
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
   return { deletedAt: null, created_by: user.id };
 }
@@ -416,7 +433,7 @@ export async function assertCanWriteLead(
 ): Promise<void> {
   assertHandledRole(user);
   const where =
-    user.role === "admin" || user.role === "manager"
+    isManagerOrAdmin(user)
       ? { id: leadId, deletedAt: null }
       : { id: leadId, deletedAt: null, OR: [{ assigned_to: user.id }, { createdBy: user.id }] };
   const row = await prismadb.crm_Leads.findFirst({ where, select: { id: true } });
@@ -429,7 +446,7 @@ export async function assertCanWriteOpportunity(
 ): Promise<void> {
   assertHandledRole(user);
   const where =
-    user.role === "admin" || user.role === "manager"
+    isManagerOrAdmin(user)
       ? { id: opportunityId, deletedAt: null }
       : { id: opportunityId, deletedAt: null, OR: [{ assigned_to: user.id }, { createdBy: user.id }] };
   const row = await prismadb.crm_Opportunities.findFirst({ where, select: { id: true } });
@@ -442,7 +459,7 @@ export async function assertCanWriteContract(
 ): Promise<void> {
   assertHandledRole(user);
   const where =
-    user.role === "admin" || user.role === "manager"
+    isManagerOrAdmin(user)
       ? { id: contractId, deletedAt: null }
       : { id: contractId, deletedAt: null, OR: [{ assigned_to: user.id }, { createdBy: user.id }] };
   const row = await prismadb.crm_Contracts.findFirst({ where, select: { id: true } });
@@ -456,7 +473,7 @@ export async function assertCanWriteTargetList(
 ): Promise<void> {
   assertHandledRole(user);
   const where =
-    user.role === "admin" || user.role === "manager"
+    isManagerOrAdmin(user)
       ? { id: listId, deletedAt: null }
       : { id: listId, deletedAt: null, created_by: user.id };
   const row = await prismadb.crm_TargetLists.findFirst({ where, select: { id: true } });
@@ -472,11 +489,35 @@ export async function assertCanWriteCrmTask(
 ): Promise<void> {
   assertHandledRole(user);
   const where =
-    user.role === "admin" || user.role === "manager"
+    isManagerOrAdmin(user)
       ? { id: taskId }
       : { id: taskId, OR: [{ createdBy: user.id }, { user: user.id }] };
   const row = await prismadb.crm_Accounts_Tasks.findFirst({ where, select: { id: true } });
   if (!row) throw new AuthorizationError();
+}
+
+// CRM tasks (crm_Accounts_Tasks) read scope. User: tasks he created or is
+// assigned, or on an account he can read (what the account page shows).
+// Partner: only tasks on his accounts, directly or via an opportunity.
+export function crmTaskReadScopeWhere(user: AuthzUser) {
+  if (isManagerOrAdmin(user)) return {};
+  if (user.role === "partner") {
+    const account = partnerAccountWhere(user.id);
+    return {
+      OR: [
+        { crm_accounts: account },
+        { opportunity: { assigned_account: account } },
+      ],
+    };
+  }
+  if (isUnhandledRole(user)) return { ...NO_ROWS };
+  return {
+    OR: [
+      { createdBy: user.id },
+      { user: user.id },
+      { crm_accounts: { deletedAt: null, OR: accountUserScopeOR(user.id) } },
+    ],
+  };
 }
 
 // Line items carry no ownership column; authority is the parent opportunity/contract
@@ -515,8 +556,21 @@ export async function assertCanWriteContractLineItem(
 // ---------------------------------------------------------------------------
 
 export function documentReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { deletedAt: null };
+  }
+  if (user.role === "partner") {
+    // Only through his accounts: no created_by_user, assigned_user or public.
+    const account = partnerAccountWhere(user.id);
+    return {
+      deletedAt: null,
+      OR: [
+        { accounts: { some: { account } } },
+        { leads: { some: { lead: { assigned_accounts: account } } } },
+        { contacts: { some: { contact: { assigned_accounts: account } } } },
+        { opportunities: { some: { opportunity: { assigned_account: account } } } },
+      ],
+    };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
   return {
@@ -578,6 +632,7 @@ export async function assertCanWriteDocument(
   user: AuthzUser,
   documentId: string,
 ): Promise<void> {
+  assertHandledRole(user);
   return assertCanReadDocument(user, documentId);
 }
 
@@ -621,9 +676,7 @@ export async function assertCanReadActivityForEntity(
     case "targetlist":
       return assertCanReadTargetList(user, entityId);
     default:
-      // Same test as isManagerOrAdmin(); importing ../session here would pull
-      // better-auth into every scope module (and its tests).
-      if (user.role !== "admin" && user.role !== "manager") throw new AuthorizationError();
+      if (!isManagerOrAdmin(user)) throw new AuthorizationError();
       return;
   }
 }
@@ -636,7 +689,7 @@ export async function assertCanReadActivityForEntity(
 // ---------------------------------------------------------------------------
 
 export function campaignReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { status: { not: "deleted" } };
   }
   if (isUnhandledRole(user)) return { status: { not: "deleted" }, ...NO_ROWS };
@@ -644,7 +697,7 @@ export function campaignReadScopeWhere(user: AuthzUser) {
 }
 
 export function campaignTemplateReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { deletedAt: null };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
@@ -696,7 +749,7 @@ export async function assertCanWriteTemplate(
 // ---------------------------------------------------------------------------
 
 export function boardReadScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { deletedAt: null };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
@@ -712,7 +765,7 @@ export function boardReadScopeWhere(user: AuthzUser) {
 }
 
 export function boardWriteScopeWhere(user: AuthzUser) {
-  if (user.role === "admin" || user.role === "manager") {
+  if (isManagerOrAdmin(user)) {
     return { deletedAt: null };
   }
   if (isUnhandledRole(user)) return { deletedAt: null, ...NO_ROWS };
@@ -802,6 +855,6 @@ export async function assertCanWriteActivity(
   });
   if (!activity) throw new AuthorizationError();
   if (activity.createdBy && activity.createdBy === user.id) return;
-  if (user.role === "manager" || user.role === "admin") return;
+  if (isManagerOrAdmin(user)) return;
   throw new AuthorizationError();
 }
