@@ -1,5 +1,15 @@
 "use server";
 import { getSession } from "@/lib/auth-server";
+import {
+  assertCanWriteAccount,
+  assertCanWriteContact,
+  assertCanWriteContract,
+  assertCanWriteLead,
+  assertCanWriteOpportunity,
+  requireAuthenticated,
+  AuthorizationError,
+  type AuthzUser,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { emitCalendarOutbound } from "@/lib/crm/calendar/outbound-emit";
@@ -10,6 +20,15 @@ const ENTITY_SLUGS: Record<string, string> = {
   lead: "leads",
   opportunity: "opportunities",
   contract: "contracts",
+};
+
+// Linking an activity to a record is a write on that record.
+const ASSERT_CAN_WRITE: Record<string, (user: AuthzUser, id: string) => Promise<void>> = {
+  account: assertCanWriteAccount,
+  contact: assertCanWriteContact,
+  lead: assertCanWriteLead,
+  opportunity: assertCanWriteOpportunity,
+  contract: assertCanWriteContract,
 };
 
 export const createActivity = async (data: {
@@ -26,6 +45,16 @@ export const createActivity = async (data: {
   try {
     const session = await getSession();
     if (!session) return { error: "Unauthorized" };
+    const authUser = await requireAuthenticated();
+    try {
+      for (const link of data.links) {
+        if (!Object.hasOwn(ASSERT_CAN_WRITE, link.entityType)) throw new AuthorizationError();
+        await ASSERT_CAN_WRITE[link.entityType](authUser, link.entityId);
+      }
+    } catch (e) {
+      if (e instanceof AuthorizationError) return { error: "Forbidden" };
+      throw e;
+    }
 
     const activity = await prismadb.$transaction(async (tx) => {
       const created = await (tx as any).crm_Activities.create({
