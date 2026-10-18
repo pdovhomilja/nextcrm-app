@@ -5,6 +5,24 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.35.0...v0.36.0) (2026-10-18)
+
+
+### Added
+
+* **authz:** partner app — route allow-list, navigation, door open, e2e (partner ticket 4, part B) ([#402](https://github.com/pdovhomilja/nextcrm-app/issues/402)) ([282fb7f](https://github.com/pdovhomilja/nextcrm-app/commit/282fb7febdd21c147070f00c4ca5e6bafb05fdf7))
+* **authz:** partner read scope through his accounts (partner ticket 2) ([#398](https://github.com/pdovhomilja/nextcrm-app/issues/398)) ([6a35cfc](https://github.com/pdovhomilja/nextcrm-app/commit/6a35cfca4349413a0c996382aff0c75938bf73c6))
+* **authz:** partner writes and own-account rule (partner ticket 4, part A) ([#400](https://github.com/pdovhomilja/nextcrm-app/issues/400)) ([ef40edd](https://github.com/pdovhomilja/nextcrm-app/commit/ef40eddf6c364730d9599a84832a3f836419335d))
+* oxo-erp-connector plugin (OXO ERP /api/v1) + SDK 0.2.6 ([#394](https://github.com/pdovhomilja/nextcrm-app/issues/394)) ([dcf0478](https://github.com/pdovhomilja/nextcrm-app/commit/dcf047845c9f301937e8106bb0606d5d2ff77976))
+* partner role, partner fields and admin controls (deny by default) ([#397](https://github.com/pdovhomilja/nextcrm-app/issues/397)) ([291d323](https://github.com/pdovhomilja/nextcrm-app/commit/291d323a95f47f0bdcc5317f877aa381204c41f6))
+
+
+### Fixed
+
+* **authz:** close partner read leaks (partner ticket 3) ([#399](https://github.com/pdovhomilja/nextcrm-app/issues/399)) ([45b4d79](https://github.com/pdovhomilja/nextcrm-app/commit/45b4d798bd8736ddd931a3d887d3ef743715d17d))
+* **authz:** linking an activity or document requires write access to the target record ([#401](https://github.com/pdovhomilja/nextcrm-app/issues/401)) ([cb52f2a](https://github.com/pdovhomilja/nextcrm-app/commit/cb52f2a8fddcfdd650451d5568b919698fee5638))
+* **documents:** private document files (presigned reads after access check) ([#396](https://github.com/pdovhomilja/nextcrm-app/issues/396)) ([d1271c1](https://github.com/pdovhomilja/nextcrm-app/commit/d1271c11cd47ba211806acfbaf225f894375e89a))
+
 ## [0.35.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.34.0...v0.35.0) (2026-10-14)
 
 
