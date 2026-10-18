@@ -1,5 +1,6 @@
 import { syncCatalog } from "./catalog";
 import { emptyRows, syncCustomers, zeroCustomers, type CustomerRun } from "./customers";
+import { syncOrdersIn } from "./orders-in";
 import { syncOrderStatuses } from "./orders-status";
 import { isAuthError, oxoClient, type OxoClient } from "./oxo";
 import { msg, tell, type Ctx } from "./settings";
@@ -46,7 +47,14 @@ export async function runSync(ctx: Ctx, client: OxoClient, now: Date): Promise<R
       if (isAuthError(e)) throw e;
       ctx.log.error(`Order statuses failed: ${msg(e)}`);
     }
-    // ORDERS IN: Task 8 adds the import of OXO ERP orders here.
+    try {
+      const inn = await syncOrdersIn({ ctx, client, dry, now });
+      Object.assign(orders, { imported: inn.imported, updated: inn.updated, pending: inn.pending });
+      ordersTop = inn.top;
+    } catch (e) {
+      if (isAuthError(e)) throw e;
+      ctx.log.error(`Orders from OXO ERP failed: ${msg(e)}`);
+    }
     if (!dry) {
       if (customersTop) await ctx.store.set(K.cursor("customers"), { at: customersTop });
       if (cat.top) await ctx.store.set(K.cursor("products"), { at: cat.top });
