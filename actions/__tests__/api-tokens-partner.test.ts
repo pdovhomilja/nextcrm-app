@@ -9,8 +9,8 @@ const gs = getSession as jest.Mock;
 
 beforeEach(() => jest.clearAllMocks());
 
-// getSession already hides partners today; this guard keeps API tokens closed
-// to them when the partner app opens (spec decision 6).
+// getSession lets partners in (partner app, ticket 4); this guard keeps API
+// tokens closed to them (spec decision 6).
 it("refuses to create an API token for a partner", async () => {
   gs.mockResolvedValue({ user: { id: "p1", role: "partner", userStatus: "ACTIVE" } });
   expect(await createApiToken({ name: "t" })).toEqual({ error: "Forbidden" });
