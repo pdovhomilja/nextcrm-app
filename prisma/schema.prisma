@@ -46,6 +46,8 @@ model crm_Accounts {
   website              String?
   deletedAt            DateTime?
   deletedBy            String?   @db.Uuid
+  /// External partner (role partner) who looks after this account; one per account.
+  partnerUserId        String?   @db.Uuid
 
   contacts           crm_Contacts[]
   leads              crm_Leads[]
@@ -53,6 +55,8 @@ model crm_Accounts {
   industry_type      crm_Industry_Type?    @relation(fields: [industry], references: [id])
   opportunities      crm_Opportunities[]
   assigned_to_user   Users?                @relation("AccountAssignedTo", fields: [assigned_to], references: [id])
+  partner_user       Users?                @relation("AccountPartner", fields: [partnerUserId], references: [id], onDelete: SetNull)
+  partner_own_users  Users[]               @relation("PartnerOwnAccount")
   crm_accounts_tasks crm_Accounts_Tasks[]
   contracts          crm_Contracts[]
   documents          DocumentsToAccounts[]
@@ -64,6 +68,7 @@ model crm_Accounts {
   orders crm_Orders[]
 
   @@index([assigned_to])
+  @@index([partnerUserId])
   @@index([industry])
   @@index([createdBy])
   @@index([updatedBy])
@@ -986,6 +991,7 @@ enum AppRole {
   user
   manager
   admin
+  partner
 }
 
 model Users {
@@ -1008,6 +1014,9 @@ model Users {
   banned           Boolean      @default(false)
   banReason        String?
   banExpires       DateTime?
+  /// Role partner only: the partner's own company account (read-only for him).
+  partnerAccountId String?      @db.Uuid
+  partnerAccount   crm_Accounts? @relation("PartnerOwnAccount", fields: [partnerAccountId], references: [id], onDelete: SetNull)
 
   tasksComment         tasksComments[]
   created_by_documents Documents[]           @relation("created_by_user")
@@ -1015,6 +1024,7 @@ model Users {
   tasks                Tasks[]
   crm_accounts_tasks   crm_Accounts_Tasks[]
   accounts             crm_Accounts[]        @relation("AccountAssignedTo")
+  partner_accounts     crm_Accounts[]        @relation("AccountPartner")
   leads                crm_Leads[]           @relation("LeadAssignedTo")
   created_by_user      crm_Opportunities[]   @relation("created_by_user_relation")
   assigned_opportunity crm_Opportunities[]   @relation("assigned_to_user_relation")
@@ -1053,6 +1063,7 @@ model Users {
   @@index([userStatus])
   @@index([userLanguage])
   @@index([role])
+  @@index([partnerAccountId])
   @@index([created_on])
   @@index([lastLoginAt])
 }
