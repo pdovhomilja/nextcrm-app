@@ -1,12 +1,13 @@
 import { AuthorizationError } from "../errors";
+import { SCOPED_ROLES } from "../roles";
 import type { AuthzUser } from "../session";
 
-// Deny by default. The scope helpers define rules for admin, manager and user
-// only. Any other role (partner, until it gets its own branch) must get no
-// rows and be refused by every assert, never fall back to the user rules.
+// Deny by default. The scope helpers define rules for SCOPED_ROLES only. Any
+// other role (partner, until it gets its own branch) must get no rows and be
+// refused by every assert, never fall back to the user rules.
 
 export function isUnhandledRole(user: AuthzUser): boolean {
-  return user.role !== "admin" && user.role !== "manager" && user.role !== "user";
+  return !SCOPED_ROLES.has(user.role);
 }
 
 export function assertHandledRole(user: AuthzUser): void {

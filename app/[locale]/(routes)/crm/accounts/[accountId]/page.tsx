@@ -5,7 +5,7 @@ import CaseStudyCard from "./components/CaseStudyCard";
 import AccountPartnerCard from "./components/AccountPartnerCard";
 import { getPartnerUsers } from "@/actions/crm/accounts/get-partner-users";
 import { getSession } from "@/lib/auth-server";
-import { requireAuthenticated } from "@/lib/authz";
+import { requireAuthenticated, isManagerOrAdmin } from "@/lib/authz";
 import { getAccountTabs, getAccountPanels } from "@/lib/plugins/slots";
 import { PluginSlot } from "@/lib/plugins/ui/PluginSlot";
 import { FindSimilarButton } from "@/components/crm/find-similar-button";
@@ -103,7 +103,7 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
     await getAccountProducts(accountId)
   );
   const allProducts = await getProductsFull();
-  const canSetPartner = actorUser.role === "admin" || actorUser.role === "manager";
+  const canSetPartner = isManagerOrAdmin(actorUser);
   const partners = canSetPartner ? await getPartnerUsers() : [];
   const activeProducts = allProducts
     .filter((p) => p.status === "ACTIVE")

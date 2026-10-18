@@ -1,4 +1,4 @@
-import { APP_ROLES, parseRole, mapLegacyRole } from "../roles";
+import { APP_ROLES, SCOPED_ROLES, parseRole, mapLegacyRole } from "../roles";
 
 describe("APP_ROLES", () => {
   it("contains exactly user, manager, admin, partner", () => {
@@ -45,5 +45,12 @@ describe("mapLegacyRole", () => {
   // the colleague (owner-scoped) rules.
   it("keeps partner as partner", () => {
     expect(mapLegacyRole("partner")).toBe("partner");
+  });
+});
+
+describe("SCOPED_ROLES", () => {
+  it("are the internal roles; partner is not scoped yet (deny by default)", () => {
+    expect([...SCOPED_ROLES].sort()).toEqual(["admin", "manager", "user"]);
+    expect(APP_ROLES.filter((r) => !SCOPED_ROLES.has(r))).toEqual(["partner"]);
   });
 });

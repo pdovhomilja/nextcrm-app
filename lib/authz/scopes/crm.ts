@@ -621,6 +621,8 @@ export async function assertCanReadActivityForEntity(
     case "targetlist":
       return assertCanReadTargetList(user, entityId);
     default:
+      // Same test as isManagerOrAdmin(); importing ../session here would pull
+      // better-auth into every scope module (and its tests).
       if (user.role !== "admin" && user.role !== "manager") throw new AuthorizationError();
       return;
   }
