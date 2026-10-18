@@ -17,3 +17,42 @@ export function isDocumentKey(key: string): boolean {
 export function documentFileRoute(documentId: string): string {
   return `/api/documents/${documentId}/file`;
 }
+
+/**
+ * Key of a file in our bucket from a stored URL (rows written before the key
+ * column was filled). Only URLs on one of our MinIO origins count; a path
+ * prefix in front of the bucket is allowed.
+ */
+export function keyFromUrl(url: string, bucket: string, origins: string[]): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  const ours = origins.some((o) => {
+    try {
+      return new URL(o).origin === parsed.origin;
+    } catch {
+      return false;
+    }
+  });
+  if (!ours) return null;
+  const path = decodeURIComponent(parsed.pathname);
+  const marker = `/${bucket}/`;
+  const at = path.indexOf(marker);
+  return at === -1 ? null : path.slice(at + marker.length);
+}
+
+/** Files from the UploadThing era (before MinIO) stay where they are. */
+export function isUploadThingUrl(url: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return (
+      protocol === "https:" &&
+      (hostname === "utfs.io" || hostname === "uploadthing.com" || hostname.endsWith(".ufs.sh"))
+    );
+  } catch {
+    return false;
+  }
+}

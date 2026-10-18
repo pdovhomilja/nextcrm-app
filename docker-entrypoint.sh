@@ -102,7 +102,8 @@ if [ -n "$MINIO_ENDPOINT" ] && [ -n "$MINIO_ACCESS_KEY" ] && [ -n "$MINIO_SECRET
 
   # Only avatars are linked by plain URL, so only avatars/ gets anonymous
   # read. Documents, thumbnails and invoices stay private: the app hands out
-  # short-lived presigned URLs after an access check.
+  # short-lived presigned URLs after an access check. Document folders are
+  # listed in lib/documents/file-key.ts (DOCUMENT_FOLDERS); never add them here.
   # Applied only when the bucket has no policy yet; an existing one is kept.
   POLICY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
     "${BUCKET_URL}?policy=" \

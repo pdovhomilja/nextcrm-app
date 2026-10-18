@@ -5,8 +5,9 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { minioPresignClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
 import { randomUUID } from "crypto";
+import { DOCUMENT_FOLDERS } from "@/lib/documents/file-key";
 
-const ALLOWED_FOLDERS = ["avatars", "images", "documents", "uploads"] as const;
+const ALLOWED_FOLDERS = ["avatars", ...DOCUMENT_FOLDERS] as const;
 type AllowedFolder = (typeof ALLOWED_FOLDERS)[number];
 
 export async function POST(req: NextRequest) {
@@ -50,7 +51,8 @@ export async function POST(req: NextRequest) {
   try {
     const presignedUrl = await getSignedUrl(minioPresignClient, command, { expiresIn: 600 });
 
-    // The public URL where the file will be accessible after upload
+    // Readable at this URL only under avatars/ (public); documents are read
+    // through /api/documents/[documentId]/file.
     const fileUrl = `${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${key}`;
 
     return NextResponse.json({ presignedUrl, fileUrl, key });

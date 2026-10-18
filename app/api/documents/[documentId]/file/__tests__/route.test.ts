@@ -2,20 +2,25 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findUnique: jest.fn() },
-    documents: { findFirst: jest.fn(), findUnique: jest.fn() },
+    documents: { findFirst: jest.fn() },
   },
 }));
-jest.mock("@/lib/minio", () => ({ minioPresignClient: {}, MINIO_BUCKET: "nextcrm" }));
-jest.mock("@aws-sdk/s3-request-presigner", () => ({
-  getSignedUrl: jest.fn(async (_client: unknown, cmd: { input: { Key: string } }) =>
-    `https://files.example/nextcrm/${cmd.input.Key}?X-Amz-Signature=sig`,
-  ),
+// Raw row (stored URL as written), not the client-facing mapped one.
+jest.mock("@/lib/prisma-base", () => ({
+  prismaBase: { documents: { findUnique: jest.fn() } },
+}));
+jest.mock("@/lib/minio", () => ({
+  MINIO_BUCKET: "nextcrm",
+  MINIO_PUBLIC_URL: "https://files.example",
+  MINIO_ENDPOINT: "http://minio:9000",
+  presignGet: jest.fn(async (key: string) => `https://files.example/nextcrm/${key}?X-Amz-Signature=sig`),
 }));
 
 import { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { prismaBase } from "@/lib/prisma-base";
+import { presignGet } from "@/lib/minio";
 import { GET } from "../route";
 
 const gs = getSession as jest.MockedFunction<typeof getSession>;
@@ -23,14 +28,14 @@ const fu = prismadb.users.findUnique as jest.MockedFunction<typeof prismadb.user
 const scopeCheck = prismadb.documents.findFirst as jest.MockedFunction<
   typeof prismadb.documents.findFirst
 >;
-const fd = prismadb.documents.findUnique as jest.MockedFunction<
-  typeof prismadb.documents.findUnique
+const fd = prismaBase.documents.findUnique as jest.MockedFunction<
+  typeof prismaBase.documents.findUnique
 >;
 
 /** Object key the route asked S3 to sign (the external storage boundary). */
 function signedKey() {
-  const calls = (getSignedUrl as jest.Mock).mock.calls;
-  return calls.length ? calls[0][1].input.Key : undefined;
+  const calls = (presignGet as jest.Mock).mock.calls;
+  return calls.length ? calls[0][0] : undefined;
 }
 
 function call() {
@@ -82,25 +87,61 @@ describe("GET /api/documents/[documentId]/file", () => {
     scopeCheck.mockResolvedValue({ id: "d1" } as any);
     fd.mockResolvedValue({
       key: null,
-      document_file_url: "http://localhost:9000/nextcrm/images/b%20c.png",
+      document_file_url: "https://files.example/nextcrm/images/b%20c.png",
     } as any);
     const res = await call();
     expect([302, 307]).toContain(res.status);
     expect(signedKey()).toBe("images/b c.png");
   });
 
-  it("file outside our bucket (old UploadThing rows): redirects to the stored URL", async () => {
+  it("legacy row holding the internal MINIO_ENDPOINT URL: key derived too", async () => {
     signedIn("user");
     scopeCheck.mockResolvedValue({ id: "d1" } as any);
     fd.mockResolvedValue({
-      key: "abc123-offer.pdf",
-      document_file_url: "https://utfs.io/f/abc123-offer.pdf",
+      key: null,
+      document_file_url: "http://minio:9000/nextcrm/documents/old.pdf",
+    } as any);
+    await call();
+    expect(signedKey()).toBe("documents/old.pdf");
+  });
+
+  it("legacy row with a foreign-host URL: no key derived, 404", async () => {
+    signedIn("user");
+    scopeCheck.mockResolvedValue({ id: "d1" } as any);
+    fd.mockResolvedValue({
+      key: null,
+      document_file_url: "https://other.example/nextcrm/documents/victim.pdf",
     } as any);
     const res = await call();
-    expect([302, 307]).toContain(res.status);
-    expect(res.headers.get("location")).toBe("https://utfs.io/f/abc123-offer.pdf");
-    expect(getSignedUrl).not.toHaveBeenCalled();
+    expect(res.status).toBe(404);
+    expect(presignGet).not.toHaveBeenCalled();
   });
+
+  it.each([
+    "https://utfs.io/f/abc123-offer.pdf",
+    "https://uploadthing.com/f/abc123-offer.pdf",
+    "https://x1y2z3.ufs.sh/f/abc123-offer.pdf",
+  ])("old UploadThing file (%s): redirects to the stored URL", async (url) => {
+    signedIn("user");
+    scopeCheck.mockResolvedValue({ id: "d1" } as any);
+    fd.mockResolvedValue({ key: "abc123-offer.pdf", document_file_url: url } as any);
+    const res = await call();
+    expect([302, 307]).toContain(res.status);
+    expect(res.headers.get("location")).toBe(url);
+    expect(presignGet).not.toHaveBeenCalled();
+  });
+
+  it.each(["https://evil.example/phish", "https://utfs.io.evil.example/f/x"])(
+    "any other stored host (%s): 404, no open redirect",
+    async (url) => {
+      signedIn("user");
+      scopeCheck.mockResolvedValue({ id: "d1" } as any);
+      fd.mockResolvedValue({ key: null, document_file_url: url } as any);
+      const res = await call();
+      expect(res.status).toBe(404);
+      expect(res.headers.get("location")).toBeNull();
+    },
+  );
 
   // key and url come from the client at upload time; a document must not
   // become a way to read invoices or other objects in the same bucket.
@@ -114,6 +155,6 @@ describe("GET /api/documents/[documentId]/file", () => {
     fd.mockResolvedValue({ key, document_file_url: url } as any);
     const res = await call();
     expect(res.status).toBe(404);
-    expect(getSignedUrl).not.toHaveBeenCalled();
+    expect(presignGet).not.toHaveBeenCalled();
   });
 });
