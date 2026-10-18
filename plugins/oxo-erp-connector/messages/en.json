@@ -1,0 +1,107 @@
+{
+  "name": "OXO ERP connector",
+  "admin": {
+    "test": "Test connection",
+    "syncNow": "Sync now",
+    "loadLists": "Load price lists",
+    "queued": "Queued: it starts within 5 minutes.",
+    "listsLoaded": "Loaded {count} price lists from OXO ERP.",
+    "running": "A sync is already running.",
+    "connected": "Connected to OXO ERP ({lists} active price lists).",
+    "dryRun": "Dry run is on: the sync only reports what it would change. Read the report below, then turn dry run off in the settings.",
+    "lastRun": "Last run",
+    "never": "not yet",
+    "nextRun": "Next run",
+    "failed": "Failed: {error}",
+    "customerCounts": "Customers: {linked} already linked, {number} matched by IČO, {vat} by DIČ, {name} by name and zip, {created} new, {updated} updated, {conflicts} conflicts, {skipped} inactive, {failed} failed",
+    "catalogCounts": "Catalog: categories {categoriesMatched} matched, {categoriesCreated} new · products {productsUpdated} updated, {productsCreated} new, {productsFailed} failed · price lists replaced {listsReplaced} · account price lists set {accountLists}",
+    "orderCounts": "Orders: {checked} checked, {moved} moved, {imported} imported, {updated} updated, {pending} waiting for their customer",
+    "listsMissing": "Price lists not found in OXO ERP: {ids}",
+    "report": "Dry-run report ({date})",
+    "nameLinks": "Linked by name and zip (check these)",
+    "createdRows": "Would be created",
+    "conflicts": "Customers matching more than one account",
+    "conflictsEmpty": "No conflicts.",
+    "conflictsHelp": "Fix the CRM data (merge the duplicate account or correct the IČO); the next sync links the customer.",
+    "reason": {
+      "number": "same IČO",
+      "vat": "same DIČ",
+      "name": "same name and zip",
+      "linked": "already linked to another OXO ERP customer"
+    },
+    "catalog": "Catalog",
+    "priceListsHelp": "Choose price lists in the setting priceLists: OXO ERP list ids separated by commas, e.g. 3, 7. Lists they build on come too.",
+    "listsLoadedAt": "OXO ERP price lists (loaded {date})",
+    "listsNotLoaded": "Click Load price lists to see the price lists in OXO ERP.",
+    "skippedRules": "Rules the CRM cannot use",
+    "syncQueued": "Sync is queued.",
+    "orders": "Orders",
+    "ordersOff": "Sending orders is off. Turn on sendOrders in the settings to send READY orders to OXO ERP.",
+    "ordersCounts": "Waiting to be sent {waiting} · sent in the last 7 days {sent} · failed {failed}",
+    "ordersPaused": "Sending is paused since {date}: {reason}. When OXO ERP accepts orders again, click Test connection.",
+    "pending": "{count} OXO ERP orders wait for their customer to be linked"
+  },
+  "needsOwner": {
+    "title": "Accounts from OXO ERP without an owner",
+    "nav": "Needs owner",
+    "help": "Open the account and set its owner; it then leaves this list.",
+    "empty": "Every linked account has an owner."
+  },
+  "panel": {
+    "linked": "OXO ERP customer #{id}",
+    "synced": "Last synced {date}",
+    "fields": "OXO ERP controls: name, IČO, DIČ, billing address, email, phone.",
+    "inactive": "Inactive in OXO ERP.",
+    "priceList": "Price list from OXO ERP: {name}",
+    "priceListMissing": "OXO ERP price list #{id} is not imported",
+    "addresses": "Delivery addresses"
+  },
+  "product": {
+    "linked": "OXO ERP product #{id}"
+  },
+  "order": {
+    "linked": "OXO ERP order {number}",
+    "state": "State in OXO ERP: {state}",
+    "delivery": {
+      "none": "not shipped",
+      "partial": "partly shipped",
+      "full": "shipped"
+    },
+    "deliveries": "Deliveries",
+    "belowList": "Below list price in OXO ERP: {lines}",
+    "waiting": "Waiting for OXO ERP since {date}",
+    "lastError": "Last error: {error}",
+    "failed": "Not sent: {reason}",
+    "missing": "Not found in OXO ERP",
+    "imported": "Imported from OXO ERP"
+  },
+  "orders": {
+    "noAccount": "The order's account has no name",
+    "notOxoProduct": "Product {product} does not come from OXO ERP",
+    "linesMissing": "{count} lines not shown: products not in the CRM"
+  },
+  "mail": {
+    "failingSubject": "OXO ERP sync is failing",
+    "failingText": "The OXO ERP sync failed three times in a row. Last error: {error}",
+    "pausedSubject": "OXO ERP does not take orders",
+    "pausedText": "Sending orders to OXO ERP is paused: {error}. When OXO ERP accepts orders again, click Test connection.",
+    "orderFailedSubject": "Order {number} was not sent to OXO ERP",
+    "orderFailedText": "Order {number} could not be sent to OXO ERP: {error}. Fix the cause, then click Retry on the order.",
+    "stuckSubject": "Order {number} has been waiting for OXO ERP for a day",
+    "stuckText": "Order {number} has been waiting to be sent to OXO ERP since {since}. Last error: {error}. The connector keeps trying; check OXO ERP.",
+    "missingSubject": "Order {number}: not found in OXO ERP",
+    "missingText": "The connector can no longer find CRM order {number} in OXO ERP. The CRM order keeps its status; cancel it by hand if the order was removed."
+  },
+  "tab": {
+    "title": "OXO ERP",
+    "notLinked": "Not linked to an OXO ERP customer",
+    "orders": "Orders",
+    "ordersEmpty": "No orders yet",
+    "number": "Number",
+    "oxo": "OXO ERP",
+    "date": "Date",
+    "total": "Total",
+    "status": "Status",
+    "delivery": "Delivery"
+  }
+}

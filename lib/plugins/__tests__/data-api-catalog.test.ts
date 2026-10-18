@@ -4,6 +4,7 @@ const writes = {
   replaceExternalPriceList: jest.fn().mockResolvedValue({ id: "L1" }),
   findExternalProducts: jest.fn().mockResolvedValue([]),
   findExternalPriceLists: jest.fn().mockResolvedValue([]),
+  findExternalCategories: jest.fn().mockResolvedValue([{ id: "c1", ref: "7", name: "Tea", parentRef: null }]),
 };
 jest.mock("@/lib/catalog/plugin-writes", () => writes);
 const getPrice = jest.fn();
@@ -19,7 +20,12 @@ import { createDataApi } from "@/lib/plugins/data-api";
 
 const f = { name: "Cup", sku: "S1", description: null, type: "PRODUCT" as const, status: "ACTIVE" as const, unit_price: "1", unit_cost: null, currency: "CZK", tax_rate: null, unit: null, categoryRef: null };
 
-it("is SDK 0.2.5 (additive)", () => expect(SDK_VERSION).toBe("0.2.5"));
+it("is SDK 0.2.6 (additive)", () => expect(SDK_VERSION).toBe("0.2.6"));
+
+it("lists external categories with products:read", async () => {
+  await expect(createDataApi("demo", []).productCategories.findExternal()).rejects.toThrow("products:read");
+  expect(await createDataApi("demo", ["products:read"]).productCategories.findExternal()).toEqual([{ id: "c1", ref: "7", name: "Tea", parentRef: null }]);
+});
 
 it("needs products:write for external product and category upserts", async () => {
   await expect(createDataApi("demo", ["products:read"]).products.upsertExternal("1", f)).rejects.toThrow("products:write");

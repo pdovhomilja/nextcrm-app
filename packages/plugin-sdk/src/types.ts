@@ -107,7 +107,12 @@ export interface ProductsApi extends ReadApi {
   upsertExternal(ref: string, fields: ExternalProductInput, opts?: { adoptBySku?: boolean }): Promise<{ id: string; created: boolean; adopted?: boolean }>;
   findExternal(): Promise<{ id: string; ref: string; status: string }[]>;
 }
-export interface ProductCategoriesApi { upsertExternal(ref: string, fields: { name: string; parentRef: string | null }): Promise<{ id: string }> }
+export interface ExternalCategory { id: string; ref: string; name: string; parentRef: string | null }
+export interface ProductCategoriesApi {
+  upsertExternal(ref: string, fields: { name: string; parentRef: string | null }): Promise<{ id: string }>;
+  /** SDK 0.2.6: every EXTERNAL category; `parentRef` is the parent's ref, null when there is none or it is not external. */
+  findExternal(): Promise<ExternalCategory[]>;
+}
 export interface ExternalPriceList { id: string; ref: string; name: string; currency: string; isActive: boolean }
 export interface PriceListsApi {
   findExternal(): Promise<ExternalPriceList[]>;

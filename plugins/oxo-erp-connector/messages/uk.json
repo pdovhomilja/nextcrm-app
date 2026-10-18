@@ -1,0 +1,107 @@
+{
+  "name": "Конектор OXO ERP",
+  "admin": {
+    "test": "Перевірити з'єднання",
+    "syncNow": "Синхронізувати зараз",
+    "loadLists": "Завантажити прайс-листи",
+    "queued": "У черзі: запуститься протягом 5 хвилин.",
+    "listsLoaded": "Завантажено {count} прайс-листів з OXO ERP.",
+    "running": "Синхронізація вже виконується.",
+    "connected": "З'єднано з OXO ERP ({lists} активних прайс-листів).",
+    "dryRun": "Пробний режим увімкнено: синхронізація лише повідомляє, що змінила б. Перегляньте звіт нижче, потім вимкніть пробний режим у налаштуваннях.",
+    "lastRun": "Останній запуск",
+    "never": "ще ні",
+    "nextRun": "Наступний запуск",
+    "failed": "Помилка: {error}",
+    "customerCounts": "Клієнти: {linked} вже пов'язано, {number} за IČO, {vat} за DIČ, {name} за назвою та індексом, {created} нових, {updated} оновлено, {conflicts} конфліктів, {skipped} неактивних, {failed} помилок",
+    "catalogCounts": "Каталог: категорії {categoriesMatched} зіставлено, {categoriesCreated} нових · товари {productsUpdated} оновлено, {productsCreated} нових, {productsFailed} помилок · прайс-листів замінено {listsReplaced} · прайс-листів облікових записів встановлено {accountLists}",
+    "orderCounts": "Замовлення: {checked} перевірено, {moved} просунуто, {imported} імпортовано, {updated} оновлено, {pending} чекають на клієнта",
+    "listsMissing": "Прайс-листи, яких немає в OXO ERP: {ids}",
+    "report": "Звіт пробного запуску ({date})",
+    "nameLinks": "Пов'язано за назвою та індексом (перевірте)",
+    "createdRows": "Було б створено",
+    "conflicts": "Клієнти, яким відповідає кілька облікових записів",
+    "conflictsEmpty": "Конфліктів немає.",
+    "conflictsHelp": "Виправте дані в CRM (об'єднайте дублікат або виправте IČO); наступна синхронізація пов'яже клієнта.",
+    "reason": {
+      "number": "однаковий IČO",
+      "vat": "однаковий DIČ",
+      "name": "однакові назва та індекс",
+      "linked": "вже пов'язаний з іншим клієнтом OXO ERP"
+    },
+    "catalog": "Каталог",
+    "priceListsHelp": "Оберіть прайс-листи в налаштуванні priceLists: ID прайс-листів OXO ERP через кому, напр. 3, 7. Прайс-листи, на яких вони базуються, додаються самі.",
+    "listsLoadedAt": "Прайс-листи OXO ERP (завантажено {date})",
+    "listsNotLoaded": "Натисніть Завантажити прайс-листи, щоб побачити прайс-листи в OXO ERP.",
+    "skippedRules": "Правила, які CRM не може використати",
+    "syncQueued": "Синхронізація в черзі.",
+    "orders": "Замовлення",
+    "ordersOff": "Надсилання замовлень вимкнено. Увімкніть sendOrders у налаштуваннях, щоб надсилати замовлення READY до OXO ERP.",
+    "ordersCounts": "Чекають на надсилання {waiting} · надіслано за 7 днів {sent} · помилок {failed}",
+    "ordersPaused": "Надсилання призупинено з {date}: {reason}. Коли OXO ERP знову прийматиме замовлення, натисніть Перевірити з'єднання.",
+    "pending": "{count} замовлень OXO ERP чекають на зв'язок з клієнтом"
+  },
+  "needsOwner": {
+    "title": "Облікові записи з OXO ERP без власника",
+    "nav": "Без власника",
+    "help": "Відкрийте обліковий запис і призначте власника; тоді він зникне зі списку.",
+    "empty": "Кожен пов'язаний обліковий запис має власника."
+  },
+  "panel": {
+    "linked": "Клієнт OXO ERP #{id}",
+    "synced": "Остання синхронізація {date}",
+    "fields": "OXO ERP керує: назва, IČO, DIČ, платіжна адреса, e-mail, телефон.",
+    "inactive": "Неактивний в OXO ERP.",
+    "priceList": "Прайс-лист з OXO ERP: {name}",
+    "priceListMissing": "Прайс-лист OXO ERP #{id} не імпортовано",
+    "addresses": "Адреси доставки"
+  },
+  "product": {
+    "linked": "Товар OXO ERP #{id}"
+  },
+  "order": {
+    "linked": "Замовлення OXO ERP {number}",
+    "state": "Стан в OXO ERP: {state}",
+    "delivery": {
+      "none": "не відвантажено",
+      "partial": "частково відвантажено",
+      "full": "відвантажено"
+    },
+    "deliveries": "Доставки",
+    "belowList": "Нижче прайсової ціни в OXO ERP: {lines}",
+    "waiting": "Чекає на OXO ERP з {date}",
+    "lastError": "Остання помилка: {error}",
+    "failed": "Не надіслано: {reason}",
+    "missing": "Не знайдено в OXO ERP",
+    "imported": "Імпортовано з OXO ERP"
+  },
+  "orders": {
+    "noAccount": "Обліковий запис замовлення не має назви",
+    "notOxoProduct": "Товар {product} не походить з OXO ERP",
+    "linesMissing": "{count} рядків не показано: товарів немає в CRM"
+  },
+  "mail": {
+    "failingSubject": "Синхронізація з OXO ERP не вдається",
+    "failingText": "Синхронізація з OXO ERP не вдалася тричі поспіль. Остання помилка: {error}",
+    "pausedSubject": "OXO ERP не приймає замовлення",
+    "pausedText": "Надсилання замовлень до OXO ERP призупинено: {error}. Коли OXO ERP знову прийматиме замовлення, натисніть Перевірити з'єднання.",
+    "orderFailedSubject": "Замовлення {number} не надіслано до OXO ERP",
+    "orderFailedText": "Замовлення {number} не вдалося надіслати до OXO ERP: {error}. Усуньте причину, потім натисніть Повторити на замовленні.",
+    "stuckSubject": "Замовлення {number} чекає на OXO ERP вже добу",
+    "stuckText": "Замовлення {number} чекає на надсилання до OXO ERP з {since}. Остання помилка: {error}. Конектор пробує далі; перевірте OXO ERP.",
+    "missingSubject": "Замовлення {number}: не знайдено в OXO ERP",
+    "missingText": "Конектор більше не знаходить замовлення CRM {number} в OXO ERP. Замовлення в CRM зберігає свій стан; скасуйте його вручну, якщо замовлення видалено."
+  },
+  "tab": {
+    "title": "OXO ERP",
+    "notLinked": "Не пов'язано з клієнтом OXO ERP",
+    "orders": "Замовлення",
+    "ordersEmpty": "Замовлень ще немає",
+    "number": "Номер",
+    "oxo": "OXO ERP",
+    "date": "Дата",
+    "total": "Разом",
+    "status": "Стан",
+    "delivery": "Доставка"
+  }
+}

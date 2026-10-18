@@ -140,6 +140,11 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
         const { upsertExternalCategory } = await import("@/lib/catalog/plugin-writes");
         return runAsActor({ type: "plugin", pluginId }, () => upsertExternalCategory(pluginId, ref, fields));
       },
+      async findExternal() {
+        need("products:read");
+        const { findExternalCategories } = await import("@/lib/catalog/plugin-writes");
+        return findExternalCategories();
+      },
     },
     priceLists: {
       async findExternal() {

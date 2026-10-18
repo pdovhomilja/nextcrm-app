@@ -1,0 +1,107 @@
+{
+  "name": "OXO-ERP-Connector",
+  "admin": {
+    "test": "Verbindung testen",
+    "syncNow": "Jetzt synchronisieren",
+    "loadLists": "Preislisten laden",
+    "queued": "In der Warteschlange: startet innerhalb von 5 Minuten.",
+    "listsLoaded": "{count} Preislisten aus OXO ERP geladen.",
+    "running": "Eine Synchronisierung läuft bereits.",
+    "connected": "Mit OXO ERP verbunden ({lists} aktive Preislisten).",
+    "dryRun": "Testmodus ist an: die Synchronisierung meldet nur, was sie ändern würde. Lesen Sie den Bericht unten und schalten Sie den Testmodus dann in den Einstellungen aus.",
+    "lastRun": "Letzter Lauf",
+    "never": "noch nicht",
+    "nextRun": "Nächster Lauf",
+    "failed": "Fehlgeschlagen: {error}",
+    "customerCounts": "Kunden: {linked} bereits verknüpft, {number} über IČO, {vat} über DIČ, {name} über Name und PLZ, {created} neu, {updated} geändert, {conflicts} Konflikte, {skipped} inaktiv, {failed} Fehler",
+    "catalogCounts": "Katalog: Kategorien {categoriesMatched} zugeordnet, {categoriesCreated} neu · Produkte {productsUpdated} geändert, {productsCreated} neu, {productsFailed} Fehler · Preislisten ersetzt {listsReplaced} · Kontopreislisten gesetzt {accountLists}",
+    "orderCounts": "Aufträge: {checked} geprüft, {moved} weitergesetzt, {imported} importiert, {updated} geändert, {pending} warten auf ihren Kunden",
+    "listsMissing": "Preislisten, die OXO ERP nicht hat: {ids}",
+    "report": "Bericht des Testlaufs ({date})",
+    "nameLinks": "Über Name und PLZ verknüpft (bitte prüfen)",
+    "createdRows": "Würden angelegt",
+    "conflicts": "Kunden, zu denen mehrere Konten passen",
+    "conflictsEmpty": "Keine Konflikte.",
+    "conflictsHelp": "Korrigieren Sie die CRM-Daten (doppeltes Konto zusammenführen oder IČO korrigieren); die nächste Synchronisierung verknüpft den Kunden.",
+    "reason": {
+      "number": "gleiche IČO",
+      "vat": "gleiche DIČ",
+      "name": "gleicher Name und PLZ",
+      "linked": "bereits mit einem anderen OXO-ERP-Kunden verknüpft"
+    },
+    "catalog": "Katalog",
+    "priceListsHelp": "Wählen Sie Preislisten in der Einstellung priceLists: OXO-ERP-Listen-IDs durch Kommas getrennt, z. B. 3, 7. Listen, auf denen sie aufbauen, kommen mit.",
+    "listsLoadedAt": "OXO-ERP-Preislisten (geladen {date})",
+    "listsNotLoaded": "Klicken Sie auf Preislisten laden, um die Preislisten in OXO ERP zu sehen.",
+    "skippedRules": "Regeln, die das CRM nicht verwenden kann",
+    "syncQueued": "Synchronisierung ist in der Warteschlange.",
+    "orders": "Aufträge",
+    "ordersOff": "Das Senden von Aufträgen ist aus. Schalten Sie sendOrders in den Einstellungen ein, um READY-Aufträge an OXO ERP zu senden.",
+    "ordersCounts": "Warten auf Versand {waiting} · in den letzten 7 Tagen gesendet {sent} · Fehler {failed}",
+    "ordersPaused": "Senden ist pausiert seit {date}: {reason}. Wenn OXO ERP wieder Aufträge annimmt, klicken Sie auf Verbindung testen.",
+    "pending": "{count} OXO-ERP-Aufträge warten auf die Verknüpfung ihres Kunden"
+  },
+  "needsOwner": {
+    "title": "Konten aus OXO ERP ohne Besitzer",
+    "nav": "Ohne Besitzer",
+    "help": "Öffnen Sie das Konto und setzen Sie den Besitzer; danach verschwindet es aus der Liste.",
+    "empty": "Jedes verknüpfte Konto hat einen Besitzer."
+  },
+  "panel": {
+    "linked": "OXO-ERP-Kunde #{id}",
+    "synced": "Zuletzt synchronisiert {date}",
+    "fields": "OXO ERP steuert: Name, IČO, DIČ, Rechnungsadresse, E-Mail, Telefon.",
+    "inactive": "In OXO ERP inaktiv.",
+    "priceList": "Preisliste aus OXO ERP: {name}",
+    "priceListMissing": "OXO-ERP-Preisliste #{id} ist nicht importiert",
+    "addresses": "Lieferadressen"
+  },
+  "product": {
+    "linked": "OXO-ERP-Produkt #{id}"
+  },
+  "order": {
+    "linked": "OXO-ERP-Auftrag {number}",
+    "state": "Status in OXO ERP: {state}",
+    "delivery": {
+      "none": "nicht versandt",
+      "partial": "teilweise versandt",
+      "full": "versandt"
+    },
+    "deliveries": "Lieferungen",
+    "belowList": "Unter Listenpreis in OXO ERP: {lines}",
+    "waiting": "Wartet auf OXO ERP seit {date}",
+    "lastError": "Letzter Fehler: {error}",
+    "failed": "Nicht gesendet: {reason}",
+    "missing": "In OXO ERP nicht gefunden",
+    "imported": "Aus OXO ERP importiert"
+  },
+  "orders": {
+    "noAccount": "Das Konto des Auftrags hat keinen Namen",
+    "notOxoProduct": "Produkt {product} stammt nicht aus OXO ERP",
+    "linesMissing": "{count} Positionen nicht angezeigt: Produkte nicht im CRM"
+  },
+  "mail": {
+    "failingSubject": "OXO-ERP-Synchronisierung schlägt fehl",
+    "failingText": "Die OXO-ERP-Synchronisierung ist dreimal hintereinander fehlgeschlagen. Letzter Fehler: {error}",
+    "pausedSubject": "OXO ERP nimmt keine Aufträge an",
+    "pausedText": "Das Senden von Aufträgen an OXO ERP ist pausiert: {error}. Wenn OXO ERP wieder Aufträge annimmt, klicken Sie auf Verbindung testen.",
+    "orderFailedSubject": "Auftrag {number} wurde nicht an OXO ERP gesendet",
+    "orderFailedText": "Auftrag {number} konnte nicht an OXO ERP gesendet werden: {error}. Beheben Sie die Ursache und klicken Sie im Auftrag auf Erneut versuchen.",
+    "stuckSubject": "Auftrag {number} wartet seit einem Tag auf OXO ERP",
+    "stuckText": "Auftrag {number} wartet seit {since} auf den Versand an OXO ERP. Letzter Fehler: {error}. Der Connector versucht es weiter; prüfen Sie OXO ERP.",
+    "missingSubject": "Auftrag {number}: in OXO ERP nicht gefunden",
+    "missingText": "Der Connector findet CRM-Auftrag {number} nicht mehr in OXO ERP. Der CRM-Auftrag behält seinen Status; stornieren Sie ihn von Hand, wenn der Auftrag entfernt wurde."
+  },
+  "tab": {
+    "title": "OXO ERP",
+    "notLinked": "Nicht mit einem OXO-ERP-Kunden verknüpft",
+    "orders": "Aufträge",
+    "ordersEmpty": "Noch keine Aufträge",
+    "number": "Nummer",
+    "oxo": "OXO ERP",
+    "date": "Datum",
+    "total": "Summe",
+    "status": "Status",
+    "delivery": "Lieferung"
+  }
+}
