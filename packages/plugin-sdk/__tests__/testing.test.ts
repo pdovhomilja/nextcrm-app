@@ -28,3 +28,10 @@ it("filters with `in` and sorts with orderBy like Prisma", async () => {
   const rows = await ctx.data.orders.find({ where: { accountId: "x", status: { in: ["PAID", "CONFIRMED"] } }, orderBy: { orderDate: "desc" }, take: 1 });
   expect(rows.map((r) => r.id)).toEqual(["c"]);
 });
+
+it("lists external categories with their parent's ref", async () => {
+  const ctx = createTestContext({ data: { productCategories: [] } });
+  await ctx.data.productCategories.upsertExternal("1", { name: "Zásoby", parentRef: null });
+  await ctx.data.productCategories.upsertExternal("2", { name: "Výrobky", parentRef: "1" });
+  expect((await ctx.data.productCategories.findExternal()).map((c) => [c.ref, c.name, c.parentRef])).toEqual([["1", "Zásoby", null], ["2", "Výrobky", "1"]]);
+});

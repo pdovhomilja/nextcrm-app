@@ -83,6 +83,14 @@ export async function findExternalProducts() {
   return rows.map((r) => ({ id: r.id, ref: r.externalRef as string, status: r.status as string }));
 }
 
+export async function findExternalCategories() {
+  const rows = await prismadb.crm_ProductCategories.findMany({
+    where: { source: "EXTERNAL" },
+    select: { id: true, externalRef: true, name: true, parent: { select: { source: true, externalRef: true } } },
+  });
+  return rows.map((r) => ({ id: r.id, ref: r.externalRef as string, name: r.name, parentRef: r.parent?.source === "EXTERNAL" ? (r.parent.externalRef as string) : null }));
+}
+
 export async function findExternalPriceLists() {
   const rows = await prismadb.crm_PriceLists.findMany({ where: { source: "EXTERNAL" }, select: { id: true, externalRef: true, name: true, currency: true, isActive: true } });
   return rows.map((r) => ({ id: r.id, ref: r.externalRef as string, name: r.name, currency: r.currency, isActive: r.isActive }));

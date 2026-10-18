@@ -105,6 +105,10 @@ function externalCategories(rows: RecordData[]) {
       if (row) { Object.assign(row, f); return { id: row.id as string }; }
       return { id: (await t.create({ ...f, source: "EXTERNAL", externalRef: ref })).id as string };
     },
+    async findExternal() {
+      return rows.filter((r) => r.source === "EXTERNAL")
+        .map((r) => ({ id: r.id as string, ref: r.externalRef as string, name: r.name as string, parentRef: (r.parentRef as string | null | undefined) ?? null }));
+    },
   };
 }
 
