@@ -131,13 +131,11 @@ beforeAll(async () => {
     userLanguage: "en",
   });
 
-  // Ensure a test account exists
-  let account = await prismadb.crm_Accounts.findFirst();
-  if (!account) {
-    account = await prismadb.crm_Accounts.create({
-      data: { v: 0, name: "Lifecycle Test Account", status: "Active" },
-    });
-  }
+  // Own account, never another suite's: the DB suites run in parallel on one
+  // database, and invoices on their fixture accounts block their cleanup.
+  const account = await prismadb.crm_Accounts.create({
+    data: { v: 0, name: "Lifecycle Test Account", status: "Active" },
+  });
   testAccountId = account.id;
 
   // Find an active tax rate (may not exist in test DB)
@@ -205,6 +203,7 @@ afterAll(async () => {
       where: { id: { in: createdInvoiceIds } },
     });
   }
+  await prismadb.crm_Accounts.delete({ where: { id: testAccountId } });
   await prismadb.$disconnect();
 });
 
