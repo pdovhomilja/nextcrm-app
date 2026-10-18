@@ -50,7 +50,7 @@ describe("mapLegacyRole", () => {
 
 describe("SCOPED_ROLES", () => {
   it("are the internal roles; partner is not scoped yet (deny by default)", () => {
-    expect([...SCOPED_ROLES].sort()).toEqual(["admin", "manager", "user"]);
+    expect(Array.from(SCOPED_ROLES).sort()).toEqual(["admin", "manager", "user"]);
     expect(APP_ROLES.filter((r) => !SCOPED_ROLES.has(r))).toEqual(["partner"]);
   });
 });
