@@ -25,6 +25,7 @@ export {
 } from "./scopes/crm";
 export {
   filterAuthorizedContactIds,
+  filterWritableContactIds,
   filterAuthorizedTargetIds,
   filterAuthorizedAccountIds,
   filterAuthorizedLeadIds,
@@ -65,7 +66,12 @@ export {
   assertCanWriteOpportunityLineItem,
   assertCanWriteContractLineItem,
 } from "./scopes/crm";
-export { assertCanReadActivityForEntity, assertCanWriteActivity } from "./scopes/crm";
+export {
+  assertCanReadActivityForEntity,
+  assertCanWriteActivity,
+  assertPartnerCanLinkActivity,
+  PARTNER_EDIT,
+} from "./scopes/crm";
 export {
   campaignReadScopeWhere,
   campaignTemplateReadScopeWhere,
@@ -79,6 +85,7 @@ export {
   assertCanReadDocument,
   assertCanWriteDocument,
   filterAuthorizedDocumentIds,
+  filterWritableDocumentIds,
 } from "./scopes/crm";
 export {
   boardReadScopeWhere,

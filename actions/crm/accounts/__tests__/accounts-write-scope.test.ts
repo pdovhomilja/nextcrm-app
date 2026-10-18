@@ -3,6 +3,7 @@
 // a non-owner must be denied AND the mutation must not run.
 
 jest.mock("@/lib/authz", () => ({
+  PARTNER_EDIT: { partnerEdit: true },
   requireAuthenticated: jest.fn(),
   assertCanWriteAccount: jest.fn(),
   AuthenticationError: class AuthenticationError extends Error {},
@@ -72,7 +73,7 @@ describe("updateAccount", () => {
   it("guards on data.id and updates for an owner", async () => {
     assertAccount.mockResolvedValue(undefined);
     await updateAccount({ id: "acc-1", name: "New" } as any);
-    expect(assertAccount).toHaveBeenCalledWith(OWNER, "acc-1");
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "acc-1", { partnerEdit: true });
     expect(accUpdate).toHaveBeenCalled();
   });
 });
@@ -128,7 +129,7 @@ describe("createTask", () => {
   it("guards on the parent account and stamps createdBy from the caller, not the input user", async () => {
     assertAccount.mockResolvedValue(undefined);
     await createTask({ ...input, account: "acc-1" } as any);
-    expect(assertAccount).toHaveBeenCalledWith(OWNER, "acc-1");
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "acc-1", { partnerEdit: true });
     const arg = taskCreate.mock.calls[0][0].data;
     expect(arg.createdBy).toBe("owner"); // authenticated caller, NOT "assignee-id"
     expect(arg.user).toBe("assignee-id"); // input user is the assignee

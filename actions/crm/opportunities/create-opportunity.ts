@@ -10,6 +10,8 @@ import { handleStageTransition } from "@/lib/crm/stage-transition";
 import {
   requireAuthenticated,
   assertCanWriteAccount,
+  assertCanWriteContact,
+  PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -56,7 +58,10 @@ export const createOpportunity = async (data: {
   }
   try {
     // Parent-write: attaching the opportunity to an account requires write on it.
-    if (account) await assertCanWriteAccount(user, account);
+    // A partner creates opportunities on his accounts only.
+    if (user.role === "partner" && !account) throw new AuthorizationError();
+    if (account) await assertCanWriteAccount(user, account, PARTNER_EDIT);
+    if (user.role === "partner" && contact) await assertCanWriteContact(user, contact, PARTNER_EDIT);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
@@ -71,7 +76,8 @@ export const createOpportunity = async (data: {
     const opportunity = await prismadb.crm_Opportunities.create({
       data: {
         account: account || undefined,
-        assigned_to: assigned_to || userId,
+        // A partner assigns only to himself.
+        assigned_to: user.role === "partner" ? userId : assigned_to || userId,
         budget: budget ? parseFloat(budget) : undefined,
         campaign: campaign || undefined,
         close_date,

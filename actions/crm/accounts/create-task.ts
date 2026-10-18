@@ -8,6 +8,7 @@ import NewTaskFromCRMToWatchersEmail from "@/emails/NewTaskFromCRMToWatchers";
 import {
   requireAuthenticated,
   assertCanWriteAccount,
+  PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -25,7 +26,8 @@ export const createTask = async (data: {
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
-  const { title, user, priority, content, account, dueDateAt } = data;
+  const { title, priority, content, account, dueDateAt } = data;
+  let { user } = data;
 
   if (!title || !user || !priority || !content || !account) {
     return { error: "Missing one of the task data" };
@@ -40,11 +42,14 @@ export const createTask = async (data: {
     throw e;
   }
   try {
-    await assertCanWriteAccount(authUser, account);
+    await assertCanWriteAccount(authUser, account, PARTNER_EDIT);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
   }
+
+  // A partner assigns only to himself.
+  if (authUser.role === "partner") user = authUser.id;
 
   let resend;
   try {

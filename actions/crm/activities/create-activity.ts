@@ -1,5 +1,10 @@
 "use server";
 import { getSession } from "@/lib/auth-server";
+import {
+  assertPartnerCanLinkActivity,
+  requireAuthenticated,
+  AuthorizationError,
+} from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { emitCalendarOutbound } from "@/lib/crm/calendar/outbound-emit";
@@ -26,6 +31,16 @@ export const createActivity = async (data: {
   try {
     const session = await getSession();
     if (!session) return { error: "Unauthorized" };
+    // A partner's activity must hang off his partner records only.
+    const authUser = await requireAuthenticated();
+    if (authUser.role === "partner") {
+      try {
+        await assertPartnerCanLinkActivity(authUser, data.links);
+      } catch (e) {
+        if (e instanceof AuthorizationError) return { error: "Forbidden" };
+        throw e;
+      }
+    }
 
     const activity = await prismadb.$transaction(async (tx) => {
       const created = await (tx as any).crm_Activities.create({

@@ -2,6 +2,7 @@
 // (GHSA-qwhm-9fcm-p878). Denial tests must fail against the pre-guard code.
 
 jest.mock("@/lib/authz", () => ({
+  PARTNER_EDIT: { partnerEdit: true },
   requireAuthenticated: jest.fn(),
   assertCanWriteOpportunity: jest.fn(),
   assertCanWriteAccount: jest.fn(),
@@ -68,7 +69,7 @@ describe("updateOpportunity", () => {
 
   it("guards on data.id and updates for an owner", async () => {
     await updateOpportunity({ id: "o-1", name: "New" } as any);
-    expect(assertOpp).toHaveBeenCalledWith(OWNER, "o-1");
+    expect(assertOpp).toHaveBeenCalledWith(OWNER, "o-1", { partnerEdit: true });
     expect(oUpdate).toHaveBeenCalled();
   });
 });
@@ -93,7 +94,7 @@ describe("createOpportunity", () => {
     assertAccount.mockRejectedValue(new AuthorizationError());
     const res = await createOpportunity({ name: "X", account: "foreign-acc" } as any);
     expect(res).toEqual({ error: "Forbidden" });
-    expect(assertAccount).toHaveBeenCalledWith(OWNER, "foreign-acc");
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "foreign-acc", { partnerEdit: true });
     expect(oCreate).not.toHaveBeenCalled();
   });
 

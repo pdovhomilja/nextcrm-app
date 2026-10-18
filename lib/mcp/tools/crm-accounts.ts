@@ -156,7 +156,7 @@ export const crmAccountTools = [
       user: AuthzUser
     ) {
       await assertWritableAccount(user, args.id);
-      if (args.assigned_to) await assertAssignableUser(args.assigned_to);
+      if (args.assigned_to) await assertAssignableUser(args.assigned_to, user);
       const { id, assigned_to, ...updateData } = args;
       const account = await prismadb.crm_Accounts.update({
         where: { id },

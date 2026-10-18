@@ -172,6 +172,16 @@ export async function filterAuthorizedContactIds(
   return rows.map((r: { id: string }) => r.id);
 }
 
+// Write decisions on a set of contacts (bulk enrichment). Same rows as the
+// read filter for the internal roles; none for a partner or an unknown role.
+export async function filterWritableContactIds(
+  user: AuthzUser,
+  contactIds: string[],
+): Promise<string[]> {
+  if (isUnhandledRole(user)) return [];
+  return filterAuthorizedContactIds(user, contactIds);
+}
+
 export async function filterAuthorizedAccountIds(
   user: AuthzUser,
   accountIds: string[],
@@ -712,6 +722,17 @@ export async function filterAuthorizedDocumentIds(
     select: { id: true },
   });
   return rows.map((r: { id: string }) => r.id);
+}
+
+// Write decisions on a set of documents (bulk delete, link, change type).
+// Same rows as the read filter for the internal roles; a partner (and any
+// role without full rules) may not write documents, so none.
+export async function filterWritableDocumentIds(
+  user: AuthzUser,
+  documentIds: string[],
+): Promise<string[]> {
+  if (isUnhandledRole(user)) return [];
+  return filterAuthorizedDocumentIds(user, documentIds);
 }
 
 // ---------------------------------------------------------------------------
