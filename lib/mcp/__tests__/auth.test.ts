@@ -29,4 +29,9 @@ describe("getMcpUser (bearer token auth)", () => {
     findUnique.mockResolvedValue({ id: "u1", role: "admin", userStatus: status });
     await expect(getMcpUser()).rejects.toThrow("Unauthorized");
   });
+
+  it("rejects a valid token of a partner (no API access for partners, spec decision 6)", async () => {
+    findUnique.mockResolvedValue({ id: "u1", role: "partner", userStatus: "ACTIVE" });
+    await expect(getMcpUser()).rejects.toThrow("Unauthorized");
+  });
 });

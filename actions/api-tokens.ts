@@ -12,6 +12,8 @@ export async function createApiToken(data: {
 }) {
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
+  // No API tokens for partners (partner-role spec, decision 6).
+  if (session.user.role === "partner") return { error: "Forbidden" };
 
   try {
     const result = await generateApiToken(

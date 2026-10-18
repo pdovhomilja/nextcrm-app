@@ -43,6 +43,10 @@ export async function getMcpUser(): Promise<McpUser> {
   if (!dbUser || dbUser.userStatus !== "ACTIVE") {
     throw new Error("Unauthorized");
   }
+  // No API or MCP access for partners (partner-role spec, decision 6).
+  if (dbUser.role === "partner") {
+    throw new Error("Unauthorized");
+  }
 
   return { id: dbUser.id, role: mapLegacyRole(dbUser.role) };
 }

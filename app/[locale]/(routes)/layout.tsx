@@ -65,6 +65,11 @@ export default async function AppLayout({
     return redirect("/inactive");
   }
 
+  // Partners get no app until the partner app exists (partner-role spec, ticket 4).
+  if (user?.role === "partner") {
+    return redirect("/partner-pending");
+  }
+
   // Fetch localization dictionary
   const dict = await getTranslations("ModuleMenu");
 
