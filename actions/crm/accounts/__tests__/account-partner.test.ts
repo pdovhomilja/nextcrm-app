@@ -1,10 +1,11 @@
 class AuthorizationError extends Error {}
+class AuthenticationError extends Error {}
 const requireRole = jest.fn();
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn().mockResolvedValue({ id: "u1", role: "user" }),
   requireRole: (...a: unknown[]) => requireRole(...a),
   assertCanWriteAccount: jest.fn(),
-  AuthenticationError: class AuthenticationError extends Error {},
+  AuthenticationError,
   AuthorizationError,
 }));
 jest.mock("@/lib/prisma", () => ({
@@ -79,6 +80,11 @@ describe("setAccountPartner", () => {
     expect(db.users.findUnique).not.toHaveBeenCalled();
   });
 
+  it("rethrows an unexpected error instead of calling it Unauthorized", async () => {
+    requireRole.mockRejectedValue(new Error("db down"));
+    await expect(setAccountPartner("acc-1", "p1")).rejects.toThrow("db down");
+  });
+
   it("refuses a user whose role is not partner", async () => {
     db.users.findUnique.mockResolvedValue({ id: "u2", role: "user" });
     expect(await setAccountPartner("acc-1", "u2")).toEqual({ error: "User is not a partner" });
@@ -98,7 +104,7 @@ describe("getPartnerUsers (options for the Partner picker)", () => {
     db.users.findMany.mockResolvedValue([{ id: "p1", name: "P", email: "p@x" }]);
     expect(await getPartnerUsers()).toEqual([{ id: "p1", name: "P", email: "p@x" }]);
     expect(requireRole).toHaveBeenCalledWith(["admin", "manager"]);
-    expect(db.users.findMany.mock.calls[0][0]).toMatchObject({ where: { role: "partner" } });
+    expect(db.users.findMany.mock.calls[0][0]).toMatchObject({ where: { role: "partner", userStatus: "ACTIVE" } });
   });
 
   it("gives nothing below manager", async () => {

@@ -6,10 +6,12 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
+jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn() }));
 
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { setPartnerAccount } from "../set-partner-account";
+import { writeAuditLog } from "@/lib/audit-log";
 
 const gs = getSession as jest.Mock;
 const findUser = prismadb.users.findUnique as jest.Mock;
@@ -22,7 +24,7 @@ const ACC = "22222222-2222-2222-2222-222222222222";
 function actorAndTarget(actorRole: string, targetRole: string | null) {
   gs.mockResolvedValue({ user: { id: "a" } });
   findUser.mockResolvedValueOnce({ id: "a", role: actorRole });
-  findUser.mockResolvedValueOnce(targetRole ? { id: "p", role: targetRole } : null);
+  findUser.mockResolvedValueOnce(targetRole ? { id: "p", role: targetRole, partnerAccountId: null } : null);
 }
 
 beforeEach(() => jest.resetAllMocks());
@@ -41,6 +43,15 @@ describe("setPartnerAccount", () => {
     expect(await setPartnerAccount("p", ACC)).toEqual({ data: { id: "p", partnerAccountId: ACC } });
     expect(upd.mock.calls[0][0]).toMatchObject({ where: { id: "p" }, data: { partnerAccountId: ACC } });
     expect(findAccount.mock.calls[0][0]).toMatchObject({ where: { id: ACC, deletedAt: null } });
+    expect(writeAuditLog).toHaveBeenCalledWith(expect.objectContaining({
+      entityType: "user", entityId: "p", action: "updated", userId: "a",
+      changes: [{ field: "partnerAccountId", old: null, new: ACC }],
+    }));
+  });
+
+  it("rethrows an unexpected error instead of calling it Unauthorized", async () => {
+    gs.mockRejectedValue(new Error("db down"));
+    await expect(setPartnerAccount("p", ACC)).rejects.toThrow("db down");
   });
 
   it("clears it with null", async () => {

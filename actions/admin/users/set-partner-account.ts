@@ -1,22 +1,25 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { requireRole, AuthorizationError } from "@/lib/authz";
+import { writeAuditLog } from "@/lib/audit-log";
+import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
 
 /** Admin sets (or clears with null) a partner's own company account. */
 export const setPartnerAccount = async (userId: string, accountId: string | null) => {
+  let actor;
   try {
-    await requireRole(["admin"]);
+    actor = await requireRole(["admin"]);
   } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
-    return { error: "Unauthorized" };
+    throw e;
   }
 
   if (!userId) return { error: "userId is required" };
 
   const target = await prismadb.users.findUnique({
     where: { id: userId },
-    select: { id: true, role: true },
+    select: { id: true, role: true, partnerAccountId: true },
   });
   if (!target) return { error: "User not found" };
   if (target.role !== "partner") return { error: "User is not a partner" };
@@ -34,6 +37,13 @@ export const setPartnerAccount = async (userId: string, accountId: string | null
       where: { id: userId },
       data: { partnerAccountId: accountId },
       select: { id: true, partnerAccountId: true },
+    });
+    await writeAuditLog({
+      entityType: "user",
+      entityId: userId,
+      action: "updated",
+      changes: [{ field: "partnerAccountId", old: target.partnerAccountId, new: accountId }],
+      userId: actor.id,
     });
     revalidatePath("/[locale]/(routes)/admin", "page");
     return { data: user };
