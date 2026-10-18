@@ -5,6 +5,7 @@ import {
   requireAuthenticated,
   filterAuthorizedTargetIds,
   AuthenticationError,
+  isUnhandledRole,
 } from "@/lib/authz";
 
 export const createTargetList = async (data: {
@@ -22,6 +23,8 @@ export const createTargetList = async (data: {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;
   }
+  // Not a partner module: refuse partners and roles without rules (partner-role spec, ticket 4).
+  if (isUnhandledRole(user)) return { error: "Forbidden" };
 
   // Only seed the list with targets the caller can access.
   const authorizedIds =

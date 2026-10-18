@@ -1,7 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import { requireAuthenticated, AuthenticationError, isUnhandledRole } from "@/lib/authz";
 
 export const createTarget = async (data: {
   last_name?: string;
@@ -26,6 +26,8 @@ export const createTarget = async (data: {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;
   }
+  // Not a partner module: refuse partners and roles without rules (partner-role spec, ticket 4).
+  if (isUnhandledRole(user)) return { error: "Forbidden" };
 
   const { last_name, email, mobile_phone, ...rest } = data;
   if (!last_name && !data.company) return { error: "last_name or company is required" };

@@ -1,7 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { parseSpreadsheetFile } from "@/lib/spreadsheet/parse";
-import { requireAuthenticated } from "@/lib/authz";
+import { requireAuthenticated, isUnhandledRole, AuthorizationError } from "@/lib/authz";
 
 export async function importTargets(
   formData: FormData
@@ -9,6 +9,8 @@ export async function importTargets(
   // Plain bulk create; rows are owned by the importer. requireAuthenticated
   // throws on no session, matching this function's throw-based contract.
   const user = await requireAuthenticated();
+  // Not a partner module: refuse partners and roles without rules (partner-role spec, ticket 4).
+  if (isUnhandledRole(user)) throw new AuthorizationError();
 
   const file = formData.get("file") as File | null;
   if (!file) throw new Error("No file provided");
