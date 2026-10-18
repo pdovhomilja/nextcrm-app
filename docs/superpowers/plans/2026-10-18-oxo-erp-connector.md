@@ -1631,7 +1631,7 @@ describe("orders out", () => {
     await sendOrder(t.ctx, t.client, "o1", now);
     await sendOrder(t.ctx, t.client, "o1", new Date(now.getTime() + 25 * 3_600_000));
     await sendOrder(t.ctx, t.client, "o1", new Date(now.getTime() + 26 * 3_600_000));
-    expect(t.notifications.map((x) => x.subject)).toEqual(["mail.stuckSubject"]);
+    expect(t.ctx.notifications.map((x) => x.subject)).toEqual(["mail.stuckSubject"]);
   });
 
   it("503 writes_disabled pauses sending with one email; the order stays READY and nothing else is tried", async () => {
@@ -1640,7 +1640,7 @@ describe("orders out", () => {
     expect(await sweepOrders(t.ctx, t.client, now)).toBe(1);
     expect([t.data.orders[0].status, await t.ctx.store.get(K.sendPaused) !== null]).toEqual(["READY", true]);
     expect(await sendOrder(t.ctx, t.client, "o2", now)).toBe("skipped");
-    expect(t.notifications.map((x) => x.subject)).toEqual(["mail.pausedSubject"]);
+    expect(t.ctx.notifications.map((x) => x.subject)).toEqual(["mail.pausedSubject"]);
   });
 
   it("409 and 422 end in SYNC_FAILED with OXO ERP's message and one email", async () => {
@@ -1649,7 +1649,7 @@ describe("orders out", () => {
       expect(await sendOrder(t.ctx, t.client, "o1", now)).toBe("failed");
       expect(t.data.orders[0].status).toBe("SYNC_FAILED");
       expect((await t.ctx.store.get<{ reason: string }>(K.failed("o1")))?.reason).toContain("PRO0500");
-      expect(t.notifications.map((x) => x.subject)).toEqual(["mail.orderFailedSubject"]);
+      expect(t.ctx.notifications.map((x) => x.subject)).toEqual(["mail.orderFailedSubject"]);
     }
   });
 
