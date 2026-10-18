@@ -33,7 +33,7 @@ export const updateActivity = async (data: {
   // swallowed into the generic "Failed to update activity" branch.
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;

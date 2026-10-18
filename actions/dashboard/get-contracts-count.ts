@@ -5,7 +5,7 @@ import { contractReadScopeWhere } from "@/lib/authz/scopes/crm";
 // Scoped to what the caller can read (no global totals for user/partner).
 export const getContractsCount = async () => {
   try {
-    const user = await requireAuthenticated();
+    const user = await requireAuthenticated({ partner: true });
     return await prismadb.crm_Contracts.count({ where: contractReadScopeWhere(user) });
   } catch (e) {
     if (e instanceof AuthenticationError) return 0;

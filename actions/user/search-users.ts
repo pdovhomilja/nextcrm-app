@@ -17,7 +17,7 @@ export async function searchUsers({
 } = {}) {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) throw new Error("Unauthorized");
     throw e;

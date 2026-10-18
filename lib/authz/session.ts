@@ -10,8 +10,12 @@ export interface AuthzUser {
   role: AppRole;
 }
 
-export async function requireAuthenticated(): Promise<AuthzUser> {
-  const session = await getSession();
+/**
+ * The signed-in user. Refuses a partner unless the caller opts in with
+ * { partner: true } (deny by default, partner-role spec ticket 4).
+ */
+export async function requireAuthenticated(opts?: { partner?: boolean }): Promise<AuthzUser> {
+  const session = await getSession(opts);
   const userId = session?.user?.id;
   if (!userId) throw new AuthenticationError();
 
@@ -20,6 +24,7 @@ export async function requireAuthenticated(): Promise<AuthzUser> {
     select: { id: true, role: true },
   });
   if (!dbUser) throw new AuthenticationError();
+  if (dbUser.role === "partner" && !opts?.partner) throw new AuthenticationError();
 
   return { id: dbUser.id, role: mapLegacyRole(dbUser.role) };
 }

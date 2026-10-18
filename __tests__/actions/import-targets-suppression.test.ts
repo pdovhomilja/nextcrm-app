@@ -3,9 +3,7 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 // is out of this suite's scope, so pass it through.
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn(),
-  isUnhandledRole: jest.fn(() => false),
   AuthenticationError: class AuthenticationError extends Error {},
-  AuthorizationError: class AuthorizationError extends Error {},
 }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {

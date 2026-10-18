@@ -57,7 +57,7 @@ export const updateOpportunity = async (data: {
   // Authorization runs before the approval gate and the update.
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;

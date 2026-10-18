@@ -44,10 +44,10 @@ export const createActivity = async (data: {
   links: Array<{ entityType: string; entityId: string }>;
 }) => {
   try {
-    const session = await getSession();
+    const session = await getSession({ partner: true });
     if (!session) return { error: "Unauthorized" };
     // A partner's activity must hang off his partner records only.
-    const authUser = await requireAuthenticated();
+    const authUser = await requireAuthenticated({ partner: true });
     try {
       if (authUser.role === "partner") {
         await assertPartnerCanLinkActivity(authUser, data.links);

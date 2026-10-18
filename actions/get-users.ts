@@ -15,7 +15,7 @@ export const getUsers = async () => {
 
 //Get active users for Selects in app etc
 export const getActiveUsers = async () => {
-  const user = await requireAuthenticated();
+  const user = await requireAuthenticated({ partner: true });
   const data = await prismadb.users.findMany({
     orderBy: {
       name: "asc",

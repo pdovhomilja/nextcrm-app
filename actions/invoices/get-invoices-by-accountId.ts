@@ -10,7 +10,7 @@ import { invoiceReadScopeWhere } from "@/lib/invoices/permissions";
 export async function getInvoicesByAccountId(accountId: string) {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return [];
     throw e;

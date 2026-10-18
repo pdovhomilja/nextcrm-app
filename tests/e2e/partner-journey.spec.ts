@@ -147,6 +147,29 @@ test.describe.serial("partner journey", () => {
     expect(created.assigned_to).toBeNull();
   });
 
+  test("his module pages render without errors", async () => {
+    const errors: string[] = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    const contact = await db.crm_Contacts.findFirstOrThrow({ where: { last_name: name("ownContact") } });
+    const lead = await db.crm_Leads.findFirstOrThrow({ where: { lastName: name("newLead") } });
+    const order = await db.crm_Orders.findFirstOrThrow({ where: { number: name("ownOrder") } });
+    const pages: [string, string][] = [
+      ["/en/crm/contacts", "Contacts"],
+      ["/en/crm/leads", "Leads"],
+      ["/en/crm/opportunities", "Opportunities"],
+      ["/en/crm/orders", name("ownOrder")],
+      [`/en/crm/contacts/${contact.id}`, name("ownContact")],
+      [`/en/crm/leads/${lead.id}`, name("newLead")],
+      [`/en/crm/orders/${order.id}`, name("ownOrder")],
+    ];
+    for (const [path, text] of pages) {
+      await page.goto(path);
+      await expect(page.getByText(text).first()).toBeVisible({ timeout: 20000 });
+      await expect(page.getByText("Runtime Error")).toHaveCount(0);
+    }
+    expect(errors).toEqual([]);
+  });
+
   test("cannot open an internal account or partner B's account by URL", async () => {
     for (const k of ["internal", "B"] as const) {
       await page.goto(`/en/crm/accounts/${ACC[k]}`);

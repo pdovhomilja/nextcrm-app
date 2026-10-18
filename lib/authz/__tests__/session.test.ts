@@ -52,10 +52,12 @@ describe("requireRole", () => {
   it("a partner passes no internal-role gate (admin pages, user-level actions)", async () => {
     mockedGetSession.mockResolvedValue({ user: { id: "p1" } } as any);
     mockedFindUnique.mockResolvedValue({ id: "p1", role: "partner" } as any);
-    await expect(requireAuthenticated()).resolves.toEqual({ id: "p1", role: "partner" });
-    await expect(requireRole(["admin"])).rejects.toBeInstanceOf(AuthorizationError);
+    // Refused before the role check: partners are signed out unless opted in.
+    await expect(requireAuthenticated()).rejects.toBeInstanceOf(AuthenticationError);
+    await expect(requireAuthenticated({ partner: true })).resolves.toEqual({ id: "p1", role: "partner" });
+    await expect(requireRole(["admin"])).rejects.toBeInstanceOf(AuthenticationError);
     await expect(requireRole(["user", "manager", "admin"])).rejects.toBeInstanceOf(
-      AuthorizationError,
+      AuthenticationError,
     );
   });
 

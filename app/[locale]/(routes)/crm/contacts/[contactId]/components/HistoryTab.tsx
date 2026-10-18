@@ -5,7 +5,7 @@ import { AuditTimeline } from "@/components/crm/audit-log/Timeline";
 export async function HistoryTab({ contactId }: { contactId: string }) {
   const [initialData, session] = await Promise.all([
     getAuditLogByEntity("contact", contactId),
-    getSession(),
+    getSession({ partner: true }),
   ]);
 
   return (

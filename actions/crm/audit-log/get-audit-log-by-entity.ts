@@ -14,7 +14,7 @@ export const getAuditLogByEntity = async (
 ) => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return { data: [], nextCursor: null };
     throw e;

@@ -7,12 +7,12 @@ import { toActor } from "@/lib/orders/transitions";
 import { OrderError } from "@/lib/orders/types";
 
 export async function getOrders(filters: { status?: string; ownerId?: string; accountId?: string } = {}) {
-  const user = await requireAuthenticated();
+  const user = await requireAuthenticated({ partner: true });
   return (await listOrders(user, { ...filters, limit: 200, offset: 0 })).data;
 }
 
 export async function getOrder(id: string) {
-  const user = await requireAuthenticated();
+  const user = await requireAuthenticated({ partner: true });
   try {
     return serializeOrder(await loadOrder(user, id), toActor(user));
   } catch (e) {
@@ -49,7 +49,7 @@ export async function getProductOptions() {
 export type ProductOption = Awaited<ReturnType<typeof getProductOptions>>[number];
 
 export async function getOwnerOptions() {
-  const user = await requireAuthenticated();
+  const user = await requireAuthenticated({ partner: true }); // partner: not a manager, gets []
   if (!isManagerOrAdmin(user)) return [];
   return prismadb.users.findMany({ where: { userStatus: "ACTIVE" }, select: { id: true, name: true }, orderBy: { name: "asc" } });
 }
@@ -61,12 +61,12 @@ export async function getPendingOrderApprovals() {
 }
 
 export async function getAccountOrders(accountId: string) {
-  const user = await requireAuthenticated();
+  const user = await requireAuthenticated({ partner: true });
   return (await listOrders(user, { accountId, limit: 200, offset: 0 })).data;
 }
 
 export async function getOrderHistory(id: string) {
-  const user = await requireAuthenticated();
+  const user = await requireAuthenticated({ partner: true });
   const visible = await prismadb.crm_Orders.findFirst({ where: { id, ...orderReadScopeWhere(user) }, select: { id: true } });
   if (!visible) return [];
   const rows = await prismadb.crm_AuditLog.findMany({ where: { entityType: "order", entityId: id }, orderBy: { createdAt: "desc" }, take: 100, include: { user: { select: { name: true } } } });

@@ -8,7 +8,7 @@ export const setLanguage = async (data: {
   userId: string;
   language: string;
 }) => {
-  const session = await getSession();
+  const session = await getSession({ partner: true });
   if (!session) return { error: "Unauthorized" };
 
   const { userId, language } = data;

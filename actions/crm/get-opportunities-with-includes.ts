@@ -12,7 +12,7 @@ import { serializeDecimalsList } from "@/lib/serialize-decimals";
 export const getOpportunitiesFull = cache(async () => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return [];
     throw e;

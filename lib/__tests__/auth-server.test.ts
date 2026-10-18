@@ -29,12 +29,26 @@ describe("getSession", () => {
     await expect(getSession()).resolves.toBeNull();
   });
 
-  // The partner app is open (spec ticket 4): proxy.ts limits his routes and
-  // lib/authz his rows, so an ACTIVE partner gets his session like anyone else.
-  it("returns the session of an ACTIVE partner", async () => {
-    const s = { session: { id: "s1" }, user: { id: "p1", role: "partner", userStatus: "ACTIVE" } };
-    apiGetSession.mockResolvedValue(s);
-    await expect(getSession()).resolves.toBe(s);
+  // Partners are refused by default (deny by default, partner-role spec
+  // ticket 4); only call sites a partner needs opt in with { partner: true }.
+  const partner = { session: { id: "s1" }, user: { id: "p1", role: "partner", userStatus: "ACTIVE" } };
+  it("returns null for an ACTIVE partner unless the caller opts in", async () => {
+    apiGetSession.mockResolvedValue(partner);
+    await expect(getSession()).resolves.toBeNull();
+    await expect(getSession({ partner: true })).resolves.toBe(partner);
+  });
+
+  it("requireAuthenticated refuses a partner unless the caller opts in", async () => {
+    apiGetSession.mockResolvedValue(partner);
+    findUnique.mockResolvedValue({ id: "p1", role: "partner" });
+    await expect(requireAuthenticated()).rejects.toBeInstanceOf(AuthenticationError);
+    await expect(requireAuthenticated({ partner: true })).resolves.toEqual({ id: "p1", role: "partner" });
+  });
+
+  it("requireAuthenticated refuses a user whose DB role is partner (stale session role)", async () => {
+    apiGetSession.mockResolvedValue({ session: { id: "s1" }, user: { id: "p1", role: "user", userStatus: "ACTIVE" } });
+    findUnique.mockResolvedValue({ id: "p1", role: "partner" });
+    await expect(requireAuthenticated()).rejects.toBeInstanceOf(AuthenticationError);
   });
 
   it("returns null without a session", async () => {

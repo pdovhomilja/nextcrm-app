@@ -248,7 +248,7 @@ describe("write paths that used read filters", () => {
       delete: await refused(bulkDeleteDocuments([ids.document.A])),
       changeType: await refused(bulkChangeType([ids.document.A], "RECEIPT" as never)),
       link: await refused(bulkLinkToAccount([ids.document.A], ACC.A)),
-    }).toEqual({ delete: "Forbidden", changeType: "Forbidden", link: "Forbidden" });
+    }).toEqual({ delete: "Unauthenticated", changeType: "Unauthenticated", link: "Unauthenticated" }); // refused centrally: no partner opt-in
     const doc = await prismadb.documents.findUniqueOrThrow({ where: { id: ids.document.A } });
     expect({ deletedAt: doc.deletedAt, type: doc.document_system_type }).toEqual({ deletedAt: null, type: "OTHER" });
   });
@@ -258,7 +258,7 @@ describe("write paths that used read filters", () => {
       method: "POST",
       body: JSON.stringify({ contactIds: [ids.contact.A], fields: ["email"] }),
     });
-    expect((await enrichBulk(req)).status).toBe(403);
+    expect((await enrichBulk(req)).status).toBe(401); // refused centrally: no partner opt-in
   });
 
   it("MCP document write tools refuse a partner (second line behind getMcpUser)", async () => {

@@ -77,7 +77,8 @@ export function NewAccountForm({ industries, onFinish }: Props) {
   const [priceLists, setPriceLists] = useState<{ id: string; name: string; currency: string }[]>([]);
   useEffect(() => {
     let alive = true;
-    getPriceListOptions().then((l) => { if (alive) setPriceLists(l); });
+    // Refused for partners (list prices are not theirs to see): the picker stays empty.
+    getPriceListOptions().then((l) => { if (alive) setPriceLists(l); }).catch(() => {});
     return () => { alive = false; };
   }, []);
 
