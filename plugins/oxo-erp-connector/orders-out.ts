@@ -1,7 +1,7 @@
 import type { AfterInput, RecordData } from "@nextcrm/plugin-sdk";
 import { countryName, sameAddress } from "./map";
 import { OxoError, oxoClient, type OxoAddress, type OxoClient, type OxoOrder } from "./oxo";
-import { localTime, msg, tell, type Ctx } from "./settings";
+import { findAll, localTime, msg, tell, type Ctx } from "./settings";
 import { K, type AccountLink, type FailedState, type OrderLink, type PriceListLink, type ProductLink, type SendState } from "./store";
 
 const CLAIM_MS = 10 * 60_000;
@@ -15,6 +15,8 @@ export class FinalError extends Error {
 const val = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
 /** At most 4 decimals, as OXO ERP stores them; the same order always gives the same string, so a repeat matches. */
 const dec = (v: unknown) => String(Number(Number(v).toFixed(4)));
+/** Lines in the order's own position order: a repeat must send them in the same order (OXO ERP compares line by line). */
+const byPosition = (order: RecordData) => [...((order.lines ?? []) as RecordData[])].sort((a, b) => Number(a.position ?? 0) - Number(b.position ?? 0));
 const clean = <T extends Record<string, unknown>>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Partial<T>;
 
 /** Spec § 4.5: the CRM order as OXO ERP's POST /orders body. */
@@ -23,7 +25,7 @@ export async function orderBody(ctx: Ctx, order: RecordData): Promise<Record<str
   if (!account?.name) throw new FinalError(ctx.t("orders.noAccount"));
   const link = await ctx.store.get<AccountLink>(K.account(account.id as string));
   const lines: { productId: number; quantity: string; unitPrice: string }[] = [];
-  for (const l of (order.lines ?? []) as RecordData[]) {
+  for (const l of byPosition(order)) {
     const p = await ctx.store.get<ProductLink>(K.product(l.productId as string));
     if (!p) throw new FinalError(ctx.t("orders.notOxoProduct", { product: String(l.sku ?? l.productName ?? l.productId) }));
     lines.push({ productId: p.oxoId, quantity: dec(l.quantity), unitPrice: dec(l.unitPrice) });
@@ -65,7 +67,7 @@ async function send(ctx: Ctx, client: OxoClient, order: RecordData, now: Date): 
   const body = await orderBody(ctx, order);
   const { body: o } = await client.post<OxoOrder>("/orders", body);
   await ctx.data.orders.update(id, { status: "SENT", externalRef: `oxo:${o.id}` });
-  const lines = (order.lines ?? []) as RecordData[];
+  const lines = byPosition(order);
   const belowList = o.lines.flatMap((l, i) => (l.belowList ? [String(lines[i]?.sku ?? lines[i]?.productName ?? l.productId)] : []));
   await ctx.store.set(K.order(id), {
     oxoId: o.id, number: o.number, state: o.state, delivery: o.delivery, deliveries: o.deliveries, belowList, sentAt: now.toISOString(), checkedAt: now.toISOString(),
@@ -133,7 +135,7 @@ export async function sendOrder(ctx: Ctx, client: OxoClient, orderId: string, no
 /** Every cron run sends READY orders without a ref: fresh ones before those already waiting; stop at the first that waits or pauses. */
 export async function sweepOrders(ctx: Ctx, client: OxoClient, now: Date): Promise<number> {
   if (!ctx.settings.sendOrders || ctx.settings.dryRun) return 0;
-  const rows = await ctx.data.orders.find({ where: { status: "READY", externalRef: null }, orderBy: { createdAt: "asc" }, take: 200 });
+  const rows = await findAll(ctx.data.orders, { status: "READY", externalRef: null }, { createdAt: "asc" });
   const waiting = new Set((await ctx.store.list("send:")).map((e) => e.key.slice(5)));
   const queue = [...rows.filter((o) => !waiting.has(o.id as string)), ...rows.filter((o) => waiting.has(o.id as string))];
   let tried = 0;

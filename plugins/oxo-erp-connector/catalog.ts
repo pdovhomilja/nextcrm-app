@@ -2,7 +2,7 @@ import { SEP, categoryPaths, fnv, mapRules, orderLists, productFields, sameProdu
 import { ref } from "./map";
 import type { OxoClient, OxoPriceList, OxoProduct } from "./oxo";
 import { chosenLists, msg, type Ctx } from "./settings";
-import { K, type AccountLink, type CatalogCounts, type PriceListLink, type ProductLink } from "./store";
+import { K, keepLock, type AccountLink, type CatalogCounts, type PriceListLink, type ProductLink } from "./store";
 
 const OVERLAP_MS = 2 * 60_000;
 const MAX_CHAIN = 11;   // core loads at most 11 lists per price (lib/pricing/get-price.ts MAX_LISTS)
@@ -42,7 +42,8 @@ export async function syncCatalog({ ctx, client, dry, now }: { ctx: Ctx; client:
   const known = new Map<number, { ref: string; templateId: number | null }>(Array.from(links.values()).map((l) => [l.oxoId, { ref: l.ref, templateId: l.templateId }]));
   let top = cursor;
   const done = new Set<number>();
-  for (const p of [...fresh, ...retry]) {
+  for (const [i, p] of Array.from([...fresh, ...retry].entries())) {
+    if ((i + 1) % 100 === 0) await keepLock(ctx);
     if (fresh.includes(p) && (!top || p.updatedAt > top)) top = p.updatedAt;
     if (done.has(p.id)) continue;
     done.add(p.id);
@@ -51,7 +52,9 @@ export async function syncCatalog({ ctx, client, dry, now }: { ctx: Ctx; client:
     if (!crmId && !(p.saleOk && p.active)) continue;
     try {
       const categoryRef = p.category ? await ensure(p.category) : null;
-      const current = crmId ? await ctx.data.products.get(crmId) : null;
+      // A CRM product with the same SKU is adopted by core (adoptBySku): its tax, cost and description must survive too (§ 10 A5).
+      const current = crmId ? await ctx.data.products.get(crmId)
+        : p.code ? ((await ctx.data.products.find({ where: { sku: p.code, source: "CRM", deletedAt: null }, take: 1 }))[0] ?? null) : null;
       const f = productFields(p, categoryRef, ctx.settings.currency, current);
       known.set(p.id, { ref: r, templateId: p.odooTemplateId });
       if (crmId && sameProduct(current, f, links.get(crmId))) continue;

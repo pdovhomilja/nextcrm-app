@@ -4,9 +4,8 @@ import { syncOrdersIn } from "./orders-in";
 import { syncOrderStatuses } from "./orders-status";
 import { isAuthError, oxoClient, type OxoClient } from "./oxo";
 import { msg, tell, type Ctx } from "./settings";
-import { K, type CatalogCounts, type OrderCounts, type RunSummary } from "./store";
+import { K, LOCK_MS, type CatalogCounts, type OrderCounts, type RunSummary } from "./store";
 
-const LOCK_MS = 10 * 60_000;
 const SLACK_MS = 30_000;
 
 export const zeroOrders = (): OrderCounts => ({ checked: 0, moved: 0, imported: 0, updated: 0, pending: 0 });
@@ -26,12 +25,11 @@ export function summaryText(ctx: Ctx, s: RunSummary): string {
 export async function runSync(ctx: Ctx, client: OxoClient, now: Date): Promise<RunSummary> {
   const dry = ctx.settings.dryRun;
   const base = { at: now.toISOString(), dryRun: dry };
-  const lock = await ctx.store.get<{ until: string }>(K.lock);
-  if (lock && Date.parse(lock.until) > now.getTime()) {
+  // Atomic: two crons can never both start a run (a second run would create the same new accounts twice).
+  if (!(await ctx.store.claim(K.lock, LOCK_MS))) {
     ctx.log.info("Sync skipped: another run is in progress");
     return { ...base, ok: false, error: ctx.t("admin.running"), customers: zeroCustomers(), rows: emptyRows() };
   }
-  await ctx.store.set(K.lock, { until: new Date(now.getTime() + LOCK_MS).toISOString() });
   const r: CustomerRun = { ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map() };
   let catalog: CatalogCounts | undefined;
   const orders = zeroOrders();

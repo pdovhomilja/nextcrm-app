@@ -1,4 +1,4 @@
-import { z, type PluginContext } from "@nextcrm/plugin-sdk";
+import { z, type FindArgs, type PluginContext, type RecordData } from "@nextcrm/plugin-sdk";
 
 function validZone(tz: string): boolean {
   try { new Intl.DateTimeFormat("en", { timeZone: tz }); return true; } catch { return false; }
@@ -37,4 +37,14 @@ export const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 /** Admin emails never fail the run that sends them. */
 export async function tell(ctx: Ctx, input: Parameters<Ctx["notify"]>[0]): Promise<void> {
   try { await ctx.notify(input); } catch (e) { ctx.log.warn(`Email "${input.subject}" not sent: ${msg(e)}`); }
+}
+
+/** Core returns at most 100 rows per find(); read every page. */
+export async function findAll(api: { find(args: FindArgs): Promise<RecordData[]> }, where: RecordData, orderBy: RecordData = { id: "asc" }): Promise<RecordData[]> {
+  const out: RecordData[] = [];
+  for (let skip = 0; ; skip += 100) {
+    const rows = await api.find({ where, orderBy, take: 100, skip });
+    out.push(...rows);
+    if (rows.length < 100) return out;
+  }
 }

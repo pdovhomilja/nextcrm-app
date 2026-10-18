@@ -38,7 +38,7 @@ describe("runSync", () => {
 
   it("a second run while one is in progress is skipped", async () => {
     const { ctx, client } = mk();
-    await ctx.store.set(K.lock, { until: new Date(now.getTime() + 60_000).toISOString() });
+    await ctx.store.set(K.lock, { until: new Date(Date.now() + 60_000).toISOString() });   // claim compares with the clock
     const s = await runSync(ctx, client, now);
     expect([s.ok, s.error]).toEqual([false, "admin.running"]);
   });

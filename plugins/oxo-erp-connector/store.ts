@@ -24,6 +24,11 @@ export const K = {
   oxoLists: "meta:oxoLists",                                // → { at, lists } for the admin section
 };
 
+export const LOCK_MS = 10 * 60_000;
+/** A long run renews its lock, so the next cron cannot start a second run next to it. */
+export const keepLock = (ctx: { store: { set(key: string, value: unknown): Promise<void> } }) =>
+  ctx.store.set(K.lock, { until: new Date(Date.now() + LOCK_MS).toISOString() });
+
 export interface AccountLink { customerId: number; syncedAt: string; priceListId: number | null; addresses: OxoAddress[]; inactive?: boolean }
 export type MatchReason = "number" | "vat" | "name" | "linked";
 export interface Conflict { customerId: number; name: string; reason: MatchReason; candidates: string[]; foundAt: string; customer: OxoCustomer }

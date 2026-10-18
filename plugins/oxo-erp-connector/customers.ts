@@ -2,7 +2,7 @@ import { accountFields, changedFields } from "./map";
 import { matchAccount } from "./match";
 import type { OxoClient, OxoCustomer } from "./oxo";
 import { msg, type Ctx } from "./settings";
-import { K, type AccountLink, type Conflict, type CustomerCounts, type ReportRow, type RunSummary } from "./store";
+import { K, keepLock, type AccountLink, type Conflict, type CustomerCounts, type ReportRow, type RunSummary } from "./store";
 
 const ROWS = 200;
 const OVERLAP_MS = 2 * 60_000;
@@ -87,9 +87,10 @@ export async function syncCustomers(r: CustomerRun, client: OxoClient): Promise<
   const rows = await client.all<OxoCustomer>("/customers", since ? { updatedSince: since } : {});
   const done = new Set<number>();
   let top = cursor;
-  for (const c of rows) {
+  for (const [i, c] of Array.from(rows.entries())) {
     if (!top || c.updatedAt > top) top = c.updatedAt;
     await guarded(r, c, done);
+    if ((i + 1) % 100 === 0) await keepLock(r.ctx);
   }
   for (const e of [...(await r.ctx.store.list("conflict:")), ...(await r.ctx.store.list("retry:"))]) {
     await guarded(r, (e.value as { customer: OxoCustomer }).customer, done);

@@ -1,6 +1,6 @@
 import type { RecordData } from "@nextcrm/plugin-sdk";
 import type { OxoClient, OxoOrder } from "./oxo";
-import { msg, tell, type Ctx } from "./settings";
+import { findAll, msg, tell, type Ctx } from "./settings";
 import { K, type OrderLink } from "./store";
 
 const RANK: Record<string, number> = { SENT: 1, CONFIRMED: 2, DELIVERED: 3, INVOICED: 4, PAID: 5 };
@@ -34,7 +34,7 @@ async function fetchBy(client: OxoClient, param: "ids" | "odooIds", values: numb
 export async function syncOrderStatuses(a: { ctx: Ctx; client: OxoClient; dry: boolean; now: Date }): Promise<{ checked: number; moved: number }> {
   const { ctx, client, dry, now } = a;
   const out = { checked: 0, moved: 0 };
-  const open = (await ctx.data.orders.find({ where: { status: { in: OPEN } }, take: 1000 }))
+  const open = (await findAll(ctx.data.orders, { status: { in: OPEN } }))
     .filter((o) => typeof o.externalRef === "string" && /^(oxo:)?\d+$/.test(o.externalRef));
   if (!open.length) return out;
   const isOxo = (o: RecordData) => (o.externalRef as string).startsWith("oxo:");

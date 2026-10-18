@@ -1,4 +1,4 @@
-import { chosenLists, type Ctx } from "../settings";
+import { chosenLists, findAll, type Ctx } from "../settings";
 import { K, type AccountLink, type FailedState, type OrderLink, type PriceListLink, type ProductLink, type SendState } from "../store";
 
 const base = (ctx: Ctx) => ctx.settings.url.replace(/\/+$/, "");
@@ -46,7 +46,7 @@ export async function accountTabData(ctx: Ctx, accountId: string) {
   const link = await ctx.store.get<AccountLink>(K.account(accountId));
   if (!link) return null;
   const orders: { orderId: string; number: string; oxoNumber: string; date: string; total: number; currency: string; status: string; delivery: string; imported: boolean }[] = [];
-  for (const o of await ctx.data.orders.find({ where: { accountId }, orderBy: { orderDate: "desc" }, take: 500 })) {
+  for (const o of await findAll(ctx.data.orders, { accountId }, { orderDate: "desc" })) {
     const l = await ctx.store.get<OrderLink>(K.order(o.id as string));
     if (!l) continue;
     orders.push({ orderId: o.id as string, number: String(o.number), oxoNumber: l.number, date: day(o.orderDate), total: Number(o.subtotal), currency: String(o.currency), status: String(o.status), delivery: l.delivery, imported: !!l.imported });
@@ -70,7 +70,7 @@ export async function catalogData(ctx: Ctx) {
 }
 
 export async function ordersData(ctx: Ctx, now: Date) {
-  const waiting = ctx.settings.sendOrders ? (await ctx.data.orders.find({ where: { status: "READY", externalRef: null }, take: 500 })).length : 0;
+  const waiting = ctx.settings.sendOrders ? (await findAll(ctx.data.orders, { status: "READY", externalRef: null })).length : 0;
   const since = now.getTime() - 7 * 86_400_000;
   const sent = (await ctx.store.list("order:")).filter((e) => !(e.value as OrderLink).imported && Date.parse((e.value as OrderLink).sentAt) >= since).length;
   const failed: ({ orderId: string; number: string } & FailedState)[] = [];
