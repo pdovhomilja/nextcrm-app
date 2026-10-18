@@ -1,7 +1,7 @@
 "use server";
 import {
   requireAuthenticated,
-  filterAuthorizedDocumentIds,
+  filterWritableDocumentIds,
   AuthenticationError,
 } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
@@ -21,7 +21,7 @@ export async function bulkDeleteDocuments(documentIds: string[]) {
   if (!documentIds || documentIds.length === 0) return;
 
   // Fail-closed: if any id is not authorized, reject the whole request.
-  const allowed = await filterAuthorizedDocumentIds(user, documentIds);
+  const allowed = await filterWritableDocumentIds(user, documentIds);
   if (allowed.length !== documentIds.length) {
     throw new Error("Forbidden");
   }

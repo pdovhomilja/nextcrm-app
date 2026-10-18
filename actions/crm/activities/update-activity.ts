@@ -2,6 +2,7 @@
 import {
   requireAuthenticated,
   assertCanWriteActivity,
+  PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -40,7 +41,7 @@ export const updateActivity = async (data: {
   try {
     // A meeting update is pushed to the owner's Google Calendar with
     // sendUpdates:"all" — an unauthorized edit mails a real customer.
-    await assertCanWriteActivity(user, data.id);
+    await assertCanWriteActivity(user, data.id, PARTNER_EDIT);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;

@@ -1,6 +1,6 @@
 import type { AppRole } from "@/lib/authz";
 import { isManagerOrAdmin } from "@/lib/authz/roles";
-import { partnerAccountWhere } from "@/lib/authz/scopes/partner";
+import { partnerVisibleAccountWhere } from "@/lib/authz/scopes/partner";
 import { NO_ROWS } from "@/lib/authz/scopes/unhandled-role";
 
 export type InvoiceStatus =
@@ -19,7 +19,7 @@ export function isInvoiceImmutable(status: InvoiceStatus): boolean {
 // accounts (read-only: every can* below refuses him). Other roles: none.
 export function invoiceReadScopeWhere(user: UserCtx): Record<string, unknown> {
   if (isManagerOrAdmin(user)) return {};
-  if (user.role === "partner") return { account: partnerAccountWhere(user.id) };
+  if (user.role === "partner") return { account: partnerVisibleAccountWhere(user.id) };
   if (user.role === "user") return { createdBy: user.id };
   return { ...NO_ROWS };
 }

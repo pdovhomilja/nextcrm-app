@@ -3,7 +3,7 @@ import { inngest } from "@/inngest/client";
 import { getApiKey } from "@/lib/api-keys";
 import {
   requireAuthenticated,
-  filterAuthorizedContactIds,
+  filterWritableContactIds,
   unauthorizedResponse,
   forbiddenResponse,
   AuthenticationError,
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "NO_API_KEY" }, { status: 402 });
   }
 
-  const authorized = await filterAuthorizedContactIds(user, contactIds);
+  const authorized = await filterWritableContactIds(user, contactIds);
   if (authorized.length !== contactIds.length) {
     return forbiddenResponse();
   }

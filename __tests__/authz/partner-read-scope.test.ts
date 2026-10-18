@@ -33,6 +33,7 @@ import {
   assertCanWriteCrmTask,
   assertCanWriteDocument,
   assertCanWriteActivity,
+  PARTNER_EDIT,
 } from "@/lib/authz/scopes/crm";
 import { orderReadScopeWhere } from "@/lib/authz/scopes/orders";
 import { getReportScope } from "@/lib/authz/scopes/report-scope";
@@ -189,29 +190,46 @@ const scopes: [string, (u: AuthzUser) => Record<string, unknown>][] = [
   ["task", crmTaskReadScopeWhere],
 ];
 
+// Own company account (Pavel 2026-10-18): the account record, its contacts,
+// orders and invoices, read-only. Leads, opportunities, contracts, documents,
+// CRM tasks and activities on it stay hidden.
+const withOwn: [string, (u: AuthzUser) => Record<string, unknown>][] = scopes.filter(([e]) =>
+  ["account", "contact", "invoice", "order"].includes(e));
+const partnerOnly: [string, (u: AuthzUser) => Record<string, unknown>][] = scopes.filter(([e]) =>
+  ["lead", "opportunity", "contract", "task"].includes(e));
+
 describe("partner A", () => {
-  it.each(scopes)("%s: exactly A's account and his own company account", async (entity, scope) => {
+  it.each(withOwn)("%s: A's account and his own company account", async (entity, scope) => {
     expect(await visible(entity, scope(partnerA))).toEqual(["A", "aOwn"]);
   });
 
-  it("documents: A's, his own account's, and the one via a contact on A's account; no public or trap document", async () => {
-    expect(await visible("document", documentReadScopeWhere(partnerA))).toEqual(["A", "aOwn", "viaContactA"]);
+  it.each(partnerOnly)("%s: A's account only, not his own company account", async (entity, scope) => {
+    expect(await visible(entity, scope(partnerA))).toEqual(["A"]);
   });
 
-  it("activities: readable on A's and his own account, refused on the others", async () => {
+  it("documents: A's and the one via a contact on A's account; none on his own account, no public or trap document", async () => {
+    expect(await visible("document", documentReadScopeWhere(partnerA))).toEqual(["A", "viaContactA"]);
+  });
+
+  it("activities: readable on A's account only, refused on his own and the others", async () => {
     const result: Record<string, boolean> = {};
     for (const k of ACC_KEYS) {
       result[k] = await assertCanReadActivityForEntity(partnerA, "account", ACC[k]).then(() => true, () => false);
     }
-    expect(result).toEqual({ A: true, aOwn: true, B: false, internal: false, stale: false });
+    expect(result).toEqual({ A: true, aOwn: false, B: false, internal: false, stale: false });
   });
 
-  it("report scope gives the same account-bound sets; no projects, campaigns or directory", async () => {
+  it("activities on a contact of his own account are refused", async () => {
+    await expect(assertCanReadActivityForEntity(partnerA, "contact", ids.contact.aOwn)).rejects.toThrow("Forbidden");
+    await expect(assertCanReadActivityForEntity(partnerA, "contact", ids.contact.A)).resolves.toBeUndefined();
+  });
+
+  it("report scope gives the same sets; no projects, campaigns or directory", async () => {
     const s = getReportScope(partnerA);
     expect(await visible("account", s.account)).toEqual(["A", "aOwn"]);
     expect(await visible("contact", s.contact)).toEqual(["A", "aOwn"]);
-    expect(await visible("lead", s.lead)).toEqual(["A", "aOwn"]);
-    expect(await visible("opportunity", s.opportunity)).toEqual(["A", "aOwn"]);
+    expect(await visible("lead", s.lead)).toEqual(["A"]);
+    expect(await visible("opportunity", s.opportunity)).toEqual(["A"]);
     expect(s.task).toEqual(NO_ROWS);
     expect(s.campaign).toEqual(NO_ROWS);
     expect(s.allowUserDirectory).toBe(false);
@@ -220,9 +238,20 @@ describe("partner A", () => {
   it("own company account: readable, not writable", async () => {
     await expect(assertCanReadAccount(partnerA, ACC.aOwn)).resolves.toBeUndefined();
     await expect(assertCanWriteAccount(partnerA, ACC.aOwn)).rejects.toThrow("Forbidden");
+    await expect(assertCanWriteAccount(partnerA, ACC.aOwn, PARTNER_EDIT)).rejects.toThrow("Forbidden");
   });
 
-  it("writes stay refused, even on his own partner account", async () => {
+  it("own company account stays read-only even if he is also named its partner", async () => {
+    await prismadb.crm_Accounts.update({ where: { id: ACC.aOwn }, data: { partnerUserId: U.A } });
+    try {
+      await expect(assertCanWriteAccount(partnerA, ACC.aOwn, PARTNER_EDIT)).rejects.toThrow("Forbidden");
+      await expect(assertCanWriteContact(partnerA, ids.contact.aOwn, PARTNER_EDIT)).rejects.toThrow("Forbidden");
+    } finally {
+      await prismadb.crm_Accounts.update({ where: { id: ACC.aOwn }, data: { partnerUserId: null } });
+    }
+  });
+
+  it("without the PARTNER_EDIT opt-in every write is refused, even on his partner account", async () => {
     const writes: [string, Promise<void>][] = [
       ["account", assertCanWriteAccount(partnerA, ACC.A)],
       ["contact", assertCanWriteContact(partnerA, ids.contact.A)],
@@ -231,11 +260,34 @@ describe("partner A", () => {
       ["contract", assertCanWriteContract(partnerA, ids.contract.A)],
       ["task", assertCanWriteCrmTask(partnerA, ids.task.A)],
       ["document", assertCanWriteDocument(partnerA, ids.document.A)],
-      ["activity", assertCanWriteActivity(partnerA, ids.activity.trapA)],
+      ["activity", assertCanWriteActivity(partnerA, ids.activity.A)],
     ];
     for (const [name, p] of writes) {
       expect({ name, refused: await p.then(() => false, () => true) }).toEqual({ name, refused: true });
     }
+  });
+
+  it("with PARTNER_EDIT: account, contact, lead, opportunity, CRM task, activity on A's account only", async () => {
+    const asserts: [string, (id: string) => Promise<void>, Record<string, string>][] = [
+      ["account", (i) => assertCanWriteAccount(partnerA, i, PARTNER_EDIT), ids.account],
+      ["contact", (i) => assertCanWriteContact(partnerA, i, PARTNER_EDIT), ids.contact],
+      ["lead", (i) => assertCanWriteLead(partnerA, i, PARTNER_EDIT), ids.lead],
+      ["opportunity", (i) => assertCanWriteOpportunity(partnerA, i, PARTNER_EDIT), ids.opportunity],
+      ["task", (i) => assertCanWriteCrmTask(partnerA, i, PARTNER_EDIT), ids.task],
+      ["activity", (i) => assertCanWriteActivity(partnerA, i, PARTNER_EDIT), ids.activity],
+    ];
+    for (const [name, assert, rows] of asserts) {
+      const allowed: string[] = [];
+      for (const k of [...ACC_KEYS, "trapA"].filter((k) => rows[k])) {
+        if (await assert(rows[k]).then(() => true, () => false)) allowed.push(k);
+      }
+      expect({ name, allowed }).toEqual({ name, allowed: ["A"] });
+    }
+  });
+
+  it("contracts and documents take no PARTNER_EDIT: refused on his account", async () => {
+    await expect(assertCanWriteContract(partnerA, ids.contract.A)).rejects.toThrow("Forbidden");
+    await expect(assertCanWriteDocument(partnerA, ids.document.A)).rejects.toThrow("Forbidden");
   });
 });
 

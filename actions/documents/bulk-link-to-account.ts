@@ -2,7 +2,7 @@
 import {
   requireAuthenticated,
   assertCanWriteAccount,
-  filterAuthorizedDocumentIds,
+  filterWritableDocumentIds,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -30,7 +30,7 @@ export async function bulkLinkToAccount(documentIds: string[], accountId: string
   }
 
   // Fail-closed: every documentId must be authorized.
-  const allowed = await filterAuthorizedDocumentIds(user, documentIds);
+  const allowed = await filterWritableDocumentIds(user, documentIds);
   if (allowed.length !== documentIds.length) {
     throw new Error("Forbidden");
   }

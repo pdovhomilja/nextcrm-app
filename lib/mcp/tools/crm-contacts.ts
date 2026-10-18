@@ -179,7 +179,7 @@ export const crmContactTools = [
     ) {
       await assertWritableContact(user, args.id);
       if (args.account) await assertLinkableAccount(user, args.account);
-      if (args.assigned_to) await assertAssignableUser(args.assigned_to);
+      if (args.assigned_to) await assertAssignableUser(args.assigned_to, user);
       const { id, account, assigned_to, ...updateData } = args;
       const contact = await prismadb.crm_Contacts.update({
         where: { id },

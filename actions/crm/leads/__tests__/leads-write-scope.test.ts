@@ -2,6 +2,7 @@
 // (GHSA-qwhm-9fcm-p878). Denial tests must fail against the pre-guard code.
 
 jest.mock("@/lib/authz", () => ({
+  PARTNER_EDIT: { partnerEdit: true },
   requireAuthenticated: jest.fn(),
   assertCanWriteLead: jest.fn(),
   assertCanWriteAccount: jest.fn(),
@@ -57,13 +58,13 @@ describe("updateLead", () => {
     assertLead.mockRejectedValue(new AuthorizationError());
     const res = await updateLead({ id: "victim", lastName: "X" } as any);
     expect(res).toEqual({ error: "Forbidden" });
-    expect(assertLead).toHaveBeenCalledWith(OWNER, "victim");
+    expect(assertLead).toHaveBeenCalledWith(OWNER, "victim", { partnerEdit: true });
     expect(lUpdate).not.toHaveBeenCalled();
   });
 
   it("updates for an owner", async () => {
     await updateLead({ id: "l-1", lastName: "X" } as any);
-    expect(assertLead).toHaveBeenCalledWith(OWNER, "l-1");
+    expect(assertLead).toHaveBeenCalledWith(OWNER, "l-1", { partnerEdit: true });
     expect(lUpdate).toHaveBeenCalled();
   });
 });
@@ -88,7 +89,7 @@ describe("createLead", () => {
     assertAccount.mockRejectedValue(new AuthorizationError());
     const res = await createLead({ last_name: "X", accountIDs: "foreign-acc" } as any);
     expect(res).toEqual({ error: "Forbidden" });
-    expect(assertAccount).toHaveBeenCalledWith(OWNER, "foreign-acc");
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "foreign-acc", { partnerEdit: true });
     expect(lCreate).not.toHaveBeenCalled();
   });
 

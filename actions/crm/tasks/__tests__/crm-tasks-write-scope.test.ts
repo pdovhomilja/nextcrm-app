@@ -2,6 +2,7 @@
 // (GHSA-qwhm-9fcm-p878). crm_Accounts_Tasks ownership = creator or assignee.
 
 jest.mock("@/lib/authz", () => ({
+  PARTNER_EDIT: { partnerEdit: true },
   requireAuthenticated: jest.fn(),
   assertCanWriteCrmTask: jest.fn(),
   AuthenticationError: class AuthenticationError extends Error {},
@@ -62,13 +63,13 @@ describe("addComment", () => {
     assertTask.mockRejectedValue(new AuthorizationError());
     const res = await addComment({ taskId: "victim", comment: "x" });
     expect(res).toEqual({ error: "Forbidden" });
-    expect(assertTask).toHaveBeenCalledWith(OWNER, "victim");
+    expect(assertTask).toHaveBeenCalledWith(OWNER, "victim", { partnerEdit: true });
     expect(commentCreate).not.toHaveBeenCalled();
   });
 
   it("creates a comment for an owner", async () => {
     await addComment({ taskId: "t-1", comment: "x" });
-    expect(assertTask).toHaveBeenCalledWith(OWNER, "t-1");
+    expect(assertTask).toHaveBeenCalledWith(OWNER, "t-1", { partnerEdit: true });
     expect(commentCreate).toHaveBeenCalled();
   });
 });
