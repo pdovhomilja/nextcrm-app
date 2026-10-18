@@ -51,6 +51,9 @@ import { getAccountsByContactId } from "@/actions/crm/get-accounts-by-contactId"
 import { getAccountsByOpportunityId } from "@/actions/crm/get-accounts-by-opportunityId";
 import { getUserLeads } from "@/actions/crm/get-user-leads";
 import { getInvoicesByAccountId } from "@/actions/invoices/get-invoices-by-accountId";
+import { searchUsers } from "@/actions/user/search-users";
+import { getUsers, getActiveUsers } from "@/actions/get-users";
+import { unifiedSearch } from "@/actions/fulltext/unified-search";
 import { GET as getInvoicePdf } from "@/app/api/invoices/[invoiceId]/pdf/route";
 
 const tag = randomUUID().slice(0, 8);
@@ -283,5 +286,42 @@ describe("invoices", () => {
     signInAs(U.colleague);
     expect(nameOf(await getInvoicesByAccountId(ACC.A))).toEqual([]);
     expect(await pdf(ids.invoice.A)).toBe(404);
+  });
+});
+
+describe("user directory and pickers", () => {
+  it("partner A finds only himself", async () => {
+    signInAs(U.A);
+    expect((await searchUsers({ search: tag })).users.map((u) => u.name)).toEqual([`A-${tag}`]);
+    expect((await getActiveUsers()).map((u) => u.id)).toEqual([U.A]);
+    expect(await getUsers()).toEqual([]);
+  });
+
+  it("control: a user still sees his colleagues", async () => {
+    signInAs(U.colleague);
+    expect((await searchUsers({ search: tag })).users.map((u) => u.name).sort())
+      .toEqual([`A-${tag}`, `B-${tag}`, `col-${tag}`, `rep-${tag}`]);
+  });
+});
+
+describe("unified search", () => {
+  const titles = (rows: { title: string }[]) => rows.map((r) => r.title.replace(`-${tag}`, "")).sort();
+
+  it("partner A: his accounts and documents, no projects, tasks or users", async () => {
+    signInAs(U.A);
+    const r = await unifiedSearch(tag);
+    if ("error" in r) throw new Error(r.error);
+    expect({
+      accounts: titles(r.accounts), documents: titles(r.documents),
+      projects: r.projects.length, tasks: r.tasks.length, users: r.users.length,
+    }).toEqual({ accounts: ["A", "aOwn"], documents: ["A", "aOwn", "linkedA"], projects: 0, tasks: 0, users: 0 });
+  });
+
+  it("control: a user finds the public board and public document", async () => {
+    signInAs(U.colleague);
+    const r = await unifiedSearch(tag);
+    if ("error" in r) throw new Error(r.error);
+    expect({ projects: titles(r.projects), documents: titles(r.documents).includes("public") })
+      .toEqual({ projects: ["board"], documents: true });
   });
 });
