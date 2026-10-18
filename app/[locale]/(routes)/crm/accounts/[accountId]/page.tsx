@@ -2,6 +2,8 @@ import Container from "@/app/[locale]/(routes)/components/ui/Container";
 import React from "react";
 import { BasicView } from "./components/BasicView";
 import CaseStudyCard from "./components/CaseStudyCard";
+import AccountPartnerCard from "./components/AccountPartnerCard";
+import { getPartnerUsers } from "@/actions/crm/accounts/get-partner-users";
 import { getSession } from "@/lib/auth-server";
 import { requireAuthenticated } from "@/lib/authz";
 import { getAccountTabs, getAccountPanels } from "@/lib/plugins/slots";
@@ -101,6 +103,8 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
     await getAccountProducts(accountId)
   );
   const allProducts = await getProductsFull();
+  const canSetPartner = actorUser.role === "admin" || actorUser.role === "manager";
+  const partners = canSetPartner ? await getPartnerUsers() : [];
   const activeProducts = allProducts
     .filter((p) => p.status === "ACTIVE")
     .map((p) => ({ id: p.id, name: p.name, currency: p.currency }));
@@ -136,6 +140,13 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
                 sessionUserRole === "manager" || sessionUserRole === "admin"
               }
             />
+            {canSetPartner && (
+              <AccountPartnerCard
+                accountId={account.id}
+                partnerUserId={account.partnerUserId}
+                partners={partners}
+              />
+            )}
             <ActivitiesSection accountId={account.id} />
             <FindSimilarButton entityType="account" recordId={accountId} />
             <AccountsTasksView data={tasks} account={account} />

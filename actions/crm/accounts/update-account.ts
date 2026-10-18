@@ -64,6 +64,8 @@ export const updateAccount = async (data: {
         updatedBy: user.id,
         ...rest,
         ...(rest.pricelist_id === "" ? { pricelist_id: null } : {}),
+        // The partner is set only through setAccountPartner (admin/manager).
+        partnerUserId: undefined,
       },
     });
     const changes = before ? diffObjects(

@@ -50,6 +50,24 @@ describe("setUserRole", () => {
     expect(callArgs.data).not.toHaveProperty("is_admin");
   });
 
+  it("admin can make a user a partner", async () => {
+    gs.mockResolvedValue({ user: { id: "a" } } as any);
+    fu.mockResolvedValue({ id: "a", role: "admin" } as any);
+    upd.mockResolvedValue({ id: "target", role: "partner" } as any);
+
+    const res = await setUserRole("target", "partner");
+    expect(res).toEqual({ data: expect.objectContaining({ role: "partner" }) });
+    expect(upd.mock.calls[0]![0]!.data).toEqual({ role: "partner" });
+  });
+
+  it("rejects a role that does not exist", async () => {
+    gs.mockResolvedValue({ user: { id: "a" } } as any);
+    fu.mockResolvedValue({ id: "a", role: "admin" } as any);
+    const res = await setUserRole("target", "owner" as any);
+    expect(res).toEqual({ error: "Invalid role" });
+    expect(upd).not.toHaveBeenCalled();
+  });
+
   it("blocks self-demotion from admin", async () => {
     gs.mockResolvedValue({ user: { id: "a" } } as any);
     fu.mockResolvedValue({ id: "a", role: "admin" } as any);
