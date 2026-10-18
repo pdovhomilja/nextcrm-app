@@ -19,7 +19,7 @@ export async function searchAccounts({
   take?: number;
 } = {}) {
   try {
-    const user = await requireAuthenticated();
+    const user = await requireAuthenticated({ partner: true });
 
     const safeTake = Math.min(PAGE_SIZE_MAX, Math.max(1, take));
     const safeSkip = Math.max(0, skip);

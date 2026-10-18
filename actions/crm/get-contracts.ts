@@ -14,7 +14,7 @@ import { serializeDecimalsList } from "@/lib/serialize-decimals";
 export const getContractsWithIncludes = cache(async () => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return [];
     throw e;
@@ -44,7 +44,7 @@ export const getContractsWithIncludes = cache(async () => {
 export const getContractsByAccountId = async (accountId: string) => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return [];
     throw e;

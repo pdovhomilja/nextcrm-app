@@ -9,7 +9,7 @@ import {
 export const getStorageSize = async () => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return 0;
     throw e;

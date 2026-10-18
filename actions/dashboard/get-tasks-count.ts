@@ -5,7 +5,7 @@ import { getReportScope } from "@/lib/authz/scopes/report-scope";
 
 export const getTasksCount = async () => {
   try {
-    const user = await requireAuthenticated();
+    const user = await requireAuthenticated({ partner: true });
     if (user.role === "admin" || user.role === "manager") {
       return await prismadb.tasks.count();
     }
@@ -18,7 +18,7 @@ export const getTasksCount = async () => {
 };
 
 export const getUsersTasksCount = async (userId: string) => {
-  const user = await requireAuthenticated();
+  const user = await requireAuthenticated({ partner: true });
   const data = await prismadb.tasks.count({
     where: {
       AND: [{ user: userId }, getReportScope(user).task],

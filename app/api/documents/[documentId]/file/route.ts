@@ -18,7 +18,7 @@ export async function GET(
   const { documentId } = await params;
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return unauthorizedResponse();
     throw e;

@@ -11,7 +11,7 @@ import {
 export const getExpectedRevenue = async (displayCurrency: string) => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return 0;
     throw e;

@@ -49,7 +49,7 @@ export const createContact = async (data: {
 
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;

@@ -22,6 +22,7 @@ import getDocumentsMenuItem from "./menu-items/Documents";
 import getInvoicesMenuItem from "./menu-items/Invoices";
 import getAdministrationMenuItem from "./menu-items/Administration";
 import getCampaignsMenuItem from "./menu-items/Campaigns";
+import { partnerNavItems } from "@/lib/partner-routes";
 
 /**
  * AppSidebar Component - Task Groups 1.2, 2.2-2.7, 3.1, 5.3, 5.4
@@ -167,7 +168,10 @@ export function AppSidebar({
       {/* Main Content - Navigation */}
       <SidebarContent>
         {/* NavMain component with all enabled module navigation items */}
-        <NavMain items={navItems} dict={dict} />
+        <NavMain
+          items={session?.user?.role === "partner" ? partnerNavItems(navItems) : navItems}
+          dict={dict}
+        />
       </SidebarContent>
 
       {/* Footer with NavUser and Build Version */}

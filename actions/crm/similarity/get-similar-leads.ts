@@ -15,7 +15,7 @@ export async function getSimilarLeads(
 ): Promise<SimilarityResult> {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError)
       return { status: "ok", records: [] };

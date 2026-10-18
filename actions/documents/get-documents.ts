@@ -9,7 +9,7 @@ import { prismadb } from "@/lib/prisma";
 export const getDocuments = async () => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return [];
     throw e;

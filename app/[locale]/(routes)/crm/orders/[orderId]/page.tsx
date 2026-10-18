@@ -15,7 +15,7 @@ import { StatusBadge } from "../components/StatusBadge";
 
 export default async function OrderPage(props: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await props.params;
-  const user = await requireAuthenticated();
+  const user = await requireAuthenticated({ partner: true });
   const order = await getOrder(orderId);
   if (!order) notFound();
   const t = await getTranslations("OrdersPage");

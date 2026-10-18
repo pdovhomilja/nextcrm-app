@@ -34,7 +34,7 @@ export const getActivitiesByEntity = async (
 ): Promise<{ data: ActivityWithLinks[]; nextCursor: ActivityCursor | null }> => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return { data: [], nextCursor: null };
     throw e;

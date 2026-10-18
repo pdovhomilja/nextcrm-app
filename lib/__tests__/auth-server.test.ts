@@ -29,11 +29,26 @@ describe("getSession", () => {
     await expect(getSession()).resolves.toBeNull();
   });
 
-  // Partners are kept out of the whole app until the partner app exists
-  // (spec ticket 4): like PENDING users, they count as signed out.
-  it("returns null for an ACTIVE partner", async () => {
-    apiGetSession.mockResolvedValue({ session: { id: "s1" }, user: { id: "p1", role: "partner", userStatus: "ACTIVE" } });
+  // Partners are refused by default (deny by default, partner-role spec
+  // ticket 4); only call sites a partner needs opt in with { partner: true }.
+  const partner = { session: { id: "s1" }, user: { id: "p1", role: "partner", userStatus: "ACTIVE" } };
+  it("returns null for an ACTIVE partner unless the caller opts in", async () => {
+    apiGetSession.mockResolvedValue(partner);
     await expect(getSession()).resolves.toBeNull();
+    await expect(getSession({ partner: true })).resolves.toBe(partner);
+  });
+
+  it("requireAuthenticated refuses a partner unless the caller opts in", async () => {
+    apiGetSession.mockResolvedValue(partner);
+    findUnique.mockResolvedValue({ id: "p1", role: "partner" });
+    await expect(requireAuthenticated()).rejects.toBeInstanceOf(AuthenticationError);
+    await expect(requireAuthenticated({ partner: true })).resolves.toEqual({ id: "p1", role: "partner" });
+  });
+
+  it("requireAuthenticated refuses a user whose DB role is partner (stale session role)", async () => {
+    apiGetSession.mockResolvedValue({ session: { id: "s1" }, user: { id: "p1", role: "user", userStatus: "ACTIVE" } });
+    findUnique.mockResolvedValue({ id: "p1", role: "partner" });
+    await expect(requireAuthenticated()).rejects.toBeInstanceOf(AuthenticationError);
   });
 
   it("returns null without a session", async () => {

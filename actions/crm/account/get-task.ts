@@ -9,7 +9,7 @@ import { crmTaskReadScopeWhere } from "@/lib/authz/scopes/crm";
 export const getCrMTask = async (taskId: string) => {
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return null;
     throw e;

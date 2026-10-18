@@ -57,9 +57,9 @@ interface AccountDetailPageProps {
 const AccountDetailPage = async (props: AccountDetailPageProps) => {
   const params = await props.params;
   const { accountId } = params;
-  const session = await getSession();
+  const session = await getSession({ partner: true });
   const sessionUserRole = (session?.user as any)?.role ?? "user";
-  const actorUser = await requireAuthenticated();
+  const actorUser = await requireAuthenticated({ partner: true });
   const actor = { type: "user" as const, userId: actorUser.id, role: actorUser.role };
   const [pluginTabs, pluginPanels] = await Promise.all([getAccountTabs(actorUser.role), getAccountPanels(actorUser.role)]);
   const account: crm_Accounts | null = await getAccount(accountId);

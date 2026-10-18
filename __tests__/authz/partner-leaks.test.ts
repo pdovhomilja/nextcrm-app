@@ -310,7 +310,7 @@ describe("user directory and pickers", () => {
     signInAs(U.A);
     expect((await searchUsers({ search: tag })).users.map((u) => u.name)).toEqual([`A-${tag}`]);
     expect((await getActiveUsers()).map((u) => u.id)).toEqual([U.A]);
-    expect(await getUsers()).toEqual([]);
+    await expect(getUsers()).rejects.toThrow(); // admin list: no partner opt-in
   });
 
   it("control: a user still sees his colleagues", async () => {
@@ -323,14 +323,9 @@ describe("user directory and pickers", () => {
 describe("unified search", () => {
   const titles = (rows: { title: string }[]) => rows.map((r) => r.title.replace(`-${tag}`, "")).sort();
 
-  it("partner A: his accounts and documents, no projects, tasks or users", async () => {
+  it("partner A: refused (no partner opt-in; /fulltext-search is off his routes)", async () => {
     signInAs(U.A);
-    const r = await unifiedSearch(tag);
-    if ("error" in r) throw new Error(r.error);
-    expect({
-      accounts: titles(r.accounts), documents: titles(r.documents),
-      projects: r.projects.length, tasks: r.tasks.length, users: r.users.length,
-    }).toEqual({ accounts: ["A", "aOwn"], documents: ["A", "linkedA"], projects: 0, tasks: 0, users: 0 });
+    expect(await unifiedSearch(tag)).toEqual({ error: "Unauthorized" });
   });
 
   it("control: a user finds the public board and public document", async () => {
@@ -393,9 +388,16 @@ describe("enrichment job pages", () => {
     }
   };
 
-  it("partner A: contact jobs on his contacts only, no target jobs", async () => {
+  it("partner A: refused, the pages load no jobs (no partner opt-in; off his routes)", async () => {
     signInAs(U.A);
-    expect(await loaded(prismadb.crm_Contact_Enrichment, ContactEnrichmentPage)).toEqual(["contactEnrichment.A"]);
-    expect(await loaded(prismadb.crm_Target_Enrichment, TargetEnrichmentPage)).toEqual([]);
+    for (const [delegate, page] of [
+      [prismadb.crm_Contact_Enrichment, ContactEnrichmentPage],
+      [prismadb.crm_Target_Enrichment, TargetEnrichmentPage],
+    ] as const) {
+      const spy = jest.spyOn(delegate, "findMany");
+      await (page as () => Promise<unknown>)().catch(() => undefined);
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    }
   });
 });

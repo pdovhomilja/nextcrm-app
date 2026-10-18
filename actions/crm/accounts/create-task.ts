@@ -23,7 +23,7 @@ export const createTask = async (data: {
 }) => {
   // getSession stays for the notification-email fields (name, userLanguage)
   // that the AuthzUser does not carry.
-  const session = await getSession();
+  const session = await getSession({ partner: true });
   if (!session) return { error: "Unauthorized" };
 
   const { title, priority, content, account, dueDateAt } = data;
@@ -36,7 +36,7 @@ export const createTask = async (data: {
   // Parent-write: creating a task under an account requires write on that account.
   let authUser;
   try {
-    authUser = await requireAuthenticated();
+    authUser = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;

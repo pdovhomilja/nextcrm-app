@@ -36,7 +36,7 @@ export const createAccount = async (data: {
   // sufficient — no object-level write assert needed.
   let user;
   try {
-    user = await requireAuthenticated();
+    user = await requireAuthenticated({ partner: true });
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;
