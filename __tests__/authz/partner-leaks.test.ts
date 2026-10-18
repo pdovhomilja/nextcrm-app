@@ -58,6 +58,8 @@ import { crmContractTools } from "@/lib/mcp/tools/crm-contracts";
 import { crmDocumentTools } from "@/lib/mcp/tools/crm-documents";
 import { crmActivityTools } from "@/lib/mcp/tools/crm-activities";
 import type { AuthzUser } from "@/lib/authz";
+import ContactEnrichmentPage from "@/app/[locale]/(routes)/crm/contacts/enrichment/page";
+import TargetEnrichmentPage from "@/app/[locale]/(routes)/campaigns/targets/enrichment/page";
 import { GET as getInvoicePdf } from "@/app/api/invoices/[invoiceId]/pdf/route";
 
 const tag = randomUUID().slice(0, 8);
@@ -69,7 +71,7 @@ type AccKey = keyof typeof ACC;
 const ACC_KEYS = Object.keys(ACC) as AccKey[];
 
 const ids: Record<string, Record<string, string>> = {
-  contact: {}, lead: {}, opportunity: {}, contract: {}, invoice: {},
+  contact: {}, lead: {}, contactEnrichment: {}, targetEnrichment: {}, opportunity: {}, contract: {}, invoice: {},
   document: {}, task: {}, activity: {}, board: {}, projectTask: {}, target: {},
 };
 let currency = "";
@@ -161,6 +163,11 @@ beforeAll(async () => {
   await prismadb.documentsToCrmAccountsTasks.createMany({
     data: [ids.document.A, ids.document.public].map((d) => ({ document_id: d, crm_accounts_task_id: ids.task.A })),
   });
+  for (const k of ["A", "internal"]) {
+    ids.contactEnrichment[k] = (await prismadb.crm_Contact_Enrichment.create({
+      data: { contactId: ids.contact[k], triggeredBy: U.rep, fields: [] },
+    })).id;
+  }
   ids.board.A = (await prismadb.boards.create({
     data: { v: 0, title: `board-${tag}`, description: "x", user: U.A, visibility: "public" },
   })).id;
@@ -170,10 +177,15 @@ beforeAll(async () => {
   ids.target.A = (await prismadb.crm_Targets.create({
     data: { last_name: `target-${tag}`, created_by: U.A },
   })).id;
+  ids.targetEnrichment.A = (await prismadb.crm_Target_Enrichment.create({
+    data: { targetId: ids.target.A, triggeredBy: U.A, fields: [] },
+  })).id;
 });
 
 afterAll(async () => {
   const all = (e: string) => Object.values(ids[e]);
+  await prismadb.crm_Contact_Enrichment.deleteMany({ where: { id: { in: all("contactEnrichment") } } });
+  await prismadb.crm_Target_Enrichment.deleteMany({ where: { id: { in: all("targetEnrichment") } } });
   await prismadb.crm_Targets.deleteMany({ where: { id: { in: all("target") } } });
   await prismadb.tasks.deleteMany({ where: { id: { in: all("projectTask") } } });
   await prismadb.boards.deleteMany({ where: { id: { in: all("board") } } });
@@ -364,5 +376,26 @@ describe("MCP read tools (same scopes as the UI)", () => {
   it("activities by entity: everything on a readable entity, refused otherwise", async () => {
     expect(mine(await listed("crm_list_activities", { entityType: "account", entityId: ACC.A }, partnerA))).toEqual(["activity.A"]);
     expect(await found("crm_list_activities", { entityType: "account", entityId: ACC.internal }, partnerA)).toBe(false);
+  });
+});
+
+describe("enrichment job pages", () => {
+  // Jest compiles the pages with the classic JSX runtime.
+  beforeAll(() => { (global as unknown as { React: unknown }).React = jest.requireActual("react"); });
+  // The rows each page loaded (the page renders them as a table).
+  const loaded = async (delegate: { findMany: (...a: never[]) => unknown }, page: () => Promise<unknown>) => {
+    const spy = jest.spyOn(delegate, "findMany");
+    try {
+      await page();
+      return nameOf((await spy.mock.results[0].value) as { id: string }[]).filter((n) => !n.startsWith("foreign:"));
+    } finally {
+      spy.mockRestore();
+    }
+  };
+
+  it("partner A: contact jobs on his contacts only, no target jobs", async () => {
+    signInAs(U.A);
+    expect(await loaded(prismadb.crm_Contact_Enrichment, ContactEnrichmentPage)).toEqual(["contactEnrichment.A"]);
+    expect(await loaded(prismadb.crm_Target_Enrichment, TargetEnrichmentPage)).toEqual([]);
   });
 });
