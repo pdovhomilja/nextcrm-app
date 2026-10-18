@@ -465,6 +465,8 @@ docker compose up -d --build
 
 The entrypoint runs `prisma migrate deploy` on every start, so new schema changes are applied automatically. The seed only runs on first install (when no users exist), so your data is safe across upgrades.
 
+Upgrading an instance installed before document files became private? Run the one-time bucket policy step in [docs/deployment/private-document-files.md](docs/deployment/private-document-files.md).
+
 ### Coolify, Portainer, etc.
 
 This setup works with self-hosting platforms:

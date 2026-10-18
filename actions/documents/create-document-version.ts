@@ -8,10 +8,10 @@ import {
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
+import { newDocumentFile } from "@/lib/documents/new-document-file";
 
 interface CreateVersionInput {
   parentDocumentId: string;
-  url: string;
   key: string;
   size: number;
   mimeType: string;
@@ -34,6 +34,8 @@ export async function createDocumentVersion(input: CreateVersionInput) {
     throw e;
   }
 
+  const file = await newDocumentFile(input.key);
+
   const parent = await prismadb.documents.findUnique({
     where: { id: input.parentDocumentId },
     select: { id: true, document_name: true, version: true, accounts: { select: { account_id: true } } },
@@ -48,8 +50,7 @@ export async function createDocumentVersion(input: CreateVersionInput) {
         v: 0,
         document_name: parent.document_name,
         description: `Version ${newVersion}`,
-        document_file_url: input.url,
-        key: input.key,
+        ...file,
         size: input.size,
         document_file_mimeType: input.mimeType,
         content_hash: input.contentHash ?? null,
@@ -63,8 +64,7 @@ export async function createDocumentVersion(input: CreateVersionInput) {
     prismadb.documents.update({
       where: { id: input.parentDocumentId },
       data: {
-        document_file_url: input.url,
-        key: input.key,
+        ...file,
         size: input.size,
         version: newVersion,
       },
