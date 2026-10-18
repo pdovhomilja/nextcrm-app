@@ -50,6 +50,16 @@ const ENTITY_WRITE_ASSERT: Record<string, (user: AuthzUser, id: string) => Promi
   task: assertCanWriteTask,
 };
 
+async function assertCanWriteLinkTarget(user: AuthzUser, entityType: string, entityId: string) {
+  if (!Object.hasOwn(ENTITY_WRITE_ASSERT, entityType)) validationError(`Invalid entity type: ${entityType}`);
+  try {
+    await ENTITY_WRITE_ASSERT[entityType](user, entityId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) forbidden();
+    throw e;
+  }
+}
+
 export const crmDocumentTools = [
   {
     name: "crm_list_documents",
@@ -224,12 +234,7 @@ export const crmDocumentTools = [
       const table = ENTITY_LINK_MAP[args.entityType];
       const fk = ENTITY_FK_MAP[args.entityType];
       if (!table || !fk) validationError(`Invalid entity type: ${args.entityType}`);
-      try {
-        await ENTITY_WRITE_ASSERT[args.entityType](user, args.entityId);
-      } catch (e) {
-        if (e instanceof AuthorizationError) forbidden();
-        throw e;
-      }
+      await assertCanWriteLinkTarget(user, args.entityType, args.entityId);
 
       await (prismadb as any)[table].create({
         data: { document_id: args.document_id, [fk]: args.entityId },
@@ -252,7 +257,8 @@ export const crmDocumentTools = [
     }),
     async handler(
       args: { document_id: string; entityType: string; entityId: string },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
       const doc = await prismadb.documents.findFirst({
         where: { id: args.document_id, created_by_user: userId },
@@ -262,6 +268,7 @@ export const crmDocumentTools = [
       const table = ENTITY_LINK_MAP[args.entityType];
       const fk = ENTITY_FK_MAP[args.entityType];
       if (!table || !fk) validationError(`Invalid entity type: ${args.entityType}`);
+      await assertCanWriteLinkTarget(user, args.entityType, args.entityId);
 
       await (prismadb as any)[table].delete({
         where: {

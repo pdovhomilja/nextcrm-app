@@ -28,10 +28,14 @@ const rep: AuthzUser = { id: U.rep, role: "user" };
 const note = (links: Array<{ entityType: string; entityId: string }>) =>
   createActivity({ type: "note", title: `note-${tag}`, date: new Date(), status: "completed", links });
 
-const linkDocument = (entityType: string, entityId: string) => {
-  const tool = crmDocumentTools.find((t) => t.name === "crm_link_document")!;
+const callDocumentTool = (name: string, entityType: string, entityId: string) => {
+  const tool = crmDocumentTools.find((t) => t.name === name)!;
   return (tool.handler as any)({ document_id: DOC, entityType, entityId }, rep.id, rep);
 };
+const linkDocument = (entityType: string, entityId: string) =>
+  callDocumentTool("crm_link_document", entityType, entityId);
+const unlinkDocument = (entityType: string, entityId: string) =>
+  callDocumentTool("crm_unlink_document", entityType, entityId);
 
 beforeAll(async () => {
   await prismadb.users.createMany({
@@ -116,5 +120,31 @@ describe("MCP crm_link_document", () => {
     await expect(linkDocument("account", ACC.rep)).resolves.toEqual({
       data: { document_id: DOC, entityType: "account", entityId: ACC.rep },
     });
+  });
+});
+
+describe("MCP crm_unlink_document", () => {
+  beforeAll(async () => {
+    await prismadb.documentsToAccounts.create({ data: { document_id: DOC, account_id: ACC.other } });
+    await prismadb.documentsToLeads.create({ data: { document_id: DOC, lead_id: LEAD.rep } });
+  });
+
+  it("refuses removing the user's document from an account he cannot write, and keeps the link", async () => {
+    await expect(unlinkDocument("account", ACC.other)).rejects.toThrow("FORBIDDEN");
+    expect(
+      await prismadb.documentsToAccounts.count({ where: { document_id: DOC, account_id: ACC.other } }),
+    ).toBe(1);
+  });
+
+  it("still unlinks the user's document from his own lead", async () => {
+    await expect(unlinkDocument("lead", LEAD.rep)).resolves.toEqual({
+      data: { document_id: DOC, entityType: "lead", entityId: LEAD.rep, unlinked: true },
+    });
+  });
+});
+
+describe("MCP link/unlink entity type outside the map", () => {
+  it.each(["crm_link_document", "crm_unlink_document"])("%s refuses entityType \"constructor\"", async (name) => {
+    await expect(callDocumentTool(name, "constructor", ACC.rep)).rejects.toThrow("VALIDATION_ERROR");
   });
 });
