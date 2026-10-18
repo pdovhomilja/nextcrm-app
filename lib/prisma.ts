@@ -1,17 +1,18 @@
 import { Prisma } from "@prisma/client";
 import { prismaBase } from "@/lib/prisma-base";
 import { withPluginRules } from "@/lib/plugins/prisma-extension";
-import { documentFileRoute } from "@/lib/documents/file-key";
+import { withDocumentFileRoutes } from "@/lib/documents/file-key";
 
-// Document files are private: every read of document_file_url through
-// prismadb (lists, includes, MCP) returns the route that checks access, never
-// the stored MinIO URL. Code that needs the stored URL reads via prismaBase.
+// Document files are private: every prismadb result (lists, nested includes,
+// MCP) gets /api/documents/<id>/file instead of the stored MinIO URL. A query
+// extension, not a result extension: result extensions add a symbol to every
+// row, which React refuses to pass to client components. Code that needs the
+// stored URL reads via prismaBase.
 const privateDocumentFiles = Prisma.defineExtension({
-  result: {
-    documents: {
-      document_file_url: {
-        needs: { id: true },
-        compute: (doc) => documentFileRoute(doc.id),
+  query: {
+    $allModels: {
+      async $allOperations({ args, query }) {
+        return withDocumentFileRoutes(await query(args));
       },
     },
   },

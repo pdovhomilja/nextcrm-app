@@ -56,3 +56,24 @@ export function isUploadThingUrl(url: string): boolean {
     return false;
   }
 }
+
+/**
+ * Walk a query result and replace every document's stored URL with its file
+ * route (in place). Only plain objects and arrays are walked, so Dates and
+ * Decimals stay as they are. A row selected without its id gets "".
+ */
+export function withDocumentFileRoutes<T>(value: T): T {
+  if (Array.isArray(value)) {
+    value.forEach(withDocumentFileRoutes);
+  } else if (value !== null && typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype) {
+    const row = value as Record<string, unknown>;
+    for (const k in row) {
+      if (k === "document_file_url") {
+        row[k] = typeof row.id === "string" ? documentFileRoute(row.id) : "";
+      } else {
+        withDocumentFileRoutes(row[k]);
+      }
+    }
+  }
+  return value;
+}
