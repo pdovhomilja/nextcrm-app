@@ -1,7 +1,22 @@
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  documentReadScopeWhere,
+  AuthenticationError,
+} from "@/lib/authz";
 
+// Size of the documents the caller can read (no org-wide total for user/partner).
 export const getStorageSize = async () => {
-  const data = await prismadb.documents.findMany({});
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return 0;
+    throw e;
+  }
+  const data = await prismadb.documents.findMany({
+    where: documentReadScopeWhere(user),
+  });
 
   //TODO: fix this any
   const storageSize = data.reduce((acc: number, doc: any) => {

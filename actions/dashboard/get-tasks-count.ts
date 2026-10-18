@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
 
 export const getTasksCount = async () => {
   try {
@@ -8,7 +9,8 @@ export const getTasksCount = async () => {
     if (user.role === "admin" || user.role === "manager") {
       return await prismadb.tasks.count();
     }
-    return await prismadb.tasks.count({ where: { user: user.id } });
+    // user: his own tasks; partner (no projects) and other roles: none.
+    return await prismadb.tasks.count({ where: getReportScope(user).task });
   } catch (e) {
     if (e instanceof AuthenticationError) return 0;
     throw e;
@@ -16,10 +18,10 @@ export const getTasksCount = async () => {
 };
 
 export const getUsersTasksCount = async (userId: string) => {
-  await requireAuthenticated();
+  const user = await requireAuthenticated();
   const data = await prismadb.tasks.count({
     where: {
-      user: userId,
+      AND: [{ user: userId }, getReportScope(user).task],
     },
   });
   return data;

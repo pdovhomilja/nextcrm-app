@@ -1,0 +1,204 @@
+/**
+ * Partner leaks closed (partner-role spec, ticket 3). DB-backed: CI runs it
+ * in the integration job.
+ *
+ * The real actions, route and MCP tools are called as partner A (session
+ * mocked, role read from the DB as in production). Fixture: partner A,
+ * partner B, an internal rep, a colleague (`user`) who only watches A's
+ * account. Accounts: A's, B's, internal-only, A's own company account. Each
+ * gets a contact, lead, opportunity, contract, invoice, document, CRM task
+ * and activity owned by the rep. The internal account carries traps: rows A
+ * created / is assigned to, a public document; plus a board, project task and
+ * target owned by A.
+ *
+ * Expected values are literal fixture names and counts.
+ */
+jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
+jest.mock("@/inngest/lib/embedding-utils", () => ({
+  generateEmbedding: jest.fn(async () => {
+    throw new Error("no embeddings in tests");
+  }),
+  toVectorLiteral: jest.fn(),
+}));
+jest.mock("@/lib/invoices/storage", () => ({
+  getInvoicePdfPresignedUrl: jest.fn(async () => "https://files.test/invoice.pdf"),
+}));
+
+import { randomUUID } from "crypto";
+import { prismadb } from "@/lib/prisma";
+import { getSession } from "@/lib/auth-server";
+import { getAccountsCount } from "@/actions/dashboard/get-accounts-count";
+import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
+import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
+import { getCampaignsCount } from "@/actions/dashboard/get-campaigns-count";
+import { getContactCount } from "@/actions/dashboard/get-contacts-count";
+import { getContractsCount } from "@/actions/dashboard/get-contracts-count";
+import { getDocumentsCount } from "@/actions/dashboard/get-documents-count";
+import { getInvoicesCount } from "@/actions/dashboard/get-invoices-count";
+import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
+import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
+import { getTargetsCount } from "@/actions/dashboard/get-targets-count";
+import { getTasksCount, getUsersTasksCount } from "@/actions/dashboard/get-tasks-count";
+import { getStorageSize } from "@/actions/documents/get-storage-size";
+import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-revenue";
+
+const tag = randomUUID().slice(0, 8);
+const id = () => randomUUID();
+
+const U = { A: id(), B: id(), rep: id(), colleague: id() };
+const ACC = { A: id(), B: id(), internal: id(), aOwn: id() };
+type AccKey = keyof typeof ACC;
+const ACC_KEYS = Object.keys(ACC) as AccKey[];
+
+const ids: Record<string, Record<string, string>> = {
+  contact: {}, lead: {}, opportunity: {}, contract: {}, invoice: {},
+  document: {}, task: {}, activity: {}, board: {}, projectTask: {}, target: {},
+};
+let currency = "";
+
+const signInAs = (userId: string) =>
+  (getSession as jest.Mock).mockResolvedValue({ user: { id: userId } });
+
+beforeAll(async () => {
+  await prismadb.users.createMany({
+    data: [
+      { id: U.A, email: `a-${tag}@partner.test`, name: `A-${tag}`, role: "partner", userStatus: "ACTIVE" },
+      { id: U.B, email: `b-${tag}@partner.test`, name: `B-${tag}`, role: "partner", userStatus: "ACTIVE" },
+      { id: U.rep, email: `rep-${tag}@partner.test`, name: `rep-${tag}`, role: "user", userStatus: "ACTIVE" },
+      { id: U.colleague, email: `col-${tag}@partner.test`, name: `col-${tag}`, role: "user", userStatus: "ACTIVE" },
+    ],
+  });
+  const partnerOf: Partial<Record<AccKey, string>> = { A: U.A, B: U.B };
+  for (const k of ACC_KEYS) {
+    await prismadb.crm_Accounts.create({
+      data: {
+        id: ACC[k], v: 0, name: `${k}-${tag}`,
+        assigned_to: U.rep, createdBy: U.rep,
+        partnerUserId: partnerOf[k] ?? null,
+      },
+    });
+  }
+  await prismadb.users.update({ where: { id: U.A }, data: { partnerAccountId: ACC.aOwn } });
+  await prismadb.accountWatchers.create({ data: { account_id: ACC.A, user_id: U.colleague } });
+  currency = (await prismadb.currency.findFirst({ select: { code: true } }))!.code;
+
+  const child = async (name: string, accountId: string, by = U.rep) => {
+    ids.contact[name] = (await prismadb.crm_Contacts.create({
+      data: { last_name: `${name}-${tag}`, accountsIDs: accountId, assigned_to: by, createdBy: by },
+    })).id;
+    ids.lead[name] = (await prismadb.crm_Leads.create({
+      data: { lastName: `${name}-${tag}`, accountsIDs: accountId, assigned_to: by, createdBy: by },
+    })).id;
+    ids.opportunity[name] = (await prismadb.crm_Opportunities.create({
+      data: {
+        name: `${name}-${tag}`, account: accountId, assigned_to: by, createdBy: by,
+        status: "ACTIVE", budget: 100, currency,
+      },
+    })).id;
+    ids.contract[name] = (await prismadb.crm_Contracts.create({
+      data: { v: 0, title: `${name}-${tag}`, value: 1, account: accountId, assigned_to: by, createdBy: by },
+    })).id;
+    ids.invoice[name] = (await prismadb.invoices.create({
+      data: { accountId, createdBy: by, currency, pdfStorageKey: `invoices/${name}-${tag}.pdf` },
+    })).id;
+    ids.document[name] = (await prismadb.documents.create({
+      data: {
+        document_name: `${name}-${tag}`, document_file_url: "x", document_file_mimeType: "application/pdf",
+        size: 1_000_000, created_by_user: by, assigned_user: by,
+        accounts: { create: { account_id: accountId } },
+      },
+    })).id;
+    ids.task[name] = (await prismadb.crm_Accounts_Tasks.create({
+      data: { v: 0, title: `${name}-${tag}`, priority: "low", account: accountId, createdBy: by, user: by },
+    })).id;
+    ids.activity[name] = (await prismadb.crm_Activities.create({
+      data: {
+        type: "note", title: `${name}-${tag}`, date: new Date(), createdBy: by,
+        links: { create: { entityType: "account", entityId: accountId } },
+      },
+    })).id;
+  };
+  for (const k of ACC_KEYS) await child(k, ACC[k]);
+
+  // Traps: rows A created / is assigned to on the internal account, a public
+  // document, and project-side records A owns.
+  await child("trapA", ACC.internal, U.A);
+  ids.document.public = (await prismadb.documents.create({
+    data: {
+      document_name: `public-${tag}`, document_file_url: "x", document_file_mimeType: "application/pdf",
+      size: 1_000_000, visibility: "public", created_by_user: U.rep,
+      accounts: { create: { account_id: ACC.internal } },
+    },
+  })).id;
+  // Linked to A's contact and opportunity only (no account link).
+  ids.document.linkedA = (await prismadb.documents.create({
+    data: {
+      document_name: `linkedA-${tag}`, document_file_url: "x", document_file_mimeType: "application/pdf",
+      created_by_user: U.rep,
+      contacts: { create: { contact_id: ids.contact.A } },
+      opportunities: { create: { opportunity_id: ids.opportunity.A } },
+    },
+  })).id;
+  ids.board.A = (await prismadb.boards.create({
+    data: { v: 0, title: `board-${tag}`, description: "x", user: U.A, visibility: "public" },
+  })).id;
+  ids.projectTask.A = (await prismadb.tasks.create({
+    data: { v: 0, position: 0, priority: "low", title: `ptask-${tag}`, user: U.A },
+  })).id;
+  ids.target.A = (await prismadb.crm_Targets.create({
+    data: { last_name: `target-${tag}`, created_by: U.A },
+  })).id;
+});
+
+afterAll(async () => {
+  const all = (e: string) => Object.values(ids[e]);
+  await prismadb.crm_Targets.deleteMany({ where: { id: { in: all("target") } } });
+  await prismadb.tasks.deleteMany({ where: { id: { in: all("projectTask") } } });
+  await prismadb.boards.deleteMany({ where: { id: { in: all("board") } } });
+  await prismadb.crm_ActivityLinks.deleteMany({ where: { activityId: { in: all("activity") } } });
+  await prismadb.crm_Activities.deleteMany({ where: { id: { in: all("activity") } } });
+  await prismadb.crm_Accounts_Tasks.deleteMany({ where: { id: { in: all("task") } } });
+  await prismadb.documents.deleteMany({ where: { id: { in: all("document") } } });
+  await prismadb.invoices.deleteMany({ where: { id: { in: all("invoice") } } });
+  await prismadb.crm_Contracts.deleteMany({ where: { id: { in: all("contract") } } });
+  await prismadb.crm_Opportunities.deleteMany({ where: { id: { in: all("opportunity") } } });
+  await prismadb.crm_Leads.deleteMany({ where: { id: { in: all("lead") } } });
+  await prismadb.crm_Contacts.deleteMany({ where: { id: { in: all("contact") } } });
+  await prismadb.accountWatchers.deleteMany({ where: { account_id: { in: Object.values(ACC) } } });
+  await prismadb.users.updateMany({ where: { id: { in: Object.values(U) } }, data: { partnerAccountId: null } });
+  await prismadb.crm_Accounts.deleteMany({ where: { id: { in: Object.values(ACC) } } });
+  await prismadb.users.deleteMany({ where: { id: { in: Object.values(U) } } });
+  await prismadb.$disconnect();
+});
+
+describe("dashboard as partner A", () => {
+  beforeEach(() => signInAs(U.A));
+
+  it("counters are his own counts: A's account and his own company account only", async () => {
+    expect({
+      accounts: await getAccountsCount(),
+      contacts: await getContactCount(),
+      leads: await getLeadsCount(),
+      opportunities: await getOpportunitiesCount(),
+      contracts: await getContractsCount(),
+      documents: await getDocumentsCount(),
+      invoices: await getInvoicesCount(),
+      storageMB: await getStorageSize(),
+      revenue: await getExpectedRevenue(currency),
+    }).toEqual({
+      accounts: 2, contacts: 2, leads: 2, opportunities: 2, contracts: 2,
+      documents: 3, invoices: 2, storageMB: 2, revenue: 200,
+    });
+  });
+
+  it("no projects, campaigns, targets; the user count is himself", async () => {
+    expect({
+      boards: await getBoardsCount(),
+      projectTasks: await getTasksCount(),
+      myProjectTasks: await getUsersTasksCount(U.A),
+      campaigns: await getCampaignsCount(),
+      targets: await getTargetsCount(),
+      users: await getActiveUsersCount(),
+    }).toEqual({ boards: 0, projectTasks: 0, myProjectTasks: 0, campaigns: 0, targets: 0, users: 1 });
+  });
+});
