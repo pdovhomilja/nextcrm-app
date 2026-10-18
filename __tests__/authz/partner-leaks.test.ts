@@ -41,6 +41,15 @@ import { getTargetsCount } from "@/actions/dashboard/get-targets-count";
 import { getTasksCount, getUsersTasksCount } from "@/actions/dashboard/get-tasks-count";
 import { getStorageSize } from "@/actions/documents/get-storage-size";
 import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-revenue";
+import { getAccountsTasks } from "@/actions/crm/account/get-tasks";
+import { getCrMTask } from "@/actions/crm/account/get-task";
+import { getUserCRMTasks } from "@/actions/crm/tasks/get-user-tasks";
+import { getDocumentsByAccountId } from "@/actions/documents/get-documents-by-accountId";
+import { getDocumentsByContactId } from "@/actions/documents/get-documents-by-contactId";
+import { getDocumentsByOpportunityId } from "@/actions/documents/get-documents-by-opportunityId";
+import { getAccountsByContactId } from "@/actions/crm/get-accounts-by-contactId";
+import { getAccountsByOpportunityId } from "@/actions/crm/get-accounts-by-opportunityId";
+import { getUserLeads } from "@/actions/crm/get-user-leads";
 
 const tag = randomUUID().slice(0, 8);
 const id = () => randomUUID();
@@ -139,6 +148,10 @@ beforeAll(async () => {
       opportunities: { create: { opportunity_id: ids.opportunity.A } },
     },
   })).id;
+  // A's task carries A's document and the internal public one.
+  await prismadb.documentsToCrmAccountsTasks.createMany({
+    data: [ids.document.A, ids.document.public].map((d) => ({ document_id: d, crm_accounts_task_id: ids.task.A })),
+  });
   ids.board.A = (await prismadb.boards.create({
     data: { v: 0, title: `board-${tag}`, description: "x", user: U.A, visibility: "public" },
   })).id;
@@ -200,5 +213,54 @@ describe("dashboard as partner A", () => {
       targets: await getTargetsCount(),
       users: await getActiveUsersCount(),
     }).toEqual({ boards: 0, projectTasks: 0, myProjectTasks: 0, campaigns: 0, targets: 0, users: 1 });
+  });
+});
+
+// id → fixture name, for any entity
+const nameOf = (rows: { id: string }[]) => {
+  const byId = new Map<string, string>();
+  for (const [entity, m] of Object.entries(ids)) for (const [n, i] of Object.entries(m)) byId.set(i, `${entity}.${n}`);
+  for (const [n, i] of Object.entries(ACC)) byId.set(i, `account.${n}`);
+  return rows.map((r) => byId.get(r.id) ?? `foreign:${r.id}`).sort();
+};
+
+describe("account-child getters as partner A", () => {
+  beforeEach(() => signInAs(U.A));
+
+  it("CRM tasks: only on his accounts, not the trap assigned to him on the internal account", async () => {
+    expect(nameOf(await getAccountsTasks(ACC.A))).toEqual(["task.A"]);
+    expect(nameOf(await getAccountsTasks(ACC.internal))).toEqual([]);
+    const task = await getCrMTask(ids.task.A);
+    expect(task?.id).toBe(ids.task.A);
+    expect(nameOf(task!.documents.map((d) => d.document))).toEqual(["document.A"]);
+    expect(await getCrMTask(ids.task.trapA)).toBeNull();
+    expect(nameOf(await getUserCRMTasks(U.A))).toEqual([]);
+  });
+
+  it("documents by account / contact / opportunity: his accounts only, no public document", async () => {
+    expect(nameOf(await getDocumentsByAccountId(ACC.A))).toEqual(["document.A"]);
+    expect(nameOf(await getDocumentsByAccountId(ACC.internal))).toEqual([]);
+    expect(nameOf(await getDocumentsByContactId(ids.contact.A))).toEqual(["document.linkedA"]);
+    expect(nameOf(await getDocumentsByContactId(ids.contact.trapA))).toEqual([]);
+    expect(nameOf(await getDocumentsByOpportunityId(ids.opportunity.A))).toEqual(["document.linkedA"]);
+    expect(nameOf(await getDocumentsByOpportunityId(ids.opportunity.trapA))).toEqual([]);
+  });
+
+  it("accounts by contact / opportunity: his accounts only", async () => {
+    expect(nameOf(await getAccountsByContactId(ids.contact.A))).toEqual(["account.A"]);
+    expect(nameOf(await getAccountsByContactId(ids.contact.trapA))).toEqual([]);
+    expect(nameOf(await getAccountsByOpportunityId(ids.opportunity.A))).toEqual(["account.A"]);
+    expect(nameOf(await getAccountsByOpportunityId(ids.opportunity.trapA))).toEqual([]);
+  });
+
+  it("leads assigned to him: none (the only one is on the internal account)", async () => {
+    expect(nameOf(await getUserLeads(U.A))).toEqual([]);
+  });
+});
+
+describe("account-child getters as a user", () => {
+  it("a user cannot list another user's leads", async () => {
+    signInAs(U.colleague);
+    expect(nameOf(await getUserLeads(U.rep))).toEqual([]);
   });
 });

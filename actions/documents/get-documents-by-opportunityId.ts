@@ -1,6 +1,27 @@
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanReadOpportunity,
+  documentReadScopeWhere,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const getDocumentsByOpportunityId = async (opportunityId: string) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
+  }
+  try {
+    await assertCanReadOpportunity(user, opportunityId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return [];
+    throw e;
+  }
+
   // Query through DocumentsToOpportunities junction table
   const data = await prismadb.documents.findMany({
     where: {
@@ -9,6 +30,7 @@ export const getDocumentsByOpportunityId = async (opportunityId: string) => {
           opportunity_id: opportunityId,
         },
       },
+      ...documentReadScopeWhere(user),
     },
     include: {
       created_by: {
