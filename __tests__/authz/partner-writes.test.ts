@@ -39,6 +39,7 @@ import { bulkChangeType } from "@/actions/documents/bulk-change-type";
 import { bulkLinkToAccount } from "@/actions/documents/bulk-link-to-account";
 import { POST as enrichBulk } from "@/app/api/crm/contacts/enrich-bulk/route";
 import { assertAssignableUser } from "@/lib/mcp/helpers";
+import { crmDocumentTools } from "@/lib/mcp/tools/crm-documents";
 
 const tag = randomUUID().slice(0, 8);
 const id = () => randomUUID();
@@ -258,6 +259,24 @@ describe("write paths that used read filters", () => {
       body: JSON.stringify({ contactIds: [ids.contact.A], fields: ["email"] }),
     });
     expect((await enrichBulk(req)).status).toBe(403);
+  });
+
+  it("MCP document write tools refuse a partner (second line behind getMcpUser)", async () => {
+    const partnerA = { id: U.A, role: "partner" as const };
+    const args: Record<string, Record<string, unknown>> = {
+      crm_create_document: { document_name: "x", contentType: "application/pdf" },
+      crm_get_upload_url: { id: ids.document.A },
+      crm_link_document: { document_id: ids.document.A, entity_type: "account", entity_id: ACC.A },
+      crm_unlink_document: { document_id: ids.document.A, entity_type: "account", entity_id: ACC.A },
+      crm_delete_document: { id: ids.document.A },
+    };
+    const results: Record<string, string> = {};
+    for (const [name, a] of Object.entries(args)) {
+      const tool = crmDocumentTools.find((t) => t.name === name)!;
+      results[name] = await (tool.handler as (...x: unknown[]) => Promise<unknown>)(a, U.A, partnerA)
+        .then(() => "allowed", (e: Error) => e.message);
+    }
+    expect(Object.values(results).every((m) => m.startsWith("FORBIDDEN"))).toBe(true);
   });
 
   it("assertAssignableUser: a partner assigns only to himself", async () => {
