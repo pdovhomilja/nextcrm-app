@@ -100,8 +100,9 @@ if [ -n "$MINIO_ENDPOINT" ] && [ -n "$MINIO_ACCESS_KEY" ] && [ -n "$MINIO_SECRET
     echo "WARN: Could not create MinIO bucket (HTTP $STATUS). File storage may not work until bucket is created manually."
   fi
 
-  # Uploaded files are linked by plain URL (no signature), so browsers need
-  # anonymous read on the upload folders. Invoices stay private (presigned).
+  # Only avatars are linked by plain URL, so only avatars/ gets anonymous
+  # read. Documents, thumbnails and invoices stay private: the app hands out
+  # short-lived presigned URLs after an access check.
   # Applied only when the bucket has no policy yet; an existing one is kept.
   POLICY_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
     "${BUCKET_URL}?policy=" \
@@ -110,7 +111,7 @@ if [ -n "$MINIO_ENDPOINT" ] && [ -n "$MINIO_ACCESS_KEY" ] && [ -n "$MINIO_SECRET
     2>/dev/null || echo "000")
   if [ "$POLICY_STATUS" = "404" ]; then
     RESOURCES=""
-    for prefix in avatars images documents uploads thumbnails; do
+    for prefix in avatars; do
       RESOURCES="${RESOURCES:+$RESOURCES,}\"arn:aws:s3:::${MINIO_BUCKET}/${prefix}/*\""
     done
     POLICY="{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\"],\"Resource\":[${RESOURCES}]}]}"
@@ -122,9 +123,9 @@ if [ -n "$MINIO_ENDPOINT" ] && [ -n "$MINIO_ACCESS_KEY" ] && [ -n "$MINIO_SECRET
       -u "${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}" \
       2>/dev/null || echo "000")
     if [ "$PUT_STATUS" = "204" ] || [ "$PUT_STATUS" = "200" ]; then
-      echo "==> Set public-read policy on upload folders of '$MINIO_BUCKET'."
+      echo "==> Set public-read policy on avatars/ of '$MINIO_BUCKET'."
     else
-      echo "WARN: Could not set bucket policy (HTTP $PUT_STATUS). Uploaded files will not open in the browser until '$MINIO_BUCKET' allows anonymous GetObject on avatars/, images/, documents/, uploads/ and thumbnails/."
+      echo "WARN: Could not set bucket policy (HTTP $PUT_STATUS). Profile photos will not show until '$MINIO_BUCKET' allows anonymous GetObject on avatars/."
     fi
   fi
 fi
