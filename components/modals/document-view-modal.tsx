@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import ModalDocumentView from "../ui/modal-document-view";
+import { documentFileRoute } from "@/lib/documents/file-key";
 
 interface AlertModalProps {
   isOpen: boolean;
@@ -36,20 +37,15 @@ const DocumentViewModal = ({
   console.log(document.document_file_mimeType, "mimeType");
 
   // Files are private: always read through the authenticated route.
-  const fileUrl = `/api/documents/${document.id}/file`;
+  const fileUrl = documentFileRoute(document.id);
 
   if (imageTypes.includes(document.document_file_mimeType)) {
-    const imageUrl = document.id ? fileUrl : "";
     return (
       <ModalDocumentView isOpen={isOpen} onClose={onClose}>
         <div className="flex flex-col h-full ">
           <div className="relative h-full p-10">
-            {imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img alt="Image preview" src={imageUrl} className="object-contain w-full h-full" />
-            ) : (
-              <p className="text-muted-foreground">No preview available</p>
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img alt="Image preview" src={fileUrl} className="object-contain w-full h-full" />
           </div>
           <div className="pt-6 space-x-2 flex items-center justify-end w-full ">
             <Button disabled={loading} variant={"outline"} onClick={onClose}>
