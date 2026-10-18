@@ -9,11 +9,16 @@ jest.mock("@/lib/prisma", () => {
         create: jest.fn(),
         update: jest.fn(),
         findFirst: jest.fn(),
+        count: jest.fn(),
       },
       $transaction: tx,
     },
   };
 });
+jest.mock("@/lib/minio", () => ({
+  MINIO_PUBLIC_URL: "https://files.example",
+  MINIO_BUCKET: "nextcrm",
+}));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 jest.mock("@/inngest/client", () => ({
   inngest: { send: jest.fn().mockResolvedValue(undefined) },
@@ -30,8 +35,7 @@ const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
 
 const baseInput = {
   parentDocumentId: "p1",
-  url: "u",
-  key: "k",
+  key: "documents/v2.pdf",
   size: 1,
   mimeType: "application/pdf",
 };
@@ -80,5 +84,37 @@ describe("createDocumentVersion auth", () => {
     await createDocumentVersion(baseInput);
     const where = (prismadb.documents.findFirst as jest.Mock).mock.calls[0][0].where;
     expect(where.OR).toBeUndefined();
+  });
+
+  it("refuses another user's key and stores the URL derived from the key", async () => {
+    mockUser("user", "u1");
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue({ id: "p1" });
+    (prismadb.documents.count as jest.Mock).mockResolvedValue(1);
+    await expect(createDocumentVersion(baseInput)).rejects.toThrow("Invalid file");
+    expect(prismadb.$transaction).not.toHaveBeenCalled();
+
+    jest.clearAllMocks();
+    mockUser("user", "u1");
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue({ id: "p1" });
+    (prismadb.documents.count as jest.Mock).mockResolvedValue(0);
+    (prismadb.documents.findUnique as jest.Mock).mockResolvedValue({
+      id: "p1", document_name: "n", version: 1, accounts: [],
+    });
+    (prismadb.$transaction as jest.Mock).mockResolvedValue([{ id: "d2" }, {}]);
+    await createDocumentVersion({ ...baseInput, url: "https://evil.example/x" } as any);
+    const created = (prismadb.documents.create as jest.Mock).mock.calls[0][0].data;
+    const updated = (prismadb.documents.update as jest.Mock).mock.calls[0][0].data;
+    expect(created.document_file_url).toBe("https://files.example/nextcrm/documents/v2.pdf");
+    expect(updated.document_file_url).toBe("https://files.example/nextcrm/documents/v2.pdf");
+  });
+
+  it("refuses a key outside the document folders", async () => {
+    mockUser("user", "u1");
+    (prismadb.documents.findFirst as jest.Mock).mockResolvedValue({ id: "p1" });
+    (prismadb.documents.count as jest.Mock).mockResolvedValue(0);
+    await expect(
+      createDocumentVersion({ ...baseInput, key: "avatars/x.png" }),
+    ).rejects.toThrow("Invalid file");
+    expect(prismadb.$transaction).not.toHaveBeenCalled();
   });
 });

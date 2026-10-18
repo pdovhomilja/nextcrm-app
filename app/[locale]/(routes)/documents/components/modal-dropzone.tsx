@@ -33,7 +33,6 @@ const ModalDropzone = ({ buttonLabel, fileType }: Props) => {
       const filename = url.split("/").pop() ?? "document";
       await createDocument({
         name: filename,
-        url,
         key, // use key directly instead of reconstructing from URL
         size: 0, // size not available from presigned URL flow
         mimeType: MIME_MAP[fileType] ?? "application/octet-stream",

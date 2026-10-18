@@ -92,7 +92,7 @@ export function BulkUploadModal({ accountId }: BulkUploadModalProps) {
       });
 
       if (!res.ok) throw new Error("Failed to get presigned URL");
-      const { presignedUrl, fileUrl, key } = await res.json();
+      const { presignedUrl, key } = await res.json();
 
       updateFile(index, { progress: 30 });
 
@@ -107,7 +107,6 @@ export function BulkUploadModal({ accountId }: BulkUploadModalProps) {
 
       await createDocument({
         name: item.file.name,
-        url: fileUrl,
         key,
         size: item.file.size,
         mimeType: item.file.type,

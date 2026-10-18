@@ -8,10 +8,10 @@ import {
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { inngest } from "@/inngest/client";
+import { newDocumentFile } from "@/lib/documents/new-document-file";
 
 interface CreateDocumentInput {
   name: string;
-  url: string;
   key: string;
   size: number;
   mimeType: string;
@@ -37,13 +37,14 @@ export async function createDocument(input: CreateDocumentInput) {
     }
   }
 
+  const file = await newDocumentFile(input.key);
+
   const document = await prismadb.documents.create({
     data: {
       v: 0,
       document_name: input.name,
       description: "new document",
-      document_file_url: input.url,
-      key: input.key,
+      ...file,
       size: input.size,
       document_file_mimeType: input.mimeType,
       content_hash: input.contentHash ?? null,
