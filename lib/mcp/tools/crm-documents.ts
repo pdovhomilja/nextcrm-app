@@ -4,6 +4,8 @@ import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { minioPresignClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
 import { randomUUID } from "crypto";
+import type { AuthzUser } from "@/lib/authz";
+import { documentReadScopeWhere } from "@/lib/authz/scopes/crm";
 import {
   paginationSchema,
   paginationArgs,
@@ -49,12 +51,10 @@ export const crmDocumentTools = [
         limit: number;
         offset: number;
       },
-      userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
-      const where: any = {
-        created_by_user: userId,
-        deletedAt: null,
-      };
+      const where: any = documentReadScopeWhere(user);
       if (args.entityType && args.entityId) {
         const relation =
           args.entityType === "account"
@@ -85,9 +85,9 @@ export const crmDocumentTools = [
     name: "crm_get_document",
     description: "Get a single document by ID",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const doc = await prismadb.documents.findFirst({
-        where: { id: args.id, created_by_user: userId, deletedAt: null },
+        where: { id: args.id, ...documentReadScopeWhere(user) },
         include: {
           accounts: true,
           contacts: true,
@@ -171,9 +171,9 @@ export const crmDocumentTools = [
     name: "crm_get_download_url",
     description: "Get a presigned download URL for a document",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       const doc = await prismadb.documents.findFirst({
-        where: { id: args.id, created_by_user: userId },
+        where: { id: args.id, ...documentReadScopeWhere(user) },
       });
       if (!doc) notFound("Document");
       if (!doc.key) validationError("Document has no storage key");

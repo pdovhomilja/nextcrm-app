@@ -4,7 +4,12 @@ import {
   generateEmbedding,
   toVectorLiteral,
 } from "@/inngest/lib/embedding-utils";
-import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import {
+  requireAuthenticated,
+  AuthenticationError,
+  boardReadScopeWhere,
+  documentReadScopeWhere,
+} from "@/lib/authz";
 import { getReportScope } from "@/lib/authz/scopes/report-scope";
 
 export interface SearchResult {
@@ -157,9 +162,14 @@ export async function unifiedSearch(
       }),
       prismadb.boards.findMany({
         where: {
-          OR: [
-            { title: { contains: query, mode: "insensitive" } },
-            { description: { contains: query, mode: "insensitive" } },
+          AND: [
+            boardReadScopeWhere(user),
+            {
+              OR: [
+                { title: { contains: query, mode: "insensitive" } },
+                { description: { contains: query, mode: "insensitive" } },
+              ],
+            },
           ],
         },
         take: 10,
@@ -196,10 +206,15 @@ export async function unifiedSearch(
       prismadb.documents.findMany({
         where: {
           parent_document_id: null,
-          OR: [
-            { document_name: { contains: query, mode: "insensitive" } },
-            { summary: { contains: query, mode: "insensitive" } },
-            { description: { contains: query, mode: "insensitive" } },
+          AND: [
+            documentReadScopeWhere(user),
+            {
+              OR: [
+                { document_name: { contains: query, mode: "insensitive" } },
+                { summary: { contains: query, mode: "insensitive" } },
+                { description: { contains: query, mode: "insensitive" } },
+              ],
+            },
           ],
         },
         take: 10,
@@ -405,6 +420,7 @@ export async function unifiedSearch(
           where: {
             parent_document_id: null,
             id: { in: allSemDocs.map((r) => r.id).filter((id) => !kwDocumentIds.has(id)) },
+            AND: [documentReadScopeWhere(user)],
           },
           select: {
             id: true,

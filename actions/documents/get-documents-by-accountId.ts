@@ -1,6 +1,27 @@
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  assertCanReadAccount,
+  documentReadScopeWhere,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const getDocumentsByAccountId = async (accountId: string) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
+  }
+  try {
+    await assertCanReadAccount(user, accountId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return [];
+    throw e;
+  }
+
   // Query through DocumentsToAccounts junction table
   const data = await prismadb.documents.findMany({
     where: {
@@ -9,6 +30,7 @@ export const getDocumentsByAccountId = async (accountId: string) => {
           account_id: accountId,
         },
       },
+      ...documentReadScopeWhere(user),
     },
     include: {
       created_by: {

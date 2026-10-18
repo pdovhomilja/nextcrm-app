@@ -1,9 +1,21 @@
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  accountReadScopeWhere,
+  AuthenticationError,
+} from "@/lib/authz";
 
 export const getAccountsByOpportunityId = async (opportunityId: string) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return [];
+    throw e;
+  }
   const data = await prismadb.crm_Accounts.findMany({
     where: {
-      deletedAt: null,
+      ...accountReadScopeWhere(user),
       opportunities: {
         some: {
           id: opportunityId,

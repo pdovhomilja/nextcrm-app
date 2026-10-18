@@ -1,9 +1,23 @@
 import { prismadb } from "@/lib/prisma";
+import {
+  requireAuthenticated,
+  documentReadScopeWhere,
+  AuthenticationError,
+} from "@/lib/authz";
+import { crmTaskReadScopeWhere } from "@/lib/authz/scopes/crm";
 
 export const getCrMTask = async (taskId: string) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return null;
+    throw e;
+  }
   const data = await prismadb.crm_Accounts_Tasks.findFirst({
     where: {
       id: taskId,
+      ...crmTaskReadScopeWhere(user),
     },
     include: {
       assigned_user: {
@@ -14,6 +28,7 @@ export const getCrMTask = async (taskId: string) => {
       },
       // Include documents through DocumentsToCrmAccountsTasks junction table
       documents: {
+        where: { document: documentReadScopeWhere(user) },
         include: {
           document: {
             select: {

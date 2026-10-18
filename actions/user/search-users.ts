@@ -1,5 +1,6 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
+import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import { userDirectoryWhere } from "@/lib/authz/scopes/users";
 
 import { prismadb } from "@/lib/prisma";
 
@@ -14,14 +15,20 @@ export async function searchUsers({
   skip?: number;
   take?: number;
 } = {}) {
-  const session = await getSession();
-  if (!session) throw new Error("Unauthorized");
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) throw new Error("Unauthorized");
+    throw e;
+  }
 
   const safeTake = Math.min(PAGE_SIZE_MAX, Math.max(1, take));
   const safeSkip = Math.max(0, skip);
 
   const where = {
     userStatus: "ACTIVE" as const,
+    ...userDirectoryWhere(user),
     ...(search
       ? { name: { contains: search, mode: "insensitive" as const } }
       : {}),

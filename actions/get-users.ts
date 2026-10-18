@@ -1,7 +1,10 @@
 import { prismadb } from "@/lib/prisma";
+import { requireAuthenticated, isAdmin } from "@/lib/authz";
+import { userDirectoryWhere } from "@/lib/authz/scopes/users";
 
-//Get all users  for admin module
+//Get all users  for admin module (admins only)
 export const getUsers = async () => {
+  if (!isAdmin(await requireAuthenticated())) return [];
   const data = await prismadb.users.findMany({
     orderBy: {
       created_on: "desc",
@@ -12,12 +15,14 @@ export const getUsers = async () => {
 
 //Get active users for Selects in app etc
 export const getActiveUsers = async () => {
+  const user = await requireAuthenticated();
   const data = await prismadb.users.findMany({
     orderBy: {
       name: "asc",
     },
     where: {
       userStatus: "ACTIVE",
+      ...userDirectoryWhere(user),
     },
     select: {
       id: true,

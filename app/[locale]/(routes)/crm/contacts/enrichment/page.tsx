@@ -1,5 +1,9 @@
 import { prismadb } from "@/lib/prisma";
-import { getSession } from "@/lib/auth-server";
+import {
+  requireAuthenticated,
+  contactReadScopeWhere,
+  AuthenticationError,
+} from "@/lib/authz";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -27,10 +31,17 @@ const STATUS_LABELS = {
 };
 
 export default async function EnrichmentJobsPage() {
-  const session = await getSession();
-  if (!session) redirect("/sign-in");
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) redirect("/sign-in");
+    throw e;
+  }
 
+  // Jobs on the records the caller can read.
   const records = await prismadb.crm_Contact_Enrichment.findMany({
+    where: { contact: contactReadScopeWhere(user) },
     orderBy: { createdAt: "desc" },
     take: 200,
     include: {

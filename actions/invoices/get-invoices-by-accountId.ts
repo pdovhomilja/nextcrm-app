@@ -5,6 +5,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { invoiceReadScopeWhere } from "@/lib/invoices/permissions";
 
 export async function getInvoicesByAccountId(accountId: string) {
   let user;
@@ -22,7 +23,7 @@ export async function getInvoicesByAccountId(accountId: string) {
   }
 
   return prismadb.invoices.findMany({
-    where: { accountId },
+    where: { accountId, ...invoiceReadScopeWhere(user) },
     orderBy: { createdAt: "desc" },
     include: {
       account: { select: { id: true, name: true } },

@@ -1,12 +1,25 @@
 import { prismadb } from "@/lib/prisma";
 import { getExchangeRates, convertAmount } from "@/lib/currency";
 import { Decimal } from "@prisma/client/runtime/client";
+import {
+  requireAuthenticated,
+  opportunityReadScopeWhere,
+  AuthenticationError,
+} from "@/lib/authz";
 
+// Sum over the opportunities the caller can read.
 export const getExpectedRevenue = async (displayCurrency: string) => {
+  let user;
+  try {
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return 0;
+    throw e;
+  }
   const activeOpportunities = await prismadb.crm_Opportunities.findMany({
     where: {
       status: "ACTIVE",
-      deletedAt: null,
+      ...opportunityReadScopeWhere(user),
     },
     select: {
       budget: true,
