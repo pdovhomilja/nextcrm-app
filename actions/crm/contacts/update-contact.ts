@@ -8,6 +8,7 @@ import {
   requireAuthenticated,
   assertCanWriteContact,
   assertCanWriteAccount,
+  PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -58,9 +59,9 @@ export const updateContact = async (data: {
     throw e;
   }
   try {
-    await assertCanWriteContact(user, id);
+    await assertCanWriteContact(user, id, PARTNER_EDIT);
     // Parent-write: relinking the contact to an account requires write on it.
-    if (assigned_account) await assertCanWriteAccount(user, assigned_account);
+    if (assigned_account) await assertCanWriteAccount(user, assigned_account, PARTNER_EDIT);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
@@ -75,7 +76,8 @@ export const updateContact = async (data: {
         v: 0,
         updatedBy: userId,
         accountsIDs: assigned_account || undefined,
-        assigned_to: assigned_to || undefined,
+        // A partner never changes the assignee.
+        assigned_to: user.role === "partner" ? undefined : assigned_to || undefined,
         contact_type_id: contact_type_id || undefined,
         birthday:
           birthday_day && birthday_month && birthday_year

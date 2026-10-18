@@ -183,7 +183,7 @@ export const crmOpportunityTools = [
       );
       if (args.account) await assertLinkableAccount(user, args.account);
       if (args.contact) await assertLinkableContact(user, args.contact);
-      if (args.assigned_to) await assertAssignableUser(args.assigned_to);
+      if (args.assigned_to) await assertAssignableUser(args.assigned_to, user);
       const {
         id,
         budget,

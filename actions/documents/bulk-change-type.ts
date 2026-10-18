@@ -1,7 +1,7 @@
 "use server";
 import {
   requireAuthenticated,
-  filterAuthorizedDocumentIds,
+  filterWritableDocumentIds,
   AuthenticationError,
 } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
@@ -20,7 +20,7 @@ export async function bulkChangeType(documentIds: string[], systemType: Document
   if (!documentIds || documentIds.length === 0) return;
 
   // Fail-closed: every documentId must be authorized.
-  const allowed = await filterAuthorizedDocumentIds(user, documentIds);
+  const allowed = await filterWritableDocumentIds(user, documentIds);
   if (allowed.length !== documentIds.length) {
     throw new Error("Forbidden");
   }

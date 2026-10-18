@@ -10,6 +10,9 @@ import { qualifiedEntryBlockReason } from "@/lib/crm/approval-gate";
 import {
   requireAuthenticated,
   assertCanWriteOpportunity,
+  assertCanWriteAccount,
+  assertCanWriteContact,
+  PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -60,7 +63,10 @@ export const updateOpportunity = async (data: {
     throw e;
   }
   try {
-    await assertCanWriteOpportunity(user, id);
+    await assertCanWriteOpportunity(user, id, PARTNER_EDIT);
+    // A partner may move an opportunity only to another of his accounts / contacts.
+    if (user.role === "partner" && account) await assertCanWriteAccount(user, account, PARTNER_EDIT);
+    if (user.role === "partner" && contact) await assertCanWriteContact(user, contact, PARTNER_EDIT);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
@@ -83,7 +89,8 @@ export const updateOpportunity = async (data: {
       where: { id },
       data: {
         account: account || undefined,
-        assigned_to: assigned_to || undefined,
+        // A partner never changes the assignee.
+        assigned_to: user.role === "partner" ? undefined : assigned_to || undefined,
         budget: budget ? parseFloat(budget) : undefined,
         campaign: campaign || undefined,
         close_date,

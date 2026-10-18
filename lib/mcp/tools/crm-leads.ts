@@ -203,7 +203,7 @@ export const crmLeadTools = [
     ) {
       await assertScopeOrNotFound(() => assertCanWriteLead(user, args.id), "Lead");
       await assertLeadOptions(args);
-      if (args.assigned_to) await assertAssignableUser(args.assigned_to);
+      if (args.assigned_to) await assertAssignableUser(args.assigned_to, user);
       const { id, assigned_to, ...updateData } = args;
       const lead = await prismadb.crm_Leads.update({
         where: { id },

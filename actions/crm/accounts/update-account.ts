@@ -7,6 +7,7 @@ import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   assertCanWriteAccount,
+  PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -49,7 +50,7 @@ export const updateAccount = async (data: {
     throw e;
   }
   try {
-    await assertCanWriteAccount(user, id);
+    await assertCanWriteAccount(user, id, PARTNER_EDIT);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
@@ -66,6 +67,8 @@ export const updateAccount = async (data: {
         ...(rest.pricelist_id === "" ? { pricelist_id: null } : {}),
         // The partner is set only through setAccountPartner (admin/manager).
         partnerUserId: undefined,
+        // A partner edits ordinary fields only, never the internal owner.
+        ...(user.role === "partner" ? { assigned_to: undefined } : {}),
       },
     });
     const changes = before ? diffObjects(

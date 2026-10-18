@@ -6,6 +6,7 @@ import {
   assertCanWriteContract,
   assertCanWriteLead,
   assertCanWriteOpportunity,
+  assertPartnerCanLinkActivity,
   requireAuthenticated,
   AuthorizationError,
   type AuthzUser,
@@ -45,11 +46,16 @@ export const createActivity = async (data: {
   try {
     const session = await getSession();
     if (!session) return { error: "Unauthorized" };
+    // A partner's activity must hang off his partner records only.
     const authUser = await requireAuthenticated();
     try {
-      for (const link of data.links) {
-        if (!Object.hasOwn(ASSERT_CAN_WRITE, link.entityType)) throw new AuthorizationError();
-        await ASSERT_CAN_WRITE[link.entityType](authUser, link.entityId);
+      if (authUser.role === "partner") {
+        await assertPartnerCanLinkActivity(authUser, data.links);
+      } else {
+        for (const link of data.links) {
+          if (!Object.hasOwn(ASSERT_CAN_WRITE, link.entityType)) throw new AuthorizationError();
+          await ASSERT_CAN_WRITE[link.entityType](authUser, link.entityId);
+        }
       }
     } catch (e) {
       if (e instanceof AuthorizationError) return { error: "Forbidden" };

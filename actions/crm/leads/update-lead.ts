@@ -8,6 +8,8 @@ import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   assertCanWriteLead,
+  assertCanWriteAccount,
+  PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -57,7 +59,9 @@ export const updateLead = async (data: {
     throw e;
   }
   try {
-    await assertCanWriteLead(user, id);
+    await assertCanWriteLead(user, id, PARTNER_EDIT);
+    // A partner may relink a lead only to another of his accounts.
+    if (user.role === "partner" && accountIDs) await assertCanWriteAccount(user, accountIDs, PARTNER_EDIT);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
@@ -83,8 +87,9 @@ export const updateLead = async (data: {
         lead_type_id: lead_type_id || undefined,
         refered_by,
         campaign,
-        assigned_to: assigned_to || userId,
-        accountsIDs: accountIDs,
+        // A partner never changes the assignee or unlinks the account.
+        assigned_to: user.role === "partner" ? undefined : assigned_to || userId,
+        accountsIDs: user.role === "partner" ? accountIDs || undefined : accountIDs,
       },
     });
 

@@ -52,11 +52,14 @@ export const createAccount = async (data: {
         createdBy: user.id,
         updatedBy: user.id,
         ...data,
-        assigned_to: data.assigned_to || user.id,
+        // A partner's new account has him as partner and no internal owner
+        // yet (spec § Writes): admins/managers find it among unowned accounts.
+        assigned_to: user.role === "partner" ? null : data.assigned_to || user.id,
         industry: data.industry || undefined,
         pricelist_id: data.pricelist_id || undefined,
-        // The partner is set only through setAccountPartner (admin/manager).
-        partnerUserId: undefined,
+        // The partner is set only through setAccountPartner (admin/manager),
+        // except that a partner's own new account names him.
+        partnerUserId: user.role === "partner" ? user.id : undefined,
         status: "Active",
       },
     });

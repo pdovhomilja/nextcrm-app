@@ -5,6 +5,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { minioPresignClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
 import { randomUUID } from "crypto";
 import { AuthorizationError, type AuthzUser } from "@/lib/authz";
+import { isUnhandledRole } from "@/lib/authz/scopes/unhandled-role";
 import {
   documentReadScopeWhere,
   assertCanWriteAccount,
@@ -14,12 +15,12 @@ import {
   assertCanWriteTask,
 } from "@/lib/authz/scopes/crm";
 import {
-  forbidden,
   paginationSchema,
   paginationArgs,
   listResponse,
   itemResponse,
   notFound,
+  forbidden,
   validationError,
   softDeleteData,
 } from "../helpers";
@@ -143,8 +144,11 @@ export const crmDocumentTools = [
         description?: string;
         visibility?: string;
       },
-      userId: string
+      userId: string,
+      user: AuthzUser,
     ) {
+      // Document writes are for internal roles only (a partner never writes documents).
+      if (isUnhandledRole(user)) forbidden();
       const ext = args.document_name.includes(".")
         ? args.document_name.split(".").pop()?.trim() || "bin"
         : "bin";
@@ -179,7 +183,9 @@ export const crmDocumentTools = [
     name: "crm_get_upload_url",
     description: "Get a presigned upload URL for an existing document",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
+    async handler(args: { id: string }, userId: string, user: AuthzUser) {
+      // Document writes are for internal roles only (a partner never writes documents).
+      if (isUnhandledRole(user)) forbidden();
       const doc = await prismadb.documents.findFirst({
         where: { id: args.id, created_by_user: userId },
       });
@@ -224,8 +230,10 @@ export const crmDocumentTools = [
     async handler(
       args: { document_id: string; entityType: string; entityId: string },
       userId: string,
-      user: AuthzUser
+      user: AuthzUser,
     ) {
+      // Document writes are for internal roles only (a partner never writes documents).
+      if (isUnhandledRole(user)) forbidden();
       const doc = await prismadb.documents.findFirst({
         where: { id: args.document_id, created_by_user: userId },
       });
@@ -258,8 +266,10 @@ export const crmDocumentTools = [
     async handler(
       args: { document_id: string; entityType: string; entityId: string },
       userId: string,
-      user: AuthzUser
+      user: AuthzUser,
     ) {
+      // Document writes are for internal roles only (a partner never writes documents).
+      if (isUnhandledRole(user)) forbidden();
       const doc = await prismadb.documents.findFirst({
         where: { id: args.document_id, created_by_user: userId },
       });
@@ -291,7 +301,9 @@ export const crmDocumentTools = [
     name: "crm_delete_document",
     description: "Soft-delete a document (sets status to DELETED)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
+    async handler(args: { id: string }, userId: string, user: AuthzUser) {
+      // Document writes are for internal roles only (a partner never writes documents).
+      if (isUnhandledRole(user)) forbidden();
       const existing = await prismadb.documents.findFirst({
         where: { id: args.id, created_by_user: userId, deletedAt: null },
       });
