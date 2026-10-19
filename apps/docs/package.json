@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "node scripts/fetch-versions.mjs && next build",
+    "versions": "node scripts/fetch-versions.mjs",
+    "test": "node --test 'scripts/*.test.mjs'",
     "dev": "next dev",
     "start": "next start",
     "types:check": "next typegen && tsc --noEmit"
