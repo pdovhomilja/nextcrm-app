@@ -23,9 +23,15 @@ const SHADOW_ROOT_BASE_CSS = `
     overflow-wrap: anywhere;
     box-sizing: border-box;
     padding: clamp(12px, 2vw, 28px);
-    contain: paint layout;
     isolation: isolate;
     position: relative;
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+  .email-shadow-content {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
   *, *::before, *::after {
     box-sizing: border-box;
@@ -41,17 +47,13 @@ const SHADOW_ROOT_BASE_CSS = `
     font-size: inherit;
     line-height: inherit;
   }
-  img, table, video, iframe {
+  img, video, iframe {
     max-width: 100% !important;
     height: auto !important;
   }
   table {
-    width: 100% !important;
+    max-width: 100%;
     border-collapse: collapse;
-  }
-  center, .email-container, .wrapper, [align="center"] > table {
-    width: 100% !important;
-    max-width: 100% !important;
   }
   a {
     color: #2563eb;
@@ -110,11 +112,10 @@ export function EmailHtmlBody({ bodyHtml, className }: Props) {
     <div
       ref={hostRef}
       className={cn(
-        "email-html-body relative w-full min-w-0 max-w-none overflow-hidden bg-white text-zinc-900",
+        "email-html-body relative w-full min-w-0 max-w-full overflow-x-auto overflow-y-visible bg-white text-zinc-900",
         className
       )}
       style={{
-        contain: "paint layout",
         isolation: "isolate",
         position: "relative",
       }}

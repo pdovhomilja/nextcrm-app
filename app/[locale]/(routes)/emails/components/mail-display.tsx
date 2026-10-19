@@ -366,7 +366,7 @@ export function MailDisplay({
       </div>
 
       {mail ? (
-        <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden">
+        <div className="flex min-h-0 flex-col overflow-hidden">
           {fullEmail ? (
             <>
               <EmailMessageHeader
@@ -385,7 +385,7 @@ export function MailDisplay({
                   className="shrink-0"
                 />
               )}
-              <div className="relative isolate min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-muted/20 dark:bg-muted/10">
+              <div className="relative isolate min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-auto overscroll-contain bg-muted/20 dark:bg-muted/10">
                 <EmailConversationBody
                   bodyText={fullEmail.bodyText}
                   bodyHtml={fullEmail.bodyHtml}
