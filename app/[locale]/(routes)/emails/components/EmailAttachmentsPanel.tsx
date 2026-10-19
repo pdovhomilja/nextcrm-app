@@ -77,7 +77,7 @@ export function EmailAttachmentsPanel({ emailId, attachments, className }: Props
         ))}
       </div>
 
-      {previewIsPdf && previewSrc && (
+      {previewIsPdf && previewSrc && preview && (
         <div className="mt-4 overflow-hidden rounded-lg border border-border/60 bg-muted/30">
           <div className="border-b border-border/40 bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
             PDF preview — {preview.name}

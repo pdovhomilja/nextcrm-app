@@ -48,7 +48,7 @@ export async function GET(
     const disposition = inline ? "inline" : "attachment";
     const encodedName = encodeURIComponent(attachment.name);
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         "Content-Type": attachment.mime || "application/octet-stream",
