@@ -24,7 +24,9 @@ export async function POST(request: Request): Promise<NextResponse> {
       request,
       onBeforeGenerateToken: async () => {
         return {
-          allowedContentTypes: [...ALLOWED_UPLOAD_CONTENT_TYPES, "application/octet-stream"],
+          allowedContentTypes: Array.from(ALLOWED_UPLOAD_CONTENT_TYPES).concat([
+            "application/octet-stream",
+          ]),
           maximumSizeInBytes: MAX_BYTES,
           addRandomSuffix: true,
           tokenPayload: JSON.stringify({ userId: session.user.id }),
