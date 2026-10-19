@@ -1,4 +1,6 @@
-/** Client-side upload for email compose attachments (MinIO presigned URL). */
+/** Client-side upload for email compose attachments. */
+
+import { uploadFileToAppStorage } from "@/lib/upload/client-upload";
 
 export type ComposeAttachmentMeta = {
   url: string;
@@ -14,35 +16,11 @@ export async function uploadComposeAttachment(file: File): Promise<ComposeAttach
     throw new Error("Each attachment must be 10 MB or smaller");
   }
 
-  const res = await fetch("/api/upload/presigned-url", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      filename: file.name,
-      contentType: file.type || "application/octet-stream",
-      folder: "uploads",
-    }),
-  });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(err.error ?? "Upload failed");
-  }
-  const { presignedUrl, fileUrl } = (await res.json()) as {
-    presignedUrl: string;
-    fileUrl: string;
-  };
-
-  const put = await fetch(presignedUrl, {
-    method: "PUT",
-    headers: { "Content-Type": file.type || "application/octet-stream" },
-    body: file,
-  });
-  if (!put.ok) throw new Error("Upload to storage failed");
-
+  const uploaded = await uploadFileToAppStorage(file, { folder: "uploads" });
   return {
-    url: fileUrl,
-    name: file.name,
-    mime: file.type || "application/octet-stream",
+    url: uploaded.url,
+    name: uploaded.name,
+    mime: uploaded.mime,
     size: file.size,
   };
 }

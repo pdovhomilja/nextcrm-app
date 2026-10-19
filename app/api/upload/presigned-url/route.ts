@@ -5,19 +5,35 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { minioPresignClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
 import { randomUUID } from "crypto";
+import {
+  isBlobStorageConfigured,
+  isFileUploadConfigured,
+  isMinioConfigured,
+} from "@/lib/storage/env";
+import { resolveUploadContentType } from "@/lib/upload/allowed-content-types";
 
 const ALLOWED_FOLDERS = ["avatars", "images", "documents", "uploads"] as const;
 type AllowedFolder = (typeof ALLOWED_FOLDERS)[number];
+
+const BLOB_HANDLE_URL = "/api/upload/blob";
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  if (!isFileUploadConfigured()) {
+    return NextResponse.json(
+      {
+        error:
+          "File storage is not configured. Add MINIO_* (S3-compatible) or connect Vercel Blob (BLOB_READ_WRITE_TOKEN) in Vercel.",
+      },
+      { status: 503 }
+    );
+  }
+
   const { filename: rawFilename, contentType, folder: rawFolder = "uploads" } = await req.json();
 
-  // Sanitize: strip any path components to prevent path traversal
   const filename = path.basename(rawFilename ?? "");
-  // Whitelist folder to only allow known upload destinations
   const folder: AllowedFolder = ALLOWED_FOLDERS.includes(rawFolder as AllowedFolder)
     ? (rawFolder as AllowedFolder)
     : "uploads";
@@ -26,41 +42,45 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "filename and contentType are required" }, { status: 400 });
   }
 
-  const ALLOWED_CONTENT_TYPES = new Set([
-    "image/jpeg", "image/png", "image/gif", "image/webp",
-    "application/pdf", "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/zip",
-    "text/plain",
-    "text/csv",
-    "video/mp4", "video/webm", "video/quicktime",
-  ]);
-  if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
+  const resolvedContentType = resolveUploadContentType(filename, contentType);
+  if (!resolvedContentType) {
     return NextResponse.json({ error: "Content type not allowed" }, { status: 400 });
   }
 
-  // Fall back to "bin" if filename has no extension or extension is empty (e.g., ".")
+  if (!isMinioConfigured() && isBlobStorageConfigured()) {
+    return NextResponse.json({
+      provider: "blob",
+      handleUploadUrl: BLOB_HANDLE_URL,
+    });
+  }
+
   const ext = filename.includes(".") ? filename.split(".").pop()?.trim() || "bin" : "bin";
   const key = `${folder}/${randomUUID()}.${ext}`;
 
   const command = new PutObjectCommand({
     Bucket: MINIO_BUCKET,
     Key: key,
-    ContentType: contentType,
+    ContentType: resolvedContentType,
   });
 
-  // Presigned URL valid for 10 minutes
   try {
     const presignedUrl = await getSignedUrl(minioPresignClient, command, { expiresIn: 600 });
-
-    // The public URL where the file will be accessible after upload
     const fileUrl = `${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${key}`;
 
-    return NextResponse.json({ presignedUrl, fileUrl, key });
+    return NextResponse.json({
+      provider: "s3",
+      presignedUrl,
+      fileUrl,
+      key,
+    });
   } catch (err) {
     console.error("Failed to generate presigned URL:", err);
+    if (isBlobStorageConfigured()) {
+      return NextResponse.json({
+        provider: "blob",
+        handleUploadUrl: BLOB_HANDLE_URL,
+      });
+    }
     return NextResponse.json({ error: "Failed to generate upload URL" }, { status: 500 });
   }
 }
