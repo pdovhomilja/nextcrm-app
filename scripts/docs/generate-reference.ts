@@ -9,6 +9,7 @@ import * as toolModules from "@/lib/mcp/tools";
 import { allTools } from "@/lib/mcp/tools";
 import { APP_ROLES, SCOPED_ROLES } from "@/lib/authz/roles";
 import { PARTNER_ROUTES } from "@/lib/partner-routes";
+import { cell, code } from "./mdx";
 
 const OUT = "apps/docs/content/docs/reference";
 const check = process.argv.includes("--check");
@@ -26,9 +27,6 @@ type JsonSchema = {
   description?: string;
 };
 
-const cell = (s: string) =>
-  s.replace(/\s+/g, " ").replace(/\|/g, "\\|").replace(/[{}]/g, (c) => `\\${c}`).replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const code = (s: string) => `\`${s.replace(/\|/g, "\\|")}\``;
 const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
 function page(title: string, description: string, body: string[]): string {

@@ -83,7 +83,7 @@ Update an existing CRM account by ID
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `assigned_to` | `string (uuid) \| null` | no |  |  |
+| `assigned_to` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
 | `description` | `string` | no |  |  |
 | `email` | `string (email)` | no |  |  |
 | `id` | `string (uuid)` | yes |  |  |
@@ -104,9 +104,9 @@ Create a CRM activity (call/meeting/note/email/visit) and link to entities
 | `duration` | `integer` | no |  |  |
 | `links` | `object[]` | no |  |  |
 | `outcome` | `string` | no |  |  |
-| `status` | `"scheduled" \| "completed" \| "cancelled"` | no | `"scheduled"` |  |
+| `status` | <code>{"\"scheduled\" \u007c \"completed\" \u007c \"cancelled\""}</code> | no | `"scheduled"` |  |
 | `title` | `string` | yes |  |  |
-| `type` | `"call" \| "meeting" \| "note" \| "email" \| "visit"` | yes |  |  |
+| `type` | <code>{"\"call\" \u007c \"meeting\" \u007c \"note\" \u007c \"email\" \u007c \"visit\""}</code> | yes |  |  |
 
 ### `crm_delete_activity`
 
@@ -134,8 +134,8 @@ List CRM activities created by the authenticated user, or all activities on a li
 | `entityType` | `string` | no |  |  |
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
-| `status` | `"scheduled" \| "completed" \| "cancelled"` | no |  |  |
-| `type` | `"call" \| "meeting" \| "note" \| "email" \| "visit"` | no |  |  |
+| `status` | <code>{"\"scheduled\" \u007c \"completed\" \u007c \"cancelled\""}</code> | no |  |  |
+| `type` | <code>{"\"call\" \u007c \"meeting\" \u007c \"note\" \u007c \"email\" \u007c \"visit\""}</code> | no |  |  |
 
 ### `crm_update_activity`
 
@@ -148,7 +148,7 @@ Update an existing CRM activity by ID
 | `duration` | `integer` | no |  |  |
 | `id` | `string (uuid)` | yes |  |  |
 | `outcome` | `string` | no |  |  |
-| `status` | `"scheduled" \| "completed" \| "cancelled"` | no |  |  |
+| `status` | <code>{"\"scheduled\" \u007c \"completed\" \u007c \"cancelled\""}</code> | no |  |  |
 | `title` | `string` | no |  |  |
 
 ## Campaigns
@@ -183,7 +183,7 @@ Add a step to a campaign sequence
 | `campaign_id` | `string (uuid)` | yes |  |  |
 | `delay_days` | `integer` | no | `0` |  |
 | `order` | `integer` | yes |  |  |
-| `send_to` | `"all" \| "non_openers"` | no | `"all"` |  |
+| `send_to` | <code>{"\"all\" \u007c \"non_openers\""}</code> | no | `"all"` |  |
 | `subject` | `string` | yes |  |  |
 | `template_id` | `string (uuid)` | yes |  |  |
 
@@ -255,7 +255,7 @@ List campaigns the caller is allowed to see
 | --- | --- | --- | --- | --- |
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
-| `status` | `"draft" \| "scheduled" \| "sending" \| "sent" \| "paused"` | no |  |  |
+| `status` | <code>{"\"draft\" \u007c \"scheduled\" \u007c \"sending\" \u007c \"sent\" \u007c \"paused\""}</code> | no |  |  |
 
 ### `campaigns_list_templates`
 
@@ -321,7 +321,7 @@ Update a campaign step by ID
 | `delay_days` | `integer` | no |  |  |
 | `id` | `string (uuid)` | yes |  |  |
 | `order` | `integer` | no |  |  |
-| `send_to` | `"all" \| "non_openers"` | no |  |  |
+| `send_to` | <code>{"\"all\" \u007c \"non_openers\""}</code> | no |  |  |
 | `subject` | `string` | no |  |  |
 | `template_id` | `string (uuid)` | no |  |  |
 
@@ -394,8 +394,8 @@ Update an existing CRM contact by ID
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `account` | `string (uuid) \| null` | no |  |  |
-| `assigned_to` | `string (uuid) \| null` | no |  |  |
+| `account` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
+| `assigned_to` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
 | `email` | `string (email)` | no |  |  |
 | `first_name` | `string` | no |  |  |
 | `id` | `string (uuid)` | yes |  |  |
@@ -448,7 +448,7 @@ List CRM contracts visible to the authenticated user
 | `account` | `string (uuid)` | no |  |  |
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
-| `status` | `"NOTSTARTED" \| "INPROGRESS" \| "SIGNED"` | no |  |  |
+| `status` | <code>{"\"NOTSTARTED\" \u007c \"INPROGRESS\" \u007c \"SIGNED\""}</code> | no |  |  |
 
 ### `crm_update_contract`
 
@@ -463,7 +463,7 @@ Update an existing CRM contract by ID (does not modify line items — use separa
 | `endDate` | `string (date-time)` | no |  |  |
 | `id` | `string (uuid)` | yes |  |  |
 | `startDate` | `string (date-time)` | no |  |  |
-| `status` | `"NOTSTARTED" \| "INPROGRESS" \| "SIGNED"` | no |  |  |
+| `status` | <code>{"\"NOTSTARTED\" \u007c \"INPROGRESS\" \u007c \"SIGNED\""}</code> | no |  |  |
 | `title` | `string` | no |  |  |
 | `type` | `string` | no |  |  |
 | `value` | `number` | no |  |  |
@@ -521,7 +521,7 @@ Link a document to an entity (account, contact, lead, opportunity, or task)
 | --- | --- | --- | --- | --- |
 | `document_id` | `string (uuid)` | yes |  |  |
 | `entityId` | `string (uuid)` | yes |  |  |
-| `entityType` | `"account" \| "contact" \| "lead" \| "opportunity" \| "task"` | yes |  |  |
+| `entityType` | <code>{"\"account\" \u007c \"contact\" \u007c \"lead\" \u007c \"opportunity\" \u007c \"task\""}</code> | yes |  |  |
 
 ### `crm_list_documents`
 
@@ -530,7 +530,7 @@ List documents, optionally filtered by linked entity type and ID
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `entityId` | `string (uuid)` | no |  |  |
-| `entityType` | `"account" \| "contact" \| "lead" \| "opportunity" \| "task"` | no |  |  |
+| `entityType` | <code>{"\"account\" \u007c \"contact\" \u007c \"lead\" \u007c \"opportunity\" \u007c \"task\""}</code> | no |  |  |
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
 
@@ -542,7 +542,7 @@ Remove a document link from an entity
 | --- | --- | --- | --- | --- |
 | `document_id` | `string (uuid)` | yes |  |  |
 | `entityId` | `string (uuid)` | yes |  |  |
-| `entityType` | `"account" \| "contact" \| "lead" \| "opportunity" \| "task"` | yes |  |  |
+| `entityType` | <code>{"\"account\" \u007c \"contact\" \u007c \"lead\" \u007c \"opportunity\" \u007c \"task\""}</code> | yes |  |  |
 
 ## Email accounts
 
@@ -661,7 +661,7 @@ Update an existing CRM lead by ID
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `assigned_to` | `string (uuid) \| null` | no |  |  |
+| `assigned_to` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
 | `campaign` | `string` | no |  |  |
 | `company` | `string` | no |  |  |
 | `description` | `string` | no |  |  |
@@ -670,9 +670,9 @@ Update an existing CRM lead by ID
 | `id` | `string (uuid)` | yes |  |  |
 | `jobTitle` | `string` | no |  |  |
 | `lastName` | `string` | no |  |  |
-| `lead_source_id` | `string (uuid) \| null` | no |  |  |
-| `lead_status_id` | `string (uuid) \| null` | no |  |  |
-| `lead_type_id` | `string (uuid) \| null` | no |  |  |
+| `lead_source_id` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
+| `lead_status_id` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
+| `lead_type_id` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
 | `phone` | `string` | no |  |  |
 | `refered_by` | `string` | no |  |  |
 
@@ -733,11 +733,11 @@ Update an existing CRM opportunity by ID
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `account` | `string (uuid) \| null` | no |  |  |
-| `assigned_to` | `string (uuid) \| null` | no |  |  |
+| `account` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
+| `assigned_to` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
 | `budget` | `integer` | no |  |  |
 | `close_date` | `string (date-time)` | no |  |  |
-| `contact` | `string (uuid) \| null` | no |  |  |
+| `contact` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
 | `currency` | `string` | no |  |  |
 | `description` | `string` | no |  |  |
 | `expected_revenue` | `integer` | no |  |  |
@@ -762,15 +762,15 @@ Create a draft order for an account; lines are priced from the customer's price 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `accountId` | `string` | yes |  |  |
-| `contactId` | `string \| null` | no |  |  |
+| `contactId` | <code>{"string \u007c null"}</code> | no |  |  |
 | `lines` | `object[]` | yes |  |  |
-| `note` | `string \| null` | no |  |  |
-| `requestedDeliveryDate` | `string \| null` | no |  |  |
-| `shipping_city` | `string \| null` | no |  |  |
-| `shipping_country` | `string \| null` | no |  |  |
-| `shipping_postal_code` | `string \| null` | no |  |  |
-| `shipping_state` | `string \| null` | no |  |  |
-| `shipping_street` | `string \| null` | no |  |  |
+| `note` | <code>{"string \u007c null"}</code> | no |  |  |
+| `requestedDeliveryDate` | <code>{"string \u007c null"}</code> | no |  |  |
+| `shipping_city` | <code>{"string \u007c null"}</code> | no |  |  |
+| `shipping_country` | <code>{"string \u007c null"}</code> | no |  |  |
+| `shipping_postal_code` | <code>{"string \u007c null"}</code> | no |  |  |
+| `shipping_state` | <code>{"string \u007c null"}</code> | no |  |  |
+| `shipping_street` | <code>{"string \u007c null"}</code> | no |  |  |
 
 ### `crm_decide_order_approval`
 
@@ -778,9 +778,9 @@ Approve or reject an order waiting for approval (manager or admin; a note is req
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `decision` | `"APPROVED" \| "REJECTED"` | yes |  |  |
+| `decision` | <code>{"\"APPROVED\" \u007c \"REJECTED\""}</code> | yes |  |  |
 | `id` | `string` | yes |  |  |
-| `note` | `string \| null` | no |  |  |
+| `note` | <code>{"string \u007c null"}</code> | no |  |  |
 | `updatedAt` | `string` | no |  |  |
 
 ### `crm_get_order`
@@ -801,7 +801,7 @@ List orders you can see, newest first
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
 | `ownerId` | `string` | no |  |  |
-| `status` | `"DRAFT" \| "PENDING_APPROVAL" \| "READY" \| "SENT" \| "CONFIRMED" \| "DELIVERED" \| "INVOICED" \| "PAID" \| "CANCELLED" \| "SYNC_FAILED"` | no |  |  |
+| `status` | <code>{"\"DRAFT\" \u007c \"PENDING_APPROVAL\" \u007c \"READY\" \u007c \"SENT\" \u007c \"CONFIRMED\" \u007c \"DELIVERED\" \u007c \"INVOICED\" \u007c \"PAID\" \u007c \"CANCELLED\" \u007c \"SYNC_FAILED\""}</code> | no |  |  |
 
 ### `crm_set_order_status`
 
@@ -809,9 +809,9 @@ Withdraw, reopen, retry, or advance an order to a later status (advance needs `t
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `action` | `"withdraw" \| "reopen" \| "retry" \| "advance"` | yes |  |  |
+| `action` | <code>{"\"withdraw\" \u007c \"reopen\" \u007c \"retry\" \u007c \"advance\""}</code> | yes |  |  |
 | `id` | `string` | yes |  |  |
-| `to` | `"DRAFT" \| "PENDING_APPROVAL" \| "READY" \| "SENT" \| "CONFIRMED" \| "DELIVERED" \| "INVOICED" \| "PAID" \| "CANCELLED" \| "SYNC_FAILED"` | no |  |  |
+| `to` | <code>{"\"DRAFT\" \u007c \"PENDING_APPROVAL\" \u007c \"READY\" \u007c \"SENT\" \u007c \"CONFIRMED\" \u007c \"DELIVERED\" \u007c \"INVOICED\" \u007c \"PAID\" \u007c \"CANCELLED\" \u007c \"SYNC_FAILED\""}</code> | no |  |  |
 
 ### `crm_submit_order`
 
@@ -827,16 +827,16 @@ Replace a draft order's header fields and full line list
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `contactId` | `string \| null` | no |  |  |
+| `contactId` | <code>{"string \u007c null"}</code> | no |  |  |
 | `id` | `string` | yes |  |  |
 | `lines` | `object[]` | yes |  |  |
-| `note` | `string \| null` | no |  |  |
-| `requestedDeliveryDate` | `string \| null` | no |  |  |
-| `shipping_city` | `string \| null` | no |  |  |
-| `shipping_country` | `string \| null` | no |  |  |
-| `shipping_postal_code` | `string \| null` | no |  |  |
-| `shipping_state` | `string \| null` | no |  |  |
-| `shipping_street` | `string \| null` | no |  |  |
+| `note` | <code>{"string \u007c null"}</code> | no |  |  |
+| `requestedDeliveryDate` | <code>{"string \u007c null"}</code> | no |  |  |
+| `shipping_city` | <code>{"string \u007c null"}</code> | no |  |  |
+| `shipping_country` | <code>{"string \u007c null"}</code> | no |  |  |
+| `shipping_postal_code` | <code>{"string \u007c null"}</code> | no |  |  |
+| `shipping_state` | <code>{"string \u007c null"}</code> | no |  |  |
+| `shipping_street` | <code>{"string \u007c null"}</code> | no |  |  |
 
 ## Price lists
 
@@ -894,7 +894,7 @@ List price lists (active by default)
 | `includeArchived` | `boolean` | no |  |  |
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
-| `source` | `"CRM" \| "EXTERNAL"` | no |  |  |
+| `source` | <code>{"\"CRM\" \u007c \"EXTERNAL\""}</code> | no |  |  |
 
 ### `crm_update_price_list`
 
@@ -913,23 +913,23 @@ Create or update a price list rule (Odoo-compatible fields; manager or admin; no
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `appliesTo` | `"ALL" \| "CATEGORY" \| "PRODUCT"` | yes |  |  |
-| `base` | `"LIST_PRICE" \| "COST" \| "PRICE_LIST"` | no |  |  |
-| `basePriceListId` | `string \| null` | no |  |  |
-| `categoryId` | `string \| null` | no |  |  |
-| `computePrice` | `"FIXED" \| "PERCENTAGE" \| "FORMULA"` | yes |  |  |
-| `dateEnd` | `string \| null` | no |  |  |
-| `dateStart` | `string \| null` | no |  |  |
-| `fixedPrice` | `number \| null` | no |  |  |
-| `minQuantity` | `number \| null` | no |  |  |
-| `percentPrice` | `number \| null` | no |  |  |
-| `priceDiscount` | `number \| null` | no |  |  |
+| `appliesTo` | <code>{"\"ALL\" \u007c \"CATEGORY\" \u007c \"PRODUCT\""}</code> | yes |  |  |
+| `base` | <code>{"\"LIST_PRICE\" \u007c \"COST\" \u007c \"PRICE_LIST\""}</code> | no |  |  |
+| `basePriceListId` | <code>{"string \u007c null"}</code> | no |  |  |
+| `categoryId` | <code>{"string \u007c null"}</code> | no |  |  |
+| `computePrice` | <code>{"\"FIXED\" \u007c \"PERCENTAGE\" \u007c \"FORMULA\""}</code> | yes |  |  |
+| `dateEnd` | <code>{"string \u007c null"}</code> | no |  |  |
+| `dateStart` | <code>{"string \u007c null"}</code> | no |  |  |
+| `fixedPrice` | <code>{"number \u007c null"}</code> | no |  |  |
+| `minQuantity` | <code>{"number \u007c null"}</code> | no |  |  |
+| `percentPrice` | <code>{"number \u007c null"}</code> | no |  |  |
+| `priceDiscount` | <code>{"number \u007c null"}</code> | no |  |  |
 | `priceListId` | `string` | yes |  |  |
-| `priceMaxMargin` | `number \| null` | no |  |  |
-| `priceMinMargin` | `number \| null` | no |  |  |
-| `priceRound` | `number \| null` | no |  |  |
-| `priceSurcharge` | `number \| null` | no |  |  |
-| `productId` | `string \| null` | no |  |  |
+| `priceMaxMargin` | <code>{"number \u007c null"}</code> | no |  |  |
+| `priceMinMargin` | <code>{"number \u007c null"}</code> | no |  |  |
+| `priceRound` | <code>{"number \u007c null"}</code> | no |  |  |
+| `priceSurcharge` | <code>{"number \u007c null"}</code> | no |  |  |
+| `productId` | <code>{"string \u007c null"}</code> | no |  |  |
 | `ruleId` | `string` | no |  |  |
 
 ## Products
@@ -940,7 +940,7 @@ Create a new CRM product
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `billing_period` | `"MONTHLY" \| "QUARTERLY" \| "SEMIANNUALLY" \| "ANNUALLY"` | no |  |  |
+| `billing_period` | <code>{"\"MONTHLY\" \u007c \"QUARTERLY\" \u007c \"SEMIANNUALLY\" \u007c \"ANNUALLY\""}</code> | no |  |  |
 | `categoryId` | `string (uuid)` | no |  |  |
 | `currency` | `string` | yes |  |  |
 | `description` | `string` | no |  |  |
@@ -948,7 +948,7 @@ Create a new CRM product
 | `name` | `string` | yes |  |  |
 | `sku` | `string` | no |  |  |
 | `tax_rate` | `number` | no |  |  |
-| `type` | `"PRODUCT" \| "SERVICE"` | yes |  |  |
+| `type` | <code>{"\"PRODUCT\" \u007c \"SERVICE\""}</code> | yes |  |  |
 | `unit` | `string` | no |  |  |
 | `unit_cost` | `number` | no |  |  |
 | `unit_price` | `number` | yes |  |  |
@@ -977,7 +977,7 @@ List CRM products (org-wide catalog)
 | --- | --- | --- | --- | --- |
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
-| `status` | `"DRAFT" \| "ACTIVE" \| "ARCHIVED"` | no |  |  |
+| `status` | <code>{"\"DRAFT\" \u007c \"ACTIVE\" \u007c \"ARCHIVED\""}</code> | no |  |  |
 
 ### `crm_update_product`
 
@@ -985,7 +985,7 @@ Update an existing CRM product by ID
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `billing_period` | `"MONTHLY" \| "QUARTERLY" \| "SEMIANNUALLY" \| "ANNUALLY"` | no |  |  |
+| `billing_period` | <code>{"\"MONTHLY\" \u007c \"QUARTERLY\" \u007c \"SEMIANNUALLY\" \u007c \"ANNUALLY\""}</code> | no |  |  |
 | `categoryId` | `string (uuid)` | no |  |  |
 | `currency` | `string` | no |  |  |
 | `description` | `string` | no |  |  |
@@ -993,9 +993,9 @@ Update an existing CRM product by ID
 | `is_recurring` | `boolean` | no |  |  |
 | `name` | `string` | no |  |  |
 | `sku` | `string` | no |  |  |
-| `status` | `"DRAFT" \| "ACTIVE" \| "ARCHIVED"` | no |  |  |
+| `status` | <code>{"\"DRAFT\" \u007c \"ACTIVE\" \u007c \"ARCHIVED\""}</code> | no |  |  |
 | `tax_rate` | `number` | no |  |  |
-| `type` | `"PRODUCT" \| "SERVICE"` | no |  |  |
+| `type` | <code>{"\"PRODUCT\" \u007c \"SERVICE\""}</code> | no |  |  |
 | `unit` | `string` | no |  |  |
 | `unit_cost` | `number` | no |  |  |
 | `unit_price` | `number` | no |  |  |
@@ -1121,7 +1121,7 @@ List tasks, optionally filtered by board, section, user, or status
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
 | `section` | `string (uuid)` | no |  |  |
-| `status` | `"ACTIVE" \| "PENDING" \| "COMPLETE"` | no |  |  |
+| `status` | <code>{"\"ACTIVE\" \u007c \"PENDING\" \u007c \"COMPLETE\""}</code> | no |  |  |
 | `user` | `string (uuid)` | no |  |  |
 
 ### `projects_move_task`
@@ -1166,7 +1166,7 @@ Update a task by ID
 | `dueDateAt` | `string (date-time)` | no |  |  |
 | `id` | `string (uuid)` | yes |  |  |
 | `priority` | `string` | no |  |  |
-| `taskStatus` | `"ACTIVE" \| "PENDING" \| "COMPLETE"` | no |  |  |
+| `taskStatus` | <code>{"\"ACTIVE\" \u007c \"PENDING\" \u007c \"COMPLETE\""}</code> | no |  |  |
 | `title` | `string` | no |  |  |
 
 ### `projects_watch_board`
@@ -1186,7 +1186,7 @@ List available report configurations
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `category` | `"sales" \| "leads" \| "accounts" \| "activity" \| "campaigns" \| "users"` | no |  |  |
+| `category` | <code>{"\"sales\" \u007c \"leads\" \u007c \"accounts\" \u007c \"activity\" \u007c \"campaigns\" \u007c \"users\""}</code> | no |  |  |
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
 
@@ -1196,7 +1196,7 @@ Run a report by category and get the data. Returns raw report data (use format p
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `category` | `"sales" \| "leads" \| "accounts" \| "activity" \| "campaigns" \| "users"` | yes |  |  |
+| `category` | <code>{"\"sales\" \u007c \"leads\" \u007c \"accounts\" \u007c \"activity\" \u007c \"campaigns\" \u007c \"users\""}</code> | yes |  |  |
 | `dateFrom` | `string (date-time)` | no |  |  |
 | `dateTo` | `string (date-time)` | no |  |  |
 
@@ -1343,4 +1343,4 @@ List NextCRM users, to resolve a person to the user ID needed by assigned_to. Re
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
 | `query` | `string` | no |  |  |
-| `status` | `"ACTIVE" \| "INACTIVE" \| "PENDING" \| "ALL"` | no |  |  |
+| `status` | <code>{"\"ACTIVE\" \u007c \"INACTIVE\" \u007c \"PENDING\" \u007c \"ALL\""}</code> | no |  |  |
