@@ -132,7 +132,11 @@ export function EmailConversationBody({
     parts.length > 1 || plainTextHasQuoteMarkers(plain) || parts.some((p) => p.kind !== "message");
 
   if (bodyHtml?.trim() && !useThreadUi) {
-    return <EmailHtmlBody bodyHtml={bodyHtml} />;
+    return (
+      <div className="mx-auto w-full max-w-3xl">
+        <EmailHtmlBody bodyHtml={bodyHtml} className="rounded-none sm:rounded-lg sm:shadow-sm" />
+      </div>
+    );
   }
 
   if (parts.length === 0) {

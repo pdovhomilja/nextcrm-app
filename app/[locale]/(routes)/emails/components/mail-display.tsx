@@ -378,13 +378,6 @@ export function MailDisplay({
                 isUnread={!mail.isRead}
                 className="shrink-0 bg-background"
               />
-              {attachmentList.length > 0 && (
-                <EmailAttachmentsPanel
-                  emailId={fullEmail.id}
-                  attachments={attachmentList}
-                  className="shrink-0"
-                />
-              )}
               <div className="relative isolate min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-auto overscroll-contain bg-muted/20 dark:bg-muted/10">
                 <EmailConversationBody
                   bodyText={fullEmail.bodyText}
@@ -394,6 +387,13 @@ export function MailDisplay({
                   sentAt={fullEmail.sentAt}
                   toLabel={toLabel}
                 />
+                {attachmentList.length > 0 && (
+                  <EmailAttachmentsPanel
+                    emailId={fullEmail.id}
+                    attachments={attachmentList}
+                    className="shrink-0 bg-muted/10 pb-8"
+                  />
+                )}
               </div>
             </>
           ) : (
