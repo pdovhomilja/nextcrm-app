@@ -96,5 +96,5 @@ export async function getAccessibleEmailAccounts(): Promise<AccessibleEmailAccou
     });
   }
 
-  return serializeDecimalsList([...byId.values()]);
+  return serializeDecimalsList(Array.from(byId.values()));
 }
