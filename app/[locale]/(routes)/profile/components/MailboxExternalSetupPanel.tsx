@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Copy, Eye, EyeOff, ExternalLink, Server } from "lucide-react";
 import { EmailSendProvider } from "@prisma/client";
@@ -17,6 +17,7 @@ import { RESEND_SMTP } from "@/lib/email/mailbox-external-setup";
 type Props = {
   accountId: string;
   sendProvider: EmailSendProvider;
+  /** When true, expand SMTP details on first paint (active mailboxes). */
   initialOpen?: boolean;
 };
 
@@ -45,15 +46,16 @@ function CopyRow({ label, value }: { label: string; value: string }) {
 }
 
 export function MailboxExternalSetupPanel({ accountId, sendProvider, initialOpen = false }: Props) {
-  const [open, setOpen] = useState(initialOpen);
+  const [open, setOpen] = useState(false);
   const [setup, setSetup] = useState<MailboxExternalSetupPublic | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(initialOpen);
+  const [bootstrapped, setBootstrapped] = useState(false);
   const [password, setPassword] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [revealing, setRevealing] = useState(false);
 
-  async function loadSetup() {
-    if (setup) {
+  async function loadSetup(forceOpen?: boolean) {
+    if (setup && !forceOpen) {
       setOpen((v) => !v);
       return;
     }
@@ -67,6 +69,12 @@ export function MailboxExternalSetupPanel({ accountId, sendProvider, initialOpen
     setSetup(result);
     setOpen(true);
   }
+
+  useEffect(() => {
+    if (!initialOpen || bootstrapped) return;
+    setBootstrapped(true);
+    void loadSetup(true);
+  }, [initialOpen, bootstrapped, accountId]);
 
   async function handleRevealPassword() {
     if (password) {

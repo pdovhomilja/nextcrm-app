@@ -219,8 +219,12 @@ export function EmailAccountsList(props: EmailAccountsListProps) {
                     Last activity {new Date(acc.lastSyncedAt).toLocaleString()}
                   </p>
                 )}
-                {!isAdmin && !legacy && acc.isActive && (
-                  <MailboxExternalSetupPanel accountId={acc.id} sendProvider={acc.sendProvider} />
+                {!isAdmin && !legacy && (
+                  <MailboxExternalSetupPanel
+                    accountId={acc.id}
+                    sendProvider={acc.sendProvider}
+                    initialOpen={acc.isActive}
+                  />
                 )}
               </div>
             </div>

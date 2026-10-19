@@ -1,4 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "ignoreCommand": "bash scripts/vercel-should-build.sh"
+  "ignoreCommand": "if [ -f scripts/vercel-should-build.sh ]; then bash scripts/vercel-should-build.sh; elif [ -f ../../scripts/vercel-should-build.sh ]; then bash ../../scripts/vercel-should-build.sh; else exit 1; fi"
 }
