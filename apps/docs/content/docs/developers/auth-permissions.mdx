@@ -37,6 +37,8 @@ The partner read scope (`lib/authz/scopes/partner.ts`, used by `scopes/crm.ts`, 
 
 For the `user` role, "own scope" is defined per resource in `lib/authz/scopes/crm.ts`. For accounts, a user can see a record if they are `assigned_to`, `createdBy`, or a watcher. Contacts, leads, opportunities and contracts add rules for records linked to an account in scope.
 
+The role list, the partner route allow-list and the partner entry points are generated from the code in [Roles and access](/docs/reference/roles).
+
 Access is enforced in code through `lib/authz`. The Better Auth access-control statements in `lib/auth-permissions.ts` only cover the plugin's own endpoints and grant nothing.
 
 ## Checking access

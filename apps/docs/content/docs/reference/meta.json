@@ -1,0 +1,12 @@
+{
+  "title": "Reference",
+  "icon": "BookOpen",
+  "pages": [
+    "index",
+    "mcp-tools",
+    "roles",
+    "environment",
+    "plugins"
+  ],
+  "root": true
+}

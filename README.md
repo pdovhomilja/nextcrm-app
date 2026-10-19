@@ -114,26 +114,7 @@ ENV variable  →  Admin system-wide  →  User profile
 
 NextCRM now ships with a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server, letting AI agents (Claude, Cursor, custom agents) read and write CRM data directly.
 
-**105 tools across 16 modules:**
-
-| Module | Tools | Operations |
-|--------|-------|------------|
-| Accounts | 6 | list, get, search, create, update, delete |
-| Contacts | 6 | list, get, search, create, update, delete |
-| Leads | 6 | list, get, search, create, update, delete |
-| Opportunities | 6 | list, get, search, create, update, delete |
-| Targets | 6 | list, get, search, create, update, delete |
-| Products | 5 | list, get, create, update, delete |
-| Contracts | 5 | list, get, create, update, delete |
-| Activities | 5 | list, get, create, update, delete |
-| Documents | 8 | list, get, create, upload, download, link, unlink, delete |
-| Target Lists | 7 | list, get, create, update, delete, add members, remove members |
-| Enrichment | 4 | enrich contact, enrich target, bulk contact, bulk target |
-| Email Accounts | 1 | list |
-| Users | 1 | list |
-| Campaigns | 19 | full lifecycle: CRUD, send, pause, resume, templates, steps, stats |
-| Projects | 18 | boards, sections, tasks, comments, documents, watch |
-| Reports | 2 | list, run |
+Every tool with its input fields, generated from the code: [MCP tools reference](https://docs.nextcrm.app/docs/reference/mcp-tools).
 
 **Authentication:** Generate Bearer tokens (`nxtc__...`) from your profile page. Tokens are SHA-256 hashed — the raw value is shown only once and never stored.
 
@@ -206,7 +187,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 - [Vercel AI SDK 6.x](https://sdk.vercel.ai/) – Unified AI interface
 - [pgvector](https://github.com/pgvector/pgvector) – PostgreSQL vector extension for similarity search (HNSW indexes)
 - [E2B](https://e2b.dev/) – Cloud sandboxes with real Chrome browser for AI-driven web research and target enrichment
-- [MCP Server](https://modelcontextprotocol.io/) – 105 tools across 16 modules via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP (`/api/mcp/mcp`) + legacy SSE (`/api/mcp/sse`, needs `REDIS_URL`) transports
+- [MCP Server](https://modelcontextprotocol.io/) – tools for every CRM module ([reference](https://docs.nextcrm.app/docs/reference/mcp-tools)) via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP (`/api/mcp/mcp`) + legacy SSE (`/api/mcp/sse`, needs `REDIS_URL`) transports
 
 ### Data fetching
 

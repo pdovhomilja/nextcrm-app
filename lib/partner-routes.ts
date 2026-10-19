@@ -7,7 +7,7 @@ import { routing } from "@/i18n/routing";
  * against the path without its locale; `*` is one path segment, and a pattern
  * also covers everything below it.
  */
-const PARTNER_ROUTES = [
+export const PARTNER_ROUTES = [
   "/crm/accounts",
   "/crm/contacts",
   "/crm/leads",
