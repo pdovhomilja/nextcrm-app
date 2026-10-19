@@ -49,7 +49,10 @@ export function EmailAttachmentsPanel({ emailId, attachments, className }: Props
                 variant={active ? "secondary" : "outline"}
                 size="sm"
                 className="h-auto max-w-[min(100%,280px)] gap-2 py-2"
-                onClick={() => setPreviewIndex(pdf ? i : null)}
+                onClick={() => {
+                  if (pdf) setPreviewIndex(i);
+                  else window.open(`/api/emails/${emailId}/attachments/${i}`, "_blank", "noopener");
+                }}
               >
                 {pdf ? (
                   <FileText className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
