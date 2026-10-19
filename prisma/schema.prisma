@@ -1622,6 +1622,8 @@ model Email {
   bccRecipients   Json        @default("[]")
   bodyText        String?
   bodyHtml        String?
+  /// [{ url, name, mime, size? }] — compose uploads or inbound copies from Resend
+  attachments     Json      @default("[]")
   sentAt          DateTime?
   isRead          Boolean     @default(false)
   isSpam          Boolean     @default(false)

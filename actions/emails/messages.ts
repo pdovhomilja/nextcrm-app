@@ -279,6 +279,12 @@ export async function sendEmail(input: SendInput) {
       bccRecipients: input.bcc?.map((e) => ({ email: e })) ?? [],
       bodyText: input.body,
       bodyHtml: input.bodyHtml ?? null,
+      attachments:
+        input.attachments?.map((a) => ({
+          url: a.url,
+          name: a.name,
+          mime: a.mime,
+        })) ?? [],
       sentAt: new Date(),
       isRead: true,
     },

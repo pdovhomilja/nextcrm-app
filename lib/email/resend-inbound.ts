@@ -2,6 +2,7 @@ import { EmailFolder, EmailSendProvider } from "@prisma/client";
 import { prismadb } from "@/lib/prisma";
 import { getResendApiKey } from "@/lib/resend";
 import { inngest } from "@/inngest/client";
+import { fetchAndPersistResendInboundAttachments } from "@/lib/email/resend-receiving-attachments";
 
 export type ResendReceivedEmail = {
   id: string;
@@ -174,6 +175,13 @@ async function storeInboundForMailbox(
     return { stored: false, reason: "duplicate", emailId: existing.id };
   }
 
+  let attachments: Awaited<ReturnType<typeof fetchAndPersistResendInboundAttachments>> = [];
+  try {
+    attachments = await fetchAndPersistResendInboundAttachments(payload.id);
+  } catch (err) {
+    console.warn("[resend-inbound] attachment ingest failed:", err);
+  }
+
   const created = await prismadb.email.create({
     data: {
       emailAccountId: account.id,
@@ -188,6 +196,7 @@ async function storeInboundForMailbox(
       bccRecipients: toRecipientJson(payload.bcc),
       bodyText: payload.text ?? null,
       bodyHtml: payload.html ?? null,
+      attachments,
       sentAt,
       isRead: false,
     },

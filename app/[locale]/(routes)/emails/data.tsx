@@ -1,6 +1,9 @@
 // Type definitions for the emails feature — mock data removed
 
+import type { EmailStoredAttachment } from "@/lib/email/attachment-types";
+
 export type EmailRecipient = { name?: string; email: string };
+export type { EmailStoredAttachment };
 
 /** Core shape returned by getEmails() list view. Detail fields are optional — populated by getEmail(). */
 export type Mail = {
@@ -17,6 +20,7 @@ export type Mail = {
   ccRecipients?: EmailRecipient[];
   bodyText?: string | null;
   bodyHtml?: string | null;
+  attachments?: EmailStoredAttachment[];
   isStarred?: boolean;
 };
 

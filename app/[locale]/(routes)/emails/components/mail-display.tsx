@@ -47,7 +47,9 @@ import {
   unarchiveEmail,
 } from "@/actions/emails/mailbox-actions";
 import { ComposeModal } from "@/app/[locale]/(routes)/emails/components/ComposeModal";
+import { EmailAttachmentsPanel } from "@/app/[locale]/(routes)/emails/components/EmailAttachmentsPanel";
 import { EmailConversationBody } from "@/app/[locale]/(routes)/emails/components/EmailConversationBody";
+import { parseEmailAttachments } from "@/lib/email/attachment-types";
 import { EmailMessageHeader } from "@/app/[locale]/(routes)/emails/components/EmailMessageHeader";
 import type { MailboxView } from "@/lib/email/mailbox-views";
 import { cn } from "@/lib/utils";
@@ -107,8 +109,11 @@ export function MailDisplay({
         ccRecipients: fullEmail.ccRecipients as Mail["ccRecipients"],
         bodyText: fullEmail.bodyText,
         bodyHtml: fullEmail.bodyHtml,
+        attachments: parseEmailAttachments(fullEmail.attachments),
       }
     : null;
+
+  const attachmentList = fullEmail ? parseEmailAttachments(fullEmail.attachments) : [];
 
   const canCompose = Boolean(composeMail?.fromEmail && mailboxView !== "trash");
 
@@ -373,6 +378,13 @@ export function MailDisplay({
                 isUnread={!mail.isRead}
                 className="shrink-0 bg-background"
               />
+              {attachmentList.length > 0 && (
+                <EmailAttachmentsPanel
+                  emailId={fullEmail.id}
+                  attachments={attachmentList}
+                  className="shrink-0"
+                />
+              )}
               <div className="relative isolate min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-muted/20 dark:bg-muted/10">
                 <EmailConversationBody
                   bodyText={fullEmail.bodyText}
