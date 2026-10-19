@@ -31,3 +31,18 @@ export function isPdfAttachment(a: EmailStoredAttachment): boolean {
     a.name.toLowerCase().endsWith(".pdf")
   );
 }
+
+export function formatAttachmentSize(bytes?: number): string | null {
+  if (bytes == null || !Number.isFinite(bytes) || bytes <= 0) return null;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(bytes < 10_240 ? 1 : 0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function attachmentKindLabel(a: EmailStoredAttachment): string {
+  if (isPdfAttachment(a)) return "PDF";
+  const ext = a.name.includes(".") ? a.name.split(".").pop()?.toUpperCase() : "";
+  if (ext) return ext.slice(0, 8);
+  if (a.mime.startsWith("image/")) return "Image";
+  return "File";
+}
