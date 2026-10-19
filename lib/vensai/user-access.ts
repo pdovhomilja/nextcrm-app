@@ -20,7 +20,9 @@ export async function setUserVentureAccess(input: {
   ventureSlugs: string[];
   crmEnabled: boolean;
 }) {
-  const slugs = [...new Set(input.ventureSlugs.map((s) => s.trim()).filter(Boolean))];
+  const slugs = Array.from(
+    new Set(input.ventureSlugs.map((s) => s.trim()).filter(Boolean)),
+  );
   const user = await prismadb.users.update({
     where: { id: input.userId },
     data: {

@@ -20,7 +20,8 @@ export function VentureAccessFields({
   onCrmEnabledChange,
 }: Props) {
   function toggle(slug: string, checked: boolean) {
-    if (checked) onVentureSlugsChange([...new Set([...ventureSlugs, slug])]);
+    if (checked)
+      onVentureSlugsChange(Array.from(new Set([...ventureSlugs, slug])));
     else onVentureSlugsChange(ventureSlugs.filter((s) => s !== slug));
   }
 

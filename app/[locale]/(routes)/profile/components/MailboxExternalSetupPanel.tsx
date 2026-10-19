@@ -101,7 +101,7 @@ export function MailboxExternalSetupPanel({ accountId, sendProvider, initialOpen
         variant="ghost"
         size="sm"
         className="h-8 gap-2 px-0 text-primary hover:bg-transparent"
-        onClick={loadSetup}
+        onClick={() => void loadSetup()}
         disabled={loading}
       >
         <Server className="h-4 w-4" />
