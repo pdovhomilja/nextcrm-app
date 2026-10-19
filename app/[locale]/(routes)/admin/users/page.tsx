@@ -12,6 +12,7 @@ import { Users } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import SendMailToAll from "./components/send-mail-to-all";
 import { getTranslations } from "next-intl/server";
+import { listVentureOptions } from "@/lib/vensai/venture-catalog";
 
 const AdminUsersPage = async () => {
   const users: Users[] = await getUsers();
@@ -19,6 +20,7 @@ const AdminUsersPage = async () => {
   const t = await getTranslations("AdminPage");
 
   const session = await getSession();
+  const ventureOptions = listVentureOptions();
 
   if (session?.user?.role !== "admin") {
     return (
@@ -42,7 +44,7 @@ const AdminUsersPage = async () => {
         <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
           {t("users.inviteHeading")}
         </h4>
-        <InviteForm orgDomain={orgDomain} />
+        <InviteForm orgDomain={orgDomain} ventureOptions={ventureOptions} />
       </div>
       <Separator />
       <div>
@@ -50,7 +52,7 @@ const AdminUsersPage = async () => {
       </div>
       <Separator />
 
-      <AdminUserDataTable columns={columns} data={users} />
+      <AdminUserDataTable columns={columns} data={users} ventureOptions={ventureOptions} />
     </Container>
   );
 };

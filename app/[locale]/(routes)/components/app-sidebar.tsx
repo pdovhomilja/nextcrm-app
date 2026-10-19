@@ -11,7 +11,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Puzzle } from "lucide-react";
+import { Building2, Puzzle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavMain } from "./nav-main";
 import getDashboardMenuItem from "./menu-items/Dashboard";
@@ -102,6 +102,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   pluginNav?: { title: string; url: string }[];
   appName: string;
   permissions?: PermissionMatrix;
+  showVenturesNav?: boolean;
 }
 
 export function AppSidebar({
@@ -110,6 +111,7 @@ export function AppSidebar({
   pluginNav,
   appName,
   permissions,
+  showVenturesNav,
   ...props
 }: AppSidebarProps) {
   const { state } = useSidebar();
@@ -136,6 +138,14 @@ export function AppSidebar({
     getInvoicesMenuItem({ title: dict?.invoices || "Invoices" }),
   ];
   const navItems = filterNavByPermissions(allNavItems, permissions);
+
+  if (showVenturesNav) {
+    navItems.splice(1, 0, {
+      title: "Ventures",
+      url: "/ventures",
+      icon: Building2,
+    });
+  }
 
   if (pluginNav?.length) {
     navItems.push({ title: dict?.plugins || "Plugins", icon: Puzzle, items: pluginNav });

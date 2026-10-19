@@ -23,6 +23,8 @@ import {
 import { createEmailAccountForUser } from "@/actions/emails/accounts";
 import EmployeeWelcomeEmail from "@/emails/EmployeeWelcome";
 import { getAppName } from "@/lib/app-name";
+import { setUserVentureAccess } from "@/lib/vensai/user-access";
+import { listVentureOptions } from "@/lib/vensai/venture-catalog";
 
 export type InviteEmployeeInput = {
   name: string;
@@ -32,6 +34,8 @@ export type InviteEmployeeInput = {
   phone: string;
   language: string;
   role: string;
+  ventureSlugs?: string[];
+  crmEnabled?: boolean;
 };
 
 export const inviteUser = async (data: InviteEmployeeInput) => {
@@ -95,6 +99,13 @@ export const inviteUser = async (data: InviteEmployeeInput) => {
   });
   if (existingMailbox) return { error: "This work email is already used as a CRM mailbox" };
 
+  const allowedVentures = new Set(listVentureOptions().map((v) => v.slug));
+  const ventureSlugs = (data.ventureSlugs ?? []).filter((s) => allowedVentures.has(s));
+  const crmEnabled = data.crmEnabled !== false;
+  if (!crmEnabled && ventureSlugs.length === 0) {
+    return { error: "Enable CRM access or assign at least one venture." };
+  }
+
   const temporaryPassword = generateTemporaryPassword();
 
   try {
@@ -110,6 +121,7 @@ export const inviteUser = async (data: InviteEmployeeInput) => {
         userLanguage: language as Language,
         role: role as AppRole,
         emailVerified: true,
+        crmEnabled,
       },
       select: {
         id: true,
@@ -162,7 +174,10 @@ export const inviteUser = async (data: InviteEmployeeInput) => {
       }),
     });
 
+    await setUserVentureAccess({ userId: user.id, ventureSlugs, crmEnabled });
+
     revalidatePath("/[locale]/(routes)/admin", "page");
+    revalidatePath("/[locale]/(routes)/ventures", "page");
     return { data: user };
   } catch (error) {
     console.log("[INVITE_USER]", error);

@@ -14,6 +14,10 @@ export const adminUserSchema = z.object({
   username: z.string().nullable().optional(),
   userStatus: z.string(),
   userLanguage: z.string(),
+  crmEnabled: z.boolean().optional(),
+  ventureGrants: z
+    .array(z.object({ ventureSlug: z.string() }))
+    .optional(),
 });
 
 export type AdminUser = z.infer<typeof adminUserSchema>;

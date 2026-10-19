@@ -1060,6 +1060,9 @@ model Users {
   scheduleOrganized TeamScheduleEntry[] @relation("ScheduleOrganizer")
   permissionGroups  PermissionGroupMember[]
   permissionOverrides UserPermission[]
+  /** When false, user may only use assigned VenSai ventures (not CRM modules). */
+  crmEnabled        Boolean            @default(true)
+  ventureGrants     UserVentureGrant[]
 
   @@index([email])
   @@index([userStatus])
@@ -1131,6 +1134,20 @@ model UserPermission {
   user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, feature, action])
+}
+
+/// VenSai Admin Portal venture access (e.g. rofyt), assigned by CRM admin.
+model UserVentureGrant {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  ventureSlug String
+  createdAt   DateTime @default(now())
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, ventureSlug])
+  @@index([userId])
+  @@index([ventureSlug])
 }
 
 model crm_AuditLog {

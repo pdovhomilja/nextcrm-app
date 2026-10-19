@@ -115,10 +115,18 @@ export default async function AppLayout({
   const { getLocale } = await import("next-intl/server");
   const { getUserPermissions } = await import("@/lib/authz/feature-access");
   const locale = (await getLocale()) as "en" | "cz" | "de" | "uk";
-  const [pluginNav, permissions] = await Promise.all([
+  const { getUserAccessProfile } = await import("@/lib/vensai/user-access");
+  const { permissionsForCrmAccess } = await import("@/lib/vensai/crm-nav");
+  const [pluginNav, permissions, accessProfile] = await Promise.all([
     getPluginNavItems(mapLegacyRole(user?.role), locale),
     getUserPermissions(session.user.id as string, session.user.role),
+    getUserAccessProfile(session.user.id as string),
   ]);
+  const effectivePermissions = permissionsForCrmAccess(
+    permissions,
+    accessProfile?.crmEnabled !== false,
+  );
+  const showVenturesNav = (accessProfile?.ventureGrants.length ?? 0) > 0;
 
   //console.log(typeof build, "build");
   return (
@@ -130,7 +138,8 @@ export default async function AppLayout({
         session={session}
         pluginNav={pluginNav}
         appName={getAppName()}
-        permissions={permissions}
+        permissions={effectivePermissions}
+        showVenturesNav={showVenturesNav}
       />
       <SidebarInset>
         <HeaderLive

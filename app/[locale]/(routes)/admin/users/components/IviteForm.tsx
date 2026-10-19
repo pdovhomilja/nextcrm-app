@@ -29,6 +29,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icons } from "@/components/ui/icons";
 import { inviteUser } from "@/actions/admin/users/invite-user";
+import { VentureAccessFields } from "./VentureAccessFields";
+import type { VentureOption } from "@/lib/vensai/venture-catalog";
 
 function slugifyClient(input: string) {
   return input
@@ -61,9 +63,17 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>;
 
-export function InviteForm({ orgDomain }: { orgDomain: string }) {
+export function InviteForm({
+  orgDomain,
+  ventureOptions,
+}: {
+  orgDomain: string;
+  ventureOptions: VentureOption[];
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const [workEmailTouched, setWorkEmailTouched] = useState(false);
+  const [ventureSlugs, setVentureSlugs] = useState<string[]>([]);
+  const [crmEnabled, setCrmEnabled] = useState(true);
   const t = useTranslations("AdminPage");
   const router = useRouter();
 
@@ -103,6 +113,8 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
         phone: data.phone,
         language: data.language,
         role: data.role,
+        ventureSlugs,
+        crmEnabled,
       });
 
       if (result.error) {
@@ -119,6 +131,8 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
           role: "user",
         });
         setWorkEmailTouched(false);
+        setVentureSlugs([]);
+        setCrmEnabled(true);
         router.refresh();
       }
     } catch {
@@ -280,6 +294,15 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
                 </FormItem>
               )}
             />
+            <div className="sm:col-span-2">
+              <VentureAccessFields
+                ventures={ventureOptions}
+                ventureSlugs={ventureSlugs}
+                crmEnabled={crmEnabled}
+                onVentureSlugsChange={setVentureSlugs}
+                onCrmEnabledChange={setCrmEnabled}
+              />
+            </div>
             <div className="flex items-end sm:col-span-2">
               <Button type="submit" disabled={isLoading} className="gap-2">
                 {isLoading && <Icons.spinner className="h-4 w-4 animate-spin" />}

@@ -30,6 +30,7 @@ import {
   Trash,
   UserCheck,
   UserX,
+  Building2,
 } from "lucide-react";
 import { AdminEditPersonalEmailDialog } from "../components/AdminEditPersonalEmailDialog";
 import { deleteUser } from "@/actions/admin/users/delete-user";
@@ -38,13 +39,17 @@ import { deactivateUser } from "@/actions/admin/users/deactivate-user";
 import { setUserRole } from "@/actions/admin/users/set-role";
 import { revokeUserApiTokens } from "@/actions/admin/users/revoke-api-tokens";
 import { AdminResetPasswordDialog } from "../components/AdminResetPasswordDialog";
+import { AdminVentureAccessDialog } from "../components/AdminVentureAccessDialog";
+import type { VentureOption } from "@/lib/vensai/venture-catalog";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
+  ventureOptions: VentureOption[];
 }
 
 export function DataTableRowActions<TData>({
   row,
+  ventureOptions,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
   const data = adminUserSchema.parse(row.original);
@@ -52,7 +57,9 @@ export function DataTableRowActions<TData>({
   const [open, setOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [personalEmailOpen, setPersonalEmailOpen] = useState(false);
+  const [ventureOpen, setVentureOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const initialSlugs = data.ventureGrants?.map((g) => g.ventureSlug) ?? [];
 
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -167,6 +174,15 @@ export function DataTableRowActions<TData>({
         onOpenChange={setPersonalEmailOpen}
         onUpdated={() => router.refresh()}
       />
+      <AdminVentureAccessDialog
+        open={ventureOpen}
+        onOpenChange={setVentureOpen}
+        userId={data.id}
+        userName={data.name || data.email}
+        ventures={ventureOptions}
+        initialSlugs={initialSlugs}
+        initialCrmEnabled={data.crmEnabled !== false}
+      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant={"ghost"} className="h-8 w-8 p-0">
@@ -187,6 +203,10 @@ export function DataTableRowActions<TData>({
           <DropdownMenuItem onClick={() => setPersonalEmailOpen(true)}>
             <Mail className="mr-2 w-4 h-4" />
             Edit personal email
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setVentureOpen(true)}>
+            <Building2 className="mr-2 w-4 h-4" />
+            Venture &amp; CRM access
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onActivate()}>
