@@ -1585,6 +1585,8 @@ model EmailAccount {
   allowSelfSignedTls Boolean  @default(false)
   username          String
   passwordEncrypted String?
+  /// CRM users who may open this mailbox and send on the owner’s behalf
+  delegateUserIds   String[]  @default([]) @db.Uuid
   isActive          Boolean   @default(true)
   sentFolderName    String    @default("Sent")
   lastSyncedAt      DateTime?

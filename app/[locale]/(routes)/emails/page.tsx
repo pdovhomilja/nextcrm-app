@@ -11,7 +11,7 @@ import Container from "../components/ui/Container";
 import EmailsSkeleton from "@/components/skeletons/emails-skeleton";
 import { getSession } from "@/lib/auth-server";
 import { getTranslations } from "next-intl/server";
-import { getEmailAccounts } from "@/actions/emails/accounts";
+import { getAccessibleEmailAccounts } from "@/actions/emails/accessible-accounts";
 import {
   getMailboxCounts,
   getMailboxEmails,
@@ -92,7 +92,7 @@ const EmailRoute = async ({
 
   let connectedAccounts: any[] = [];
   try {
-    connectedAccounts = await getEmailAccounts();
+    connectedAccounts = await getAccessibleEmailAccounts();
   } catch (error) {
     console.error("[EmailRoute] Failed to load email accounts:", error);
     connectedAccounts = [];
@@ -182,6 +182,7 @@ const EmailRoute = async ({
           <EmailComposeFromQuery
             accountId={activeAccountId}
             mailboxAddress={activeMailboxAddress}
+            accounts={connectedAccounts}
           />
         </Suspense>
       )}

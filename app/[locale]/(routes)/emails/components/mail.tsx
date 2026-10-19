@@ -272,7 +272,10 @@ export function MailComponent({
       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-1 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
         <aside className="flex w-[4.5rem] shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-border/40 bg-muted/30 sm:w-44">
-          <div className="p-2">
+          <div className="space-y-1 p-2">
+            <p className="hidden px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:block">
+              View as
+            </p>
             <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} />
           </div>
           <Separator className="opacity-50" />
@@ -280,6 +283,7 @@ export function MailComponent({
             <div className="p-2">
               <ComposeModal
                 accountId={activeAccountId}
+                accounts={accounts}
                 mailboxAddress={activeMailboxAddress}
                 trigger={
                   <Button
@@ -302,6 +306,7 @@ export function MailComponent({
             <MailDisplay
               mail={selectedMail}
               activeAccountId={activeAccountId}
+              accounts={accounts}
               mailboxAddress={activeMailboxAddress}
               mailboxView={mailboxView}
               onBack={() => setMobileReadOpen(false)}
@@ -344,6 +349,7 @@ export function MailComponent({
             <MailDisplay
               mail={selectedMail}
               activeAccountId={activeAccountId}
+              accounts={accounts}
               mailboxAddress={activeMailboxAddress}
               mailboxView={mailboxView}
             />

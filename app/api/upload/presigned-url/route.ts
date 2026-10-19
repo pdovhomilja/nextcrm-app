@@ -30,7 +30,11 @@ export async function POST(req: NextRequest) {
     "image/jpeg", "image/png", "image/gif", "image/webp",
     "application/pdf", "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/zip",
     "text/plain",
+    "text/csv",
     "video/mp4", "video/webm", "video/quicktime",
   ]);
   if (!ALLOWED_CONTENT_TYPES.has(contentType)) {

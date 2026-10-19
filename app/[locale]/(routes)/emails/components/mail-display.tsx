@@ -34,7 +34,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { Mail } from "@/app/[locale]/(routes)/emails/data";
+import type { ConnectedAccount, Mail } from "@/app/[locale]/(routes)/emails/data";
 import { getEmail } from "@/actions/emails/messages";
 import {
   archiveEmail,
@@ -56,6 +56,7 @@ interface MailDisplayProps {
   mail: Mail | null;
   activeAccountId: string | null;
   mailboxAddress?: string;
+  accounts?: ConnectedAccount[];
   mailboxView: MailboxView;
   onBack?: () => void;
 }
@@ -64,6 +65,7 @@ export function MailDisplay({
   mail,
   activeAccountId,
   mailboxAddress = "",
+  accounts = [],
   mailboxView,
   onBack,
 }: MailDisplayProps) {
@@ -267,6 +269,7 @@ export function MailDisplay({
               <span className="inline-flex">
                 <ComposeModal
                   accountId={activeAccountId ?? ""}
+                  accounts={accounts}
                   mailboxAddress={mailboxAddress}
                   mode="reply"
                   replyTo={composeMail}
@@ -289,6 +292,7 @@ export function MailDisplay({
           </Tooltip>
           <ComposeModal
             accountId={activeAccountId ?? ""}
+            accounts={accounts}
             mailboxAddress={mailboxAddress}
             mode="reply"
             replyTo={composeMail}
@@ -300,6 +304,7 @@ export function MailDisplay({
           />
           <ComposeModal
             accountId={activeAccountId ?? ""}
+            accounts={accounts}
             mailboxAddress={mailboxAddress}
             mode="reply-all"
             replyTo={composeMail}
@@ -311,6 +316,7 @@ export function MailDisplay({
           />
           <ComposeModal
             accountId={activeAccountId ?? ""}
+            accounts={accounts}
             mailboxAddress={mailboxAddress}
             mode="forward"
             replyTo={composeMail}

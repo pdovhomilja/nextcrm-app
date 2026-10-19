@@ -1,6 +1,7 @@
 "use server";
 
 import { getSession } from "@/lib/auth-server";
+import { resolveMailboxAccess } from "@/lib/email/mailbox-access";
 import { prismadb } from "@/lib/prisma";
 import {
   mailboxViewWhere,
@@ -31,9 +32,10 @@ async function requireSession() {
   return session.user.id as string;
 }
 
-async function ownedEmail(id: string, userId: string) {
-  const email = await prismadb.email.findFirst({ where: { id, userId } });
+async function ownedEmail(id: string, _sessionUserId: string) {
+  const email = await prismadb.email.findFirst({ where: { id } });
   if (!email) throw new Error("Not found");
+  await resolveMailboxAccess(email.emailAccountId);
   return email;
 }
 
@@ -45,11 +47,13 @@ export async function getMailboxEmails(
   unreadOnly?: boolean
 ): Promise<MailboxEmailsResult> {
   try {
-    const userId = await requireSession();
+    const sessionUserId = await requireSession();
+    const access = await resolveMailboxAccess(accountId);
+    const mailboxUserId = access.mailboxUserId;
     const view = parseMailboxView(viewRaw);
     const safePage = Math.max(1, page);
     const searchTerm = search?.trim();
-    const cacheGen = await getMailboxCacheGeneration(userId, accountId);
+    const cacheGen = await getMailboxCacheGeneration(sessionUserId, accountId);
     const cacheKey = {
       view,
       page: safePage,
@@ -58,14 +62,14 @@ export async function getMailboxEmails(
     };
 
     const cached = await getCachedMailboxList<MailboxEmailsResult>(
-      userId,
+      sessionUserId,
       accountId,
       cacheGen,
       cacheKey
     );
     if (cached) return cached;
 
-    const where = mailboxViewWhere(userId, accountId, view, {
+    const where = mailboxViewWhere(mailboxUserId, accountId, view, {
       unreadOnly: view === "inbox" && unreadOnly,
       search: searchTerm,
     });
@@ -100,7 +104,7 @@ export async function getMailboxEmails(
       totalPages: total === 0 ? 0 : Math.ceil(total / MAILBOX_PAGE_SIZE),
       view,
     };
-    await setCachedMailboxList(userId, accountId, cacheGen, cacheKey, result);
+    await setCachedMailboxList(sessionUserId, accountId, cacheGen, cacheKey, result);
     return result;
   } catch (error) {
     console.error("[getMailboxEmails] Error:", error);
@@ -110,11 +114,12 @@ export async function getMailboxEmails(
 
 export async function getMailboxCounts(accountId: string): Promise<MailboxCounts> {
   try {
-    const userId = await requireSession();
-    const cached = await getCachedMailboxCounts<MailboxCounts>(userId, accountId);
+    const sessionUserId = await requireSession();
+    const access = await resolveMailboxAccess(accountId);
+    const cached = await getCachedMailboxCounts<MailboxCounts>(sessionUserId, accountId);
     if (cached) return cached;
 
-    const base = { userId, emailAccountId: accountId };
+    const base = { userId: access.mailboxUserId, emailAccountId: accountId };
 
     const [inboxUnread, inboxTotal, starred, spam, archive, trash] = await Promise.all([
       prismadb.email.count({
@@ -147,7 +152,7 @@ export async function getMailboxCounts(accountId: string): Promise<MailboxCounts
     ]);
 
     const counts = { inboxUnread, inboxTotal, starred, spam, archive, trash };
-    await setCachedMailboxCounts(userId, accountId, counts);
+    await setCachedMailboxCounts(sessionUserId, accountId, counts);
     return counts;
   } catch {
     return { inboxUnread: 0, inboxTotal: 0, starred: 0, spam: 0, archive: 0, trash: 0 };
@@ -161,19 +166,17 @@ export async function setEmailStarred(id: string, isStarred: boolean) {
   await invalidateMailboxCacheForEmail(id, userId);
 }
 
-async function bulkOwned(ids: string[], userId: string) {
+async function bulkOwned(ids: string[], sessionUserId: string) {
   if (!ids.length) return;
-  const rows = await prismadb.email.findMany({
-    where: { id: { in: ids }, userId },
-    select: { id: true },
-  });
-  if (rows.length !== ids.length) throw new Error("Not found");
+  for (const id of ids) {
+    await ownedEmail(id, sessionUserId);
+  }
 }
 
 export async function bulkSetRead(ids: string[], isRead: boolean) {
   const userId = await requireSession();
   await bulkOwned(ids, userId);
-  await prismadb.email.updateMany({ where: { id: { in: ids }, userId }, data: { isRead } });
+  await prismadb.email.updateMany({ where: { id: { in: ids } }, data: { isRead } });
   await invalidateMailboxCacheForEmails(ids, userId);
 }
 
@@ -181,7 +184,7 @@ export async function bulkTrash(ids: string[]) {
   const userId = await requireSession();
   await bulkOwned(ids, userId);
   await prismadb.email.updateMany({
-    where: { id: { in: ids }, userId },
+    where: { id: { in: ids } },
     data: { isDeleted: true, isSpam: false, isArchived: false },
   });
   await invalidateMailboxCacheForEmails(ids, userId);

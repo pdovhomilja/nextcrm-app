@@ -51,7 +51,7 @@ export function AccountSwitcher({ accounts, activeAccountId }: AccountSwitcherPr
           "h-8 w-full gap-1 px-2 text-xs font-medium",
           "[&>span]:line-clamp-1 [&>span]:truncate"
         )}
-        aria-label="Select account"
+        aria-label="View mailbox as"
       >
         <SelectValue placeholder="Mail">
           <span className="truncate">{shortLabel}</span>
@@ -62,6 +62,11 @@ export function AccountSwitcher({ accounts, activeAccountId }: AccountSwitcherPr
           <SelectItem key={account.id} value={account.id} className="text-xs">
             <span className="truncate">{mailboxShortLabel(account.label)}</span>
             <span className="ml-1 text-muted-foreground">({account.username})</span>
+            {account.accessKind && account.accessKind !== "owner" && (
+              <span className="ml-1 text-[10px] uppercase text-amber-600 dark:text-amber-400">
+                {account.accessKind === "delegate" ? "delegated" : "team"}
+              </span>
+            )}
           </SelectItem>
         ))}
       </SelectContent>

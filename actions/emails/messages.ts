@@ -8,6 +8,8 @@ import { assertPublicHost, HostNotAllowedError } from "@/lib/net/host-guard";
 import nodemailer from "nodemailer";
 import { EmailFolder, EmailSendProvider } from "@prisma/client";
 import { sendMailViaResend } from "@/lib/email/resend-mail";
+import { resolveMailboxAccess } from "@/lib/email/mailbox-access";
+import { fetchUploadBuffer } from "@/lib/email/fetch-upload-buffer";
 
 const PAGE_SIZE = 50;
 const MAX_COUNT = 10_000;
@@ -82,15 +84,16 @@ export async function getEmails(
 
 export async function getEmail(id: string) {
   try {
-    const userId = await requireSession();
+    await requireSession();
     const email = await prismadb.email.findFirst({
-      where: { id, userId },
+      where: { id },
       include: {
         contacts: { include: { contact: { select: { id: true, first_name: true, last_name: true } } } },
         accounts: { include: { account: { select: { id: true, name: true } } } },
       },
     });
     if (!email) throw new Error("Not found");
+    await resolveMailboxAccess(email.emailAccountId);
 
     // Lazy body fetch for emails not yet CRM-linked at sync time
     if (!email.bodyText && !email.bodyHtml && email.imapUid) {
@@ -163,6 +166,12 @@ export async function deleteEmail(id: string) {
   await trashEmail(id);
 }
 
+export type SendEmailAttachmentInput = {
+  url: string;
+  name: string;
+  mime: string;
+};
+
 type SendInput = {
   accountId: string;
   to: string[];
@@ -173,15 +182,29 @@ type SendInput = {
   bodyHtml?: string;
   inReplyTo?: string;   // parent's Message-ID
   references?: string;  // parent's References + parent's Message-ID (space-separated)
+  attachments?: SendEmailAttachmentInput[];
 };
 
 export async function sendEmail(input: SendInput) {
-  const userId = await requireSession();
+  await requireSession();
+  const access = await resolveMailboxAccess(input.accountId);
+  if (!access.canSend) throw new Error("You cannot send from this mailbox");
 
-  const account = await prismadb.emailAccount.findFirst({
-    where: { id: input.accountId, userId },
+  const account = await prismadb.emailAccount.findUnique({
+    where: { id: input.accountId },
   });
   if (!account) throw new Error("Account not found");
+
+  const attachmentBuffers =
+    input.attachments && input.attachments.length > 0
+      ? await Promise.all(
+          input.attachments.map(async (a) => ({
+            filename: a.name,
+            content: await fetchUploadBuffer(a.url),
+            contentType: a.mime,
+          }))
+        )
+      : undefined;
 
   let rfcMessageId: string;
 
@@ -198,6 +221,7 @@ export async function sendEmail(input: SendInput) {
       html: input.bodyHtml,
       inReplyTo: input.inReplyTo,
       references: input.references,
+      attachments: attachmentBuffers,
     });
     rfcMessageId = sent?.id ? `resend-${sent.id}` : `local-${crypto.randomUUID()}@nextcrm`;
   } else {
@@ -232,6 +256,11 @@ export async function sendEmail(input: SendInput) {
       html: input.bodyHtml,
       inReplyTo: input.inReplyTo,
       references: input.references,
+      attachments: attachmentBuffers?.map((a) => ({
+        filename: a.filename,
+        content: a.content,
+        contentType: a.contentType,
+      })),
     });
     rfcMessageId = info.messageId ?? `local-${crypto.randomUUID()}@nextcrm`;
   }
@@ -240,7 +269,7 @@ export async function sendEmail(input: SendInput) {
   await prismadb.email.create({
     data: {
       emailAccountId: input.accountId,
-      userId,
+      userId: access.mailboxUserId,
       rfcMessageId,
       folder: EmailFolder.SENT,
       subject: input.subject,

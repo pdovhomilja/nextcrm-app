@@ -39,8 +39,11 @@ import {
   Plus,
   Trash2,
   User,
+  UserPlus,
   Zap,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -57,6 +60,7 @@ import {
   adminCreateEmailAccount,
   adminDeleteEmailAccount,
   adminSetEmailAccountActive,
+  adminSetEmailAccountDelegates,
 } from "@/actions/admin/email-accounts";
 import type { getAdminEmailAccounts } from "@/actions/admin/email-accounts";
 import { MailboxExternalSetupPanel } from "./MailboxExternalSetupPanel";
@@ -89,6 +93,11 @@ export function EmailAccountsList(props: EmailAccountsListProps) {
   const [testing, setTesting] = useState(false);
   const [form, setForm] = useState({ label: "", fromName: "", username: "" });
   const [assignUserId, setAssignUserId] = useState("");
+  const [delegateOpen, setDelegateOpen] = useState(false);
+  const [delegateAccountId, setDelegateAccountId] = useState<string | null>(null);
+  const [delegateOwnerId, setDelegateOwnerId] = useState<string | null>(null);
+  const [delegateSelected, setDelegateSelected] = useState<string[]>([]);
+  const [savingDelegates, setSavingDelegates] = useState(false);
 
   const refresh = () => router.refresh();
   const resendAccounts = accounts.filter((a) => a.sendProvider === EmailSendProvider.RESEND);
@@ -104,6 +113,29 @@ export function EmailAccountsList(props: EmailAccountsListProps) {
     setTesting(false);
     if (result.ok) toast.success("Resend API key and sender look good");
     else toast.error(result.error ?? "Resend check failed");
+  }
+
+  function openDelegateDialog(acc: AdminAccount) {
+    const ownerId = acc.user?.id ?? null;
+    setDelegateAccountId(acc.id);
+    setDelegateOwnerId(ownerId);
+    setDelegateSelected(acc.delegateUserIds ?? []);
+    setDelegateOpen(true);
+  }
+
+  async function saveDelegates() {
+    if (!delegateAccountId) return;
+    setSavingDelegates(true);
+    try {
+      await adminSetEmailAccountDelegates(delegateAccountId, delegateSelected);
+      toast.success("Delegates updated");
+      setDelegateOpen(false);
+      refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update delegates");
+    } finally {
+      setSavingDelegates(false);
+    }
   }
 
   async function handleCreate() {
@@ -213,6 +245,12 @@ export function EmailAccountsList(props: EmailAccountsListProps) {
                     {acc.user.name ?? acc.user.email}
                   </p>
                 )}
+                {isAdmin && "delegateUserIds" in acc && acc.delegateUserIds.length > 0 && (
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <UserPlus className="h-3.5 w-3.5 shrink-0" />
+                    {acc.delegateUserIds.length} delegate{acc.delegateUserIds.length === 1 ? "" : "s"}
+                  </p>
+                )}
                 {acc.lastSyncedAt && (
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Clock className="h-3.5 w-3.5 shrink-0" />
@@ -240,6 +278,12 @@ export function EmailAccountsList(props: EmailAccountsListProps) {
                 <DropdownMenuItem onClick={() => handleToggle(acc.id, acc.isActive)}>
                   {acc.isActive ? "Pause mailbox" : "Activate mailbox"}
                 </DropdownMenuItem>
+                {isAdmin && !legacy && (
+                  <DropdownMenuItem onClick={() => openDelegateDialog(acc as AdminAccount)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Manage delegates
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
@@ -307,6 +351,58 @@ export function EmailAccountsList(props: EmailAccountsListProps) {
           {resendAccounts.map((acc) => renderMailboxCard(acc, false))}
           {legacyAccounts.map((acc) => renderMailboxCard(acc, true))}
         </ul>
+      )}
+
+      {isAdmin && (
+        <Dialog open={delegateOpen} onOpenChange={setDelegateOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Mailbox delegates</DialogTitle>
+              <DialogDescription>
+                Selected users can open this inbox (view as) and send email from this address (send as).
+                They cannot change SMTP settings or delete the mailbox.
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-64 pr-3">
+              <ul className="space-y-2">
+                {assignableUsers
+                  .filter((u) => u.id !== delegateOwnerId)
+                  .map((u) => {
+                    const checked = delegateSelected.includes(u.id);
+                    return (
+                      <li key={u.id} className="flex items-start gap-2">
+                        <Checkbox
+                          id={`delegate-${u.id}`}
+                          checked={checked}
+                          onCheckedChange={(next) => {
+                            setDelegateSelected((prev) =>
+                              next === true
+                                ? [...prev, u.id]
+                                : prev.filter((id) => id !== u.id)
+                            );
+                          }}
+                        />
+                        <label
+                          htmlFor={`delegate-${u.id}`}
+                          className="cursor-pointer text-sm leading-tight"
+                        >
+                          {u.name ? `${u.name} (${u.email})` : u.email}
+                        </label>
+                      </li>
+                    );
+                  })}
+              </ul>
+            </ScrollArea>
+            <DialogFooter>
+              <Button variant="outline" type="button" onClick={() => setDelegateOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="button" onClick={() => void saveDelegates()} disabled={savingDelegates}>
+                {savingDelegates ? "Saving…" : "Save delegates"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>

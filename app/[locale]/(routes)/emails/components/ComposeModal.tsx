@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, forwardRef, useEffect, useRef } from "react";
+import { Paperclip, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,18 @@ import { Label } from "@/components/ui/label";
 import { sendEmail } from "@/actions/emails/messages";
 import { EmailComposeEditor } from "@/app/[locale]/(routes)/emails/components/EmailComposeEditor";
 import { useRouter } from "next/navigation";
-import type { Mail } from "@/app/[locale]/(routes)/emails/data";
+import type { ConnectedAccount, Mail } from "@/app/[locale]/(routes)/emails/data";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  uploadComposeAttachment,
+  type ComposeAttachmentMeta,
+} from "@/lib/email/upload-compose-attachment";
 import {
   buildForwardedBody,
   buildReplyAllRecipients,
@@ -31,6 +43,8 @@ type Mode = "new" | "reply" | "reply-all" | "forward";
 type Props = {
   accountId: string;
   mailboxAddress?: string;
+  /** Mailboxes the user may send from (view-as / delegate / own). */
+  accounts?: ConnectedAccount[];
   mode?: Mode;
   replyTo?: Mail | null;
   trigger?: React.ReactNode;
@@ -94,6 +108,7 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
   {
     accountId,
     mailboxAddress = "",
+    accounts = [],
     mode = "new",
     replyTo,
     trigger,
@@ -117,7 +132,16 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [bodyHtml, setBodyHtml] = useState("<p></p>");
+  const [sendFromAccountId, setSendFromAccountId] = useState(accountId);
+  const [attachments, setAttachments] = useState<ComposeAttachmentMeta[]>([]);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const quotePlainRef = useRef("");
+
+  const sendFromAccount =
+    accounts.find((a) => a.id === sendFromAccountId) ??
+    accounts.find((a) => a.id === accountId);
+  const effectiveMailboxAddress = sendFromAccount?.username ?? mailboxAddress;
 
   useEffect(() => {
     if (!open) return;
@@ -134,8 +158,32 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
     } else {
       quotePlainRef.current = "";
     }
+    setSendFromAccountId(accountId);
+    setAttachments([]);
     setError(null);
-  }, [open, mode, replyTo, mailboxAddress, initialTo]);
+  }, [open, mode, replyTo, mailboxAddress, initialTo, accountId]);
+
+  useEffect(() => {
+    if (open) setSendFromAccountId(accountId);
+  }, [open, accountId]);
+
+  async function onPickFiles(files: FileList | null) {
+    if (!files?.length) return;
+    setUploadingAttachment(true);
+    setError(null);
+    try {
+      const added: ComposeAttachmentMeta[] = [];
+      for (const file of Array.from(files)) {
+        added.push(await uploadComposeAttachment(file));
+      }
+      setAttachments((prev) => [...prev, ...added]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Attachment upload failed");
+    } finally {
+      setUploadingAttachment(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   function applyAiDraft(result: { subject: string; html: string }) {
     if (result.subject.trim() && !subject.trim()) {
@@ -156,12 +204,13 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
     setError(null);
     try {
       await sendEmail({
-        accountId,
+        accountId: sendFromAccountId,
         to: to.split(",").map((e) => e.trim()).filter(Boolean),
         cc: cc.split(",").map((e) => e.trim()).filter(Boolean),
         subject,
         body,
         bodyHtml,
+        attachments: attachments.map((a) => ({ url: a.url, name: a.name, mime: a.mime })),
         inReplyTo: mode === "reply" || mode === "reply-all" ? replyTo?.rfcMessageId : undefined,
         references: mode === "reply" || mode === "reply-all" ? replyTo?.rfcMessageId : undefined,
       });
@@ -212,6 +261,31 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
             {needsSource && !sourceReady && (
               <p className="text-sm text-muted-foreground">Loading message… open again in a moment.</p>
             )}
+            {accounts.length > 1 && (
+              <div className="space-y-1">
+                <Label>Send as</Label>
+                <Select value={sendFromAccountId} onValueChange={setSendFromAccountId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose mailbox" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.label} ({a.username})
+                        {a.accessKind && a.accessKind !== "owner"
+                          ? ` — ${a.accessKind === "delegate" ? "delegated" : "team"}`
+                          : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {sendFromAccount?.accessKind && sendFromAccount.accessKind !== "owner" && (
+              <p className="text-xs text-muted-foreground">
+                Sending on behalf of {sendFromAccount.ownerName ?? sendFromAccount.ownerEmail ?? "mailbox owner"}.
+              </p>
+            )}
             <div className="space-y-1">
               <Label>To</Label>
               <Input
@@ -253,10 +327,59 @@ export const ComposeModal = forwardRef<HTMLDivElement, Props>(function ComposeMo
                 }}
               />
             </div>
+            <div className="space-y-2">
+              <Label>Attachments</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => void onPickFiles(e.target.files)}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                disabled={uploadingAttachment}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip className="h-4 w-4" />
+                {uploadingAttachment ? "Uploading…" : "Attach file"}
+              </Button>
+              {attachments.length > 0 && (
+                <ul className="space-y-1 text-sm">
+                  {attachments.map((a) => (
+                    <li
+                      key={a.url}
+                      className="flex items-center justify-between gap-2 rounded-md border px-2 py-1"
+                    >
+                      <span className="truncate">{a.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={() => setAttachments((prev) => prev.filter((x) => x.url !== a.url))}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-xs text-muted-foreground">Up to 10 MB per file (PDF, Office, images, CSV, ZIP).</p>
+            </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button
               onClick={handleSend}
-              disabled={sending || !to.trim() || !subject.trim() || (needsSource && !sourceReady)}
+              disabled={
+                sending ||
+                uploadingAttachment ||
+                !to.trim() ||
+                !subject.trim() ||
+                (needsSource && !sourceReady)
+              }
               className="w-full"
             >
               {sending ? "Sending…" : "Send"}

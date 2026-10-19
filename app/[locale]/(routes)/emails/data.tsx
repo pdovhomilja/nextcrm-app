@@ -24,4 +24,7 @@ export type ConnectedAccount = {
   id: string;
   label: string;
   username: string;
+  accessKind?: "owner" | "delegate" | "admin";
+  ownerName?: string | null;
+  ownerEmail?: string | null;
 };
