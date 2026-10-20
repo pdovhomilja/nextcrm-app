@@ -20,6 +20,27 @@ export function isRedisCacheDisabledByEnv(): boolean {
   return flag === "1" || flag?.toLowerCase() === "true";
 }
 
+function resolveUpstashRestUrl(): string | undefined {
+  return (
+    process.env.UPSTASH_REDIS_REST_URL?.trim() ||
+    process.env.KV_REST_API_URL?.trim() ||
+    undefined
+  );
+}
+
+function resolveUpstashRestToken(): string | undefined {
+  return (
+    process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ||
+    process.env.KV_REST_API_TOKEN?.trim() ||
+    undefined
+  );
+}
+
+/** True when REST URL + token exist (Upstash or Vercel KV naming). */
+export function isUpstashConfigured(): boolean {
+  return Boolean(resolveUpstashRestUrl() && resolveUpstashRestToken());
+}
+
 /** True when Redis cache reads/writes are allowed (configured, not bypassed, not disabled). */
 export function isRedisCacheActive(): boolean {
   if (isRedisCacheDisabledByEnv()) return false;
@@ -27,18 +48,22 @@ export function isRedisCacheActive(): boolean {
   return isUpstashConfigured();
 }
 
-export function isUpstashConfigured(): boolean {
-  return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
-}
-
 /**
  * Upstash Redis — Vercel Marketplace → **Upstash Redis** (not “Upstash Search”).
- * Sets UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN.
+ * Accepts UPSTASH_REDIS_REST_* or legacy KV_REST_API_* from Vercel KV integrations.
  */
 export function getUpstashRedis(): Redis | null {
   if (!isRedisCacheActive()) return null;
   if (client !== undefined) return client;
-  client = Redis.fromEnv();
+
+  const url = resolveUpstashRestUrl();
+  const token = resolveUpstashRestToken();
+  if (!url || !token) {
+    client = null;
+    return client;
+  }
+
+  client = new Redis({ url, token });
   return client;
 }
 
@@ -55,4 +80,40 @@ export function recordRedisCacheFailure(error: unknown): void {
       "[upstash-redis] Cache unavailable or quota hit — using Postgres fallback for ~60s"
     );
   }
+}
+
+/** For admin diagnostics — no secrets. */
+export async function getRedisCacheDiagnostics(): Promise<{
+  configured: boolean;
+  active: boolean;
+  disabledByEnv: boolean;
+  bypassSecondsRemaining: number;
+  pingOk: boolean | null;
+}> {
+  const configured = isUpstashConfigured();
+  const disabledByEnv = isRedisCacheDisabledByEnv();
+  const active = isRedisCacheActive();
+  const bypassSecondsRemaining =
+    bypassUntilMs > Date.now() ? Math.ceil((bypassUntilMs - Date.now()) / 1000) : 0;
+
+  let pingOk: boolean | null = null;
+  const redis = getUpstashRedis();
+  if (redis) {
+    try {
+      const pong = await redis.ping();
+      pingOk = pong === "PONG";
+      recordRedisCacheSuccess();
+    } catch (e) {
+      pingOk = false;
+      recordRedisCacheFailure(e);
+    }
+  }
+
+  return {
+    configured,
+    active,
+    disabledByEnv,
+    bypassSecondsRemaining,
+    pingOk,
+  };
 }
