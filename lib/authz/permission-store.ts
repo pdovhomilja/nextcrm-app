@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prismadb } from "@/lib/prisma";
 import type { AppRole } from "./roles";
 import type { EffectEntry, RoleEntry } from "./permissions";
@@ -8,7 +9,10 @@ export type PermissionRows = {
   userEntries: EffectEntry[];
 };
 
-export async function loadPermissionRows(userId: string, role: AppRole): Promise<PermissionRows> {
+async function loadPermissionRowsFromDb(
+  userId: string,
+  role: AppRole
+): Promise<PermissionRows> {
   const [roleOverrides, groupEntries, userEntries] = await Promise.all([
     prismadb.rolePermission.findMany({
       where: { role },
@@ -24,4 +28,13 @@ export async function loadPermissionRows(userId: string, role: AppRole): Promise
     }),
   ]);
   return { roleOverrides, groupEntries, userEntries };
+}
+
+/** Permission matrix inputs — cached across navigations (invalidates on TTL). */
+export async function loadPermissionRows(userId: string, role: AppRole): Promise<PermissionRows> {
+  return unstable_cache(
+    () => loadPermissionRowsFromDb(userId, role),
+    ["permission-rows-v1", userId, role],
+    { revalidate: 180, tags: [`permissions-${userId}`] }
+  )();
 }

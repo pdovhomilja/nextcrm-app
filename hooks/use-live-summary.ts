@@ -23,10 +23,10 @@ export function useLiveSummary(placeholder?: LiveSummary) {
     queryKey: ["live-summary"],
     queryFn: fetchLiveSummary,
     placeholderData: placeholder,
-    staleTime: 45_000,
-    refetchInterval: 45_000,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
-    refetchOnMount: "always",
+    refetchOnMount: false,
   });
 }

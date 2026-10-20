@@ -11,7 +11,12 @@ import { AppSidebar } from "./components/app-sidebar";
 import { getTranslations } from "next-intl/server";
 import { AvatarProvider } from "@/context/avatar-context";
 import { CurrencyProvider } from "@/context/currency-context";
-import { getEnabledCurrencies, getDefaultCurrency } from "@/lib/currency";
+import {
+  getCachedDefaultCurrency,
+  getCachedEnabledCurrencies,
+  getCachedPluginNav,
+  getCachedUserAccessProfile,
+} from "@/lib/server/cached-platform";
 import { getAppName } from "@/lib/app-name";
 
 export const metadata: Metadata = {
@@ -71,11 +76,16 @@ export default async function AppLayout({
   }
 
   // Parallelize layout data fetching to eliminate waterfall delay
+  const userId = session.user.id as string;
+  const { getLocale } = await import("next-intl/server");
+  const locale = (await getLocale()) as "en" | "cz" | "de" | "uk";
+  const { mapLegacyRole } = await import("@/lib/authz/roles");
+
   const [dict, cookieStore, enabledCurrencies, defaultCurrency] = await Promise.all([
     getTranslations("ModuleMenu"),
     cookies(),
-    getEnabledCurrencies(),
-    getDefaultCurrency(),
+    getCachedEnabledCurrencies(),
+    getCachedDefaultCurrency(),
   ]);
 
   // Extract translations as plain object for client component
@@ -110,17 +120,13 @@ export default async function AppLayout({
     : defaultCurrency;
   const currencyList = enabledCurrencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }));
 
-  const { getPluginNavItems } = await import("@/lib/plugins/nav");
-  const { mapLegacyRole } = await import("@/lib/authz/roles");
-  const { getLocale } = await import("next-intl/server");
   const { getUserPermissions } = await import("@/lib/authz/feature-access");
-  const locale = (await getLocale()) as "en" | "cz" | "de" | "uk";
-  const { getUserAccessProfile } = await import("@/lib/vensai/user-access");
   const { permissionsForCrmAccess } = await import("@/lib/vensai/crm-nav");
+  const role = mapLegacyRole(user?.role);
   const [pluginNav, permissions, accessProfile] = await Promise.all([
-    getPluginNavItems(mapLegacyRole(user?.role), locale),
-    getUserPermissions(session.user.id as string, session.user.role),
-    getUserAccessProfile(session.user.id as string),
+    getCachedPluginNav(role, locale),
+    getUserPermissions(userId, session.user.role),
+    getCachedUserAccessProfile(userId),
   ]);
   const effectivePermissions = permissionsForCrmAccess(
     permissions,
