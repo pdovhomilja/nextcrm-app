@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getSession } from "@/lib/auth-server";
 import { requireRole, AuthorizationError } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
@@ -15,7 +16,7 @@ export type MailboxAccess = {
   sendProvider: import("@prisma/client").EmailSendProvider;
 };
 
-export async function resolveMailboxAccess(accountId: string): Promise<MailboxAccess> {
+async function resolveMailboxAccessUncached(accountId: string): Promise<MailboxAccess> {
   const session = await getSession();
   const sessionUserId = session?.user?.id;
   if (!sessionUserId) throw new Error("Unauthorized");
@@ -78,3 +79,6 @@ export async function resolveMailboxAccess(accountId: string): Promise<MailboxAc
     throw e;
   }
 }
+
+/** Per-request dedupe (parallel getMailboxEmails + getMailboxCounts on the same page load). */
+export const resolveMailboxAccess = cache(resolveMailboxAccessUncached);

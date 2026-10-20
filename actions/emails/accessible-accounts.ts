@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_cache } from "next/cache";
 import { getSession } from "@/lib/auth-server";
 import { requireRole, AuthorizationError } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
@@ -16,85 +17,70 @@ export type AccessibleEmailAccount = {
   ownerEmail: string | null;
 };
 
+const accountSelect = {
+  id: true,
+  label: true,
+  username: true,
+  fromName: true,
+  userId: true,
+  delegateUserIds: true,
+  user: { select: { name: true, email: true } },
+} as const;
+
+async function loadAccessibleAccounts(
+  userId: string,
+  elevated: boolean
+): Promise<AccessibleEmailAccount[]> {
+  const rows = await prismadb.emailAccount.findMany({
+    where: elevated
+      ? { isActive: true }
+      : {
+          isActive: true,
+          OR: [{ userId }, { delegateUserIds: { has: userId } }],
+        },
+    select: accountSelect,
+    orderBy: elevated
+      ? [{ user: { email: "asc" } }, { createdAt: "asc" }]
+      : { createdAt: "asc" },
+  });
+
+  return rows.map((a) => {
+    let accessKind: MailboxAccessKind = "delegate";
+    if (a.userId === userId) accessKind = "owner";
+    else if (a.delegateUserIds.includes(userId)) accessKind = "delegate";
+    else if (elevated) accessKind = "admin";
+
+    return {
+      id: a.id,
+      label: a.label,
+      username: a.username,
+      fromName: a.fromName,
+      accessKind,
+      ownerName: a.user.name,
+      ownerEmail: a.user.email,
+    };
+  });
+}
+
+const cachedAccountsForUser = unstable_cache(
+  async (userId: string, elevated: boolean) => loadAccessibleAccounts(userId, elevated),
+  ["accessible-email-accounts-v2"],
+  { revalidate: 120 }
+);
+
 /** Mailboxes the signed-in user may view (own, delegated, or all for admin/manager). */
 export async function getAccessibleEmailAccounts(): Promise<AccessibleEmailAccount[]> {
   const session = await getSession();
   const userId = session?.user?.id;
   if (!userId) return [];
 
-  const select = {
-    id: true,
-    label: true,
-    username: true,
-    fromName: true,
-    userId: true,
-    delegateUserIds: true,
-    user: { select: { name: true, email: true } },
-  } as const;
-
-  const owned = await prismadb.emailAccount.findMany({
-    where: { userId, isActive: true },
-    select,
-    orderBy: { createdAt: "asc" },
-  });
-
-  const delegated = await prismadb.emailAccount.findMany({
-    where: { isActive: true, delegateUserIds: { has: userId } },
-    select,
-    orderBy: { createdAt: "asc" },
-  });
-
-  let elevated: typeof owned = [];
+  let elevated = false;
   try {
     await requireRole(["admin", "manager"]);
-    elevated = await prismadb.emailAccount.findMany({
-      where: { isActive: true },
-      select,
-      orderBy: [{ user: { email: "asc" } }, { createdAt: "asc" }],
-    });
+    elevated = true;
   } catch (e) {
     if (!(e instanceof AuthorizationError)) throw e;
   }
 
-  const byId = new Map<string, AccessibleEmailAccount>();
-
-  for (const a of owned) {
-    byId.set(a.id, {
-      id: a.id,
-      label: a.label,
-      username: a.username,
-      fromName: a.fromName,
-      accessKind: "owner",
-      ownerName: a.user.name,
-      ownerEmail: a.user.email,
-    });
-  }
-
-  for (const a of delegated) {
-    if (byId.has(a.id)) continue;
-    byId.set(a.id, {
-      id: a.id,
-      label: a.label,
-      username: a.username,
-      fromName: a.fromName,
-      accessKind: "delegate",
-      ownerName: a.user.name,
-      ownerEmail: a.user.email,
-    });
-  }
-
-  for (const a of elevated) {
-    if (byId.has(a.id)) continue;
-    byId.set(a.id, {
-      id: a.id,
-      label: a.label,
-      username: a.username,
-      fromName: a.fromName,
-      accessKind: "admin",
-      ownerName: a.user.name,
-      ownerEmail: a.user.email,
-    });
-  }
-
-  return serializeDecimalsList(Array.from(byId.values()));
+  return serializeDecimalsList(await cachedAccountsForUser(userId, elevated));
 }

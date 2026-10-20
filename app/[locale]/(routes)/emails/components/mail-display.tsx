@@ -35,7 +35,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { ConnectedAccount, Mail } from "@/app/[locale]/(routes)/emails/data";
-import { getEmail } from "@/actions/emails/messages";
+import { fetchEmailDetail } from "@/lib/email/client-email-cache";
 import {
   archiveEmail,
   deleteEmailPermanent,
@@ -83,7 +83,7 @@ export function MailDisplay({
     }
     setFullEmail(null);
     let cancelled = false;
-    getEmail(mail.id)
+    fetchEmailDetail(mail.id)
       .then((data) => {
         if (!cancelled) setFullEmail(data);
       })

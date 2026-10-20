@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
@@ -20,7 +21,7 @@ export async function getSession() {
  * PENDING/INACTIVE users apart (the app layout and the /pending and
  * /inactive pages); never use it to authorize anything.
  */
-export async function getSessionAnyStatus() {
+export const getSessionAnyStatus = cache(async () => {
   try {
     return await auth.api.getSession({
       headers: await headers(),
@@ -29,4 +30,4 @@ export async function getSessionAnyStatus() {
     console.warn("[auth-server] Failed to retrieve session from database:", error);
     return null;
   }
-}
+});

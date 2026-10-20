@@ -201,4 +201,7 @@ export function EmailAttachmentsPanel({ emailId, attachments, className }: Props
             </div>
           )}
         </SheetContent>
-      </S
+      </Sheet>
+    </>
+  );
+}

@@ -168,9 +168,13 @@ export async function setEmailStarred(id: string, isStarred: boolean) {
 
 async function bulkOwned(ids: string[], sessionUserId: string) {
   if (!ids.length) return;
-  for (const id of ids) {
-    await ownedEmail(id, sessionUserId);
-  }
+  const rows = await prismadb.email.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, emailAccountId: true },
+  });
+  if (rows.length !== ids.length) throw new Error("Not found");
+  const accountIds = Array.from(new Set(rows.map((r) => r.emailAccountId)));
+  await Promise.all(accountIds.map((accountId) => resolveMailboxAccess(accountId)));
 }
 
 export async function bulkSetRead(ids: string[], isRead: boolean) {
