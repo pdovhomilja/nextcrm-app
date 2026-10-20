@@ -268,9 +268,7 @@ export function MailDisplay({
                     className={iconBtn}
                     disabled={!mail || busy || mailboxView === "sent"}
                     onClick={() =>
-                      runAction(() => moveEmailToSpam(mail!.id), {
-                        remove: mailboxView !== "spam" && mailboxView !== "trash",
-                      })
+                      runAction(() => moveEmailToSpam(mail!.id), { remove: true })
                     }
                   >
                     <ShieldAlert className="h-4 w-4" />
@@ -289,9 +287,7 @@ export function MailDisplay({
                   className={cn(iconBtn, "hover:text-destructive")}
                   disabled={!mail || busy}
                   onClick={() =>
-                    runAction(() => trashEmail(mail!.id), {
-                      remove: mailboxView !== "trash",
-                    })
+                    runAction(() => trashEmail(mail!.id), { remove: true })
                   }
                 >
                   <Trash2 className="h-4 w-4" />
@@ -394,9 +390,7 @@ export function MailDisplay({
                 <DropdownMenuItem
                   disabled={!mail || busy}
                   onClick={() =>
-                    runAction(() => moveEmailToSpam(mail!.id), {
-                      remove: mailboxView !== "spam" && mailboxView !== "trash",
-                    })
+                    runAction(() => moveEmailToSpam(mail!.id), { remove: true })
                   }
                 >
                   Report spam

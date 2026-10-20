@@ -1,4 +1,4 @@
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 
 export function contactsListTag(userId: string, role: string) {
   return `contacts-list-${userId}-${role}`;
@@ -17,42 +17,42 @@ export function accountPickerTag(userId: string, role: string) {
 }
 
 export function revalidatePlatformCurrencies() {
-  revalidateTag("platform-currencies");
-  revalidateTag("crm-config");
+  updateTag("platform-currencies");
+  updateTag("crm-config");
 }
 
 export function revalidatePermissionsForRole(role: string) {
-  revalidateTag(`permissions-role-${role}`);
+  updateTag(`permissions-role-${role}`);
 }
 
 export function revalidatePermissionsForUser(userId: string) {
-  revalidateTag(`permissions-${userId}`);
+  updateTag(`permissions-${userId}`);
 }
 
 export function revalidateUserAccess(userId: string) {
-  revalidateTag(`user-access-${userId}`);
+  updateTag(`user-access-${userId}`);
 }
 
 export function revalidatePluginNav() {
-  revalidateTag("plugin-nav");
+  updateTag("plugin-nav");
 }
 
 export function revalidateDashboardForUser(userId: string) {
-  revalidateTag(`dashboard-${userId}`);
+  updateTag(`dashboard-${userId}`);
 }
 
 export function revalidateContactsList(userId: string, role: string) {
-  revalidateTag(contactsListTag(userId, role));
+  updateTag(contactsListTag(userId, role));
 }
 
 export function revalidateDocumentsList(userId: string, role: string) {
-  revalidateTag(documentsListTag(userId, role));
+  updateTag(documentsListTag(userId, role));
 }
 
 export function revalidateBoardsList(userId: string, role: string) {
-  revalidateTag(boardsListTag(userId, role));
+  updateTag(boardsListTag(userId, role));
 }
 
 export function revalidateAccountPicker(userId: string, role: string) {
-  revalidateTag(accountPickerTag(userId, role));
+  updateTag(accountPickerTag(userId, role));
 }

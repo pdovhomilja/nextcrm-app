@@ -39,6 +39,7 @@ export function MailList({
   onRemoveMail,
 }: MailListProps) {
   const [mail, setMail] = useMail();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const prefetchedIds = useRef(new Set<string>());
 
