@@ -13,6 +13,7 @@ import { MAILBOX_PAGE_SIZE } from "@/lib/email/mailbox-constants";
 import type { Mail } from "@/app/[locale]/(routes)/emails/data";
 import { useMail } from "@/app/[locale]/(routes)/emails/use-mail";
 import { setEmailStarred } from "@/actions/emails/mailbox-actions";
+import type { MailboxView } from "@/lib/email/mailbox-views";
 
 interface MailListProps {
   items: Mail[];
@@ -21,6 +22,9 @@ interface MailListProps {
   total: number;
   selectedIds: string[];
   onSelectedIdsChange: (ids: string[]) => void;
+  mailboxView?: MailboxView;
+  onPatchMail?: (id: string, patch: Partial<Mail>) => void;
+  onRemoveMail?: (id: string) => void;
 }
 
 export function MailList({
@@ -30,9 +34,11 @@ export function MailList({
   total,
   selectedIds,
   onSelectedIdsChange,
+  mailboxView = "inbox",
+  onPatchMail,
+  onRemoveMail,
 }: MailListProps) {
   const [mail, setMail] = useMail();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const prefetchedIds = useRef(new Set<string>());
 
@@ -61,8 +67,14 @@ export function MailList({
   async function toggleStar(e: React.MouseEvent, item: Mail) {
     e.stopPropagation();
     const next = !item.isStarred;
-    await setEmailStarred(item.id, next);
-    router.refresh();
+    onPatchMail?.(item.id, { isStarred: next });
+    if (mailboxView === "starred" && !next) onRemoveMail?.(item.id);
+    try {
+      await setEmailStarred(item.id, next);
+    } catch (err) {
+      console.error(err);
+      onPatchMail?.(item.id, { isStarred: !next });
+    }
   }
 
   return (

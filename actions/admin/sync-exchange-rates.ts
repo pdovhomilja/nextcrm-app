@@ -3,6 +3,7 @@
 import { getSession } from "@/lib/auth-server";
 import { persistFrankfurterRates } from "@/lib/currency/persist-frankfurter-rates";
 import { revalidatePath } from "next/cache";
+import { revalidatePlatformCurrencies } from "@/lib/server/platform-cache-tags";
 
 export async function syncExchangeRatesFromFrankfurter(): Promise<{
   ok: boolean;
@@ -16,6 +17,7 @@ export async function syncExchangeRatesFromFrankfurter(): Promise<{
 
   try {
     const updated = await persistFrankfurterRates();
+    revalidatePlatformCurrencies();
     revalidatePath("/admin/currencies");
     return { ok: true, updated };
   } catch (e) {
@@ -43,6 +45,7 @@ export async function syncExchangeRatesFromCurrencyApiAction(): Promise<{
       "@/lib/currency/currencyapi"
     );
     const res = await syncExchangeRatesFromCurrencyApi();
+    revalidatePlatformCurrencies();
     revalidatePath("/admin/currencies");
     return res;
   } catch (e) {
@@ -71,6 +74,7 @@ export async function syncGlobalCurrenciesAction(): Promise<{
       "@/lib/currency/currencyapi"
     );
     const res = await syncAllCurrenciesFromCurrencyApi();
+    revalidatePlatformCurrencies();
     revalidatePath("/admin/currencies");
     return { ok: true, ...res };
   } catch (e) {

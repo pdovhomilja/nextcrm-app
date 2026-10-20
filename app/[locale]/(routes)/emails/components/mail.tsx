@@ -81,20 +81,44 @@ export function MailComponent({
     accounts.find((a) => a.id === activeAccountId)?.username ?? "";
 
   const listFilter = searchParams.get("filter") === "unread" ? "unread" : "all";
-  const filteredMails =
-    mailboxView === "inbox" && listFilter === "unread"
-      ? mails.filter((m) => !m.isRead)
-      : mails;
-
+  const [localMails, setLocalMails] = React.useState(mails);
   React.useEffect(() => {
-    if (!mail.selected && mails[0]?.id) {
-      setMail({ ...mail, selected: mails[0].id });
-    }
-  }, [mail.selected, mails, setMail]);
-
-  React.useEffect(() => {
-    setSelectedIds((prev) => prev.filter((id) => mails.some((m) => m.id === id)));
+    setLocalMails(mails);
   }, [mails]);
+
+  const patchMail = React.useCallback((id: string, patch: Partial<Mail>) => {
+    setLocalMails((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+  }, []);
+
+  const removeMail = React.useCallback(
+    (id: string) => {
+      setLocalMails((prev) => {
+        const next = prev.filter((m) => m.id !== id);
+        if (mail.selected === id) {
+          setMail({ ...mail, selected: next[0]?.id ?? null });
+        }
+        return next;
+      });
+    },
+    [mail, setMail]
+  );
+
+  const filteredMails = React.useMemo(() => {
+    if (mailboxView === "inbox" && listFilter === "unread") {
+      return localMails.filter((m) => !m.isRead);
+    }
+    return localMails;
+  }, [localMails, mailboxView, listFilter]);
+
+  React.useEffect(() => {
+    if (!mail.selected && filteredMails[0]?.id) {
+      setMail({ ...mail, selected: filteredMails[0].id });
+    }
+  }, [mail.selected, filteredMails, setMail]);
+
+  React.useEffect(() => {
+    setSelectedIds((prev) => prev.filter((id) => localMails.some((m) => m.id === id)));
+  }, [localMails]);
 
   React.useEffect(() => {
     if (isLargeScreen) setMobileReadOpen(false);
@@ -119,11 +143,14 @@ export function MailComponent({
     return () => window.removeEventListener("keydown", onKey);
   }, [mail, mails, setMail]);
 
-  async function runBulk(fn: () => Promise<void>) {
+  async function runBulk(fn: () => Promise<void>, optimistic?: () => void) {
     setBulkBusy(true);
     try {
+      optimistic?.();
       await fn();
       setSelectedIds([]);
+    } catch (e) {
+      console.error(e);
       router.refresh();
     } finally {
       setBulkBusy(false);
@@ -190,7 +217,13 @@ export function MailComponent({
     },
   ];
 
-  const selectedMail = mails.find((item) => item.id === mail.selected) || null;
+  const selectedMail = filteredMails.find((item) => item.id === mail.selected) || null;
+
+  const mailListHandlers = {
+    mailboxView,
+    onPatchMail: patchMail,
+    onRemoveMail: removeMail,
+  };
 
   const listPane = (
     <div className="grid h-full min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden">
@@ -229,7 +262,12 @@ export function MailComponent({
             variant="secondary"
             className="h-7 text-xs"
             disabled={bulkBusy}
-            onClick={() => runBulk(() => bulkSetRead(selectedIds, true))}
+            onClick={() =>
+              runBulk(
+                () => bulkSetRead(selectedIds, true),
+                () => selectedIds.forEach((id) => patchMail(id, { isRead: true }))
+              )
+            }
           >
             Mark read
           </Button>
@@ -238,7 +276,12 @@ export function MailComponent({
             variant="secondary"
             className="h-7 text-xs"
             disabled={bulkBusy}
-            onClick={() => runBulk(() => bulkSetRead(selectedIds, false))}
+            onClick={() =>
+              runBulk(
+                () => bulkSetRead(selectedIds, false),
+                () => selectedIds.forEach((id) => patchMail(id, { isRead: false }))
+              )
+            }
           >
             Mark unread
           </Button>
@@ -247,7 +290,12 @@ export function MailComponent({
             variant="destructive"
             className="h-7 text-xs"
             disabled={bulkBusy}
-            onClick={() => runBulk(() => bulkTrash(selectedIds))}
+            onClick={() =>
+              runBulk(
+                () => bulkTrash(selectedIds),
+                () => selectedIds.forEach((id) => removeMail(id))
+              )
+            }
           >
             Trash
           </Button>
@@ -262,6 +310,7 @@ export function MailComponent({
           total={total}
           selectedIds={selectedIds}
           onSelectedIdsChange={setSelectedIds}
+          {...mailListHandlers}
         />
       </div>
     </div>
@@ -310,6 +359,8 @@ export function MailComponent({
               mailboxAddress={activeMailboxAddress}
               mailboxView={mailboxView}
               onBack={() => setMobileReadOpen(false)}
+              onPatchMail={patchMail}
+              onRemoveMail={removeMail}
             />
           ) : (
             listPane
@@ -352,6 +403,8 @@ export function MailComponent({
               accounts={accounts}
               mailboxAddress={activeMailboxAddress}
               mailboxView={mailboxView}
+              onPatchMail={patchMail}
+              onRemoveMail={removeMail}
             />
           </div>
         </ResizablePanel>

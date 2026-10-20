@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { revalidatePlatformCurrencies } from "@/lib/server/platform-cache-tags";
 import { ExchangeRateSource } from "@prisma/client";
 import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
 
@@ -90,6 +91,7 @@ export async function bulkToggleCurrencies(enableAll: boolean) {
       data: { isEnabled: false },
     });
   }
+  revalidatePlatformCurrencies();
   revalidatePath("/", "layout");
 }
 
@@ -120,6 +122,7 @@ export async function saveCurrencyApiKey(key: string) {
     update: { value: cleanKey },
     create: { key: "currencyapi_key", value: cleanKey },
   });
+  revalidatePlatformCurrencies();
   revalidatePath("/", "layout");
 }
 
@@ -146,6 +149,7 @@ export async function createCurrency(data: { code: string; name: string; symbol:
   if (denied) throw new Error(denied.error);
   const parsed = currencySchema.parse(data);
   await prismadb.currency.create({ data: { ...parsed, isEnabled: true, isDefault: false } });
+  revalidatePlatformCurrencies();
   revalidatePath("/", "layout");
 }
 
@@ -153,6 +157,7 @@ export async function toggleCurrency(code: string, isEnabled: boolean) {
   const denied = await ensureAdmin();
   if (denied) throw new Error(denied.error);
   await prismadb.currency.update({ where: { code }, data: { isEnabled } });
+  revalidatePlatformCurrencies();
   revalidatePath("/", "layout");
 }
 
@@ -168,6 +173,7 @@ export async function setDefaultCurrency(code: string) {
       create: { key: "default_currency", value: code },
     }),
   ]);
+  revalidatePlatformCurrencies();
   revalidatePath("/", "layout");
 }
 
@@ -199,6 +205,7 @@ export async function updateExchangeRate(data: {
       effectiveDate: new Date(),
     },
   });
+  revalidatePlatformCurrencies();
   revalidatePath("/", "layout");
 }
 
@@ -219,5 +226,6 @@ export async function setEcbAutoUpdate(enabled: boolean) {
     update: { value: enabled ? "true" : "false" },
     create: { key: "ecb_auto_update", value: enabled ? "true" : "false" },
   });
+  revalidatePlatformCurrencies();
   revalidatePath("/", "layout");
 }

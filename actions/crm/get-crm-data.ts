@@ -11,7 +11,8 @@ import {
   opportunityReadScopeWhere,
 } from "@/lib/authz";
 
-const getCrmConfigData = unstable_cache(
+/** Shared CRM dropdowns / lookups (admin CRM settings, currencies in forms). */
+export const getCachedCrmConfigLookups = unstable_cache(
   async () => {
     const [
       saleTypes,
@@ -74,7 +75,7 @@ export const getAllCrmData = cache(async () => {
     contracts,
     campaigns,
   ] = await Promise.all([
-    getCrmConfigData(),
+    getCachedCrmConfigLookups(),
     prismadb.crm_Accounts.findMany({ where: accountReadScopeWhere(user) }),
     prismadb.crm_Opportunities.findMany({ where: opportunityReadScopeWhere(user) }),
     prismadb.crm_Leads.findMany({ where: leadReadScopeWhere(user) }),

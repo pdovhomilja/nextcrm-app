@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { revalidatePluginNav } from "@/lib/server/platform-cache-tags";
 import { requireRole, AuthenticationError, AuthorizationError } from "@/lib/authz";
 import { installPlugin, savePluginSettings, setPluginEnabled, uninstallPlugin } from "@/lib/plugins/lifecycle";
 import { getPluginState } from "@/lib/plugins/state";
@@ -24,6 +25,7 @@ async function asAdmin(fn: (userId: string) => Promise<void>, path = "/admin/plu
   }
   try {
     await fn(userId);
+    revalidatePluginNav();
     revalidatePath(path);
     return { ok: true };
   } catch (e) {

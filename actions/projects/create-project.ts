@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { invalidateAfterBoardWrite } from "@/lib/server/invalidate-after-write";
 import { requireFeature, AuthenticationError, AuthorizationError } from "@/lib/authz";
 import { SCRUM_BOARD_SECTIONS } from "@/lib/projects/board-templates";
 
@@ -48,6 +49,7 @@ export const createProject = async (data: {
     });
 
     revalidatePath("/[locale]/(routes)/projects", "page");
+    invalidateAfterBoardWrite(user);
     return { data: newBoard };
   } catch (error) {
     console.log("[CREATE_PROJECT]", error);

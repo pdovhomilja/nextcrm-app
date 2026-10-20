@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { invalidateAfterBoardWrite } from "@/lib/server/invalidate-after-write";
 import {
   requireFeature,
   assertCanWriteBoard,
@@ -47,6 +48,7 @@ export const updateProject = async (data: {
     });
 
     revalidatePath("/[locale]/(routes)/projects", "page");
+    invalidateAfterBoardWrite(user);
     return { success: true };
   } catch (error) {
     console.log("[UPDATE_PROJECT]", error);

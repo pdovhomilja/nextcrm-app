@@ -35,6 +35,9 @@ export async function loadPermissionRows(userId: string, role: AppRole): Promise
   return unstable_cache(
     () => loadPermissionRowsFromDb(userId, role),
     ["permission-rows-v1", userId, role],
-    { revalidate: 180, tags: [`permissions-${userId}`] }
+    {
+      revalidate: 180,
+      tags: [`permissions-${userId}`, `permissions-role-${role}`],
+    }
   )();
 }

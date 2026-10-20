@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateUserAccess } from "@/lib/server/platform-cache-tags";
 import {
   requireRole,
   AuthenticationError,
@@ -34,6 +35,7 @@ export async function setVentureAccess(input: {
       ventureSlugs,
       crmEnabled: input.crmEnabled,
     });
+    revalidateUserAccess(input.userId);
     revalidatePath("/[locale]/(routes)/admin/users", "page");
     revalidatePath("/[locale]/(routes)/ventures", "page");
     return { ok: true as const };

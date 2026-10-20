@@ -7,6 +7,7 @@ import {
 } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { invalidateAfterDocumentWrite } from "@/lib/server/invalidate-after-write";
 import { inngest } from "@/inngest/client";
 
 interface CreateDocumentInput {
@@ -63,5 +64,6 @@ export async function createDocument(input: CreateDocumentInput) {
   });
 
   revalidatePath("/[locale]/(routes)/documents");
+  invalidateAfterDocumentWrite(user);
   return document;
 }

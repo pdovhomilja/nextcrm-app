@@ -4,15 +4,11 @@ import CrmTableSkeleton from "@/components/skeletons/crm-table-skeleton";
 
 import Container from "../../components/ui/Container";
 import ContactsView from "../components/ContactsView";
-import { getContacts } from "@/actions/crm/get-contacts";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getContactsPageData } from "@/actions/crm/get-contacts-page-data";
 import { getTranslations } from "next-intl/server";
 
 async function ContactsContent() {
-  const [crmData, contacts] = await Promise.all([
-    getAllCrmData(),
-    getContacts(),
-  ]);
+  const { crmData, contacts } = await getContactsPageData();
   return <ContactsView crmData={crmData} data={contacts} />;
 }
 

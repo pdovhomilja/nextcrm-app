@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import {
   Archive,
@@ -50,6 +49,7 @@ import { ComposeModal } from "@/app/[locale]/(routes)/emails/components/ComposeM
 import { EmailAttachmentsPanel } from "@/app/[locale]/(routes)/emails/components/EmailAttachmentsPanel";
 import { EmailConversationBody } from "@/app/[locale]/(routes)/emails/components/EmailConversationBody";
 import { parseEmailAttachments } from "@/lib/email/attachment-types";
+import type { getEmail } from "@/actions/emails/messages";
 import { EmailMessageHeader } from "@/app/[locale]/(routes)/emails/components/EmailMessageHeader";
 import type { MailboxView } from "@/lib/email/mailbox-views";
 import { cn } from "@/lib/utils";
@@ -61,6 +61,8 @@ interface MailDisplayProps {
   accounts?: ConnectedAccount[];
   mailboxView: MailboxView;
   onBack?: () => void;
+  onPatchMail?: (id: string, patch: Partial<Mail>) => void;
+  onRemoveMail?: (id: string) => void;
 }
 
 export function MailDisplay({
@@ -70,8 +72,9 @@ export function MailDisplay({
   accounts = [],
   mailboxView,
   onBack,
+  onPatchMail,
+  onRemoveMail,
 }: MailDisplayProps) {
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [fetchedEmail, setFullEmail] = useState<Awaited<ReturnType<typeof getEmail>> | null>(null);
   const fullEmail = mail?.id ? fetchedEmail : null;
@@ -117,12 +120,17 @@ export function MailDisplay({
 
   const canCompose = Boolean(composeMail?.fromEmail && mailboxView !== "trash");
 
-  async function runAction(fn: () => Promise<void>) {
+  async function runAction(
+    fn: () => Promise<void>,
+    after?: { patch?: Partial<Mail>; remove?: boolean }
+  ) {
     if (!mail?.id || busy) return;
     setBusy(true);
+    const id = mail.id;
     try {
+      if (after?.patch) onPatchMail?.(id, after.patch);
+      if (after?.remove) onRemoveMail?.(id);
       await fn();
-      router.refresh();
     } catch (e) {
       console.error(e);
     } finally {
@@ -166,7 +174,11 @@ export function MailDisplay({
                     size="icon"
                     className={iconBtn}
                     disabled={!mail || busy}
-                    onClick={() => runAction(() => restoreEmailFromTrash(mail!.id))}
+                    onClick={() =>
+                      runAction(() => restoreEmailFromTrash(mail!.id), {
+                        remove: mailboxView === "trash",
+                      })
+                    }
                   >
                     <ArchiveRestore className="h-4 w-4" />
                   </Button>
@@ -180,7 +192,9 @@ export function MailDisplay({
                     size="icon"
                     className={cn(iconBtn, "hover:text-destructive")}
                     disabled={!mail || busy}
-                    onClick={() => runAction(() => deleteEmailPermanent(mail!.id))}
+                    onClick={() =>
+                      runAction(() => deleteEmailPermanent(mail!.id), { remove: true })
+                    }
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -196,7 +210,11 @@ export function MailDisplay({
                   size="icon"
                   className={iconBtn}
                   disabled={!mail || busy}
-                  onClick={() => runAction(() => moveEmailFromSpam(mail!.id))}
+                  onClick={() =>
+                    runAction(() => moveEmailFromSpam(mail!.id), {
+                      remove: mailboxView === "spam",
+                    })
+                  }
                 >
                   <ShieldCheck className="h-4 w-4" />
                 </Button>
@@ -211,7 +229,11 @@ export function MailDisplay({
                   size="icon"
                   className={iconBtn}
                   disabled={!mail || busy}
-                  onClick={() => runAction(() => unarchiveEmail(mail!.id))}
+                  onClick={() =>
+                    runAction(() => unarchiveEmail(mail!.id), {
+                      remove: mailboxView === "archive",
+                    })
+                  }
                 >
                   <ArchiveRestore className="h-4 w-4" />
                 </Button>
@@ -227,7 +249,11 @@ export function MailDisplay({
                     size="icon"
                     className={iconBtn}
                     disabled={!mail || busy || mailboxView === "sent"}
-                    onClick={() => runAction(() => archiveEmail(mail!.id))}
+                    onClick={() =>
+                      runAction(() => archiveEmail(mail!.id), {
+                        remove: ["inbox", "sent", "starred", "spam"].includes(mailboxView),
+                      })
+                    }
                   >
                     <Archive className="h-4 w-4" />
                   </Button>
@@ -241,7 +267,11 @@ export function MailDisplay({
                     size="icon"
                     className={iconBtn}
                     disabled={!mail || busy || mailboxView === "sent"}
-                    onClick={() => runAction(() => moveEmailToSpam(mail!.id))}
+                    onClick={() =>
+                      runAction(() => moveEmailToSpam(mail!.id), {
+                        remove: mailboxView !== "spam" && mailboxView !== "trash",
+                      })
+                    }
                   >
                     <ShieldAlert className="h-4 w-4" />
                   </Button>
@@ -258,7 +288,11 @@ export function MailDisplay({
                   size="icon"
                   className={cn(iconBtn, "hover:text-destructive")}
                   disabled={!mail || busy}
-                  onClick={() => runAction(() => trashEmail(mail!.id))}
+                  onClick={() =>
+                    runAction(() => trashEmail(mail!.id), {
+                      remove: mailboxView !== "trash",
+                    })
+                  }
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -340,14 +374,18 @@ export function MailDisplay({
             <DropdownMenuContent align="end">
               <DropdownMenuItem
                 disabled={!mail || busy}
-                onClick={() => runAction(() => setEmailRead(mail!.id, false))}
+                onClick={() =>
+                  runAction(() => setEmailRead(mail!.id, false), { patch: { isRead: false } })
+                }
               >
                 <MailOpen className="mr-2 h-4 w-4" />
                 Mark as unread
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={!mail || busy}
-                onClick={() => runAction(() => setEmailRead(mail!.id, true))}
+                onClick={() =>
+                  runAction(() => setEmailRead(mail!.id, true), { patch: { isRead: true } })
+                }
               >
                 Mark as read
               </DropdownMenuItem>
@@ -355,7 +393,11 @@ export function MailDisplay({
               {mailboxView !== "spam" && mailboxView !== "trash" && mailboxView !== "sent" && (
                 <DropdownMenuItem
                   disabled={!mail || busy}
-                  onClick={() => runAction(() => moveEmailToSpam(mail!.id))}
+                  onClick={() =>
+                    runAction(() => moveEmailToSpam(mail!.id), {
+                      remove: mailboxView !== "spam" && mailboxView !== "trash",
+                    })
+                  }
                 >
                   Report spam
                 </DropdownMenuItem>
