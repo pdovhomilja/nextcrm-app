@@ -9,14 +9,18 @@ import {
   parseRole,
 } from "@/lib/authz";
 import { getOrgEmailDomain, isValidWorkEmail, slugifyUsername } from "@/lib/org-work-email";
-import { upsertCredentialAccount } from "@/lib/auth-credentials";
+import { generateTemporaryPassword, upsertCredentialAccount } from "@/lib/auth-credentials";
 import { createEmailAccountForUser } from "@/actions/emails/accounts";
 import { setUserVentureAccess } from "@/lib/vensai/user-access";
 import { listVentureOptions } from "@/lib/vensai/venture-catalog";
+import resendHelper from "@/lib/resend";
+import { getPublicAppUrl } from "@/lib/app-url";
+import EmployeeWelcomeEmail from "@/emails/EmployeeWelcome";
+import { getAppName } from "@/lib/app-name";
 
 export type CreateEmployeeInput = {
   workEmail: string;
-  password: string;
+  password?: string;
   role: string;
   name?: string;
   personalEmail?: string;
@@ -45,21 +49,29 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
 
   const role = parseRole(data.role);
   const workEmail = data.workEmail.trim().toLowerCase();
-  const password = data.password?.trim() ?? "";
   const personal = data.personalEmail?.trim().toLowerCase() ?? "";
   const phone = data.phone?.trim() || null;
   const local = workEmail.split("@")[0] || "";
   const username = slugifyUsername(local);
   const name = data.name?.trim() || local || null;
+  const suppliedPassword = data.password?.trim() ?? "";
+  const sendTemporaryPassword = personal.length > 0;
+  const password = sendTemporaryPassword ? generateTemporaryPassword() : suppliedPassword;
 
   if (!role) return { error: "Select a valid role" };
   if (!isValidWorkEmail(workEmail)) {
     return { error: `Work email must use your org domain (@${getOrgEmailDomain()})` };
   }
-  if (password.length < 8) return { error: "Password must be at least 8 characters" };
-  if (personal && !isEmail(personal)) return { error: "Enter a valid personal email" };
-  if (personal && personal === workEmail) {
+  if (sendTemporaryPassword && !isEmail(personal)) return { error: "Enter a valid personal email" };
+  if (sendTemporaryPassword && personal === workEmail) {
     return { error: "Personal email must be different from the work email" };
+  }
+  if (!sendTemporaryPassword && password.length < 8) {
+    return { error: "Password must be at least 8 characters" };
+  }
+  const fromAddress = process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || "";
+  if (sendTemporaryPassword && !fromAddress) {
+    return { error: "Email sending is not configured, so a temporary password cannot be delivered" };
   }
 
   const loginEmail = personal || workEmail;
@@ -98,7 +110,7 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
         email: loginEmail,
         workEmail,
         phone,
-        mustChangePassword: false,
+        mustChangePassword: sendTemporaryPassword,
         userStatus: "ACTIVE",
         userLanguage: "en",
         role,
@@ -122,6 +134,35 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
       await prismadb.users.delete({ where: { id: user.id } });
       const message = mailboxError instanceof Error ? mailboxError.message : "Could not create the mailbox";
       return { error: `${workEmail}: ${message}` };
+    }
+
+    if (sendTemporaryPassword) {
+      try {
+        const resend = await resendHelper();
+        const appName = getAppName();
+        const inviter = await prismadb.users.findUnique({
+          where: { id: actor.id },
+          select: { name: true },
+        });
+        await resend.emails.send({
+          from: `${appName} <${fromAddress}>`,
+          to: personal,
+          subject: `Your ${appName} login — ${workEmail}`,
+          react: EmployeeWelcomeEmail({
+            displayName: name || personal,
+            workEmail,
+            personalEmail: personal,
+            temporaryPassword: password,
+            invitedByName: inviter?.name || "Your administrator",
+            appUrl: getPublicAppUrl(),
+            appName,
+          }),
+        });
+      } catch (mailError) {
+        console.error("[CREATE_EMPLOYEE] welcome email failed:", mailError);
+        await prismadb.users.delete({ where: { id: user.id } });
+        return { error: `Could not email the temporary password to ${personal}` };
+      }
     }
 
     await setUserVentureAccess({ userId: user.id, ventureSlugs, crmEnabled });

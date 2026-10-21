@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icons } from "@/components/ui/icons";
 import { inviteUser } from "@/actions/admin/users/invite-user";
@@ -34,6 +33,9 @@ import { VentureAccessFields } from "./VentureAccessFields";
 import type { VentureOption } from "@/lib/vensai/venture-catalog";
 
 const FormSchema = z.object({
+  name: z.string().optional(),
+  personalEmail: z.string().optional(),
+  phone: z.string().optional(),
   workEmail: z.string().email(),
   role: z.enum(["user", "trainee", "manager", "admin"]),
   password: z.string().optional(),
@@ -50,7 +52,6 @@ export function InviteForm({
   ventureOptions: VentureOption[];
 }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [setPassword, setSetPassword] = useState(false);
   const [ventureSlugs, setVentureSlugs] = useState<string[]>([]);
   const [crmEnabled, setCrmEnabled] = useState(true);
   const router = useRouter();
@@ -58,32 +59,43 @@ export function InviteForm({
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
+      name: "",
+      personalEmail: "",
+      phone: "",
       workEmail: "",
       role: "user",
       password: "",
       confirmPassword: "",
     },
   });
+  const personalEmail = form.watch("personalEmail") ?? "";
+  const sendsTemporaryPassword = personalEmail.trim().length > 0;
 
   async function onSubmit(data: FormValues) {
-    if (!setPassword) {
-      toast.error("Tick Set password and enter a password.");
+    const personal = data.personalEmail?.trim() ?? "";
+    if (personal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal)) {
+      toast.error("Enter a valid personal email.");
       return;
     }
-    if (!data.password || data.password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
-      return;
-    }
-    if (data.password !== data.confirmPassword) {
-      toast.error("Password and confirm password do not match.");
-      return;
+    if (!personal) {
+      if (!data.password || data.password.length < 8) {
+        toast.error("Password must be at least 8 characters.");
+        return;
+      }
+      if (data.password !== data.confirmPassword) {
+        toast.error("Password and confirm password do not match.");
+        return;
+      }
     }
 
     setIsLoading(true);
     try {
       const result = await inviteUser({
+        name: data.name,
+        personalEmail: personal || undefined,
+        phone: data.phone,
         workEmail: data.workEmail,
-        password: data.password,
+        password: personal ? undefined : data.password,
         role: data.role,
         ventureSlugs,
         crmEnabled,
@@ -92,9 +104,20 @@ export function InviteForm({
       if ("error" in result && result.error) {
         toast.error(result.error);
       } else {
-        toast.success("User created. They can sign in with this work email and password.");
-        form.reset({ workEmail: "", role: "user", password: "", confirmPassword: "" });
-        setSetPassword(false);
+        toast.success(
+          personal
+            ? "User created. A temporary password was sent to their personal email."
+            : "User created. They can sign in with this work email and password."
+        );
+        form.reset({
+          name: "",
+          personalEmail: "",
+          phone: "",
+          workEmail: "",
+          role: "user",
+          password: "",
+          confirmPassword: "",
+        });
         setVentureSlugs([]);
         setCrmEnabled(true);
         router.refresh();
@@ -111,12 +134,102 @@ export function InviteForm({
       <CardHeader>
         <CardTitle className="text-lg">Add user</CardTitle>
         <CardDescription>
-          Work email and a password are enough. Name, personal email, and phone can be added later.
+          Name, personal email, phone, and role. A personal email receives a temporary VenSai password.
+          Leave it blank to set the password here.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid max-w-xl gap-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input disabled={isLoading} placeholder="Full name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="personalEmail"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Personal email</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={isLoading}
+                      type="email"
+                      placeholder="name@gmail.com"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    If this is filled in, VenSai CRM emails a temporary password. Leave it empty to set a password below.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {!sendsTemporaryPassword && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          autoComplete="new-password"
+                          disabled={isLoading}
+                          placeholder="At least 8 characters"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirm password</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          autoComplete="new-password"
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone number</FormLabel>
+                  <FormControl>
+                    <Input disabled={isLoading} placeholder="Phone number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="workEmail"
@@ -132,64 +245,12 @@ export function InviteForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    This is the login. You can change it later. It must end with @{orgDomain}.
+                    Company mailbox. They can sign in with this address. It must end with @{orgDomain}.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm font-medium">
-                <Checkbox
-                  checked={setPassword}
-                  onCheckedChange={(checked) => setSetPassword(checked === true)}
-                  disabled={isLoading}
-                />
-                Set password
-              </label>
-              {setPassword && (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            autoComplete="new-password"
-                            disabled={isLoading}
-                            placeholder="At least 8 characters"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm password</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            autoComplete="new-password"
-                            disabled={isLoading}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-            </div>
 
             <FormField
               control={form.control}
