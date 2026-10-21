@@ -6,6 +6,7 @@ import { getOrgEmailDomain } from "@/lib/org-work-email";
 import { getSession } from "@/lib/auth-server";
 import { UsersAdmin } from "./components/UsersAdmin";
 import { getTranslations } from "next-intl/server";
+import { listVentureOptions } from "@/lib/vensai/venture-catalog";
 
 const AdminUsersPage = async () => {
   const users = await getUsers();
@@ -13,6 +14,7 @@ const AdminUsersPage = async () => {
   const t = await getTranslations("AdminPage");
 
   const session = await getSession();
+  const ventureOptions = listVentureOptions();
 
   if (session?.user?.role !== "admin") {
     return (
@@ -35,6 +37,7 @@ const AdminUsersPage = async () => {
       <UsersAdmin
         orgDomain={orgDomain}
         inviteHeading={t("users.inviteHeading")}
+        ventureOptions={ventureOptions}
         users={users.map((user) => ({
           id: user.id,
           created_on: user.created_on,
@@ -47,6 +50,8 @@ const AdminUsersPage = async () => {
           username: user.username,
           userStatus: user.userStatus,
           userLanguage: user.userLanguage,
+          crmEnabled: user.crmEnabled,
+          ventureGrants: user.ventureGrants,
         }))}
       />
     </Container>

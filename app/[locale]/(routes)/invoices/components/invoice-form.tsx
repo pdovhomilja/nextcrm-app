@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import {
 import { LineItemsEditor, LineItemRow } from "./line-items-editor";
 import { TotalsPanel } from "./totals-panel";
 import { AccountSearchCombobox } from "@/components/ui/account-search-combobox";
+import { InvoicePdfLivePreview, type InvoicePreviewPayload } from "./invoice-pdf-live-preview";
 import { INVOICE_TYPES } from "@/types/invoice";
 import { createInvoice } from "@/actions/invoices/create-invoice";
 import { updateInvoice } from "@/actions/invoices/update-invoice";
@@ -162,10 +163,13 @@ export function InvoiceForm({
     ];
   });
 
-  const getTaxRateValue = (taxRateId: string) => {
-    const tr = taxRates.find((t) => t.id === taxRateId);
-    return tr ? parseFloat(tr.rate) : 0;
-  };
+  const getTaxRateValue = useCallback(
+    (taxRateId: string) => {
+      const tr = taxRates.find((t) => t.id === taxRateId);
+      return tr ? parseFloat(tr.rate) : 0;
+    },
+    [taxRates]
+  );
 
   const totalsInput = lineItems.map((li) => ({
     quantity: li.quantity,
@@ -228,177 +232,227 @@ export function InvoiceForm({
 
   const l = labels ?? {};
 
+  const previewPayload: InvoicePreviewPayload = useMemo(() => {
+    return {
+      type,
+      accountId,
+      seriesId,
+      currency,
+      dueDate,
+      bankName,
+      iban,
+      swift,
+      variableSymbol,
+      publicNotes,
+      lineItems: lineItems.map((li) => ({
+        productId: li.productId || undefined,
+        description: li.description,
+        quantity: li.quantity,
+        unitPrice: li.unitPrice,
+        discountPercent: li.discountPercent,
+        taxRateId: li.taxRateId || undefined,
+        taxRate: getTaxRateValue(li.taxRateId),
+      })),
+    };
+  }, [
+    type,
+    accountId,
+    seriesId,
+    currency,
+    dueDate,
+    bankName,
+    iban,
+    swift,
+    variableSymbol,
+    publicNotes,
+    lineItems,
+    getTaxRateValue,
+  ]);
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label>{l.type ?? "Type"}</Label>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {INVOICE_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t.replace("_", " ")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <div className="space-y-10">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>{l.type ?? "Type"}</Label>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {INVOICE_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t.replace("_", " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{l.account ?? "Account"}</Label>
+              <AccountSearchCombobox
+                value={accountId}
+                onChange={setAccountId}
+                placeholder="Select account..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{l.series ?? "Series"}</Label>
+              <Select
+                value={seriesId || "none"}
+                onValueChange={(v) => setSeriesId(v === "none" ? "" : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select series..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-</SelectItem>
+                  {series.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>{l.account ?? "Account"}</Label>
-            <AccountSearchCombobox
-              value={accountId}
-              onChange={setAccountId}
-              placeholder="Select account..."
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>{l.currency ?? "Currency"}</Label>
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencies.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.code} - {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{l.dueDate ?? "Due Date"}</Label>
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{l.variableSymbol ?? "Variable Symbol"}</Label>
+              <Input
+                value={variableSymbol}
+                onChange={(e) => setVariableSymbol(e.target.value)}
+                placeholder="Variable symbol"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>{l.bankName ?? "Bank Name"}</Label>
+              <Input
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{l.iban ?? "IBAN"}</Label>
+              <Input
+                value={iban}
+                onChange={(e) => setIban(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{l.swift ?? "SWIFT"}</Label>
+              <Input
+                value={swift}
+                onChange={(e) => setSwift(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label className="mb-3 block">
+              {l.lineItems ?? "Line Items"}
+            </Label>
+            <LineItemsEditor
+              items={lineItems}
+              onChange={setLineItems}
+              products={products}
+              taxRates={taxRates}
+              labels={{
+                product: l.product,
+                description: l.description,
+                quantity: l.quantity,
+                unitPrice: l.unitPrice,
+                discount: l.discount,
+                taxRate: l.taxRate,
+                total: l.total,
+                addLine: l.addLine,
+              }}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>{l.series ?? "Series"}</Label>
-            <Select
-              value={seriesId || "none"}
-              onValueChange={(v) => setSeriesId(v === "none" ? "" : v)}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>{l.publicNotes ?? "Public Notes"}</Label>
+              <Textarea
+                value={publicNotes}
+                onChange={(e) => setPublicNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{l.internalNotes ?? "Internal Notes"}</Label>
+              <Textarea
+                value={internalNotes}
+                onChange={(e) => setInternalNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button onClick={handleSubmit} disabled={saving}>
+              {saving
+                ? "Saving..."
+                : isEdit
+                  ? "Update Draft"
+                  : (l.save ?? "Save Draft")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => router.back()}
+              disabled={saving}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select series..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">-</SelectItem>
-                {series.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              Cancel
+            </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label>{l.currency ?? "Currency"}</Label>
-            <Select value={currency} onValueChange={setCurrency}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {currencies.map((c) => (
-                  <SelectItem key={c.code} value={c.code}>
-                    {c.code} - {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{l.dueDate ?? "Due Date"}</Label>
-            <Input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>{l.variableSymbol ?? "Variable Symbol"}</Label>
-            <Input
-              value={variableSymbol}
-              onChange={(e) => setVariableSymbol(e.target.value)}
-              placeholder="Variable symbol"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label>{l.bankName ?? "Bank Name"}</Label>
-            <Input
-              value={bankName}
-              onChange={(e) => setBankName(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>{l.iban ?? "IBAN"}</Label>
-            <Input
-              value={iban}
-              onChange={(e) => setIban(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>{l.swift ?? "SWIFT"}</Label>
-            <Input
-              value={swift}
-              onChange={(e) => setSwift(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label className="mb-3 block">
-            {l.lineItems ?? "Line Items"}
-          </Label>
-          <LineItemsEditor
-            items={lineItems}
-            onChange={setLineItems}
-            products={products}
-            taxRates={taxRates}
-            labels={{
-              product: l.product,
-              description: l.description,
-              quantity: l.quantity,
-              unitPrice: l.unitPrice,
-              discount: l.discount,
-              taxRate: l.taxRate,
-              total: l.total,
-              addLine: l.addLine,
-            }}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>{l.publicNotes ?? "Public Notes"}</Label>
-            <Textarea
-              value={publicNotes}
-              onChange={(e) => setPublicNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>{l.internalNotes ?? "Internal Notes"}</Label>
-            <Textarea
-              value={internalNotes}
-              onChange={(e) => setInternalNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <Button onClick={handleSubmit} disabled={saving}>
-            {saving
-              ? "Saving..."
-              : isEdit
-                ? "Update Draft"
-                : (l.save ?? "Save Draft")}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => router.back()}
-            disabled={saving}
-          >
-            Cancel
-          </Button>
+        <div className="space-y-4">
+          <TotalsPanel lineItems={totalsInput} currency={currency} locale={locale} />
         </div>
       </div>
 
-      <div className="space-y-4">
-        <TotalsPanel lineItems={totalsInput} currency={currency} locale={locale} />
+      {/* Live PDF Preview section */}
+      <div className="pt-6 border-t">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold tracking-tight">Invoice PDF Preview</h2>
+          <p className="text-sm text-muted-foreground">
+            Live document rendering with your letterhead. Updates automatically as you edit.
+          </p>
+        </div>
+        <InvoicePdfLivePreview formData={previewPayload} />
       </div>
     </div>
   );

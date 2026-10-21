@@ -161,7 +161,21 @@ export const columns: ColumnDef<AdminUser>[] = [
     enableHiding: true,
   },
   {
+    accessorKey: "ventureGrants",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Ventures" />
+    ),
+    cell: ({ row }) => {
+      const slugs = row.original.ventureGrants?.map((g) => g.ventureSlug) ?? [];
+      if (!slugs.length) return <span className="text-muted-foreground">—</span>;
+      return <span className="font-mono text-xs">{slugs.join(", ")}</span>;
+    },
+    enableSorting: false,
+  },
+  {
     id: "actions",
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    cell: ({ row, table }) => (
+      <DataTableRowActions row={row} ventureOptions={table.options.meta?.ventureOptions ?? []} />
+    ),
   },
 ];

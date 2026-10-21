@@ -19,26 +19,11 @@ import LoadingBox from "./components/dasboard/loading-box";
 import StorageQuota from "./components/dasboard/storage-quota";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import {
-  getTasksCount,
-  getUsersTasksCount,
-} from "@/actions/dashboard/get-tasks-count";
-import { getInvoicesCount } from "@/actions/dashboard/get-invoices-count";
-import { getCampaignsCount } from "@/actions/dashboard/get-campaigns-count";
-import { getTargetsCount } from "@/actions/dashboard/get-targets-count";
-import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
-import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
-import { getStorageSize } from "@/actions/documents/get-storage-size";
-import { getContactCount } from "@/actions/dashboard/get-contacts-count";
-import { getAccountsCount } from "@/actions/dashboard/get-accounts-count";
-import { getContractsCount } from "@/actions/dashboard/get-contracts-count";
-import { getDocumentsCount } from "@/actions/dashboard/get-documents-count";
-import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
-import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
-import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-revenue";
+import { loadDashboardMetrics } from "@/actions/dashboard/load-dashboard-metrics";
+import { getCachedDefaultCurrency } from "@/lib/server/cached-platform";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
-import { getDefaultCurrency, formatCurrency as formatCurrencyUtil } from "@/lib/currency";
+import { formatCurrency as formatCurrencyUtil } from "@/lib/currency";
 import { Decimal } from "@prisma/client/runtime/client";
 
 const DashboardPage = async () => {
@@ -48,30 +33,32 @@ const DashboardPage = async () => {
 
   const userId = session?.user?.id;
 
-  const cookieStore = await cookies();
-  const defaultCurrency = await getDefaultCurrency();
+  const [cookieStore, defaultCurrency, dict] = await Promise.all([
+    cookies(),
+    getCachedDefaultCurrency(),
+    getTranslations("DashboardPage"),
+  ]);
+
   const displayCurrency = cookieStore.get("display_currency")?.value || defaultCurrency;
+  const {
+    leads,
+    tasks,
+    invoices,
+    campaigns,
+    targets,
+    storage,
+    projects,
+    contacts,
+    contracts,
+    users,
+    accounts,
+    revenue,
+    documents,
+    opportunities,
+    usersTasks,
+  } = await loadDashboardMetrics(userId, displayCurrency);
 
-  //Get user language
   const lang = session?.user?.userLanguage;
-
-  //Fetch translations from dictionary
-  const dict = await getTranslations("DashboardPage");
-  const leads = await getLeadsCount();
-  const tasks = await getTasksCount();
-  const invoices = await getInvoicesCount();
-  const campaigns = await getCampaignsCount();
-  const targets = await getTargetsCount();
-  const storage = await getStorageSize();
-  const projects = await getBoardsCount();
-  const contacts = await getContactCount();
-  const contracts = await getContractsCount();
-  const users = await getActiveUsersCount();
-  const accounts = await getAccountsCount();
-  const revenue = await getExpectedRevenue(displayCurrency);
-  const documents = await getDocumentsCount();
-  const opportunities = await getOpportunitiesCount();
-  const usersTasks = await getUsersTasksCount(userId);
 
   return (
     <Container

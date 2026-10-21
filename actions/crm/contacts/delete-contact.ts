@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { invalidateAfterContactWrite } from "@/lib/server/invalidate-after-write";
 import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { writeAuditLog } from "@/lib/audit-log";
 import {
@@ -41,6 +42,7 @@ export const deleteContact = async (contactId: string) => {
       userId: user.id,
     });
     revalidatePath("/[locale]/(routes)/crm/contacts", "page");
+    invalidateAfterContactWrite(user);
     return { success: true };
   } catch (error) {
     const ruleMessage = await pluginRuleErrorMessage(error);

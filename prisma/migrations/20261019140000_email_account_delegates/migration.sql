@@ -1,0 +1,1 @@
+ALTER TABLE "EmailAccount" ADD COLUMN "delegateUserIds" UUID[] NOT NULL DEFAULT ARRAY[]::UUID[];

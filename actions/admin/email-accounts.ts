@@ -39,6 +39,7 @@ export async function getAdminEmailAccounts() {
       sentFolderName: true,
       lastSyncedAt: true,
       createdAt: true,
+      delegateUserIds: true,
       user: {
         select: { id: true, email: true, name: true },
       },
@@ -86,6 +87,18 @@ export async function adminSetEmailAccountActive(id: string, isActive: boolean) 
   const account = await prismadb.emailAccount.findUnique({ where: { id }, select: { id: true } });
   if (!account) throw new Error("Not found");
   await prismadb.emailAccount.update({ where: { id }, data: { isActive } });
+  revalidatePath("/[locale]/(routes)/admin/email-accounts", "page");
+}
+
+export async function adminSetEmailAccountDelegates(accountId: string, delegateUserIds: string[]) {
+  await requireAdmin();
+  const account = await prismadb.emailAccount.findUnique({ where: { id: accountId }, select: { id: true } });
+  if (!account) throw new Error("Not found");
+  const unique = Array.from(new Set(delegateUserIds.filter(Boolean)));
+  await prismadb.emailAccount.update({
+    where: { id: accountId },
+    data: { delegateUserIds: unique },
+  });
   revalidatePath("/[locale]/(routes)/admin/email-accounts", "page");
 }
 

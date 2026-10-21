@@ -30,6 +30,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Icons } from "@/components/ui/icons";
 import { inviteUser } from "@/actions/admin/users/invite-user";
 import { ROLE_OPTIONS } from "./role-options";
+import { VentureAccessFields } from "./VentureAccessFields";
+import type { VentureOption } from "@/lib/vensai/venture-catalog";
 
 const FormSchema = z.object({
   workEmail: z.string().email(),
@@ -40,9 +42,17 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>;
 
-export function InviteForm({ orgDomain }: { orgDomain: string }) {
+export function InviteForm({
+  orgDomain,
+  ventureOptions,
+}: {
+  orgDomain: string;
+  ventureOptions: VentureOption[];
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const [setPassword, setSetPassword] = useState(false);
+  const [ventureSlugs, setVentureSlugs] = useState<string[]>([]);
+  const [crmEnabled, setCrmEnabled] = useState(true);
   const router = useRouter();
 
   const form = useForm<FormValues>({
@@ -75,6 +85,8 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
         workEmail: data.workEmail,
         password: data.password,
         role: data.role,
+        ventureSlugs,
+        crmEnabled,
       });
 
       if ("error" in result && result.error) {
@@ -83,6 +95,8 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
         toast.success("User created. They can sign in with this work email and password.");
         form.reset({ workEmail: "", role: "user", password: "", confirmPassword: "" });
         setSetPassword(false);
+        setVentureSlugs([]);
+        setCrmEnabled(true);
         router.refresh();
       }
     } catch {
@@ -200,6 +214,13 @@ export function InviteForm({ orgDomain }: { orgDomain: string }) {
                   <FormMessage />
                 </FormItem>
               )}
+            />
+            <VentureAccessFields
+              ventures={ventureOptions}
+              ventureSlugs={ventureSlugs}
+              crmEnabled={crmEnabled}
+              onVentureSlugsChange={setVentureSlugs}
+              onCrmEnabledChange={setCrmEnabled}
             />
 
             <div>

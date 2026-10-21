@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { invalidateAfterContactWrite } from "@/lib/server/invalidate-after-write";
 import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import sendEmail from "@/lib/sendmail";
 import { inngest } from "@/inngest/client";
@@ -110,6 +111,7 @@ export const createContact = async (data: {
     });
     void inngest.send({ name: "crm/contact.saved", data: { record_id: contact.id } });
     revalidatePath("/[locale]/crm/contacts", "page");
+    invalidateAfterContactWrite(user);
     return { data: contact };
   } catch (error) {
     const ruleMessage = await pluginRuleErrorMessage(error);

@@ -27,17 +27,27 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
+import type { VentureOption } from "@/lib/vensai/venture-catalog";
+
+declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface TableMeta<TData> {
+    ventureOptions?: VentureOption[];
+  }
+}
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onSelectedChange?: (rows: TData[]) => void;
+  ventureOptions?: VentureOption[];
 }
 
 export function AdminUserDataTable<TData, TValue>({
   columns,
   data,
   onSelectedChange,
+  ventureOptions = [],
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -67,6 +77,7 @@ export function AdminUserDataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    meta: { ventureOptions },
   });
 
   React.useEffect(() => {

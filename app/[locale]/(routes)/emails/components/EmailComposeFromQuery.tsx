@@ -2,15 +2,17 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import type { ConnectedAccount } from "@/app/[locale]/(routes)/emails/data";
 import { ComposeModal } from "./ComposeModal";
 
 type Props = {
   accountId: string;
   mailboxAddress: string;
+  accounts?: ConnectedAccount[];
 };
 
 /** Opens compose when `?composeTo=` is present (assistant, team chat, deep links). */
-export function EmailComposeFromQuery({ accountId, mailboxAddress }: Props) {
+export function EmailComposeFromQuery({ accountId, mailboxAddress, accounts = [] }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const composeTo = searchParams.get("composeTo")?.trim();
@@ -37,6 +39,7 @@ export function EmailComposeFromQuery({ accountId, mailboxAddress }: Props) {
     <ComposeModal
       key={`${composeTo}-${composePrompt}-${seed}`}
       accountId={accountId}
+      accounts={accounts}
       mailboxAddress={mailboxAddress}
       mode="new"
       defaultOpen

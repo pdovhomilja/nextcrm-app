@@ -30,6 +30,7 @@ import {
   Trash,
   UserCheck,
   UserX,
+  Building2,
 } from "lucide-react";
 import { AdminEditUserDialog } from "../components/AdminEditUserDialog";
 import { deleteUser } from "@/actions/admin/users/delete-user";
@@ -37,22 +38,28 @@ import { activateUser } from "@/actions/admin/users/activate-user";
 import { deactivateUser } from "@/actions/admin/users/deactivate-user";
 import { setUserRole } from "@/actions/admin/users/set-role";
 import { revokeUserApiTokens } from "@/actions/admin/users/revoke-api-tokens";
+import { AdminVentureAccessDialog } from "../components/AdminVentureAccessDialog";
+import type { VentureOption } from "@/lib/vensai/venture-catalog";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
+  ventureOptions: VentureOption[];
 }
 
 export function DataTableRowActions<TData>({
   row,
+  ventureOptions,
 }: DataTableRowActionsProps<TData>) {
   const router = useRouter();
   const data = adminUserSchema.parse(row.original);
 
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [ventureOpen, setVentureOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const workEmail = data.workEmail || data.email;
   const personalEmail = data.email !== workEmail ? data.email : "";
+  const initialSlugs = data.ventureGrants?.map((g) => g.ventureSlug) ?? [];
 
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -163,6 +170,15 @@ export function DataTableRowActions<TData>({
         onOpenChange={setEditOpen}
         onUpdated={() => router.refresh()}
       />
+      <AdminVentureAccessDialog
+        open={ventureOpen}
+        onOpenChange={setVentureOpen}
+        userId={data.id}
+        userName={data.name || data.email}
+        ventures={ventureOptions}
+        initialSlugs={initialSlugs}
+        initialCrmEnabled={data.crmEnabled !== false}
+      />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant={"ghost"} className="h-8 w-8 p-0">
@@ -179,6 +195,10 @@ export function DataTableRowActions<TData>({
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             <Pencil className="mr-2 w-4 h-4" />
             Edit user
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setVentureOpen(true)}>
+            <Building2 className="mr-2 w-4 h-4" />
+            Venture &amp; CRM access
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onActivate()}>

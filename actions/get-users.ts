@@ -6,6 +6,9 @@ export const getUsers = async () => {
     orderBy: {
       created_on: "desc",
     },
+    include: {
+      ventureGrants: { select: { ventureSlug: true } },
+    },
   });
   return data;
 };

@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import Papa from "papaparse";
 import { writeAuditLog } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
+import { invalidateAfterContactWrite } from "@/lib/server/invalidate-after-write";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 
 const MAX_ROWS = 500;
@@ -101,5 +102,6 @@ export async function importContacts(
   }
 
   revalidatePath("/[locale]/(routes)/crm/contacts", "page");
+  invalidateAfterContactWrite(user);
   return { imported: valid.length, skipped: errors.length, errors };
 }

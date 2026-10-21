@@ -7,6 +7,7 @@ import {
 } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { invalidateAfterDocumentWrite } from "@/lib/server/invalidate-after-write";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { minioClient, MINIO_BUCKET } from "@/lib/minio";
 
@@ -48,4 +49,5 @@ export async function bulkDeleteDocuments(documentIds: string[]) {
   });
 
   revalidatePath("/[locale]/(routes)/documents");
+  invalidateAfterDocumentWrite(user);
 }

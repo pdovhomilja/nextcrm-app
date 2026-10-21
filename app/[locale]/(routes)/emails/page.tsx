@@ -11,14 +11,11 @@ import Container from "../components/ui/Container";
 import EmailsSkeleton from "@/components/skeletons/emails-skeleton";
 import { getSession } from "@/lib/auth-server";
 import { getTranslations } from "next-intl/server";
-import { getEmailAccounts } from "@/actions/emails/accounts";
-import {
-  getMailboxCounts,
-  getMailboxEmails,
-} from "@/actions/emails/mailbox-actions";
+import { getAccessibleEmailAccounts } from "@/actions/emails/accessible-accounts";
+import { getMailboxPageData } from "@/actions/emails/mailbox-page";
 import { parseMailboxView } from "@/lib/email/mailbox-views";
 
-type EmailsListResult = Awaited<ReturnType<typeof getMailboxEmails>>;
+type EmailsListResult = Awaited<ReturnType<typeof getMailboxPageData>>["emails"];
 
 const emptyEmailsResult: EmailsListResult = {
   emails: [],
@@ -92,7 +89,7 @@ const EmailRoute = async ({
 
   let connectedAccounts: any[] = [];
   try {
-    connectedAccounts = await getEmailAccounts();
+    connectedAccounts = await getAccessibleEmailAccounts();
   } catch (error) {
     console.error("[EmailRoute] Failed to load email accounts:", error);
     connectedAccounts = [];
@@ -160,16 +157,13 @@ const EmailRoute = async ({
   };
   if (activeAccountId) {
     try {
-      [emailsResult, mailboxCounts] = await Promise.all([
-        getMailboxEmails(
-          activeAccountId,
-          mailboxView,
-          activePage,
-          params.search,
-          unreadOnly
-        ),
-        getMailboxCounts(activeAccountId),
-      ]);
+      ({ emails: emailsResult, counts: mailboxCounts } = await getMailboxPageData(
+        activeAccountId,
+        mailboxView,
+        activePage,
+        params.search,
+        unreadOnly
+      ));
     } catch (error) {
       console.error("[EmailRoute] Failed to load emails:", error);
     }
@@ -182,6 +176,7 @@ const EmailRoute = async ({
           <EmailComposeFromQuery
             accountId={activeAccountId}
             mailboxAddress={activeMailboxAddress}
+            accounts={connectedAccounts}
           />
         </Suspense>
       )}

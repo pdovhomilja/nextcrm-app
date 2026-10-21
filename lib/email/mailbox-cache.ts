@@ -5,8 +5,8 @@ import {
 } from "@/lib/cache/upstash-redis";
 
 const PREFIX = "mailbox:v1";
-const LIST_TTL_SECONDS = 45;
-const COUNTS_TTL_SECONDS = 30;
+const LIST_TTL_SECONDS = 120;
+const COUNTS_TTL_SECONDS = 90;
 
 function getRedis() {
   return getUpstashRedis();
@@ -127,17 +127,17 @@ export async function invalidateMailboxCache(userId: string, accountId: string) 
   }
 }
 
-async function ownedAccountIdForEmail(emailId: string, userId: string) {
+async function ownedAccountIdForEmail(emailId: string) {
   const { prismadb } = await import("@/lib/prisma");
   const row = await prismadb.email.findFirst({
-    where: { id: emailId, userId },
+    where: { id: emailId },
     select: { emailAccountId: true },
   });
   return row?.emailAccountId;
 }
 
 export async function invalidateMailboxCacheForEmail(emailId: string, userId: string) {
-  const accountId = await ownedAccountIdForEmail(emailId, userId);
+  const accountId = await ownedAccountIdForEmail(emailId);
   if (accountId) await invalidateMailboxCache(userId, accountId);
 }
 
@@ -145,7 +145,7 @@ export async function invalidateMailboxCacheForEmails(ids: string[], userId: str
   if (!ids.length) return;
   const { prismadb } = await import("@/lib/prisma");
   const rows = await prismadb.email.findMany({
-    where: { id: { in: ids }, userId },
+    where: { id: { in: ids } },
     select: { emailAccountId: true },
   });
   const accounts = new Set(rows.map((r) => r.emailAccountId));

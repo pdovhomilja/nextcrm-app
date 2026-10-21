@@ -1061,6 +1061,9 @@ model Users {
   scheduleOrganized TeamScheduleEntry[] @relation("ScheduleOrganizer")
   permissionGroups  PermissionGroupMember[]
   permissionOverrides UserPermission[]
+  /** When false, user may only use assigned VenSai ventures (not CRM modules). */
+  crmEnabled        Boolean            @default(true)
+  ventureGrants     UserVentureGrant[]
 
   @@index([email])
   @@index([userStatus])
@@ -1132,6 +1135,20 @@ model UserPermission {
   user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, feature, action])
+}
+
+/// VenSai Admin Portal venture access (e.g. rofyt), assigned by CRM admin.
+model UserVentureGrant {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  ventureSlug String
+  createdAt   DateTime @default(now())
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, ventureSlug])
+  @@index([userId])
+  @@index([ventureSlug])
 }
 
 model crm_AuditLog {
@@ -1569,6 +1586,8 @@ model EmailAccount {
   allowSelfSignedTls Boolean  @default(false)
   username          String
   passwordEncrypted String?
+  /// CRM users who may open this mailbox and send on the owner’s behalf
+  delegateUserIds   String[]  @default([]) @db.Uuid
   isActive          Boolean   @default(true)
   sentFolderName    String    @default("Sent")
   lastSyncedAt      DateTime?
@@ -1604,6 +1623,8 @@ model Email {
   bccRecipients   Json        @default("[]")
   bodyText        String?
   bodyHtml        String?
+  /// [{ url, name, mime, size? }] — compose uploads or inbound copies from Resend
+  attachments     Json      @default("[]")
   sentAt          DateTime?
   isRead          Boolean     @default(false)
   isSpam          Boolean     @default(false)
@@ -2440,124 +2461,4 @@ model crm_OrderLines {
 
   @@index([orderId])
   @@index([productId])
-}
-
-enum VentureAppKind {
-  rofyt
-  custom
-}
-
-enum VentureLifecycleStatus {
-  registered
-  domain_assigned
-  deploying
-  reachable
-  provisioning_ready
-  failed
-}
-
-enum VentureTargetHealth {
-  unknown
-  reachable
-  unreachable
-  tls_error
-  provisioning_unavailable
-}
-
-enum VentureProvisioningStatus {
-  not_configured
-  pending
-  succeeded
-  failed
-  already_exists
-}
-
-/// VenSai Labs venture registry (control plane metadata in CRM).
-model VentureApp {
-  id                  String                 @id @default(uuid()) @db.Uuid
-  slug                String                 @unique
-  name                String
-  kind                VentureAppKind         @default(custom)
-  description         String?                @db.Text
-  assignedSubdomain   String?
-  lifecycleStatus     VentureLifecycleStatus @default(registered)
-  adminEmail          String?
-  adminPasswordHash   String?
-  envEncrypted        String?                @db.Text
-  externalUrl         String?
-  gitRepositoryUrl    String?
-  extensionsJson      Json?
-  notes               String?                @db.Text
-  statsJson           Json?
-  createdAt           DateTime               @default(now())
-  updatedAt           DateTime               @updatedAt
-  createdBy           String?                @db.Uuid
-
-  targets             VentureApplicationTarget[]
-  provisioningOps     ProvisioningOperation[]
-
-  @@index([kind])
-  @@index([lifecycleStatus])
-}
-
-model VentureApplicationTarget {
-  id                           String                    @id @default(uuid()) @db.Uuid
-  ventureId                    String                    @db.Uuid
-  targetKey                    String
-  displayName                  String
-  applicationType              String
-  deploymentUrl                String
-  healthPath                   String                    @default("/api/health")
-  healthStatus                 VentureTargetHealth       @default(unknown)
-  provisioningStatus           VentureProvisioningStatus @default(not_configured)
-  administratorEmail           String?
-  provisioningSecretEncrypted  String?                   @db.Text
-  lastConnectionTestAt         DateTime?
-  lastProvisioningAttemptAt    DateTime?
-  lastProvisioningSuccessAt    DateTime?
-  createdAt                    DateTime                  @default(now())
-  updatedAt                    DateTime                  @updatedAt
-
-  venture       VentureApp            @relation(fields: [ventureId], references: [id], onDelete: Cascade)
-  auditLogs     ProvisioningAuditLog[]
-  operations    ProvisioningOperation[]
-
-  @@unique([ventureId, targetKey])
-  @@index([ventureId])
-}
-
-model ProvisioningOperation {
-  id                String    @id @default(uuid()) @db.Uuid
-  ventureId         String    @db.Uuid
-  targetId          String    @db.Uuid
-  initiatedByUserId String    @db.Uuid
-  operationType     String
-  idempotencyKey    String    @unique
-  status            String
-  correlationId     String
-  sanitizedResult   Json?
-  startedAt         DateTime  @default(now())
-  completedAt       DateTime?
-
-  venture VentureApp               @relation(fields: [ventureId], references: [id], onDelete: Cascade)
-  target  VentureApplicationTarget @relation(fields: [targetId], references: [id], onDelete: Cascade)
-
-  @@index([targetId])
-  @@index([ventureId])
-}
-
-model ProvisioningAuditLog {
-  id                String   @id @default(uuid()) @db.Uuid
-  targetId          String   @db.Uuid
-  initiatedByUserId String?  @db.Uuid
-  operation         String
-  outcome           String
-  correlationId     String?
-  sanitizedMessage  String?  @db.Text
-  createdAt         DateTime @default(now())
-
-  target VentureApplicationTarget @relation(fields: [targetId], references: [id], onDelete: Cascade)
-
-  @@index([targetId])
-  @@index([createdAt])
 }

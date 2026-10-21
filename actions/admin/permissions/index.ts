@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 
 import { prismadb } from "@/lib/prisma";
 import {
+  revalidatePermissionsForRole,
+  revalidatePermissionsForUser,
+} from "@/lib/server/platform-cache-tags";
+import {
   AuthenticationError,
   AuthorizationError,
   isFeatureKey,
@@ -32,9 +36,20 @@ function validCell(feature: string, action: string) {
   return isFeatureKey(feature) && isPermissionAction(action);
 }
 
-function refresh() {
+function refreshLayout() {
   revalidatePath(PERMISSIONS_PATH, "page");
   revalidatePath("/[locale]/(routes)", "layout");
+}
+
+async function refreshGroupMembers(groupId: string) {
+  const members = await prismadb.permissionGroupMember.findMany({
+    where: { groupId },
+    select: { userId: true },
+  });
+  for (const { userId } of members) {
+    revalidatePermissionsForUser(userId);
+  }
+  refreshLayout();
 }
 
 export async function setRolePermission(
@@ -54,7 +69,8 @@ export async function setRolePermission(
     create: { role: appRole, feature, action, allowed },
     update: { allowed },
   });
-  refresh();
+  revalidatePermissionsForRole(appRole);
+  refreshLayout();
   return { data: true };
 }
 
@@ -65,7 +81,8 @@ export async function resetRolePermissions(role: string): Promise<Result> {
   if (!appRole || appRole === "admin") return { error: "Admin always has full access" };
 
   await prismadb.rolePermission.deleteMany({ where: { role: appRole } });
-  refresh();
+  revalidatePermissionsForRole(appRole);
+  refreshLayout();
   return { data: true };
 }
 
@@ -85,15 +102,16 @@ export async function createPermissionGroup(
     data: { name: trimmed, description: description?.trim() || null },
     select: { id: true },
   });
-  refresh();
+  refreshLayout();
   return { data: group };
 }
 
 export async function deletePermissionGroup(groupId: string): Promise<Result> {
   const denied = await requireAdmin();
   if (denied) return denied;
+  await refreshGroupMembers(groupId);
   await prismadb.permissionGroup.delete({ where: { id: groupId } });
-  refresh();
+  refreshLayout();
   return { data: true };
 }
 
@@ -111,7 +129,10 @@ export async function setGroupMembers(groupId: string, userIds: string[]): Promi
       skipDuplicates: true,
     }),
   ]);
-  refresh();
+  for (const userId of unique) {
+    revalidatePermissionsForUser(userId);
+  }
+  refreshLayout();
   return { data: true };
 }
 
@@ -134,7 +155,7 @@ export async function setGroupPermission(
       update: { effect },
     });
   }
-  refresh();
+  await refreshGroupMembers(groupId);
   return { data: true };
 }
 
@@ -157,7 +178,8 @@ export async function setUserPermission(
       update: { effect },
     });
   }
-  refresh();
+  revalidatePermissionsForUser(userId);
+  refreshLayout();
   return { data: true };
 }
 
@@ -165,6 +187,7 @@ export async function clearUserPermissions(userId: string): Promise<Result> {
   const denied = await requireAdmin();
   if (denied) return denied;
   await prismadb.userPermission.deleteMany({ where: { userId } });
-  refresh();
+  revalidatePermissionsForUser(userId);
+  refreshLayout();
   return { data: true };
 }

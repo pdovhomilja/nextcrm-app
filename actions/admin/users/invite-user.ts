@@ -11,6 +11,8 @@ import {
 import { getOrgEmailDomain, isValidWorkEmail, slugifyUsername } from "@/lib/org-work-email";
 import { upsertCredentialAccount } from "@/lib/auth-credentials";
 import { createEmailAccountForUser } from "@/actions/emails/accounts";
+import { setUserVentureAccess } from "@/lib/vensai/user-access";
+import { listVentureOptions } from "@/lib/vensai/venture-catalog";
 
 export type CreateEmployeeInput = {
   workEmail: string;
@@ -19,6 +21,8 @@ export type CreateEmployeeInput = {
   name?: string;
   personalEmail?: string;
   phone?: string;
+  ventureSlugs?: string[];
+  crmEnabled?: boolean;
 };
 
 function isEmail(value: string) {
@@ -79,6 +83,13 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
   });
   if (existingMailbox) return { error: "This work email is already used as a CRM mailbox" };
 
+  const allowedVentures = new Set(listVentureOptions().map((v) => v.slug));
+  const ventureSlugs = (data.ventureSlugs ?? []).filter((s) => allowedVentures.has(s));
+  const crmEnabled = data.crmEnabled !== false;
+  if (!crmEnabled && ventureSlugs.length === 0) {
+    return { error: "Enable CRM access or assign at least one venture." };
+  }
+
   try {
     const user = await prismadb.users.create({
       data: {
@@ -92,6 +103,7 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
         userLanguage: "en",
         role,
         emailVerified: true,
+        crmEnabled,
       },
       select: { id: true, email: true, workEmail: true, name: true, role: true },
     });
@@ -112,6 +124,9 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
       return { error: `${workEmail}: ${message}` };
     }
 
+    await setUserVentureAccess({ userId: user.id, ventureSlugs, crmEnabled });
+    revalidatePath("/[locale]/(routes)/admin", "page");
+    revalidatePath("/[locale]/(routes)/ventures", "page");
     return { data: user };
   } catch (error) {
     console.error("[CREATE_EMPLOYEE]", error);

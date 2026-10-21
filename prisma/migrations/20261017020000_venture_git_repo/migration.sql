@@ -1,2 +1,0 @@
-ALTER TABLE "VentureApp" ADD COLUMN IF NOT EXISTS "gitRepositoryUrl" TEXT;
-ALTER TABLE "VentureApp" ADD COLUMN IF NOT EXISTS "extensionsJson" JSONB;

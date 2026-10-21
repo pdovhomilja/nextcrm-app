@@ -12,6 +12,10 @@ import { stripHtmlToPlain } from "@/lib/email/compose-helpers";
 import type { ParsedQuoteHeader } from "@/lib/email/parse-on-wrote-label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EmailHtmlBody } from "@/app/[locale]/(routes)/emails/components/EmailHtmlBody";
+import {
+  EmailBodyCard,
+  EmailReadCanvas,
+} from "@/app/[locale]/(routes)/emails/components/EmailReadCanvas";
 
 type Props = {
   bodyText?: string | null;
@@ -132,11 +136,21 @@ export function EmailConversationBody({
     parts.length > 1 || plainTextHasQuoteMarkers(plain) || parts.some((p) => p.kind !== "message");
 
   if (bodyHtml?.trim() && !useThreadUi) {
-    return <EmailHtmlBody bodyHtml={bodyHtml} />;
+    return (
+      <EmailReadCanvas>
+        <EmailBodyCard>
+          <EmailHtmlBody bodyHtml={bodyHtml} className="rounded-xl" />
+        </EmailBodyCard>
+      </EmailReadCanvas>
+    );
   }
 
   if (parts.length === 0) {
-    return <p className="px-5 py-8 text-sm text-muted-foreground">(No content)</p>;
+    return (
+      <EmailReadCanvas>
+        <p className="text-sm text-muted-foreground">(No content)</p>
+      </EmailReadCanvas>
+    );
   }
 
   const latestBody = parts[0]?.body ?? "";
@@ -145,13 +159,17 @@ export function EmailConversationBody({
   );
 
   return (
-    <div className="pb-8">
-      <div className="px-5 py-5 sm:px-8 sm:py-6">
-        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/95">{latestBody || "(No content)"}</p>
-      </div>
+    <EmailReadCanvas className="pb-4">
+      <EmailBodyCard>
+        <div className="px-5 py-5 sm:px-8 sm:py-6">
+          <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/95">
+            {latestBody || "(No content)"}
+          </p>
+        </div>
+      </EmailBodyCard>
 
       {quotedMessages.length > 0 && (
-        <section className="border-t border-border/40 bg-muted/10">
+        <section className="mt-4 overflow-hidden rounded-xl border border-border/50 bg-card/80 shadow-sm">
           {quotedMessages.map((msg) => (
             <CollapsedQuoteRow
               key={msg.id}
@@ -162,6 +180,6 @@ export function EmailConversationBody({
           ))}
         </section>
       )}
-    </div>
+    </EmailReadCanvas>
   );
 }

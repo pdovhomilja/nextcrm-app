@@ -81,20 +81,44 @@ export function MailComponent({
     accounts.find((a) => a.id === activeAccountId)?.username ?? "";
 
   const listFilter = searchParams.get("filter") === "unread" ? "unread" : "all";
-  const filteredMails =
-    mailboxView === "inbox" && listFilter === "unread"
-      ? mails.filter((m) => !m.isRead)
-      : mails;
-
+  const [localMails, setLocalMails] = React.useState(mails);
   React.useEffect(() => {
-    if (!mail.selected && mails[0]?.id) {
-      setMail({ ...mail, selected: mails[0].id });
-    }
-  }, [mail.selected, mails, setMail]);
-
-  React.useEffect(() => {
-    setSelectedIds((prev) => prev.filter((id) => mails.some((m) => m.id === id)));
+    setLocalMails(mails);
   }, [mails]);
+
+  const patchMail = React.useCallback((id: string, patch: Partial<Mail>) => {
+    setLocalMails((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+  }, []);
+
+  const removeMail = React.useCallback(
+    (id: string) => {
+      setLocalMails((prev) => {
+        const next = prev.filter((m) => m.id !== id);
+        if (mail.selected === id) {
+          setMail({ ...mail, selected: next[0]?.id ?? null });
+        }
+        return next;
+      });
+    },
+    [mail, setMail]
+  );
+
+  const filteredMails = React.useMemo(() => {
+    if (mailboxView === "inbox" && listFilter === "unread") {
+      return localMails.filter((m) => !m.isRead);
+    }
+    return localMails;
+  }, [localMails, mailboxView, listFilter]);
+
+  React.useEffect(() => {
+    if (!mail.selected && filteredMails[0]?.id) {
+      setMail({ ...mail, selected: filteredMails[0].id });
+    }
+  }, [mail.selected, filteredMails, setMail]);
+
+  React.useEffect(() => {
+    setSelectedIds((prev) => prev.filter((id) => localMails.some((m) => m.id === id)));
+  }, [localMails]);
 
   React.useEffect(() => {
     if (isLargeScreen) setMobileReadOpen(false);
@@ -119,11 +143,14 @@ export function MailComponent({
     return () => window.removeEventListener("keydown", onKey);
   }, [mail, mails, setMail]);
 
-  async function runBulk(fn: () => Promise<void>) {
+  async function runBulk(fn: () => Promise<void>, optimistic?: () => void) {
     setBulkBusy(true);
     try {
+      optimistic?.();
       await fn();
       setSelectedIds([]);
+    } catch (e) {
+      console.error(e);
       router.refresh();
     } finally {
       setBulkBusy(false);
@@ -190,7 +217,13 @@ export function MailComponent({
     },
   ];
 
-  const selectedMail = mails.find((item) => item.id === mail.selected) || null;
+  const selectedMail = filteredMails.find((item) => item.id === mail.selected) || null;
+
+  const mailListHandlers = {
+    mailboxView,
+    onPatchMail: patchMail,
+    onRemoveMail: removeMail,
+  };
 
   const listPane = (
     <div className="grid h-full min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] overflow-hidden">
@@ -229,7 +262,12 @@ export function MailComponent({
             variant="secondary"
             className="h-7 text-xs"
             disabled={bulkBusy}
-            onClick={() => runBulk(() => bulkSetRead(selectedIds, true))}
+            onClick={() =>
+              runBulk(
+                () => bulkSetRead(selectedIds, true),
+                () => selectedIds.forEach((id) => patchMail(id, { isRead: true }))
+              )
+            }
           >
             Mark read
           </Button>
@@ -238,7 +276,12 @@ export function MailComponent({
             variant="secondary"
             className="h-7 text-xs"
             disabled={bulkBusy}
-            onClick={() => runBulk(() => bulkSetRead(selectedIds, false))}
+            onClick={() =>
+              runBulk(
+                () => bulkSetRead(selectedIds, false),
+                () => selectedIds.forEach((id) => patchMail(id, { isRead: false }))
+              )
+            }
           >
             Mark unread
           </Button>
@@ -247,7 +290,12 @@ export function MailComponent({
             variant="destructive"
             className="h-7 text-xs"
             disabled={bulkBusy}
-            onClick={() => runBulk(() => bulkTrash(selectedIds))}
+            onClick={() =>
+              runBulk(
+                () => bulkTrash(selectedIds),
+                () => selectedIds.forEach((id) => removeMail(id))
+              )
+            }
           >
             Trash
           </Button>
@@ -262,6 +310,7 @@ export function MailComponent({
           total={total}
           selectedIds={selectedIds}
           onSelectedIdsChange={setSelectedIds}
+          {...mailListHandlers}
         />
       </div>
     </div>
@@ -272,7 +321,10 @@ export function MailComponent({
       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <div className="flex h-full min-h-0 w-full max-w-full min-w-0 flex-1 overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm">
         <aside className="flex w-[4.5rem] shrink-0 flex-col overflow-y-auto overscroll-contain border-r border-border/40 bg-muted/30 sm:w-44">
-          <div className="p-2">
+          <div className="space-y-1 p-2">
+            <p className="hidden px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground sm:block">
+              View as
+            </p>
             <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} />
           </div>
           <Separator className="opacity-50" />
@@ -280,6 +332,7 @@ export function MailComponent({
             <div className="p-2">
               <ComposeModal
                 accountId={activeAccountId}
+                accounts={accounts}
                 mailboxAddress={activeMailboxAddress}
                 trigger={
                   <Button
@@ -302,9 +355,12 @@ export function MailComponent({
             <MailDisplay
               mail={selectedMail}
               activeAccountId={activeAccountId}
+              accounts={accounts}
               mailboxAddress={activeMailboxAddress}
               mailboxView={mailboxView}
               onBack={() => setMobileReadOpen(false)}
+              onPatchMail={patchMail}
+              onRemoveMail={removeMail}
             />
           ) : (
             listPane
@@ -344,8 +400,11 @@ export function MailComponent({
             <MailDisplay
               mail={selectedMail}
               activeAccountId={activeAccountId}
+              accounts={accounts}
               mailboxAddress={activeMailboxAddress}
               mailboxView={mailboxView}
+              onPatchMail={patchMail}
+              onRemoveMail={removeMail}
             />
           </div>
         </ResizablePanel>

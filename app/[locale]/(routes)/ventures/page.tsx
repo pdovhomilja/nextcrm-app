@@ -1,83 +1,47 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-
-import { listVentures } from "@/actions/ventures/list-ventures";
-import { BUILTIN_VENTURE_APPS } from "@/lib/ventures/catalog";
 import Container from "../components/ui/Container";
 import { getSession } from "@/lib/auth-server";
-import { Button } from "@/components/ui/button";
-import { VenturesLockButton } from "@/components/ventures/VenturesLockButton";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getUserAccessProfile } from "@/lib/vensai/user-access";
+import { adminPortalVentureUrl, listVentureOptions } from "@/lib/vensai/venture-catalog";
 
 export default async function VenturesPage() {
   const session = await getSession();
-  if (!session) redirect("/sign-in");
-  const role = session.user.role;
-  if (role !== "admin" && role !== "manager") redirect("/");
+  if (!session?.user?.id) redirect("/sign-in");
 
-  let ventures: Awaited<ReturnType<typeof listVentures>> = [];
-  try {
-    ventures = await listVentures();
-  } catch {
-    redirect("/");
-  }
+  const profile = await getUserAccessProfile(session.user.id);
+  const catalog = new Map(listVentureOptions().map((v) => [v.slug, v.label]));
+  const slugs = profile?.ventureGrants.map((g) => g.ventureSlug) ?? [];
 
   return (
-    <Container
-      title="Ventures"
-      description="Connected products under VenSai Labs — Rofyt first, more apps over time."
-    >
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <Container title="VenSai ventures" description="Admin Portal workspaces assigned to your account.">
+      {!slugs.length ? (
         <p className="text-sm text-muted-foreground">
-          Each venture requires a Git repository URL, subdomain, admin login, and encrypted{" "}
-          <code className="text-xs">.env</code> before it is fully registered.
+          No ventures assigned yet. Ask a CRM admin to grant access under Admin → Users.
         </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <VenturesLockButton />
-          {role === "admin" ? (
-            <Button asChild>
-              <Link href="/ventures/new">New venture</Link>
-            </Button>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {BUILTIN_VENTURE_APPS.map((app) => (
-          <Card key={app.slug}>
-            <CardHeader>
-              <CardTitle>{app.name}</CardTitle>
-              <CardDescription>{app.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild variant="secondary" size="sm">
-                <Link href={app.href}>Open {app.name}</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-
-        {ventures
-          .filter((v) => v.kind === "custom")
-          .map((v) => (
-            <Card key={v.id}>
-              <CardHeader>
-                <CardTitle>{v.name}</CardTitle>
-                <CardDescription className="space-y-1">
-                  <span className="block">{v.assignedSubdomain ?? v.slug}</span>
-                  <span className="block truncate text-xs">
-                    {v.gitRepositoryUrl ?? "Git repository not set"}
-                  </span>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/ventures/${v.slug}`}>Manage</Link>
-                </Button>
-              </CardContent>
-            </Card>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {slugs.map((slug) => (
+            <li key={slug} className="rounded-lg border border-border bg-card p-4 shadow-sm">
+              <p className="font-medium">{catalog.get(slug) ?? slug}</p>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">{slug}</p>
+              <Link
+                href={adminPortalVentureUrl(slug)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+              >
+                Open in Admin Portal →
+              </Link>
+            </li>
           ))}
-      </div>
+        </ul>
+      )}
+      {profile && !profile.crmEnabled ? (
+        <p className="mt-6 text-sm text-amber-700">
+          CRM modules are disabled for your account. You can still use assigned ventures above.
+        </p>
+      ) : null}
     </Container>
   );
 }

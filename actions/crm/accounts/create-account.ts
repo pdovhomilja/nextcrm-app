@@ -1,6 +1,7 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { invalidateAfterAccountWrite } from "@/lib/server/invalidate-after-write";
 import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
@@ -68,6 +69,7 @@ export const createAccount = async (data: {
     });
     void inngest.send({ name: "crm/account.saved", data: { record_id: account.id } });
     revalidatePath("/[locale]/(routes)/crm/accounts", "page");
+    invalidateAfterAccountWrite(user);
     return { data: account };
   } catch (error) {
     const ruleMessage = await pluginRuleErrorMessage(error);

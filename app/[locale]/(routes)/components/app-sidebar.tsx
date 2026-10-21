@@ -11,7 +11,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Puzzle } from "lucide-react";
+import { Building2, Puzzle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavMain } from "./nav-main";
 import getDashboardMenuItem from "./menu-items/Dashboard";
@@ -25,7 +25,6 @@ import getDocumentsMenuItem from "./menu-items/Documents";
 import getInvoicesMenuItem from "./menu-items/Invoices";
 import getAdministrationMenuItem from "./menu-items/Administration";
 import getCampaignsMenuItem from "./menu-items/Campaigns";
-import getVenturesMenuItem from "./menu-items/Ventures";
 import type { NavItem } from "./nav-main";
 import { featureForPath, type PermissionMatrix } from "@/lib/authz/permissions";
 
@@ -103,6 +102,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   pluginNav?: { title: string; url: string }[];
   appName: string;
   permissions?: PermissionMatrix;
+  showVenturesNav?: boolean;
 }
 
 export function AppSidebar({
@@ -111,6 +111,7 @@ export function AppSidebar({
   pluginNav,
   appName,
   permissions,
+  showVenturesNav,
   ...props
 }: AppSidebarProps) {
   const { state } = useSidebar();
@@ -136,15 +137,15 @@ export function AppSidebar({
     getDocumentsMenuItem({ title: dict?.documents || "Documents" }),
     getInvoicesMenuItem({ title: dict?.invoices || "Invoices" }),
   ];
-  if (session?.user?.role === "admin" || session?.user?.role === "manager") {
-    allNavItems.push(
-      getVenturesMenuItem({
-        title: "Ventures",
-        includeNew: session?.user?.role === "admin",
-      })
-    );
-  }
   const navItems = filterNavByPermissions(allNavItems, permissions);
+
+  if (showVenturesNav) {
+    navItems.splice(1, 0, {
+      title: "Ventures",
+      url: "/ventures",
+      icon: Building2,
+    });
+  }
 
   if (pluginNav?.length) {
     navItems.push({ title: dict?.plugins || "Plugins", icon: Puzzle, items: pluginNav });
