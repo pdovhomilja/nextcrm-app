@@ -2,6 +2,7 @@ import { prismadb } from "@/lib/prisma";
 import {
   requireAuthenticated,
   AuthenticationError,
+  isEndUserRole,
 } from "@/lib/authz";
 import dayjs from "dayjs";
 
@@ -17,7 +18,7 @@ export const getTasksPastDue = async () => {
   const nextWeek = dayjs().add(7, "day").startOf("day");
   // user role: restrict to own tasks. manager/admin: global.
   const userScope =
-    user.role === "user" ? [{ user: user.id }] : [];
+    isEndUserRole(user.role) ? [{ user: user.id }] : [];
 
   const getTaskPastDue = await prismadb.tasks.findMany({
     where: {

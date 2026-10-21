@@ -5,12 +5,13 @@ import { z } from "zod";
 export const adminUserSchema = z.object({
   //TODO: fix all the types and nullable
   id: z.string(),
-  created_on: z.date(),
-  lastLoginAt: z.date().nullable().optional(),
+  created_on: z.coerce.date(),
+  lastLoginAt: z.coerce.date().nullable().optional(),
   role: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   email: z.string(),
   workEmail: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
   username: z.string().nullable().optional(),
   userStatus: z.string(),
   userLanguage: z.string(),

@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import Container from "@/app/[locale]/(routes)/components/ui/Container";
 import { Badge } from "@/components/ui/badge";
 import { requireAuthenticated } from "@/lib/authz";
+import { toPluginRole } from "@/lib/authz/roles";
 import { getProductPanels } from "@/lib/plugins/slots";
 import { PluginSlot } from "@/lib/plugins/ui/PluginSlot";
 import { getProduct } from "@/actions/crm/products/get-product";
@@ -24,7 +25,7 @@ const ProductPage = async (props: ProductDetailPageProps) => {
   const { productId } = params;
   const t = await getTranslations("ProductsPage");
   const user = await requireAuthenticated();
-  const panels = await getProductPanels(user.role);
+  const panels = await getProductPanels(toPluginRole(user.role));
 
   const [product, categories, crmData] = await Promise.all([
     getProduct(productId),
@@ -101,7 +102,7 @@ const ProductPage = async (props: ProductDetailPageProps) => {
           {panels.length > 0 && (
             <section className="mt-4 space-y-2">
               {panels.map(({ plugin, panel }) => (
-                <PluginSlot key={`${plugin.definition.id}:${panel.id}`} plugin={plugin} actor={{ type: "user", userId: user.id, role: user.role }} render={(ctx) => panel.component({ productId, ctx })} />
+                <PluginSlot key={`${plugin.definition.id}:${panel.id}`} plugin={plugin} actor={{ type: "user", userId: user.id, role: toPluginRole(user.role) }} render={(ctx) => panel.component({ productId, ctx })} />
               ))}
             </section>
           )}

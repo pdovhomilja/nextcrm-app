@@ -1,5 +1,5 @@
 export type { AppRole } from "./roles";
-export { APP_ROLES, parseRole, mapLegacyRole } from "./roles";
+export { APP_ROLES, parseRole, mapLegacyRole, isEndUserRole, toPluginRole } from "./roles";
 export { AuthenticationError, AuthorizationError } from "./errors";
 export {
   unauthorizedResponse,

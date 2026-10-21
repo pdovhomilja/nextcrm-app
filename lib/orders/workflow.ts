@@ -31,7 +31,7 @@ export async function submitOrder(user: AuthzUser, id: string) {
   const lines = await Promise.all(order.lines.map((l, i) => priceLine(order, {
     productId: l.productId, quantity: l.quantity.toString(), unitPrice: l.unitPriceOverridden ? l.unitPrice.toString() : null,
   }, i)));
-  const pending = user.role === "user" && lines.some(isBelowList);
+  const pending = (user.role === "user" || user.role === "trainee") && lines.some(isBelowList);
   const status = pending ? "PENDING_APPROVAL" : "READY";
   // One conditional write: a concurrent edit of the draft makes this fail with "changed" instead of
   // deciding the status on lines that are no longer the order's lines.

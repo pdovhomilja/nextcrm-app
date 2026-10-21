@@ -2,6 +2,7 @@ import { prismadb } from "@/lib/prisma";
 import {
   requireAuthenticated,
   AuthenticationError,
+  isEndUserRole,
 } from "@/lib/authz";
 
 export const getUserTasks = async (userId: string) => {
@@ -14,7 +15,7 @@ export const getUserTasks = async (userId: string) => {
   }
 
   // user role: only allowed to read own tasks.
-  if (user.role === "user" && userId !== user.id) {
+  if (isEndUserRole(user.role) && userId !== user.id) {
     return [];
   }
 

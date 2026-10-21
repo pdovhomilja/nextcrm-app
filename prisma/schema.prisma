@@ -987,6 +987,7 @@ enum ActiveStatus {
 
 enum AppRole {
   user
+  trainee
   manager
   admin
 }

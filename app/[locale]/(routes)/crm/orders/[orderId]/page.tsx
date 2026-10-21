@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import Container from "../../../components/ui/Container";
 import { requireAuthenticated } from "@/lib/authz";
+import { toPluginRole } from "@/lib/authz/roles";
 import { getOrder, getOrderFormData, getProductOptions } from "@/actions/crm/orders/queries";
 import { getOrderPanels } from "@/lib/plugins/slots";
 import { PluginSlot } from "@/lib/plugins/ui/PluginSlot";
@@ -23,9 +24,9 @@ export default async function OrderPage(props: { params: Promise<{ orderId: stri
   const [form, products, panels] = await Promise.all([
     editable ? getOrderFormData(order.accountId) : null,
     editable ? getProductOptions() : [],
-    getOrderPanels(user.role),
+    getOrderPanels(toPluginRole(user.role)),
   ]);
-  const actor = { type: "user" as const, userId: user.id, role: user.role };
+  const actor = { type: "user" as const, userId: user.id, role: toPluginRole(user.role) };
   return (
     <Container title={`${t("title")} ${order.number}`} description={order.accountName ?? ""}>
       <div className="space-y-6">

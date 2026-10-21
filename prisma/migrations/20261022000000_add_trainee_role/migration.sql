@@ -1,0 +1,1 @@
+ALTER TYPE "AppRole" ADD VALUE IF NOT EXISTS 'trainee';

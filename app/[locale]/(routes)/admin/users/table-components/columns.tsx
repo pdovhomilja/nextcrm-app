@@ -3,6 +3,7 @@
 import moment from "moment";
 
 import { ColumnDef } from "@tanstack/react-table";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { statuses } from "../table-data/data";
 import { AdminUser } from "../table-data/schema";
@@ -11,6 +12,25 @@ import { DataTableColumnHeader } from "./data-table-column-header";
 import { formatDistanceToNowStrict } from "date-fns";
 
 export const columns: ColumnDef<AdminUser>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   /*   {
     accessorKey: "id",
     header: ({ column }) => (
@@ -76,9 +96,14 @@ export const columns: ColumnDef<AdminUser>[] = [
   {
     accessorKey: "email",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Personal (login)" />
+      <DataTableColumnHeader column={column} title="Personal email" />
     ),
-    cell: ({ row }) => <div className="text-sm">{row.getValue("email")}</div>,
+    cell: ({ row }) => {
+      const personal = row.original.email;
+      const work = row.original.workEmail;
+      const shown = work && personal === work ? "—" : personal;
+      return <div className="text-sm">{shown}</div>;
+    },
     enableSorting: true,
     enableHiding: true,
   },

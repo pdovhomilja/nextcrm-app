@@ -120,11 +120,12 @@ export default async function AppLayout({
     : defaultCurrency;
   const currencyList = enabledCurrencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }));
 
+  const { toPluginRole } = await import("@/lib/authz/roles");
   const { getUserPermissions } = await import("@/lib/authz/feature-access");
   const { permissionsForCrmAccess } = await import("@/lib/vensai/crm-nav");
   const role = mapLegacyRole(user?.role);
   const [pluginNav, permissions, accessProfile] = await Promise.all([
-    getCachedPluginNav(role, locale),
+    getCachedPluginNav(toPluginRole(role), locale),
     getUserPermissions(userId, session.user.role),
     getCachedUserAccessProfile(userId),
   ]);

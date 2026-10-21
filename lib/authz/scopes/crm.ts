@@ -1,6 +1,7 @@
 import { prismadb } from "@/lib/prisma";
 import { AuthzUser } from "../session";
 import { AuthorizationError } from "../errors";
+import { isEndUserRole } from "../roles";
 
 type ContactWhere = NonNullable<
   Parameters<typeof prismadb.crm_Contacts.updateMany>[0]
@@ -600,7 +601,7 @@ export async function assertCanReadActivityForEntity(
     case "targetlist":
       return assertCanReadTargetList(user, entityId);
     default:
-      if (user.role === "user") throw new AuthorizationError();
+      if (isEndUserRole(user.role)) throw new AuthorizationError();
       return;
   }
 }
@@ -746,7 +747,7 @@ export async function assertCanWriteTask(
   });
   const boardId = task?.assigned_section?.board_relation?.id;
   if (!boardId) throw new AuthorizationError();
-  if (user.role === "user" && task?.user === user.id) return;
+  if (isEndUserRole(user.role) && task?.user === user.id) return;
   return assertCanWriteBoard(user, boardId);
 }
 

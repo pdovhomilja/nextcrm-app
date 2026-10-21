@@ -1,97 +1,81 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { Language, EmailSendProvider, AppRole } from "@prisma/client";
+import { EmailSendProvider } from "@prisma/client";
 import {
   requireRole,
   AuthenticationError,
   AuthorizationError,
   parseRole,
 } from "@/lib/authz";
-import resendHelper from "@/lib/resend";
-import { getPublicAppUrl } from "@/lib/app-url";
-import {
-  defaultWorkEmailForUsername,
-  getOrgEmailDomain,
-  isValidWorkEmail,
-  slugifyUsername,
-} from "@/lib/org-work-email";
-import {
-  generateTemporaryPassword,
-  upsertCredentialAccount,
-} from "@/lib/auth-credentials";
+import { getOrgEmailDomain, isValidWorkEmail, slugifyUsername } from "@/lib/org-work-email";
+import { upsertCredentialAccount } from "@/lib/auth-credentials";
 import { createEmailAccountForUser } from "@/actions/emails/accounts";
-import EmployeeWelcomeEmail from "@/emails/EmployeeWelcome";
-import { getAppName } from "@/lib/app-name";
 import { setUserVentureAccess } from "@/lib/vensai/user-access";
 import { listVentureOptions } from "@/lib/vensai/venture-catalog";
 
-export type InviteEmployeeInput = {
-  name: string;
-  username: string;
-  workEmail?: string;
-  personalEmail: string;
-  phone: string;
-  language: string;
+export type CreateEmployeeInput = {
+  workEmail: string;
+  password: string;
   role: string;
+  name?: string;
+  personalEmail?: string;
+  phone?: string;
   ventureSlugs?: string[];
   crmEnabled?: boolean;
 };
 
-export const inviteUser = async (data: InviteEmployeeInput) => {
-  let actor;
+function isEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+async function requireAdmin() {
   try {
-    actor = await requireRole(["admin"]);
+    return await requireRole(["admin"]);
   } catch (e) {
-    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
-    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" as const };
+    if (e instanceof AuthorizationError) return { error: "Forbidden" as const };
     throw e;
   }
+}
 
-  const inviter = await prismadb.users.findUnique({
-    where: { id: actor.id },
-    select: { name: true },
-  });
+export const createEmployee = async (data: CreateEmployeeInput) => {
+  const actor = await requireAdmin();
+  if ("error" in actor) return actor;
 
-  const { name, username, personalEmail, language } = data;
   const role = parseRole(data.role);
-  const personal = personalEmail.trim().toLowerCase();
-  const phone = data.phone?.trim() ?? "";
-  const slug = slugifyUsername(username);
+  const workEmail = data.workEmail.trim().toLowerCase();
+  const password = data.password?.trim() ?? "";
+  const personal = data.personalEmail?.trim().toLowerCase() ?? "";
+  const phone = data.phone?.trim() || null;
+  const local = workEmail.split("@")[0] || "";
+  const username = slugifyUsername(local);
+  const name = data.name?.trim() || local || null;
 
-  if (!name?.trim()) return { error: "Display name is required" };
-  if (!slug || slug.length < 2) return { error: "Username must be at least 2 characters (e.g. dhoni)" };
-  if (!personal || !personal.includes("@")) return { error: "Valid personal email is required" };
-  if (!phone || phone.replace(/\D/g, "").length < 8) {
-    return { error: "Enter a valid phone number (at least 8 digits)" };
-  }
-  if (!language) return { error: "Language is required" };
   if (!role) return { error: "Select a valid role" };
-
-  let workEmail: string;
-  try {
-    workEmail = (data.workEmail?.trim() || defaultWorkEmailForUsername(slug)).toLowerCase();
-  } catch {
-    return { error: "Could not build work email from username" };
-  }
-
   if (!isValidWorkEmail(workEmail)) {
     return { error: `Work email must use your org domain (@${getOrgEmailDomain()})` };
   }
-
-  let resend;
-  try {
-    resend = await resendHelper();
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Resend API key is not configured";
-    return { error: message };
+  if (password.length < 8) return { error: "Password must be at least 8 characters" };
+  if (personal && !isEmail(personal)) return { error: "Enter a valid personal email" };
+  if (personal && personal === workEmail) {
+    return { error: "Personal email must be different from the work email" };
   }
 
-  const existingPersonal = await prismadb.users.findFirst({ where: { email: personal } });
-  if (existingPersonal) return { error: "A user with this personal email already exists" };
+  const loginEmail = personal || workEmail;
 
-  const existingWork = await prismadb.users.findFirst({ where: { workEmail } });
-  if (existingWork) return { error: "This work email is already assigned to another user" };
+  const taken = await prismadb.users.findFirst({
+    where: {
+      OR: [
+        { email: loginEmail },
+        { email: workEmail },
+        { workEmail },
+        ...(personal ? [{ email: personal }, { workEmail: personal }] : []),
+      ],
+    },
+    select: { id: true },
+  });
+  if (taken) return { error: `${workEmail} is already used by another user` };
 
   const existingMailbox = await prismadb.emailAccount.findFirst({
     where: { username: workEmail },
@@ -106,81 +90,54 @@ export const inviteUser = async (data: InviteEmployeeInput) => {
     return { error: "Enable CRM access or assign at least one venture." };
   }
 
-  const temporaryPassword = generateTemporaryPassword();
-
   try {
     const user = await prismadb.users.create({
       data: {
-        name: name.trim(),
-        username: slug,
-        email: personal,
+        name,
+        username: username || null,
+        email: loginEmail,
         workEmail,
         phone,
-        mustChangePassword: true,
+        mustChangePassword: false,
         userStatus: "ACTIVE",
-        userLanguage: language as Language,
-        role: role as AppRole,
+        userLanguage: "en",
+        role,
         emailVerified: true,
         crmEnabled,
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        workEmail: true,
-        username: true,
-        avatar: true,
-        role: true,
-        userLanguage: true,
-        userStatus: true,
-        lastLoginAt: true,
-      },
+      select: { id: true, email: true, workEmail: true, name: true, role: true },
     });
 
-    await upsertCredentialAccount(user.id, personal, temporaryPassword);
+    await upsertCredentialAccount(user.id, loginEmail, password);
 
     try {
       await createEmailAccountForUser(user.id, {
         sendProvider: EmailSendProvider.RESEND,
-        label: `${name.trim()} (${slug})`,
-        fromName: name.trim(),
+        label: name || workEmail,
+        fromName: name || local,
         username: workEmail,
       });
     } catch (mailboxError) {
-      console.error("[INVITE_USER] Resend mailbox creation failed:", mailboxError);
+      console.error("[CREATE_EMPLOYEE] mailbox failed:", mailboxError);
       await prismadb.users.delete({ where: { id: user.id } });
-      return {
-        error:
-          "User was not created — could not provision the Resend mailbox. Check RESEND_API_KEY and domain settings.",
-      };
+      const message = mailboxError instanceof Error ? mailboxError.message : "Could not create the mailbox";
+      return { error: `${workEmail}: ${message}` };
     }
 
-    const appUrl = getPublicAppUrl();
-    const appName = getAppName();
-    const fromAddress = process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL;
-
-    await resend.emails.send({
-      from: `${appName} <${fromAddress}>`,
-      to: personal,
-      subject: `Your ${appName} login — ${workEmail}`,
-      react: EmployeeWelcomeEmail({
-        displayName: name.trim(),
-        workEmail,
-        personalEmail: personal,
-        temporaryPassword,
-        invitedByName: inviter?.name || "Your admin",
-        appUrl,
-        appName,
-      }),
-    });
-
     await setUserVentureAccess({ userId: user.id, ventureSlugs, crmEnabled });
-
     revalidatePath("/[locale]/(routes)/admin", "page");
     revalidatePath("/[locale]/(routes)/ventures", "page");
     return { data: user };
   } catch (error) {
-    console.log("[INVITE_USER]", error);
-    return { error: "Failed to create employee" };
+    console.error("[CREATE_EMPLOYEE]", error);
+    return { error: `Failed to create ${workEmail}` };
   }
+};
+
+export const inviteUser = async (data: CreateEmployeeInput) => {
+  const result = await createEmployee(data);
+  if (!("error" in result)) {
+    revalidatePath("/[locale]/(routes)/admin/users", "page");
+  }
+  return result;
 };

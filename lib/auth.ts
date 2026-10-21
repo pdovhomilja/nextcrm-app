@@ -3,7 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { emailOTP, testUtils } from "better-auth/plugins";
 import { admin as adminPlugin } from "better-auth/plugins";
 import { prismadb } from "@/lib/prisma";
-import { ac, admin, manager, user } from "@/lib/auth-permissions";
+import { ac, admin, manager, trainee, user } from "@/lib/auth-permissions";
 import { newUserNotify } from "@/lib/new-user-notify";
 import { OTP_EXPIRES_SECONDS, sendOtpEmail } from "@/lib/auth-otp-mail";
 import { getBetterAuthTrustedOrigins } from "@/lib/auth-base-url";
@@ -110,7 +110,7 @@ export const auth = betterAuth({
       : []),
     adminPlugin({
       ac,
-      roles: { admin, manager, user },
+      roles: { admin, manager, user, trainee },
       defaultRole: "user",
     }),
   ],

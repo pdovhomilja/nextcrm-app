@@ -1,4 +1,5 @@
 import type { McpUser } from "@/lib/mcp/auth";
+import { toPluginRole } from "@/lib/authz/roles";
 import { runAsActor } from "@/lib/plugins/actor";
 import { PluginRuleError } from "@/lib/plugins/errors";
 import { translatePluginMessage } from "@/lib/plugins/i18n";
@@ -9,7 +10,10 @@ type ToolResult = { content: { type: "text"; text: string }[]; isError?: true };
 export async function runMcpToolCall(getUser: () => Promise<McpUser>, call: (user: McpUser) => unknown): Promise<ToolResult> {
   try {
     const mcpUser = await getUser();
-    const result = await runAsActor({ type: "token", userId: mcpUser.id, role: mcpUser.role }, () => call(mcpUser));
+    const result = await runAsActor(
+      { type: "token", userId: mcpUser.id, role: toPluginRole(mcpUser.role) },
+      () => call(mcpUser)
+    );
     return {
       content: [{ type: "text" as const, text: JSON.stringify(result) }],
     };
