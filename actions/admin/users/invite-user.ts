@@ -55,23 +55,28 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
   const username = slugifyUsername(local);
   const name = data.name?.trim() || local || null;
   const suppliedPassword = data.password?.trim() ?? "";
-  const sendTemporaryPassword = personal.length > 0;
-  const password = sendTemporaryPassword ? generateTemporaryPassword() : suppliedPassword;
+  const hasPersonal = personal.length > 0;
+  const generatedPassword = hasPersonal && suppliedPassword.length === 0;
+  const password = generatedPassword ? generateTemporaryPassword() : suppliedPassword;
+  const emailThePassword = hasPersonal;
 
   if (!role) return { error: "Select a valid role" };
   if (!isValidWorkEmail(workEmail)) {
     return { error: `Work email must use your org domain (@${getOrgEmailDomain()})` };
   }
-  if (sendTemporaryPassword && !isEmail(personal)) return { error: "Enter a valid personal email" };
-  if (sendTemporaryPassword && personal === workEmail) {
+  if (hasPersonal && !isEmail(personal)) return { error: "Enter a valid personal email" };
+  if (hasPersonal && personal === workEmail) {
     return { error: "Personal email must be different from the work email" };
   }
-  if (!sendTemporaryPassword && password.length < 8) {
+  if (!hasPersonal && password.length < 8) {
+    return { error: "Set a password. Personal email is empty." };
+  }
+  if (suppliedPassword.length > 0 && suppliedPassword.length < 8) {
     return { error: "Password must be at least 8 characters" };
   }
   const fromAddress = process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL || "";
-  if (sendTemporaryPassword && !fromAddress) {
-    return { error: "Email sending is not configured, so a temporary password cannot be delivered" };
+  if (emailThePassword && !fromAddress) {
+    return { error: "Email sending is not configured, so the password cannot be delivered" };
   }
 
   const loginEmail = personal || workEmail;
@@ -110,7 +115,7 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
         email: loginEmail,
         workEmail,
         phone,
-        mustChangePassword: sendTemporaryPassword,
+        mustChangePassword: generatedPassword,
         userStatus: "ACTIVE",
         userLanguage: "en",
         role,
@@ -136,7 +141,7 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
       return { error: `${workEmail}: ${message}` };
     }
 
-    if (sendTemporaryPassword) {
+    if (emailThePassword) {
       try {
         const resend = await resendHelper();
         const appName = getAppName();
@@ -153,6 +158,7 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
             workEmail,
             personalEmail: personal,
             temporaryPassword: password,
+            mustChange: generatedPassword,
             invitedByName: inviter?.name || "Your administrator",
             appUrl: getPublicAppUrl(),
             appName,
@@ -161,7 +167,7 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
       } catch (mailError) {
         console.error("[CREATE_EMPLOYEE] welcome email failed:", mailError);
         await prismadb.users.delete({ where: { id: user.id } });
-        return { error: `Could not email the temporary password to ${personal}` };
+        return { error: `Could not email the password to ${personal}` };
       }
     }
 

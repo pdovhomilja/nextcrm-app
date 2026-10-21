@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icons } from "@/components/ui/icons";
 import { inviteUser } from "@/actions/admin/users/invite-user";
@@ -52,6 +53,7 @@ export function InviteForm({
   ventureOptions: VentureOption[];
 }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [setPassword, setSetPassword] = useState(false);
   const [ventureSlugs, setVentureSlugs] = useState<string[]>([]);
   const [crmEnabled, setCrmEnabled] = useState(true);
   const router = useRouter();
@@ -69,15 +71,21 @@ export function InviteForm({
     },
   });
   const personalEmail = form.watch("personalEmail") ?? "";
-  const sendsTemporaryPassword = personalEmail.trim().length > 0;
+  const personalFilled = personalEmail.trim().length > 0;
+  const passwordRequired = !personalFilled;
 
   async function onSubmit(data: FormValues) {
     const personal = data.personalEmail?.trim() ?? "";
+    const choosingPassword = !personal || setPassword;
     if (personal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal)) {
       toast.error("Enter a valid personal email.");
       return;
     }
-    if (!personal) {
+    if (!personal && !setPassword) {
+      toast.error("Set a password. Personal email is empty.");
+      return;
+    }
+    if (choosingPassword) {
       if (!data.password || data.password.length < 8) {
         toast.error("Password must be at least 8 characters.");
         return;
@@ -95,7 +103,7 @@ export function InviteForm({
         personalEmail: personal || undefined,
         phone: data.phone,
         workEmail: data.workEmail,
-        password: personal ? undefined : data.password,
+        password: choosingPassword ? data.password : undefined,
         role: data.role,
         ventureSlugs,
         crmEnabled,
@@ -105,9 +113,11 @@ export function InviteForm({
         toast.error(result.error);
       } else {
         toast.success(
-          personal
+          personal && !choosingPassword
             ? "User created. A temporary password was sent to their personal email."
-            : "User created. They can sign in with this work email and password."
+            : personal
+              ? "User created. That password was sent to their personal email."
+              : "User created. They can sign in with this work email and password."
         );
         form.reset({
           name: "",
@@ -118,6 +128,7 @@ export function InviteForm({
           password: "",
           confirmPassword: "",
         });
+        setSetPassword(false);
         setVentureSlugs([]);
         setCrmEnabled(true);
         router.refresh();
@@ -134,8 +145,8 @@ export function InviteForm({
       <CardHeader>
         <CardTitle className="text-lg">Add user</CardTitle>
         <CardDescription>
-          Name, personal email, phone, and role. A personal email receives a temporary VenSai password.
-          Leave it blank to set the password here.
+          Name, personal email, phone, and role. Tick Set password to choose the password. Leave personal
+          email empty and a password is required.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -170,13 +181,21 @@ export function InviteForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    If this is filled in, VenSai CRM emails a temporary password. Leave it empty to set a password below.
+                    Filled in with Set password off: a random password is emailed here. Tick Set password to email the password you type.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {!sendsTemporaryPassword && (
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <Checkbox
+                checked={setPassword || passwordRequired}
+                disabled={isLoading || passwordRequired}
+                onCheckedChange={(checked) => setSetPassword(checked === true)}
+              />
+              Set password
+            </label>
+            {(setPassword || passwordRequired) && (
               <div className="grid gap-3 sm:grid-cols-2">
                 <FormField
                   control={form.control}

@@ -11,6 +11,7 @@ interface EmployeeWelcomeEmailProps {
   invitedByName: string;
   appUrl: string;
   appName: string;
+  mustChange?: boolean;
 }
 
 export function EmployeeWelcomeEmail({
@@ -21,6 +22,7 @@ export function EmployeeWelcomeEmail({
   invitedByName,
   appUrl,
   appName,
+  mustChange = true,
 }: EmployeeWelcomeEmailProps) {
   return (
     <VensaiEmailShell
@@ -42,7 +44,7 @@ export function EmployeeWelcomeEmail({
       </Text>
       <Text style={{ fontSize: 14, lineHeight: "24px", color: VENSAI_BRAND.colors.text }}>
         {invitedByName} created your CRM account. Sign in with your personal email or company
-        address <strong>{workEmail}</strong> using the temporary password below, or choose{" "}
+        address <strong>{workEmail}</strong> using the {mustChange ? "temporary password" : "password"} below, or choose{" "}
         <strong>Email code</strong> on the login page for a one-time code.
       </Text>
       <Section
@@ -66,15 +68,17 @@ export function EmployeeWelcomeEmail({
           {workEmail}
         </Text>
         <Text style={{ margin: "12px 0 0", fontSize: 11, textTransform: "uppercase", color: VENSAI_BRAND.colors.muted }}>
-          Temporary password
+          {mustChange ? "Temporary password" : "Password"}
         </Text>
         <Text style={{ margin: "4px 0 0", fontFamily: "monospace", fontSize: 14, fontWeight: 600 }}>
           {temporaryPassword}
         </Text>
       </Section>
-      <Text style={{ fontSize: 12, lineHeight: "20px", color: VENSAI_BRAND.colors.muted }}>
-        After you sign in, you will be asked to choose a new password before using the CRM.
-      </Text>
+      {mustChange ? (
+        <Text style={{ fontSize: 12, lineHeight: "20px", color: VENSAI_BRAND.colors.muted }}>
+          After you sign in, you will be asked to choose a new password before using the CRM.
+        </Text>
+      ) : null}
       <Section style={{ margin: "24px 0", textAlign: "center" as const }}>
         <Button
           href={appUrl}
