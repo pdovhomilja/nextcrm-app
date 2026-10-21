@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { Actor } from "@nextcrm/plugin-sdk";
+import { toPluginRole } from "@/lib/authz/roles";
 
 export interface ActorFrame { actor: Actor; depth: number }
 
@@ -22,7 +23,7 @@ export async function resolveActor(): Promise<Actor> {
   try {
     const { requireAuthenticated } = await import("@/lib/authz");
     const user = await requireAuthenticated();
-    return { type: "user", userId: user.id, role: user.role };
+    return { type: "user", userId: user.id, role: toPluginRole(user.role) };
   } catch {
     return { type: "system" };
   }

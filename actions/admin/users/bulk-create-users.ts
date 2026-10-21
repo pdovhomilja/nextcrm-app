@@ -15,7 +15,7 @@ export async function createBulkEmployees(input: {
   role: string;
 }) {
   if (input.password !== input.confirmPassword) {
-    return { error: "Password and confirm password do not match" };
+    return { error: "Password and confirm password do not match", data: { created: [], failed: [] } };
   }
 
   const built = buildBulkWorkEmails({
@@ -25,7 +25,7 @@ export async function createBulkEmployees(input: {
     count: input.count,
     domain: getOrgEmailDomain(),
   });
-  if ("error" in built) return built;
+  if ("error" in built) return { error: built.error, data: { created: [], failed: [] } };
 
   const created: string[] = [];
   const failed: { email: string; error: string }[] = [];
@@ -36,8 +36,11 @@ export async function createBulkEmployees(input: {
       password: input.password,
       role: input.role,
     });
-    if ("error" in result) failed.push({ email: workEmail, error: result.error });
-    else created.push(workEmail);
+    if ("error" in result) {
+      failed.push({ email: workEmail, error: result.error ?? "Failed to create user" });
+    } else {
+      created.push(workEmail);
+    }
   }
 
   revalidatePath("/[locale]/(routes)/admin/users", "page");

@@ -4,6 +4,7 @@ import { BasicView } from "./components/BasicView";
 import CaseStudyCard from "./components/CaseStudyCard";
 import { getSession } from "@/lib/auth-server";
 import { requireAuthenticated } from "@/lib/authz";
+import { toPluginRole } from "@/lib/authz/roles";
 import { getAccountTabs, getAccountPanels } from "@/lib/plugins/slots";
 import { PluginSlot } from "@/lib/plugins/ui/PluginSlot";
 import { FindSimilarButton } from "@/components/crm/find-similar-button";
@@ -58,8 +59,9 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
   const session = await getSession();
   const sessionUserRole = (session?.user as any)?.role ?? "user";
   const actorUser = await requireAuthenticated();
-  const actor = { type: "user" as const, userId: actorUser.id, role: actorUser.role };
-  const [pluginTabs, pluginPanels] = await Promise.all([getAccountTabs(actorUser.role), getAccountPanels(actorUser.role)]);
+  const pluginRole = toPluginRole(actorUser.role);
+  const actor = { type: "user" as const, userId: actorUser.id, role: pluginRole };
+  const [pluginTabs, pluginPanels] = await Promise.all([getAccountTabs(pluginRole), getAccountPanels(pluginRole)]);
   const account: crm_Accounts | null = await getAccount(accountId);
   const opportunities: crm_Opportunities[] = serializeDecimalsList(
     await getOpportunitiesFullByAccountId(accountId)

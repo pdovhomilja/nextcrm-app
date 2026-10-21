@@ -8,13 +8,19 @@ export async function bulkUpdateEmployees(input: {
   role?: string;
   password?: string;
 }) {
-  const userIds = [...new Set(input.userIds.map((id) => id.trim()).filter(Boolean))];
-  if (userIds.length === 0) return { error: "Select at least one user" };
+  const userIds = Array.from(new Set(input.userIds.map((id) => id.trim()).filter(Boolean)));
+  if (userIds.length === 0) {
+    return { error: "Select at least one user", data: { updated: [], failed: [] } };
+  }
 
   const password = input.password?.trim() ?? "";
   const role = input.role?.trim() ?? "";
-  if (!password && !role) return { error: "Choose a role, a password, or both" };
-  if (password && password.length < 8) return { error: "Password must be at least 8 characters" };
+  if (!password && !role) {
+    return { error: "Choose a role, a password, or both", data: { updated: [], failed: [] } };
+  }
+  if (password && password.length < 8) {
+    return { error: "Password must be at least 8 characters", data: { updated: [], failed: [] } };
+  }
 
   const updated: string[] = [];
   const failed: { id: string; error: string }[] = [];
@@ -25,7 +31,7 @@ export async function bulkUpdateEmployees(input: {
       ...(role ? { role } : {}),
       ...(password ? { password } : {}),
     });
-    if ("error" in result) failed.push({ id: userId, error: result.error });
+    if ("error" in result) failed.push({ id: userId, error: result.error ?? "Failed to update user" });
     else updated.push(userId);
   }
 

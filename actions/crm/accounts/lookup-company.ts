@@ -2,6 +2,7 @@
 import { getTranslations } from "next-intl/server";
 import type { CompanyRecord } from "@nextcrm/plugin-sdk";
 import { requireAuthenticated } from "@/lib/authz";
+import { toPluginRole } from "@/lib/authz/roles";
 import { getCompanyRegistryProviders } from "@/lib/plugins/slots";
 import { createPluginContext } from "@/lib/plugins/context";
 
@@ -19,7 +20,7 @@ export async function lookupCompany(country: string, registrationNumber: string)
   if (!found) return { error: t("registryNotFound") };
   let ctx: Awaited<ReturnType<typeof createPluginContext>> | undefined;
   try {
-    ctx = await createPluginContext({ plugin: found.plugin as never, actor: { type: "user", userId: user.id, role: user.role } });
+    ctx = await createPluginContext({ plugin: found.plugin as never, actor: { type: "user", userId: user.id, role: toPluginRole(user.role) } });
     const data = await found.provider.lookup(registrationNumber.trim(), cc, ctx);
     return data ? { data } : { error: t("registryNotFound") };
   } catch (e) {
@@ -46,7 +47,7 @@ export async function validateVatNumber(vat: string): Promise<{ result: VatCheck
   if (!found?.provider.validateVat) return { result: "noProvider" };
   let ctx: Awaited<ReturnType<typeof createPluginContext>> | undefined;
   try {
-    ctx = await createPluginContext({ plugin: found.plugin as never, actor: { type: "user", userId: user.id, role: user.role } });
+    ctx = await createPluginContext({ plugin: found.plugin as never, actor: { type: "user", userId: user.id, role: toPluginRole(user.role) } });
     return { result: (await found.provider.validateVat(value, ctx)) ? "valid" : "invalid" };
   } catch (e) {
     if (ctx) ctx.log.error(`VAT validation failed: ${String(e)}`);
