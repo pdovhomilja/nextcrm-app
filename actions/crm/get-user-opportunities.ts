@@ -2,6 +2,7 @@ import { prismadb } from "@/lib/prisma";
 import {
   requireAuthenticated,
   AuthenticationError,
+  isEndUserRole,
 } from "@/lib/authz";
 
 export const getUserOpportunities = async (userId: string) => {
@@ -15,7 +16,7 @@ export const getUserOpportunities = async (userId: string) => {
 
   // A plain "user" can only fetch their own opportunity list. Manager/admin
   // can list opportunities for any user.
-  if (user.role === "user" && userId !== user.id) {
+  if (isEndUserRole(user.role) && userId !== user.id) {
     return [];
   }
 

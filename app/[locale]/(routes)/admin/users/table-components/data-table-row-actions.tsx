@@ -24,20 +24,19 @@ import { toast } from "sonner";
 import {
   Copy,
   KeyRound,
-  Mail,
   MoreHorizontal,
+  Pencil,
   Shield,
   Trash,
   UserCheck,
   UserX,
 } from "lucide-react";
-import { AdminEditPersonalEmailDialog } from "../components/AdminEditPersonalEmailDialog";
+import { AdminEditUserDialog } from "../components/AdminEditUserDialog";
 import { deleteUser } from "@/actions/admin/users/delete-user";
 import { activateUser } from "@/actions/admin/users/activate-user";
 import { deactivateUser } from "@/actions/admin/users/deactivate-user";
 import { setUserRole } from "@/actions/admin/users/set-role";
 import { revokeUserApiTokens } from "@/actions/admin/users/revoke-api-tokens";
-import { AdminResetPasswordDialog } from "../components/AdminResetPasswordDialog";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -50,9 +49,10 @@ export function DataTableRowActions<TData>({
   const data = adminUserSchema.parse(row.original);
 
   const [open, setOpen] = useState(false);
-  const [passwordOpen, setPasswordOpen] = useState(false);
-  const [personalEmailOpen, setPersonalEmailOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const workEmail = data.workEmail || data.email;
+  const personalEmail = data.email !== workEmail ? data.email : "";
 
   const onCopy = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -127,7 +127,7 @@ export function DataTableRowActions<TData>({
     }
   };
 
-  const onSetRole = async (role: "admin" | "manager" | "user") => {
+  const onSetRole = async (role: "admin" | "manager" | "user" | "trainee") => {
     try {
       setLoading(true);
       const result = await setUserRole(data.id, role);
@@ -152,19 +152,15 @@ export function DataTableRowActions<TData>({
         onConfirm={onDelete}
         loading={loading}
       />
-      <AdminResetPasswordDialog
+      <AdminEditUserDialog
         userId={data.id}
-        userName={data.name || data.email}
-        personalEmail={data.email}
-        open={passwordOpen}
-        onOpenChange={setPasswordOpen}
-      />
-      <AdminEditPersonalEmailDialog
-        userId={data.id}
-        userName={data.name || data.email}
-        personalEmail={data.email}
-        open={personalEmailOpen}
-        onOpenChange={setPersonalEmailOpen}
+        name={data.name || ""}
+        phone={data.phone || ""}
+        personalEmail={personalEmail}
+        workEmail={workEmail}
+        role={data.role || "user"}
+        open={editOpen}
+        onOpenChange={setEditOpen}
         onUpdated={() => router.refresh()}
       />
       <DropdownMenu>
@@ -180,13 +176,9 @@ export function DataTableRowActions<TData>({
             <Copy className="mr-2 w-4 h-4" />
             Copy ID
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setPasswordOpen(true)}>
-            <KeyRound className="mr-2 w-4 h-4" />
-            Reset password
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setPersonalEmailOpen(true)}>
-            <Mail className="mr-2 w-4 h-4" />
-            Edit personal email
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>
+            <Pencil className="mr-2 w-4 h-4" />
+            Edit user
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => onActivate()}>
@@ -216,6 +208,9 @@ export function DataTableRowActions<TData>({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onSetRole("user")}>
                 User
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onSetRole("trainee")}>
+                Trainee
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>

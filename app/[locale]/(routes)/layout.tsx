@@ -111,12 +111,12 @@ export default async function AppLayout({
   const currencyList = enabledCurrencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }));
 
   const { getPluginNavItems } = await import("@/lib/plugins/nav");
-  const { mapLegacyRole } = await import("@/lib/authz/roles");
+  const { mapLegacyRole, toPluginRole } = await import("@/lib/authz/roles");
   const { getLocale } = await import("next-intl/server");
   const { getUserPermissions } = await import("@/lib/authz/feature-access");
   const locale = (await getLocale()) as "en" | "cz" | "de" | "uk";
   const [pluginNav, permissions] = await Promise.all([
-    getPluginNavItems(mapLegacyRole(user?.role), locale),
+    getPluginNavItems(toPluginRole(mapLegacyRole(user?.role)), locale),
     getUserPermissions(session.user.id as string, session.user.role),
   ]);
 

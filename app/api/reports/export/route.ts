@@ -5,6 +5,7 @@ import {
   forbiddenResponse,
   AuthenticationError,
   getReportScope,
+  isEndUserRole,
   type ReportScope,
 } from "@/lib/authz";
 import {
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
 
-  if (category === "users" && user.role === "user") {
+  if (category === "users" && isEndUserRole(user.role)) {
     return forbiddenResponse();
   }
 

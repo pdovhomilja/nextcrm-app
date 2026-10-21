@@ -33,4 +33,9 @@ export const roles = [
     label: "User",
     icon: StopIcon,
   },
+  {
+    value: "trainee",
+    label: "Trainee",
+    icon: PauseIcon,
+  },
 ];

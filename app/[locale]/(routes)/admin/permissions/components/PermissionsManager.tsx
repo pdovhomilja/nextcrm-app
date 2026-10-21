@@ -57,8 +57,13 @@ type Props = {
   userOverrides: UserOverride[];
 };
 
-const EDITABLE_ROLES: AppRole[] = ["user", "manager"];
-const ROLE_LABEL: Record<AppRole, string> = { user: "User", manager: "Manager", admin: "Admin" };
+const EDITABLE_ROLES: AppRole[] = ["user", "trainee", "manager"];
+const ROLE_LABEL: Record<AppRole, string> = {
+  user: "User",
+  trainee: "Trainee",
+  manager: "Manager",
+  admin: "Admin",
+};
 
 function toChoices(rows: EffectRow[]): Record<string, CellChoice> {
   return Object.fromEntries(rows.map((r) => [cellKey(r.feature, r.action), r.effect]));

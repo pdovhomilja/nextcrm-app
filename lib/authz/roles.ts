@@ -1,6 +1,16 @@
-export type AppRole = "user" | "manager" | "admin";
+export type AppRole = "user" | "trainee" | "manager" | "admin";
 
-export const APP_ROLES: readonly AppRole[] = ["user", "manager", "admin"] as const;
+export const APP_ROLES: readonly AppRole[] = ["user", "trainee", "manager", "admin"] as const;
+
+/** Plugin pages only know user, manager, and admin. Trainees use the user pages. */
+export function isEndUserRole(role: AppRole): boolean {
+  return role === "user" || role === "trainee";
+}
+
+export function toPluginRole(role: AppRole): "user" | "manager" | "admin" {
+  if (role === "admin" || role === "manager") return role;
+  return "user";
+}
 
 const APP_ROLE_SET = new Set<string>(APP_ROLES);
 
@@ -14,6 +24,7 @@ const LEGACY_MAP: Record<string, AppRole> = {
   member: "manager",
   viewer: "user",
   user: "user",
+  trainee: "trainee",
   manager: "manager",
 };
 

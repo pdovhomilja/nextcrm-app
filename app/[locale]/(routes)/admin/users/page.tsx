@@ -1,20 +1,14 @@
 import { getUsers } from "@/actions/get-users";
 import React from "react";
 import Container from "../../components/ui/Container";
-import { InviteForm } from "./components/IviteForm";
 import { getOrgEmailDomain } from "@/lib/org-work-email";
-import { Separator } from "@/components/ui/separator";
 
 import { getSession } from "@/lib/auth-server";
-import { AdminUserDataTable } from "./table-components/data-table";
-import { columns } from "./table-components/columns";
-import { Users } from "@prisma/client";
-import { Button } from "@/components/ui/button";
-import SendMailToAll from "./components/send-mail-to-all";
+import { UsersAdmin } from "./components/UsersAdmin";
 import { getTranslations } from "next-intl/server";
 
 const AdminUsersPage = async () => {
-  const users: Users[] = await getUsers();
+  const users = await getUsers();
   const orgDomain = getOrgEmailDomain();
   const t = await getTranslations("AdminPage");
 
@@ -38,19 +32,23 @@ const AdminUsersPage = async () => {
       title={t("users.title")}
       description={t("users.description")}
     >
-      <div className="flex-col1">
-        <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
-          {t("users.inviteHeading")}
-        </h4>
-        <InviteForm orgDomain={orgDomain} />
-      </div>
-      <Separator />
-      <div>
-        <SendMailToAll />
-      </div>
-      <Separator />
-
-      <AdminUserDataTable columns={columns} data={users} />
+      <UsersAdmin
+        orgDomain={orgDomain}
+        inviteHeading={t("users.inviteHeading")}
+        users={users.map((user) => ({
+          id: user.id,
+          created_on: user.created_on,
+          lastLoginAt: user.lastLoginAt,
+          role: user.role,
+          name: user.name,
+          email: user.email,
+          workEmail: user.workEmail,
+          phone: user.phone,
+          username: user.username,
+          userStatus: user.userStatus,
+          userLanguage: user.userLanguage,
+        }))}
+      />
     </Container>
   );
 };

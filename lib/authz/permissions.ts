@@ -73,6 +73,10 @@ export const ROLE_DEFAULTS: Record<AppRole, PermissionMatrix> = {
     products: VIEW_ONLY,
     price_lists: VIEW_ONLY,
   }),
+  trainee: matrixOf(ALL, {
+    products: VIEW_ONLY,
+    price_lists: VIEW_ONLY,
+  }),
 };
 
 export type Effect = "ALLOW" | "DENY";
