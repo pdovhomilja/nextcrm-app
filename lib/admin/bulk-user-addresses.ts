@@ -18,10 +18,9 @@ export type BulkAddressResult =
   | { error: string };
 
 /**
- * One user: prefix + middle + suffix.
- * Many users: prefix and middle stay, and the suffix becomes 1, 2, 3… up to the count.
- * trn + 1 + plx and count 1 → trn1plx@domain
- * trn + 1 and count 10 → trn11@domain … trn110@domain
+ * The middle number counts up, and the suffix stays.
+ * trn + 10 + plx → trn10plx, trn11plx, trn12plx. Never trn101plx.
+ * An empty middle starts at 1: trn + plx → trn1plx, trn2plx, …
  */
 export function buildBulkWorkEmails(input: BulkAddressInput): BulkAddressResult {
   const prefix = part(input.prefix);
@@ -37,10 +36,12 @@ export function buildBulkWorkEmails(input: BulkAddressInput): BulkAddressResult 
     return { error: "Enter a prefix, middle, suffix, or any mix of them" };
   }
 
-  const locals =
-    count === 1
-      ? [`${prefix}${middix}${suffix}`]
-      : Array.from({ length: count }, (_, index) => `${prefix}${middix}${index + 1}`);
+  const numericMiddle = /^\d+$/.test(middix);
+  const locals = Array.from({ length: count }, (_, index) => {
+    if (numericMiddle) return `${prefix}${Number(middix) + index}${suffix}`;
+    if (count === 1) return `${prefix}${middix}${suffix}`;
+    return `${prefix}${middix}${index + 1}${suffix}`;
+  });
 
   if (locals.some((local) => local.length < 1)) {
     return { error: "The email name would be empty. Add a prefix or middle text." };

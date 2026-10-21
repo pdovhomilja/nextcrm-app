@@ -104,8 +104,8 @@ export function BulkCreateDialog({ orgDomain }: { orgDomain: string }) {
         <DialogHeader>
           <DialogTitle>Bulk creation</DialogTitle>
           <DialogDescription>
-            One user joins prefix, middle, and suffix. For more than one, prefix and middle stay the
-            same and the suffix becomes 1, 2, 3… Every user gets the same password and role.
+            The middle number counts up and the suffix stays. trn, 10, and plx becomes trn10plx, then
+            trn11plx. Every user gets the same password and role.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">
@@ -124,8 +124,8 @@ export function BulkCreateDialog({ orgDomain }: { orgDomain: string }) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Fill one, two, or all three. Example: trn, 1, and plx with 1 user is trn1plx@{orgDomain}.
-            With 10 users the addresses are trn11@{orgDomain} through trn110@{orgDomain}.
+            Fill one, two, or all three. trn, 1, and plx with 11 users is trn1plx@{orgDomain} through
+            trn11plx@{orgDomain}. A middle of 10 continues as trn11plx@{orgDomain}, not trn101plx.
           </p>
           <div className="space-y-1.5">
             <Label htmlFor="bulk-count">Number of users</Label>

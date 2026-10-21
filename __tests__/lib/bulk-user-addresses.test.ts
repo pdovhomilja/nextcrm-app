@@ -13,16 +13,30 @@ describe("buildBulkWorkEmails", () => {
     ).toEqual({ emails: ["trn1plx@vensailabs.in"] });
   });
 
-  it("keeps prefix and middle and numbers the suffix for many users", () => {
+  it("counts the middle number up and keeps the suffix", () => {
     const result = buildBulkWorkEmails({
       prefix: "trn",
       middix: "1",
       suffix: "plx",
-      count: 10,
+      count: 11,
       domain: "vensailabs.in",
     });
     expect(result).toEqual({
-      emails: Array.from({ length: 10 }, (_, i) => `trn1${i + 1}@vensailabs.in`),
+      emails: Array.from({ length: 11 }, (_, i) => `trn${i + 1}plx@vensailabs.in`),
+    });
+  });
+
+  it("goes from 10 to 11 instead of gluing on another digit", () => {
+    expect(
+      buildBulkWorkEmails({
+        prefix: "trn",
+        middix: "10",
+        suffix: "plx",
+        count: 2,
+        domain: "vensailabs.in",
+      })
+    ).toEqual({
+      emails: ["trn10plx@vensailabs.in", "trn11plx@vensailabs.in"],
     });
   });
 
