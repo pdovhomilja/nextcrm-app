@@ -84,7 +84,7 @@ export function LoginComponent() {
         return;
       }
       toast.success("Login successful.");
-      window.location.href = "/";
+      window.location.href = new URL("/", window.location.origin).href;
     } catch (error) {
       toast.error("Verification failed.");
     } finally {
