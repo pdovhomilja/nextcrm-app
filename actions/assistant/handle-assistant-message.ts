@@ -9,6 +9,11 @@ import {
   buildEmailsComposeQuery,
   interpretAssistantCommand,
 } from "@/lib/assistant/interpret-command";
+import {
+  appendMemoriesToSystem,
+  recallMemoriesForPrompt,
+  rememberConversationTurn,
+} from "@/lib/mem0/crm-memory";
 
 export type AssistantAction =
   | { type: "reply"; message: string }
@@ -105,15 +110,29 @@ export async function handleAssistantMessage(input: {
   }
 
   try {
+    const memories = await recallMemoriesForPrompt({
+      userId,
+      query: text,
+      surface: "assistant",
+    });
     const result = await completeChat({
       task: "quick-copy",
       userId,
       messages: [
-        { role: "system", content: systemPrompt(input.pageContext) },
+        {
+          role: "system",
+          content: appendMemoriesToSystem(systemPrompt(input.pageContext), memories),
+        },
         { role: "user", content: text },
       ],
       temperature: 0.5,
       timeoutMs: 45_000,
+    });
+    void rememberConversationTurn({
+      userId,
+      surface: "assistant",
+      userText: text,
+      assistantText: result.content,
     });
     return {
       ok: true,

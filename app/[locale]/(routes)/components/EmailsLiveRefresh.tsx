@@ -16,7 +16,11 @@ export function EmailsLiveRefresh() {
     const count = data?.emailUnreadCount;
     if (count === undefined) return;
     if (prev.current !== undefined && prev.current !== count) {
-      router.refresh();
+      const timer = window.setTimeout(() => {
+        if (document.visibilityState === "visible") router.refresh();
+      }, 4000);
+      prev.current = count;
+      return () => window.clearTimeout(timer);
     }
     prev.current = count;
   }, [data?.emailUnreadCount, pathname, router]);

@@ -7,7 +7,7 @@ import { getProductPanels } from "@/lib/plugins/slots";
 import { PluginSlot } from "@/lib/plugins/ui/PluginSlot";
 import { getProduct } from "@/actions/crm/products/get-product";
 import { getProductCategories } from "@/actions/crm/products/get-product-categories";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCachedCrmConfigLookups } from "@/actions/crm/get-crm-data";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { serializeDecimals, serializeDecimalsList } from "@/lib/serialize-decimals";
 
@@ -30,7 +30,7 @@ const ProductPage = async (props: ProductDetailPageProps) => {
   const [product, categories, crmData] = await Promise.all([
     getProduct(productId),
     getProductCategories(),
-    getAllCrmData(),
+    getCachedCrmConfigLookups(),
   ]);
 
   if (!product) return <div>Product not found</div>;

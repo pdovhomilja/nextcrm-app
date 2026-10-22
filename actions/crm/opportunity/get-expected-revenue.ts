@@ -3,23 +3,22 @@ import { getExchangeRates, convertAmount } from "@/lib/currency";
 import { Decimal } from "@prisma/client/runtime/client";
 
 export const getExpectedRevenue = async (displayCurrency: string) => {
-  const activeOpportunities = await prismadb.crm_Opportunities.findMany({
-    where: {
-      status: "ACTIVE",
-      deletedAt: null,
-    },
-    select: {
-      budget: true,
-      currency: true,
-    },
-  });
-
-  const rates = await getExchangeRates();
+  const [groups, rates] = await Promise.all([
+    prismadb.crm_Opportunities.groupBy({
+      by: ["currency"],
+      where: {
+        status: "ACTIVE",
+        deletedAt: null,
+      },
+      _sum: { budget: true },
+    }),
+    getExchangeRates(),
+  ]);
 
   let total = new Decimal(0);
-  for (const opp of activeOpportunities) {
-    const budget = new Decimal(opp.budget?.toString() ?? "0");
-    const from = opp.currency || displayCurrency;
+  for (const group of groups) {
+    const budget = new Decimal(group._sum.budget?.toString() ?? "0");
+    const from = group.currency || displayCurrency;
     const converted = convertAmount(budget, from, displayCurrency, rates);
     total = total.add(converted ?? budget);
   }

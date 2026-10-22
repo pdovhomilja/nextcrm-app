@@ -20,7 +20,7 @@ import {
 import moment from "moment";
 import { Clapperboard } from "lucide-react";
 import { prismadb } from "@/lib/prisma";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCrmPickerData } from "@/actions/crm/get-crm-data";
 import { OpportunityDetailActions } from "./OpportunityDetailActions";
 import RequestApprovalButton from "./RequestApprovalButton";
 import { Badge } from "@/components/ui/badge";
@@ -40,8 +40,8 @@ interface OppsViewProps {
 
 export async function BasicView({ data }: OppsViewProps) {
   //console.log(data, "data");
-  const users = await prismadb.users.findMany();
-  const crmData = await getAllCrmData();
+  const users = await prismadb.users.findMany({ select: { id: true, name: true } });
+  const crmData = await getCrmPickerData();
   const { saleTypes, saleStages, campaigns, currencies } = crmData;
   const cookieStore = await cookies();
   const defaultCurrency = await getDefaultCurrency();

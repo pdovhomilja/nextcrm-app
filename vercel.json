@@ -1,4 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "fluid": true,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains"
+        }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/exchange-rates",
+      "schedule": "0 6 * * *"
+    }
+  ],
   "ignoreCommand": "if [ -f scripts/vercel-should-build.sh ]; then bash scripts/vercel-should-build.sh; elif [ -f ../../scripts/vercel-should-build.sh ]; then bash ../../scripts/vercel-should-build.sh; else exit 1; fi"
 }

@@ -36,23 +36,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  crm_Accounts,
-  crm_Contacts,
-  crm_Opportunities_Sales_Stages,
-  crm_Opportunities_Type,
-  crm_campaigns,
-} from "@prisma/client";
 import { createOpportunity } from "@/actions/crm/opportunities/create-opportunity";
 import { useSession } from "@/lib/auth-client";
 
+type NamedOption = { id: string; name: string };
+
 //TODO: fix all the types
 type NewTaskFormProps = {
-  accounts: crm_Accounts[];
-  contacts: crm_Contacts[];
-  salesType: crm_Opportunities_Type[];
-  saleStages: crm_Opportunities_Sales_Stages[];
-  campaigns: crm_campaigns[];
+  accounts: { id: string; name: string }[];
+  contacts: { id: string; first_name?: string | null; last_name: string }[];
+  salesType: NamedOption[];
+  saleStages: NamedOption[];
+  campaigns: NamedOption[];
   currencies: { code: string; name: string; symbol: string }[];
   selectedStage?: string;
   accountId?: string;

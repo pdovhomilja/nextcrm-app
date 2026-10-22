@@ -10,6 +10,9 @@ import { emailSyncAccount } from "@/inngest/functions/emails/sync-account";
 import { embedEmail } from "@/inngest/functions/emails/embed-email";
 import { emailLinkCrm } from "@/inngest/functions/emails/link-crm";
 import { emailResendInbound } from "@/inngest/functions/emails/resend-inbound";
+import { emailFetchBody } from "@/inngest/functions/emails/fetch-body";
+import { emailResendAttachments } from "@/inngest/functions/emails/resend-attachments";
+import { adminEmployeeWelcomeEmail } from "@/inngest/functions/admin/employee-welcome";
 import { enrichContact } from "@/inngest/functions/enrich-contact";
 import { enrichContactsBulk } from "@/inngest/functions/enrich-contacts-bulk";
 import { enrichTarget } from "@/inngest/functions/enrich-target";
@@ -33,6 +36,7 @@ import { enrichDocument } from "@/inngest/functions/documents/enrich-document";
 import { generateDocumentThumbnail } from "@/inngest/functions/documents/generate-thumbnail";
 import { syncExchangeRates } from "@/inngest/functions/ecb/sync-exchange-rates";
 import { frankfurterSyncRates } from "@/inngest/functions/frankfurter/sync-rates";
+import { linkedInQualifyLead } from "@/inngest/functions/linkedin/qualify-lead";
 import { getPluginFunctions } from "@/lib/plugins/inngest";
 
 export const { GET, POST, PUT } = serve({
@@ -48,6 +52,9 @@ export const { GET, POST, PUT } = serve({
     embedEmail,
     emailLinkCrm,
     emailResendInbound,
+    emailFetchBody,
+    emailResendAttachments,
+    adminEmployeeWelcomeEmail,
     enrichContact,
     enrichContactsBulk,
     enrichTarget,
@@ -71,6 +78,7 @@ export const { GET, POST, PUT } = serve({
     generateDocumentThumbnail,
     syncExchangeRates,
     frankfurterSyncRates,
+    linkedInQualifyLead,
     ...getPluginFunctions(),
   ],
 });

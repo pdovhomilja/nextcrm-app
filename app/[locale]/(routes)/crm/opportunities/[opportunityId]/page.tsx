@@ -9,7 +9,7 @@ import DocumentsView from "../../components/DocumentsView";
 import ContactsView from "../../components/ContactsView";
 import AccountsView from "../../components/AccountsView";
 
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCrmPickerData } from "@/actions/crm/get-crm-data";
 import { getOpportunity } from "@/actions/crm/get-opportunity";
 import { getContactsByOpportunityId } from "@/actions/crm/get-contacts-by-opportunityId";
 import { getDocumentsByOpportunityId } from "@/actions/documents/get-documents-by-opportunityId";
@@ -34,7 +34,7 @@ const OpportunityView = async (
   const [opportunity, crmData, accounts, contacts, documents, allProducts] =
     await Promise.all([
       getOpportunity(opportunityId),
-      getAllCrmData(),
+      getCrmPickerData(),
       getAccountsByOpportunityId(opportunityId),
       getContactsByOpportunityId(opportunityId),
       getDocumentsByOpportunityId(opportunityId),

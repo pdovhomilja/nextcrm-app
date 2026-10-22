@@ -25,13 +25,14 @@ import { NewLeadForm } from "../leads/components/NewLeadForm";
 import { BulkImportLeadsModal } from "../leads/components/BulkImportLeadsModal";
 import { LeadDataTable } from "../leads/table-components/data-table";
 
-import type { getAllCrmData } from "@/actions/crm/get-crm-data";
-
-type CrmData = Awaited<ReturnType<typeof getAllCrmData>>;
-
 interface LeadsViewProps {
   data: any[];
-  crmData: CrmData;
+  crmData: {
+    accounts: { id: string; name: string }[];
+    leadSources: { id: string; name: string }[];
+    leadStatuses: { id: string; name: string }[];
+    leadTypes: { id: string; name: string }[];
+  };
   accountId?: string;
 }
 

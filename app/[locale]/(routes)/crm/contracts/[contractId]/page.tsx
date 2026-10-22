@@ -1,6 +1,6 @@
 import Container from "@/app/[locale]/(routes)/components/ui/Container";
 import { getContract } from "@/actions/crm/get-contract";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { prismadb } from "@/lib/prisma";
 import { getProductsFull } from "@/actions/crm/products/get-products";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,10 +18,9 @@ interface ContractDetailPageProps {
 const ContractPage = async (props: ContractDetailPageProps) => {
   const params = await props.params;
   const { contractId } = params;
-  const [contract, allProducts, crmData] = await Promise.all([
+  const [contract, allProducts] = await Promise.all([
     getContract(contractId),
     getProductsFull(),
-    getAllCrmData(),
   ]);
 
   if (!contract) return <div>Contract not found</div>;
@@ -39,12 +38,14 @@ const ContractPage = async (props: ContractDetailPageProps) => {
     ? serializeDecimalsList((contract as any).lineItems as any[])
     : [];
 
-  // Get opportunities linked to the same account
-  const accountId = (contract as any)?.accountId;
+  const accountId = (contract as any)?.accountId ?? (contract as any)?.account;
   const opportunities = accountId
-    ? crmData.opportunities
-        .filter((o: any) => o.accountId === accountId)
-        .map((o: any) => ({ id: o.id, name: o.name }))
+    ? (
+        await prismadb.crm_Opportunities.findMany({
+          where: { account: accountId, deletedAt: null },
+          select: { id: true, name: true },
+        })
+      ).map((row) => ({ id: row.id, name: row.name ?? "" }))
     : [];
 
   return (

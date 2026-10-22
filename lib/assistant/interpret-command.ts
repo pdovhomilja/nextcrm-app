@@ -18,6 +18,8 @@ const NAV_RE: { re: RegExp; path: string; label: string }[] = [
   { re: /\b(open|go to)\s+crm\b/i, path: "/crm/dashboard", label: "CRM" },
   { re: /\b(open|go to)\s+campaigns?\b/i, path: "/campaigns", label: "Campaigns" },
   { re: /\b(open|go to)\s+schedule\b/i, path: "/schedule", label: "Schedule" },
+  { re: /\b(open|go to)\s+linkedin\b/i, path: "/admin/linkedin", label: "LinkedIn" },
+  { re: /\b(open|go to)\s+leads?\b/i, path: "/crm/leads", label: "Leads" },
 ];
 
 export type ComposeEmailIntent = {

@@ -14,6 +14,11 @@ import {
   type MailboxComposeMode,
 } from "@/lib/llm/quality-modes";
 import { getConfiguredLlmProviders } from "@/lib/llm/availability";
+import {
+  appendMemoriesToSystem,
+  recallMemoriesForPrompt,
+  rememberConversationTurn,
+} from "@/lib/mem0/crm-memory";
 
 export type GenerateComposeEmailInput = {
   prompt: string;
@@ -283,6 +288,12 @@ export async function generateComposeEmail(
       crmContext
     );
 
+    const composeMemories = await recallMemoriesForPrompt({
+      userId: user.id,
+      query: `${prompt || action} ${input.to ?? ""} email tone signature`.trim(),
+      surface: "compose-email",
+    });
+
     // 3. Dispatch to workflow (isolated 1-to-1 CRM email pipeline)
     const { content, provider, stages } = await completeChatWorkflow({
       task: "quick-copy",
@@ -292,7 +303,10 @@ export async function generateComposeEmail(
       messages: [
         {
           role: "system",
-          content: mailboxComposeSystemPrompt(modeConfig.htmlStyle, composeMode),
+          content: appendMemoriesToSystem(
+            mailboxComposeSystemPrompt(modeConfig.htmlStyle, composeMode),
+            composeMemories
+          ),
         },
         { role: "user", content: userMessage },
       ],
@@ -322,6 +336,13 @@ export async function generateComposeEmail(
     const subject =
       parsed.subject?.trim() ||
       (composeMode === "new" ? input.subject?.trim() ?? "" : "");
+
+    void rememberConversationTurn({
+      userId: user.id,
+      surface: "compose-email",
+      userText: prompt || action,
+      assistantText: `Subject: ${subject}\n${html.slice(0, 1500)}`,
+    });
 
     return { ok: true, subject, html };
   } catch (e) {

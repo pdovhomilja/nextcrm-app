@@ -161,7 +161,7 @@ export function AppSidebar({
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-sidebar-border/70 bg-sidebar/95 backdrop-blur-md"
+      className="border-r border-sidebar-border/70 bg-sidebar"
       {...props}
     >
       {/* Header with Logo and Branding */}

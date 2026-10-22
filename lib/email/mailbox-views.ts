@@ -61,7 +61,6 @@ export function mailboxViewWhere(
             { subject: { contains: search, mode: "insensitive" } },
             { fromEmail: { contains: search, mode: "insensitive" } },
             { fromName: { contains: search, mode: "insensitive" } },
-            { bodyText: { contains: search, mode: "insensitive" } },
           ],
         },
       ],

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import Container from "../../components/ui/Container";
 import CrmTableSkeleton from "@/components/skeletons/crm-table-skeleton";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCrmPickerData } from "@/actions/crm/get-crm-data";
 import { getContractsWithIncludes } from "@/actions/crm/get-contracts";
 import { getOrders } from "@/actions/crm/orders/queries";
 import { getInvoices } from "@/app/[locale]/(routes)/invoices/data/get-invoices";
@@ -23,7 +23,7 @@ interface ContractsPageProps {
 
 async function ContractsContent() {
   const [crmData, rawContracts] = await Promise.all([
-    getAllCrmData(),
+    getCrmPickerData(),
     getContractsWithIncludes(),
   ]);
   const contracts = serializeDecimalsList(rawContracts);

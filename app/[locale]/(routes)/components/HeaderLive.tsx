@@ -48,7 +48,7 @@ export function HeaderLive({ user, initialLive }: Props) {
   const live = data ?? initialLive;
 
   return (
-    <header className="sticky top-0 z-30 flex h-[3.25rem] shrink-0 items-center gap-3 border-b border-border/50 bg-background/75 px-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 sm:px-5">
+    <header className="sticky top-0 z-30 flex h-[3.25rem] shrink-0 items-center gap-3 border-b border-border/50 bg-background px-3 sm:px-5">
       <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
         <SidebarTrigger className="-ml-0.5 h-9 w-9 shrink-0 rounded-xl" />
         <Separator orientation="vertical" className="hidden h-5 sm:block" />

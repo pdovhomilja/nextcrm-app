@@ -21,6 +21,8 @@ import {
   getLinkedInSnapshot,
 } from "./actions";
 import LinkedInConnectButton from "./LinkedInConnectButton";
+import { LinkedInIcpPanel, LinkedInOrgAiBrief } from "./LinkedInAiPanel";
+import { extractLinkedInPostSnippets } from "@/lib/linkedin/post-text";
 
 type LinkedInPageProps = {
   searchParams: Promise<{ connected?: string; organizationId?: string; reason?: string }>;
@@ -47,6 +49,8 @@ export default async function LinkedInPage({ searchParams }: LinkedInPageProps) 
 
   const organizations = snapshot?.organizations?.elements ?? [];
   const posts = snapshot?.posts?.elements ?? [];
+  const postSnippets = extractLinkedInPostSnippets(posts, 5);
+  const defaultIcp = process.env.LINKEDIN_ICP_BRIEF ?? "";
   const snapshotProfile = snapshot?.profile ?? profile;
   const orgFeaturesDisabled = snapshot?.orgFeaturesDisabled === true;
   const leadWebhookUrl = process.env.NEXT_PUBLIC_APP_URL
@@ -188,6 +192,11 @@ export default async function LinkedInPage({ searchParams }: LinkedInPageProps) 
                 <StatusItem label="Content sync" value={`${posts.length} posts loaded`} />
               </div>
             ) : null}
+
+            <LinkedInIcpPanel defaultIcp={defaultIcp} />
+            {params.organizationId && snapshot && !orgFeaturesDisabled ? (
+              <LinkedInOrgAiBrief organizationId={params.organizationId} />
+            ) : null}
           </div>
 
           <aside className="rounded-3xl border border-border/70 bg-sidebar p-6 text-sidebar-foreground sm:p-7">
@@ -209,7 +218,7 @@ export default async function LinkedInPage({ searchParams }: LinkedInPageProps) 
           </aside>
         </section>
 
-        {snapshot && !orgFeaturesDisabled && posts.length > 0 ? (
+        {snapshot && !orgFeaturesDisabled && postSnippets.length > 0 ? (
           <section className="rounded-3xl border border-border/70 bg-card p-6 sm:p-8">
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -221,16 +230,14 @@ export default async function LinkedInPage({ searchParams }: LinkedInPageProps) 
               </Link>
             </div>
             <div className="mt-6 grid gap-3">
-              {posts.slice(0, 5).map((_, index) => (
+              {postSnippets.map((snippet, index) => (
                 <div key={index} className="flex items-start gap-4 rounded-2xl border border-border/60 bg-muted/20 p-4">
                   <div className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <FileText className="size-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium">Organization post {index + 1}</p>
-                    <p className="mt-1 truncate text-sm text-muted-foreground">
-                      Review this signal and connect it to a lead, campaign, or project.
-                    </p>
+                    <p className="font-medium">Post {index + 1}</p>
+                    <p className="mt-1 line-clamp-4 text-sm text-muted-foreground">{snippet}</p>
                   </div>
                   <CheckCircle2 className="ml-auto mt-1 size-4 shrink-0 text-emerald-500" />
                 </div>

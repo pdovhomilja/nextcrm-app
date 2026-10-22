@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import Container from "../../components/ui/Container";
 import CrmTableSkeleton from "@/components/skeletons/crm-table-skeleton";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCachedCrmConfigLookups } from "@/actions/crm/get-crm-data";
 import { getProductsFull } from "@/actions/crm/products/get-products";
 import { getProductCategories } from "@/actions/crm/products/get-product-categories";
 import ProductsView from "../components/ProductsView";
@@ -11,7 +11,7 @@ async function ProductsContent() {
   const [products, categories, crmData] = await Promise.all([
     getProductsFull(),
     getProductCategories(),
-    getAllCrmData(),
+    getCachedCrmConfigLookups(),
   ]);
 
   const serializedProducts = serializeDecimalsList(products);

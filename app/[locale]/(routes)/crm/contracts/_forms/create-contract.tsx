@@ -6,7 +6,6 @@ import { ElementRef, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import { crm_Accounts } from "@prisma/client";
 import { UserSearchCombobox } from "@/components/ui/user-search-combobox";
 
 import { useAction } from "@/hooks/use-action";
@@ -26,7 +25,7 @@ const CreateContractForm = ({
   accountId,
   currencies = [],
 }: {
-  accounts: crm_Accounts[];
+  accounts: { id: string; name: string }[];
   accountId: string;
   currencies?: { code: string; name: string; symbol: string }[];
 }) => {

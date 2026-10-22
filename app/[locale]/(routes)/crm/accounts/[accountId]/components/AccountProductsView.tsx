@@ -25,14 +25,12 @@ import {
 import AssignProductForm from "./AssignProductForm";
 import { removeAssignment } from "@/actions/crm/account-products/remove-assignment";
 
-import type { getAllCrmData } from "@/actions/crm/get-crm-data";
-
-type CrmData = Awaited<ReturnType<typeof getAllCrmData>>;
-
 interface AccountProductsViewProps {
   data: any[];
   accountId: string;
-  crmData: CrmData;
+  crmData: {
+    currencies: { code: string; name: string; symbol: string }[];
+  };
   activeProducts: { id: string; name: string; currency: string }[];
 }
 

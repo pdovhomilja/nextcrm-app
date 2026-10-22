@@ -11,6 +11,12 @@ const config: Config = {
     "^e2b$": "<rootDir>/__mocks__/e2b.ts",
   },
   testMatch: ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx"],
+  modulePathIgnorePatterns: [
+    "<rootDir>/.tmp-no-next",
+    "<rootDir>/.next",
+    "<rootDir>/node_modules",
+  ],
+  watchPathIgnorePatterns: ["<rootDir>/.next", "<rootDir>/.tmp-no-next"],
   transform: {
     "^.+\\.tsx?$": ["ts-jest", { tsconfig: { jsx: "react", target: "es2017" } }],
     // sanitize-html >= 2.17.6 pulls in ESM-only htmlparser2@12 and its dom/entities deps

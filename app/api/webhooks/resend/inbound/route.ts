@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
-import { ingestResendInboundEmail } from "@/lib/email/resend-inbound";
 import { getResendInboundWebhookSecret } from "@/lib/email/resend-webhook-secret";
+import { inngest } from "@/inngest/client";
 
 type ResendInboundWebhookEvent = {
   type: string;
@@ -81,19 +81,20 @@ export async function POST(req: NextRequest) {
   };
 
   try {
-    const result = await ingestResendInboundEmail(emailId, webhookMeta);
-    if (!result.stored && result.reason === "no_matching_mailbox") {
-      console.warn("[resend-inbound] No CRM mailbox for recipients:", result.recipients);
-      return NextResponse.json({
-        ok: true,
-        warning: "no_matching_mailbox",
-        recipients: result.recipients,
-      });
-    }
-    return NextResponse.json({ ok: true, ...result });
+    await inngest.send({
+      name: "email/resend-inbound",
+      data: {
+        resendEmailId: emailId,
+        to: webhookMeta.to,
+        cc: webhookMeta.cc,
+        bcc: webhookMeta.bcc,
+        received_for: webhookMeta.received_for,
+      },
+    });
+    return NextResponse.json({ ok: true, queued: true }, { status: 202 });
   } catch (err) {
-    console.error("[resend-inbound] Ingest failed:", err);
-    return NextResponse.json({ error: "Ingest failed" }, { status: 500 });
+    console.error("[resend-inbound] Queue failed:", err);
+    return NextResponse.json({ error: "Queue failed" }, { status: 500 });
   }
 }
 

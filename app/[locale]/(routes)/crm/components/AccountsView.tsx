@@ -25,13 +25,11 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
-import type { getAllCrmData } from "@/actions/crm/get-crm-data";
-
-type CrmData = Awaited<ReturnType<typeof getAllCrmData>>;
-
 interface AccountsViewProps {
   data: any[];
-  crmData: CrmData;
+  crmData: {
+    industries: { id: string; name: string }[];
+  };
 }
 
 const AccountsView = ({ data, crmData }: AccountsViewProps) => {

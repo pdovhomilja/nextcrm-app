@@ -10,7 +10,7 @@ import { PluginSlot } from "@/lib/plugins/ui/PluginSlot";
 import { FindSimilarButton } from "@/components/crm/find-similar-button";
 
 import { getAccount } from "@/actions/crm/get-account";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCrmPickerData } from "@/actions/crm/get-crm-data";
 import { getOpportunitiesFullByAccountId } from "@/actions/crm/get-opportunities-with-includes-by-accountId";
 import { getContactsByAccountId } from "@/actions/crm/get-contacts-by-accountId";
 import { getLeadsByAccountId } from "@/actions/crm/get-leads-by-accountId";
@@ -28,16 +28,6 @@ import LeadsView from "../../components/LeadsView";
 import ContactsView from "../../components/ContactsView";
 import DocumentsView from "../../components/DocumentsView";
 import InvoicesView from "../../components/InvoicesView";
-
-import {
-  Documents,
-  crm_Accounts,
-  crm_Accounts_Tasks,
-  crm_Contacts,
-  crm_Contracts,
-  crm_Leads,
-  crm_Opportunities,
-} from "@prisma/client";
 
 import AccountsTasksView from "./components/TasksView";
 import ContractsView from "../../components/ContractsView";
@@ -62,20 +52,38 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
   const pluginRole = toPluginRole(actorUser.role);
   const actor = { type: "user" as const, userId: actorUser.id, role: pluginRole };
   const [pluginTabs, pluginPanels] = await Promise.all([getAccountTabs(pluginRole), getAccountPanels(pluginRole)]);
-  const account: crm_Accounts | null = await getAccount(accountId);
-  const opportunities: crm_Opportunities[] = serializeDecimalsList(
-    await getOpportunitiesFullByAccountId(accountId)
-  );
-  const contacts: crm_Contacts[] = await getContactsByAccountId(accountId);
-  const contracts: crm_Contracts[] = serializeDecimalsList(
-    await getContractsByAccountId(accountId)
-  );
-  const leads: crm_Leads[] = await getLeadsByAccountId(accountId);
-  const documents: Documents[] = await getDocumentsByAccountId(accountId);
-  const tasks: crm_Accounts_Tasks[] = await getAccountsTasks(accountId);
-  const invoices = await getInvoicesByAccountId(accountId);
-  const t = await getTranslations("InvoicesPage");
-  const to = await getTranslations("OrdersPage");
+  const [
+    account,
+    opportunitiesRaw,
+    contacts,
+    contractsRaw,
+    leads,
+    documents,
+    tasks,
+    invoices,
+    t,
+    to,
+    crmData,
+    accountProductsRaw,
+    allProducts,
+  ] = await Promise.all([
+    getAccount(accountId),
+    getOpportunitiesFullByAccountId(accountId),
+    getContactsByAccountId(accountId),
+    getContractsByAccountId(accountId),
+    getLeadsByAccountId(accountId),
+    getDocumentsByAccountId(accountId),
+    getAccountsTasks(accountId),
+    getInvoicesByAccountId(accountId),
+    getTranslations("InvoicesPage"),
+    getTranslations("OrdersPage"),
+    getCrmPickerData(),
+    getAccountProducts(accountId),
+    getProductsFull(),
+  ]);
+  const opportunities = serializeDecimalsList(opportunitiesRaw);
+  const contracts = serializeDecimalsList(contractsRaw);
+  const accountProducts = serializeDecimalsList(accountProductsRaw);
   const invoiceStatusLabels: Record<string, string> = {
     DRAFT: t("status.DRAFT"),
     ISSUED: t("status.ISSUED"),
@@ -98,11 +106,6 @@ const AccountDetailPage = async (props: AccountDetailPageProps) => {
     type: t("table.type"),
     currency: t("table.currency"),
   };
-  const crmData = await getAllCrmData();
-  const accountProducts = serializeDecimalsList(
-    await getAccountProducts(accountId)
-  );
-  const allProducts = await getProductsFull();
   const activeProducts = allProducts
     .filter((p) => p.status === "ACTIVE")
     .map((p) => ({ id: p.id, name: p.name, currency: p.currency }));

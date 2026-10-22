@@ -25,11 +25,11 @@ import { createColumns } from "../opportunities/table-components/columns";
 import { NewOpportunityForm } from "../opportunities/components/NewOpportunityForm";
 import { OpportunitiesDataTable } from "../opportunities/table-components/data-table";
 
-import type { getAllCrmData } from "@/actions/crm/get-crm-data";
+import type { getCrmPickerData } from "@/actions/crm/get-crm-data";
 import { useCurrency } from "@/context/currency-context";
 import { Decimal } from "@prisma/client/runtime/client";
 
-type CrmData = Awaited<ReturnType<typeof getAllCrmData>>;
+type CrmData = Awaited<ReturnType<typeof getCrmPickerData>>;
 
 interface OpportunitiesViewProps {
   data: any[];

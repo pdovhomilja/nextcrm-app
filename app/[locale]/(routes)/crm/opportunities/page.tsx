@@ -4,14 +4,14 @@ import CrmTableSkeleton from "@/components/skeletons/crm-table-skeleton";
 
 import Container from "../../components/ui/Container";
 import OpportunitiesView from "../components/OpportunitiesView";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCrmPickerData } from "@/actions/crm/get-crm-data";
 import { getOpportunitiesFull } from "@/actions/crm/get-opportunities-with-includes";
 import { getTranslations } from "next-intl/server";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
 
 async function OpportunitiesContent() {
   const [crmData, rawOpportunities] = await Promise.all([
-    getAllCrmData(),
+    getCrmPickerData(),
     getOpportunitiesFull(),
   ]);
   const opportunities = serializeDecimalsList(rawOpportunities);

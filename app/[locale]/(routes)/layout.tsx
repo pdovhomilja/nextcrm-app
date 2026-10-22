@@ -8,7 +8,10 @@ import Footer from "./components/Footer";
 import { Metadata } from "next";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/app-sidebar";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { mapLegacyRole, toPluginRole } from "@/lib/authz/roles";
+import { getUserPermissions } from "@/lib/authz/feature-access";
+import { permissionsForCrmAccess } from "@/lib/vensai/crm-nav";
 import { AvatarProvider } from "@/context/avatar-context";
 import { CurrencyProvider } from "@/context/currency-context";
 import {
@@ -75,18 +78,20 @@ export default async function AppLayout({
     return redirect("/change-password");
   }
 
-  // Parallelize layout data fetching to eliminate waterfall delay
   const userId = session.user.id as string;
-  const { getLocale } = await import("next-intl/server");
+  const role = mapLegacyRole(user?.role);
   const locale = (await getLocale()) as "en" | "cz" | "de" | "uk";
-  const { mapLegacyRole } = await import("@/lib/authz/roles");
 
-  const [dict, cookieStore, enabledCurrencies, defaultCurrency] = await Promise.all([
-    getTranslations("ModuleMenu"),
-    cookies(),
-    getCachedEnabledCurrencies(),
-    getCachedDefaultCurrency(),
-  ]);
+  const [dict, cookieStore, enabledCurrencies, defaultCurrency, permissions, accessProfile, pluginNav] =
+    await Promise.all([
+      getTranslations("ModuleMenu"),
+      cookies(),
+      getCachedEnabledCurrencies(),
+      getCachedDefaultCurrency(),
+      getUserPermissions(userId, session.user.role),
+      getCachedUserAccessProfile(userId),
+      getCachedPluginNav(toPluginRole(role), locale),
+    ]);
 
   // Extract translations as plain object for client component
   const translations = {
@@ -120,15 +125,6 @@ export default async function AppLayout({
     : defaultCurrency;
   const currencyList = enabledCurrencies.map((c: { code: string; name: string; symbol: string }) => ({ code: c.code, name: c.name, symbol: c.symbol }));
 
-  const { toPluginRole } = await import("@/lib/authz/roles");
-  const { getUserPermissions } = await import("@/lib/authz/feature-access");
-  const { permissionsForCrmAccess } = await import("@/lib/vensai/crm-nav");
-  const role = mapLegacyRole(user?.role);
-  const [pluginNav, permissions, accessProfile] = await Promise.all([
-    getCachedPluginNav(toPluginRole(role), locale),
-    getUserPermissions(userId, session.user.role),
-    getCachedUserAccessProfile(userId),
-  ]);
   const effectivePermissions = permissionsForCrmAccess(
     permissions,
     accessProfile?.crmEnabled !== false,

@@ -2,7 +2,7 @@ import React from "react";
 
 import { getAccounts } from "@/actions/crm/get-accounts";
 import { getContacts } from "@/actions/crm/get-contacts";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCrmPickerData } from "@/actions/crm/get-crm-data";
 import { getLeads } from "@/actions/crm/get-leads";
 import { getContractsWithIncludes } from "@/actions/crm/get-contracts";
 import { getOpportunitiesFull } from "@/actions/crm/get-opportunities-with-includes";
@@ -16,7 +16,7 @@ import ContractsView from "./ContractsView";
 const MainPageView = async () => {
   const [crmData, accounts, contacts, opportunities, leads, contracts] =
     await Promise.all([
-      getAllCrmData(),
+      getCrmPickerData(),
       getAccounts(),
       getContacts(),
       getOpportunitiesFull(),

@@ -49,26 +49,15 @@ describe("getAccounts (rich-shape, page-level)", () => {
     expect(call.where).toEqual({ deletedAt: null });
   });
 
-  it("preserves the rich include shape used by AccountsView (assigned_to_user, contacts, watchers)", async () => {
+  it("loads only the columns the accounts table renders", async () => {
     mockUser("admin", "a1");
     (prismadb.crm_Accounts.findMany as jest.Mock).mockResolvedValue([]);
     await getAccounts();
     const call = (prismadb.crm_Accounts.findMany as jest.Mock).mock.calls[0][0];
-    expect(call.include).toMatchObject({
+    expect(call.include).toEqual({
       assigned_to_user: { select: { name: true } },
       contacts: { select: { first_name: true, last_name: true } },
-      watchers: expect.objectContaining({
-        include: expect.objectContaining({
-          user: expect.objectContaining({
-            select: expect.objectContaining({
-              id: true,
-              name: true,
-              email: true,
-              avatar: true,
-            }),
-          }),
-        }),
-      }),
     });
+    expect(call.include.watchers).toBeUndefined();
   });
 });

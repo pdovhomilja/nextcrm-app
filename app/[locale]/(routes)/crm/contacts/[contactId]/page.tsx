@@ -5,7 +5,7 @@ import { FindSimilarButton } from "@/components/crm/find-similar-button";
 
 import { getContact } from "@/actions/crm/get-contact";
 import { getOpportunitiesFullByContactId } from "@/actions/crm/get-opportunities-with-includes-by-contactId";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCrmPickerData } from "@/actions/crm/get-crm-data";
 import { getDocumentsByContactId } from "@/actions/documents/get-documents-by-contactId";
 import { getAccountsByContactId } from "@/actions/crm/get-accounts-by-contactId";
 
@@ -19,11 +19,13 @@ import { ActivitiesSection } from "./components/ActivitiesSection";
 const ContactViewPage = async (props: any) => {
   const params = await props.params;
   const { contactId } = params;
-  const contact: any = await getContact(contactId);
-  const opportunities: any = await getOpportunitiesFullByContactId(contactId);
-  const documents = await getDocumentsByContactId(contactId);
-  const accounts = await getAccountsByContactId(contactId);
-  const crmData = await getAllCrmData();
+  const [contact, opportunities, documents, accounts, crmData] = await Promise.all([
+    getContact(contactId),
+    getOpportunitiesFullByContactId(contactId),
+    getDocumentsByContactId(contactId),
+    getAccountsByContactId(contactId),
+    getCrmPickerData(),
+  ]);
 
   //  console.log(accounts, "accounts");
 

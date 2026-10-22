@@ -30,7 +30,7 @@ import Link from "next/link";
 import { EnvelopeClosedIcon, LightningBoltIcon } from "@radix-ui/react-icons";
 import { LucideLandmark } from "lucide-react";
 import { LeadDetailActions } from "./LeadDetailActions";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCachedCrmConfigLookups } from "@/actions/crm/get-crm-data";
 
 interface OppsViewProps {
   data: any;
@@ -39,7 +39,7 @@ interface OppsViewProps {
 export async function BasicView({ data }: OppsViewProps) {
   //console.log(data, "data");
   const users = await prismadb.users.findMany();
-  const crmData = await getAllCrmData();
+  const crmData = await getCachedCrmConfigLookups();
   const { leadSources, leadStatuses, leadTypes } = crmData;
   if (!data) return <div>Opportunity not found</div>;
   return (

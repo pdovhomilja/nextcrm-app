@@ -2,7 +2,7 @@ import { EmailFolder, EmailSendProvider } from "@prisma/client";
 import { prismadb } from "@/lib/prisma";
 import { getResendApiKey } from "@/lib/resend";
 import { inngest } from "@/inngest/client";
-import { fetchAndPersistResendInboundAttachments } from "@/lib/email/resend-receiving-attachments";
+import { invalidateMailboxCache } from "@/lib/email/mailbox-cache";
 
 export type ResendReceivedEmail = {
   id: string;
@@ -175,13 +175,6 @@ async function storeInboundForMailbox(
     return { stored: false, reason: "duplicate", emailId: existing.id };
   }
 
-  let attachments: Awaited<ReturnType<typeof fetchAndPersistResendInboundAttachments>> = [];
-  try {
-    attachments = await fetchAndPersistResendInboundAttachments(payload.id);
-  } catch (err) {
-    console.warn("[resend-inbound] attachment ingest failed:", err);
-  }
-
   const created = await prismadb.email.create({
     data: {
       emailAccountId: account.id,
@@ -196,7 +189,7 @@ async function storeInboundForMailbox(
       bccRecipients: toRecipientJson(payload.bcc),
       bodyText: payload.text ?? null,
       bodyHtml: payload.html ?? null,
-      attachments,
+      attachments: [],
       sentAt,
       isRead: false,
     },
@@ -208,7 +201,15 @@ async function storeInboundForMailbox(
     data: { lastSyncedAt: new Date() },
   });
 
+  await invalidateMailboxCache(account.userId, account.id);
+
   await inngest.send({ name: "email/link-crm", data: { emailId: created.id } });
+  void inngest
+    .send({
+      name: "email/resend-attachments",
+      data: { emailId: created.id, resendEmailId: payload.id },
+    })
+    .catch(() => {});
 
   return { stored: true, emailId: created.id };
 }

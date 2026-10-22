@@ -1,6 +1,6 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { EmailSendProvider } from "@prisma/client";
 import {
   requireRole,
@@ -13,10 +13,7 @@ import { generateTemporaryPassword, upsertCredentialAccount } from "@/lib/auth-c
 import { createEmailAccountForUser } from "@/actions/emails/accounts";
 import { setUserVentureAccess } from "@/lib/vensai/user-access";
 import { listVentureOptions } from "@/lib/vensai/venture-catalog";
-import resendHelper from "@/lib/resend";
-import { getPublicAppUrl } from "@/lib/app-url";
-import EmployeeWelcomeEmail from "@/emails/EmployeeWelcome";
-import { getAppName } from "@/lib/app-name";
+import { inngest } from "@/inngest/client";
 
 export type CreateEmployeeInput = {
   workEmail: string;
@@ -142,36 +139,26 @@ export const createEmployee = async (data: CreateEmployeeInput) => {
     }
 
     if (emailThePassword) {
-      try {
-        const resend = await resendHelper();
-        const appName = getAppName();
-        const inviter = await prismadb.users.findUnique({
-          where: { id: actor.id },
-          select: { name: true },
-        });
-        await resend.emails.send({
-          from: `${appName} <${fromAddress}>`,
-          to: personal,
-          subject: `Your ${appName} login — ${workEmail}`,
-          react: EmployeeWelcomeEmail({
-            displayName: name || personal,
-            workEmail,
+      void inngest
+        .send({
+          name: "admin/employee-welcome-email",
+          data: {
+            userId: user.id,
             personalEmail: personal,
+            workEmail,
+            displayName: name || personal,
             temporaryPassword: password,
             mustChange: generatedPassword,
-            invitedByName: inviter?.name || "Your administrator",
-            appUrl: getPublicAppUrl(),
-            appName,
-          }),
+            inviterId: actor.id,
+          },
+        })
+        .catch((mailError) => {
+          console.error("[CREATE_EMPLOYEE] welcome email queue failed:", mailError);
         });
-      } catch (mailError) {
-        console.error("[CREATE_EMPLOYEE] welcome email failed:", mailError);
-        await prismadb.users.delete({ where: { id: user.id } });
-        return { error: `Could not email the password to ${personal}` };
-      }
     }
 
     await setUserVentureAccess({ userId: user.id, ventureSlugs, crmEnabled });
+    revalidateTag("team-directory");
     revalidatePath("/[locale]/(routes)/admin", "page");
     revalidatePath("/[locale]/(routes)/ventures", "page");
     return { data: user };

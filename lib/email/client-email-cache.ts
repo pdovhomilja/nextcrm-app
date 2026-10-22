@@ -1,14 +1,27 @@
-import { getEmail } from "@/actions/emails/messages";
-
-type EmailDetail = Awaited<ReturnType<typeof getEmail>>;
+type EmailDetail = {
+  id: string;
+  bodyText?: string | null;
+  bodyHtml?: string | null;
+  imapUid?: number | null;
+  [key: string]: unknown;
+} | null;
 
 const cache = new Map<string, Promise<EmailDetail>>();
 
-/** Dedupe open/prefetch server fetches for the same message in one session. */
+async function loadEmailDetail(id: string): Promise<EmailDetail> {
+  const res = await fetch(`/api/emails/${encodeURIComponent(id)}`, {
+    credentials: "include",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to load email");
+  return res.json() as Promise<EmailDetail>;
+}
+
+/** Dedupe message detail fetches (Route Handler — stays off RSC navigation path). */
 export function fetchEmailDetail(id: string): Promise<EmailDetail> {
   const existing = cache.get(id);
   if (existing) return existing;
-  const promise = getEmail(id);
+  const promise = loadEmailDetail(id);
   cache.set(id, promise);
   promise.catch(() => {
     cache.delete(id);

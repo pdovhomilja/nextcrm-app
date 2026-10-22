@@ -24,7 +24,7 @@ import { EnvelopeClosedIcon } from "@radix-ui/react-icons";
 import { Badge } from "@/components/ui/badge";
 import { EnrichButton } from "./EnrichButton";
 import { ContactDetailActions } from "./ContactDetailActions";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCachedCrmConfigLookups } from "@/actions/crm/get-crm-data";
 
 interface OppsViewProps {
   data: any;
@@ -33,7 +33,7 @@ interface OppsViewProps {
 export async function BasicView({ data }: OppsViewProps) {
   //console.log(data, "data");
   const users = await prismadb.users.findMany();
-  const crmData = await getAllCrmData();
+  const crmData = await getCachedCrmConfigLookups();
   const contactTypes = crmData.contactTypes;
   if (!data) return <div>Opportunity not found</div>;
   return (

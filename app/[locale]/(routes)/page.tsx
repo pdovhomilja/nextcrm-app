@@ -21,25 +21,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { loadDashboardMetrics } from "@/actions/dashboard/load-dashboard-metrics";
 import { getCachedDefaultCurrency } from "@/lib/server/cached-platform";
+import { mapLegacyRole } from "@/lib/authz/roles";
 import { getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { formatCurrency as formatCurrencyUtil } from "@/lib/currency";
 import { Decimal } from "@prisma/client/runtime/client";
 
-const DashboardPage = async () => {
-  const session = await getSession();
-
-  if (!session) return null;
-
-  const userId = session?.user?.id;
-
-  const [cookieStore, defaultCurrency, dict] = await Promise.all([
-    cookies(),
-    getCachedDefaultCurrency(),
-    getTranslations("DashboardPage"),
-  ]);
-
-  const displayCurrency = cookieStore.get("display_currency")?.value || defaultCurrency;
+async function DashboardMetrics({
+  userId,
+  displayCurrency,
+  allTasks,
+}: {
+  userId: string;
+  displayCurrency: string;
+  allTasks: boolean;
+}) {
+  const dict = await getTranslations("DashboardPage");
   const {
     leads,
     tasks,
@@ -56,17 +53,9 @@ const DashboardPage = async () => {
     documents,
     opportunities,
     usersTasks,
-  } = await loadDashboardMetrics(userId, displayCurrency);
-
-  const lang = session?.user?.userLanguage;
+  } = await loadDashboardMetrics(userId, displayCurrency, allTasks);
 
   return (
-    <Container
-      title={dict("containerTitle")}
-      description={
-        "Welcome to VenSai CRM — here you can see your company overview"
-      }
-    >
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <Suspense fallback={<LoadingBox />}>
           <Card>
@@ -178,6 +167,48 @@ const DashboardPage = async () => {
 
         <StorageQuota actual={storage} title={dict("storage")} />
       </div>
+  );
+}
+
+const DashboardPage = async () => {
+  const session = await getSession();
+
+  if (!session) return null;
+
+  const userId = session.user.id;
+
+  const [cookieStore, defaultCurrency, dict] = await Promise.all([
+    cookies(),
+    getCachedDefaultCurrency(),
+    getTranslations("DashboardPage"),
+  ]);
+
+  const displayCurrency = cookieStore.get("display_currency")?.value || defaultCurrency;
+  const role = mapLegacyRole(session.user.role);
+  const allTasks = role === "admin" || role === "manager";
+
+  return (
+    <Container
+      title={dict("containerTitle")}
+      description={
+        "Welcome to VenSai CRM — here you can see your company overview"
+      }
+    >
+      <Suspense
+        fallback={
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }, (_, index) => (
+              <LoadingBox key={index} />
+            ))}
+          </div>
+        }
+      >
+        <DashboardMetrics
+          userId={userId}
+          displayCurrency={displayCurrency}
+          allTasks={allTasks}
+        />
+      </Suspense>
     </Container>
   );
 };

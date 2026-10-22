@@ -12,18 +12,7 @@ import type { AppRole } from "@/lib/authz/roles";
 
 const contactsInclude = {
   assigned_to_user: { select: { name: true } },
-  crate_by_user: { select: { name: true } },
-  assigned_accounts: true,
-  opportunities: {
-    include: {
-      opportunity: { select: { id: true, name: true } },
-    },
-  },
-  documents: {
-    include: {
-      document: { select: { id: true, document_name: true } },
-    },
-  },
+  assigned_accounts: { select: { name: true } },
 } as const;
 
 async function loadContacts(userId: string, role: AppRole) {
@@ -37,7 +26,7 @@ async function loadContacts(userId: string, role: AppRole) {
 export function getCachedContactsList(userId: string, role: AppRole) {
   return unstable_cache(
     () => loadContacts(userId, role),
-    ["contacts-list-v1", userId, role],
+    ["contacts-list-v2", userId, role],
     { revalidate: 90, tags: [contactsListTag(userId, role)] }
   )();
 }

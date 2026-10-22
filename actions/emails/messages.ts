@@ -1,8 +1,8 @@
 "use server";
 import { getSession } from "@/lib/auth-server";
 
-import { prismadb } from "@/lib/prisma";
 import { decrypt } from "@/lib/email-crypto";
+import { prismadb } from "@/lib/prisma";
 import { serializeDecimals, serializeDecimalsList } from "@/lib/serialize-decimals";
 import { assertPublicHost, HostNotAllowedError } from "@/lib/net/host-guard";
 import nodemailer from "nodemailer";
@@ -10,6 +10,7 @@ import { EmailFolder, EmailSendProvider } from "@prisma/client";
 import { sendMailViaResend } from "@/lib/email/resend-mail";
 import { resolveMailboxAccess } from "@/lib/email/mailbox-access";
 import { fetchUploadBuffer } from "@/lib/email/fetch-upload-buffer";
+import { inngest } from "@/inngest/client";
 
 const PAGE_SIZE = 50;
 const MAX_COUNT = 10_000;
@@ -108,51 +109,8 @@ export async function getEmail(id: string) {
     if (!email) throw new Error("Not found");
     await resolveMailboxAccess(email.emailAccountId);
 
-    // Lazy body fetch for emails not yet CRM-linked at sync time
-    if (!email.bodyText && !email.bodyHtml && email.imapUid) {
-      try {
-        const account = await prismadb.emailAccount.findUnique({
-          where: { id: email.emailAccountId },
-          select: {
-            username: true,
-            passwordEncrypted: true,
-            imapHost: true,
-            imapPort: true,
-            imapSsl: true,
-            allowSelfSignedTls: true,
-            sentFolderName: true,
-          },
-        });
-
-        if (account?.passwordEncrypted) {
-          const { fetchBodyByUid } = await import("@/inngest/lib/imap-utils");
-          const folderName = email.folder === "SENT" ? (account.sentFolderName || "Sent") : "INBOX";
-          const body = await fetchBodyByUid(
-            {
-              username: account.username,
-              password: decrypt(account.passwordEncrypted),
-              imapHost: account.imapHost,
-              imapPort: account.imapPort,
-              imapSsl: account.imapSsl,
-              allowSelfSignedTls: account.allowSelfSignedTls,
-            },
-            folderName,
-            email.imapUid
-          );
-
-          if (body.bodyText || body.bodyHtml) {
-            await prismadb.email.update({
-              where: { id },
-              data: { bodyText: body.bodyText ?? null, bodyHtml: body.bodyHtml ?? null },
-            });
-            // Patch in-memory so caller gets the body immediately (before any send that may throw)
-            email.bodyText = body.bodyText ?? null;
-            email.bodyHtml = body.bodyHtml ?? null;
-          }
-        }
-      } catch {
-        // Body fetch failed — return email without body; display will show a fallback
-      }
+    if (!email.bodyText && !email.bodyHtml) {
+      void inngest.send({ name: "email/fetch-body", data: { emailId: id } }).catch(() => {});
     }
 
     // Mark as read (fire-and-forget)

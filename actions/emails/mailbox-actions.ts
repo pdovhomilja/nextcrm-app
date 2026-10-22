@@ -121,37 +121,53 @@ export async function getMailboxCounts(accountId: string): Promise<MailboxCounts
 
     const base = { userId: access.mailboxUserId, emailAccountId: accountId };
 
-    const [inboxUnread, inboxTotal, starred, spam, archive, trash] = await Promise.all([
-      prismadb.email.count({
-        where: {
-          ...base,
-          folder: EmailFolder.INBOX,
-          isRead: false,
-          isDeleted: false,
-          isSpam: false,
-          isArchived: false,
+    const [row] = await prismadb.$queryRaw<
+      [
+        {
+          inbox_unread: bigint;
+          inbox_total: bigint;
+          starred: bigint;
+          spam: bigint;
+          archive: bigint;
+          trash: bigint;
         },
-      }),
-      prismadb.email.count({
-        where: {
-          ...base,
-          folder: EmailFolder.INBOX,
-          isDeleted: false,
-          isSpam: false,
-          isArchived: false,
-        },
-      }),
-      prismadb.email.count({
-        where: { ...base, isStarred: true, isDeleted: false, isSpam: false },
-      }),
-      prismadb.email.count({ where: { ...base, isSpam: true, isDeleted: false } }),
-      prismadb.email.count({
-        where: { ...base, isArchived: true, isDeleted: false, isSpam: false },
-      }),
-      prismadb.email.count({ where: { ...base, isDeleted: true } }),
-    ]);
+      ]
+    >`
+      SELECT
+        COUNT(*) FILTER (
+          WHERE folder = 'INBOX'::"EmailFolder"
+            AND NOT "isRead"
+            AND NOT "isDeleted"
+            AND NOT "isSpam"
+            AND NOT "isArchived"
+        ) AS inbox_unread,
+        COUNT(*) FILTER (
+          WHERE folder = 'INBOX'::"EmailFolder"
+            AND NOT "isDeleted"
+            AND NOT "isSpam"
+            AND NOT "isArchived"
+        ) AS inbox_total,
+        COUNT(*) FILTER (
+          WHERE "isStarred" AND NOT "isDeleted" AND NOT "isSpam"
+        ) AS starred,
+        COUNT(*) FILTER (WHERE "isSpam" AND NOT "isDeleted") AS spam,
+        COUNT(*) FILTER (
+          WHERE "isArchived" AND NOT "isDeleted" AND NOT "isSpam"
+        ) AS archive,
+        COUNT(*) FILTER (WHERE "isDeleted") AS trash
+      FROM "Email"
+      WHERE "userId" = ${access.mailboxUserId}::uuid
+        AND "emailAccountId" = ${accountId}::uuid
+    `;
 
-    const counts = { inboxUnread, inboxTotal, starred, spam, archive, trash };
+    const counts = {
+      inboxUnread: Number(row?.inbox_unread ?? 0),
+      inboxTotal: Number(row?.inbox_total ?? 0),
+      starred: Number(row?.starred ?? 0),
+      spam: Number(row?.spam ?? 0),
+      archive: Number(row?.archive ?? 0),
+      trash: Number(row?.trash ?? 0),
+    };
     await setCachedMailboxCounts(sessionUserId, accountId, counts);
     return counts;
   } catch {

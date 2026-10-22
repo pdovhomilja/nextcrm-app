@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth-server";
-import { getTeamDirectory } from "@/actions/team/get-team-directory";
+import { getCachedTeamDirectory } from "@/lib/server/cached-team";
 import { dmRoomKey, GENERAL_CHAT_ROOM, parseRoomKey } from "@/lib/chat/room-keys";
 import { dmMeetRoomSuffix, teamRoomName } from "@/lib/jitsi/meet-url";
 import { ChatShell } from "./components/ChatShell";
@@ -21,7 +21,7 @@ export default async function ChatPage({
     roomKey = dmRoomKey(userId, params.userId);
   }
 
-  const team = await getTeamDirectory();
+  const team = await getCachedTeamDirectory();
   const displayName = session.user.name?.trim() || session.user.email || "User";
 
   const roomTitle =

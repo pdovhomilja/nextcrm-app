@@ -5,8 +5,8 @@ import {
 } from "@/lib/cache/upstash-redis";
 
 const PREFIX = "mailbox:v1";
-const LIST_TTL_SECONDS = 120;
-const COUNTS_TTL_SECONDS = 90;
+const LIST_TTL_SECONDS = 180;
+const COUNTS_TTL_SECONDS = 120;
 
 function getRedis() {
   return getUpstashRedis();

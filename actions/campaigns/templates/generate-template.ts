@@ -17,6 +17,11 @@ import {
   injectHeroImageIntoHtml,
 } from "@/lib/llm/openrouter-image";
 import { getConfiguredLlmProviders } from "@/lib/llm/availability";
+import {
+  appendMemoriesToSystem,
+  recallMemoriesForPrompt,
+  rememberConversationTurn,
+} from "@/lib/mem0/crm-memory";
 
 export type GenerateTemplateOptions = {
   mode?: AiQualityMode;
@@ -59,13 +64,25 @@ export const generateTemplate = async (
     const modeConfig = QUALITY_MODE_CONFIG[mode];
     const includeHeroImage = Boolean(options?.includeHeroImage) && mode !== "fast";
 
+    const campaignMemories = await recallMemoriesForPrompt({
+      userId: user.id,
+      query: `${trimmed} brand voice campaign marketing`,
+      surface: "campaign-email",
+    });
+
     const { content, provider, stages } = await completeChatWorkflow({
       task: "campaign-email",
       userId: user.id,
       userBrief: trimmed,
       mode,
       messages: [
-        { role: "system", content: campaignEmailSystemPrompt(modeConfig.htmlStyle) },
+        {
+          role: "system",
+          content: appendMemoriesToSystem(
+            campaignEmailSystemPrompt(modeConfig.htmlStyle),
+            campaignMemories
+          ),
+        },
         { role: "user", content: trimmed },
       ],
     });
@@ -108,6 +125,13 @@ export const generateTemplate = async (
     }
 
     html = shrinkHtmlForAction(html);
+
+    void rememberConversationTurn({
+      userId: user.id,
+      surface: "campaign-email",
+      userText: trimmed,
+      assistantText: `Subject: ${parsed.subject ?? ""}\n${html.slice(0, 1500)}`,
+    });
 
     return {
       ok: true,

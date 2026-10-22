@@ -4,8 +4,14 @@ import { decrypt } from "@/lib/email-crypto";
 import { EmailFolder, EmailSendProvider } from "@prisma/client";
 import Imap from "imap";
 import { connectImap, fetchHeaders, type ParsedHeader } from "@/inngest/lib/imap-utils";
+import {
+  capImapUids,
+  EMAIL_FIRST_SYNC_SINCE_MS,
+  EMAIL_INITIAL_IMPORT_MAX,
+  EMAIL_SYNC_BATCH_MAX,
+} from "@/lib/email/sync-limits";
 
-const SIX_MONTHS_MS = 6 * 30 * 24 * 60 * 60 * 1000;
+const LINK_CRM_FANOUT_CHUNK = 40;
 
 async function searchFolder(
   imap: Imap,
@@ -19,7 +25,7 @@ async function searchFolder(
       const criteria: unknown[] =
         lastUid > 0
           ? [["UID", `${lastUid + 1}:*`]]
-          : [["SINCE", new Date(Date.now() - SIX_MONTHS_MS)]];
+          : [["SINCE", new Date(Date.now() - EMAIL_FIRST_SYNC_SINCE_MS)]];
 
       imap.search(criteria, (searchErr, uids) => {
         if (searchErr) return reject(searchErr);
@@ -35,6 +41,7 @@ export const emailSyncAccount = inngest.createFunction(
   {
     id: "email-sync-account",
     name: "Email: Sync Account",
+    concurrency: { limit: 3 },
     triggers: [{ event: "email/sync-account" }],
   },
   async ({ event, step }) => {
@@ -80,7 +87,20 @@ export const emailSyncAccount = inngest.createFunction(
       }
     );
 
-    if (inboxUids.length === 0 && sentUids.length === 0) {
+    const inboxLast = account.inboxLastUid ?? 0;
+    const sentLast = account.sentLastUid ?? 0;
+    const inboxCap = capImapUids(
+      inboxUids,
+      inboxLast,
+      inboxLast === 0 ? EMAIL_INITIAL_IMPORT_MAX : EMAIL_SYNC_BATCH_MAX
+    );
+    const sentCap = capImapUids(
+      sentUids,
+      sentLast,
+      sentLast === 0 ? EMAIL_INITIAL_IMPORT_MAX : EMAIL_SYNC_BATCH_MAX
+    );
+
+    if (inboxCap.length === 0 && sentCap.length === 0) {
       await step.run("update-synced-at", () =>
         prismadb.emailAccount.update({
           where: { id: accountId },
@@ -95,23 +115,23 @@ export const emailSyncAccount = inngest.createFunction(
       const pwd = decrypt(encryptedPassword);
       const acc = { username: account.username, password: pwd, imapHost: account.imapHost, imapPort: account.imapPort, imapSsl: account.imapSsl, allowSelfSignedTls: account.allowSelfSignedTls };
       const [inbox, sent] = await Promise.all([
-        inboxUids.length > 0
+        inboxCap.length > 0
           ? connectImap(acc).then(async (imap) => {
               try {
                 await new Promise<void>((res, rej) =>
                   imap.openBox("INBOX", true, (err) => err ? rej(err) : res())
                 );
-                return fetchHeaders(imap, inboxUids);
+                return fetchHeaders(imap, inboxCap);
               } finally { imap.end(); }
             })
           : Promise.resolve([] as ParsedHeader[]),
-        sentUids.length > 0
+        sentCap.length > 0
           ? connectImap(acc).then(async (imap) => {
               try {
                 await new Promise<void>((res, rej) =>
                   imap.openBox(sentFolder, true, (err) => err ? rej(err) : res())
                 );
-                return fetchHeaders(imap, sentUids);
+                return fetchHeaders(imap, sentCap);
               } finally { imap.end(); }
             })
           : Promise.resolve([] as ParsedHeader[]),
@@ -131,7 +151,12 @@ export const emailSyncAccount = inngest.createFunction(
       if (allMessages.length === 0) {
         await prismadb.emailAccount.update({
           where: { id: accountId },
-          data: { lastSyncedAt: new Date(), inboxLastUid: newInboxHighest, sentLastUid: newSentHighest },
+          data: {
+            lastSyncedAt: new Date(),
+            inboxLastUid:
+              inboxCap.length > 0 ? Math.max(inboxLast, ...inboxCap) : newInboxHighest,
+            sentLastUid: sentCap.length > 0 ? Math.max(sentLast, ...sentCap) : newSentHighest,
+          },
         });
         return [];
       }
@@ -182,21 +207,28 @@ export const emailSyncAccount = inngest.createFunction(
       // 5. Update account watermarks (one query)
       await prismadb.emailAccount.update({
         where: { id: accountId },
-        data: { lastSyncedAt: new Date(), inboxLastUid: newInboxHighest, sentLastUid: newSentHighest },
+        data: {
+          lastSyncedAt: new Date(),
+          inboxLastUid:
+            inboxCap.length > 0 ? Math.max(inboxLast, ...inboxCap) : newInboxHighest,
+          sentLastUid: sentCap.length > 0 ? Math.max(sentLast, ...sentCap) : newSentHighest,
+        },
       });
 
       return newIds;
     });
 
-    // Fan out link-crm for each new email — use step.sendEvent for deterministic replay
     if (insertedIds.length > 0) {
-      await step.sendEvent(
-        "fan-out-link-crm",
-        insertedIds.map((id) => ({
-          name: "email/link-crm" as const,
-          data: { emailId: id },
-        }))
-      );
+      for (let i = 0; i < insertedIds.length; i += LINK_CRM_FANOUT_CHUNK) {
+        const chunk = insertedIds.slice(i, i + LINK_CRM_FANOUT_CHUNK);
+        await step.sendEvent(
+          `fan-out-link-crm-${i}`,
+          chunk.map((id) => ({
+            name: "email/link-crm" as const,
+            data: { emailId: id },
+          }))
+        );
+      }
     }
 
     return { synced: inboxHeaders.length + sentHeaders.length, newMessages: insertedIds.length };

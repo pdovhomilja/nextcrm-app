@@ -3,13 +3,13 @@ import React, { Suspense } from "react";
 import AccountsView from "../components/AccountsView";
 import Container from "../../components/ui/Container";
 import CrmAccountsSkeleton from "@/components/skeletons/crm-accounts-skeleton";
-import { getAllCrmData } from "@/actions/crm/get-crm-data";
+import { getCachedCrmConfigLookups } from "@/actions/crm/get-crm-data";
 import { getAccounts } from "@/actions/crm/get-accounts";
 import { getTranslations } from "next-intl/server";
 
 async function AccountsContent() {
   const [crmData, accounts] = await Promise.all([
-    getAllCrmData(),
+    getCachedCrmConfigLookups(),
     getAccounts(),
   ]);
   return <AccountsView crmData={crmData} data={accounts} />;

@@ -16,13 +16,12 @@ import { ContractsDataTable } from "../contracts/table-components/data-table";
 import CreateContractForm from "../contracts/_forms/create-contract";
 import { ImportContractsDialog } from "../contracts/components/ImportContractsDialog";
 
-import type { getAllCrmData } from "@/actions/crm/get-crm-data";
-
-type CrmData = Awaited<ReturnType<typeof getAllCrmData>>;
-
 interface ContractsViewProps {
   data: any[];
-  crmData: CrmData;
+  crmData: {
+    accounts: { id: string; name: string }[];
+    currencies: { code: string; name: string; symbol: string }[];
+  };
   accountId?: string;
 }
 

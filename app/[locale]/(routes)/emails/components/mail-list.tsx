@@ -1,10 +1,8 @@
 "use client";
 
-import { useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import { primeEmailDetail } from "@/lib/email/client-email-cache";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,14 +39,6 @@ export function MailList({
   const [mail, setMail] = useMail();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const prefetchedIds = useRef(new Set<string>());
-
-  function prefetchMessage(id: string) {
-    if (prefetchedIds.current.has(id)) return;
-    prefetchedIds.current.add(id);
-    primeEmailDetail(id);
-  }
-
   const safeTotalPages = Math.max(totalPages, total > 0 ? 1 : 0);
   const rangeStart = total === 0 ? 0 : (page - 1) * MAILBOX_PAGE_SIZE + 1;
   const rangeEnd = total === 0 ? 0 : Math.min(page * MAILBOX_PAGE_SIZE, total);
@@ -96,8 +86,6 @@ export function MailList({
                 !item.isRead && mail.selected !== item.id && "bg-background/80 font-medium"
               )}
               onClick={() => setMail({ ...mail, selected: item.id })}
-              onMouseEnter={() => prefetchMessage(item.id)}
-              onFocus={() => prefetchMessage(item.id)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") setMail({ ...mail, selected: item.id });
               }}

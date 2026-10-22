@@ -1,101 +1,108 @@
 "use server";
 
 import { unstable_cache } from "next/cache";
-import { getTasksCount, getUsersTasksCount } from "@/actions/dashboard/get-tasks-count";
-import { getInvoicesCount } from "@/actions/dashboard/get-invoices-count";
-import { getCampaignsCount } from "@/actions/dashboard/get-campaigns-count";
-import { getTargetsCount } from "@/actions/dashboard/get-targets-count";
-import { getLeadsCount } from "@/actions/dashboard/get-leads-count";
-import { getBoardsCount } from "@/actions/dashboard/get-boards-count";
+import { prismadb } from "@/lib/prisma";
 import { getStorageSize } from "@/actions/documents/get-storage-size";
-import { getContactCount } from "@/actions/dashboard/get-contacts-count";
-import { getAccountsCount } from "@/actions/dashboard/get-accounts-count";
-import { getContractsCount } from "@/actions/dashboard/get-contracts-count";
-import { getDocumentsCount } from "@/actions/dashboard/get-documents-count";
-import { getActiveUsersCount } from "@/actions/dashboard/get-active-users-count";
-import { getOpportunitiesCount } from "@/actions/dashboard/get-opportunities-count";
 import { getExpectedRevenue } from "@/actions/crm/opportunity/get-expected-revenue";
 
 export type DashboardMetrics = {
-  leads: Awaited<ReturnType<typeof getLeadsCount>>;
-  tasks: Awaited<ReturnType<typeof getTasksCount>>;
-  invoices: Awaited<ReturnType<typeof getInvoicesCount>>;
-  campaigns: Awaited<ReturnType<typeof getCampaignsCount>>;
-  targets: Awaited<ReturnType<typeof getTargetsCount>>;
-  storage: Awaited<ReturnType<typeof getStorageSize>>;
-  projects: Awaited<ReturnType<typeof getBoardsCount>>;
-  contacts: Awaited<ReturnType<typeof getContactCount>>;
-  contracts: Awaited<ReturnType<typeof getContractsCount>>;
-  users: Awaited<ReturnType<typeof getActiveUsersCount>>;
-  accounts: Awaited<ReturnType<typeof getAccountsCount>>;
-  revenue: Awaited<ReturnType<typeof getExpectedRevenue>>;
-  documents: Awaited<ReturnType<typeof getDocumentsCount>>;
-  opportunities: Awaited<ReturnType<typeof getOpportunitiesCount>>;
-  usersTasks: Awaited<ReturnType<typeof getUsersTasksCount>>;
+  leads: number;
+  tasks: number;
+  invoices: number;
+  campaigns: number;
+  targets: number;
+  storage: number;
+  projects: number;
+  contacts: number;
+  contracts: number;
+  users: number;
+  accounts: number;
+  revenue: number;
+  documents: number;
+  opportunities: number;
+  usersTasks: number;
 };
+
+type CountRow = {
+  leads: number;
+  tasks: number;
+  invoices: number;
+  campaigns: number;
+  targets: number;
+  documents: number;
+  projects: number;
+  contacts: number;
+  contracts: number;
+  users: number;
+  accounts: number;
+  opportunities: number;
+  users_tasks: number;
+};
+
+function asCount(value: unknown) {
+  return typeof value === "number" ? value : Number(value ?? 0);
+}
+
+/** One round trip. Vercel keeps only two DB connections, so 15 separate counts queue. */
+async function fetchDashboardCounts(userId: string, allTasks: boolean): Promise<CountRow> {
+  const rows = await prismadb.$queryRaw<CountRow[]>`
+    SELECT
+      (SELECT COUNT(*)::int FROM "crm_Leads" WHERE "deletedAt" IS NULL) AS leads,
+      (SELECT COUNT(*)::int FROM "Tasks" WHERE ${allTasks} OR "user" = CAST(${userId} AS uuid)) AS tasks,
+      (SELECT COUNT(*)::int FROM "Invoices") AS invoices,
+      (SELECT COUNT(*)::int FROM "crm_campaigns") AS campaigns,
+      (SELECT COUNT(*)::int FROM "crm_Targets") AS targets,
+      (SELECT COUNT(*)::int FROM "Documents") AS documents,
+      (SELECT COUNT(*)::int FROM "Boards") AS projects,
+      (SELECT COUNT(*)::int FROM "crm_Contacts" WHERE "deletedAt" IS NULL) AS contacts,
+      (SELECT COUNT(*)::int FROM "crm_Contracts" WHERE "deletedAt" IS NULL) AS contracts,
+      (SELECT COUNT(*)::int FROM "Users" WHERE "userStatus"::text = 'ACTIVE') AS users,
+      (SELECT COUNT(*)::int FROM "crm_Accounts" WHERE "deletedAt" IS NULL) AS accounts,
+      (SELECT COUNT(*)::int FROM "crm_Opportunities" WHERE "deletedAt" IS NULL) AS opportunities,
+      (SELECT COUNT(*)::int FROM "Tasks" WHERE "user" = CAST(${userId} AS uuid)) AS users_tasks
+  `;
+  return rows[0];
+}
 
 async function fetchDashboardMetrics(
   userId: string,
-  displayCurrency: string
+  displayCurrency: string,
+  allTasks: boolean
 ): Promise<DashboardMetrics> {
-  const [
-    leads,
-    tasks,
-    invoices,
-    campaigns,
-    targets,
-    storage,
-    projects,
-    contacts,
-    contracts,
-    users,
-    accounts,
-    revenue,
-    documents,
-    opportunities,
-    usersTasks,
-  ] = await Promise.all([
-    getLeadsCount(),
-    getTasksCount(),
-    getInvoicesCount(),
-    getCampaignsCount(),
-    getTargetsCount(),
+  const [counts, storage, revenue] = await Promise.all([
+    fetchDashboardCounts(userId, allTasks),
     getStorageSize(),
-    getBoardsCount(),
-    getContactCount(),
-    getContractsCount(),
-    getActiveUsersCount(),
-    getAccountsCount(),
     getExpectedRevenue(displayCurrency),
-    getDocumentsCount(),
-    getOpportunitiesCount(),
-    getUsersTasksCount(userId),
   ]);
 
   return {
-    leads,
-    tasks,
-    invoices,
-    campaigns,
-    targets,
+    leads: asCount(counts.leads),
+    tasks: asCount(counts.tasks),
+    invoices: asCount(counts.invoices),
+    campaigns: asCount(counts.campaigns),
+    targets: asCount(counts.targets),
     storage,
-    projects,
-    contacts,
-    contracts,
-    users,
-    accounts,
+    projects: asCount(counts.projects),
+    contacts: asCount(counts.contacts),
+    contracts: asCount(counts.contracts),
+    users: asCount(counts.users),
+    accounts: asCount(counts.accounts),
     revenue,
-    documents,
-    opportunities,
-    usersTasks,
+    documents: asCount(counts.documents),
+    opportunities: asCount(counts.opportunities),
+    usersTasks: asCount(counts.users_tasks),
   };
 }
 
 /** Dashboard tiles — parallel queries + short cross-request cache. */
-export async function loadDashboardMetrics(userId: string, displayCurrency: string) {
+export async function loadDashboardMetrics(
+  userId: string,
+  displayCurrency: string,
+  allTasks: boolean
+) {
   return unstable_cache(
-    () => fetchDashboardMetrics(userId, displayCurrency),
-    ["dashboard-metrics-v1", userId, displayCurrency],
+    () => fetchDashboardMetrics(userId, displayCurrency, allTasks),
+    ["dashboard-metrics-v2", userId, displayCurrency, allTasks ? "all" : "own"],
     { revalidate: 90, tags: [`dashboard-${userId}`] }
   )();
 }

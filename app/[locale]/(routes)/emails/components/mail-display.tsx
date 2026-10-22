@@ -34,7 +34,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { ConnectedAccount, Mail } from "@/app/[locale]/(routes)/emails/data";
-import { fetchEmailDetail } from "@/lib/email/client-email-cache";
+import { fetchEmailDetail, invalidateEmailDetail } from "@/lib/email/client-email-cache";
 import {
   archiveEmail,
   deleteEmailPermanent,
@@ -97,6 +97,26 @@ export function MailDisplay({
       cancelled = true;
     };
   }, [mail?.id]);
+
+  const bodyLoading = Boolean(
+    mail?.id && fullEmail && !fullEmail.bodyText && !fullEmail.bodyHtml
+  );
+
+  useEffect(() => {
+    if (!mail?.id || !bodyLoading) return;
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      tries += 1;
+      invalidateEmailDetail(mail.id);
+      fetchEmailDetail(mail.id)
+        .then((data) => {
+          if (data) setFullEmail(data);
+        })
+        .catch(() => {});
+      if (tries >= 24) window.clearInterval(timer);
+    }, 1500);
+    return () => window.clearInterval(timer);
+  }, [mail?.id, bodyLoading]);
 
   const composeMail: Mail | null = fullEmail
     ? {
@@ -416,6 +436,9 @@ export function MailDisplay({
                 className="shrink-0"
               />
               <div className="relative isolate min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-auto overscroll-contain bg-muted/30 dark:bg-muted/15">
+                {bodyLoading && (
+                  <p className="px-5 py-3 text-sm text-muted-foreground">Loading message body…</p>
+                )}
                 <EmailConversationBody
                   bodyText={fullEmail.bodyText}
                   bodyHtml={fullEmail.bodyHtml}
