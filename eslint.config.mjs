@@ -13,18 +13,13 @@ const config = [
       "react-hooks/incompatible-library": "off",
     },
   },
+  // Existing code that eslint-config-next 16.4.2 (react-hooks 7.1.1) newly
+  // flags. Each rule is off only for the files where it fires; fix them in a
+  // follow-up and drop them from these lists.
   {
-    // Existing code that eslint-config-next 16.4.2 (react-hooks 7.1.1) newly
-    // flags. Kept out of the Next security bump; fix these files in a follow-up
-    // and drop them from this list. Every other file stays fully checked.
     files: [
-      "app/[[]locale]/(auth)/sign-in/components/LoginComponent.tsx",
-      "app/[[]locale]/(routes)/components/nav-user.tsx",
-      "app/[[]locale]/(routes)/components/ui/AvatarDropdown.tsx",
-      "app/[[]locale]/(routes)/crm/dashboard/_components/CRMKanban.tsx",
       "app/[[]locale]/(routes)/profile/components/CalendarConnectionsList.tsx",
       "app/[[]locale]/(routes)/profile/components/ProfilePhotoForm.tsx",
-      "app/[[]locale]/(routes)/projects/boards/[[]boardId]/components/Kanban.tsx",
       "app/[[]locale]/(routes)/projects/boards/[[]boardId]/dialogs/DeleteProject.tsx",
       "app/[[]locale]/(routes)/projects/boards/[[]boardId]/dialogs/NewSection.tsx",
       "app/[[]locale]/(routes)/projects/boards/[[]boardId]/forms/NewSection.tsx",
@@ -33,17 +28,29 @@ const config = [
       "app/[[]locale]/(routes)/projects/dialogs/UpdateTask.tsx",
       "app/[[]locale]/(routes)/projects/forms/UpdateProject.tsx",
       "components/CommandComponent.tsx",
-      "components/modals/ImportTargetsModal.tsx",
-      "components/ui/sidebar.tsx",
       "hooks/use-mobile.tsx",
     ],
-    rules: {
-      "@next/next/no-location-assign-relative-destination": "off",
-      "react-hooks/globals": "off",
-      "react-hooks/preserve-manual-memoization": "off",
-      "react-hooks/refs": "off",
-      "react-hooks/set-state-in-effect": "off",
-    },
+    rules: { "react-hooks/set-state-in-effect": "off" },
+  },
+  {
+    files: [
+      "app/[[]locale]/(routes)/crm/dashboard/_components/CRMKanban.tsx",
+      "app/[[]locale]/(routes)/projects/boards/[[]boardId]/components/Kanban.tsx",
+      "components/ui/sidebar.tsx",
+    ],
+    rules: { "react-hooks/refs": "off" },
+  },
+  {
+    files: [
+      "app/[[]locale]/(routes)/projects/boards/[[]boardId]/components/Kanban.tsx",
+    ],
+    rules: { "react-hooks/globals": "off" },
+  },
+  {
+    files: [
+      "components/modals/ImportTargetsModal.tsx",
+    ],
+    rules: { "react-hooks/preserve-manual-memoization": "off" },
   },
   {
     files: ["plugins/**/*.{ts,tsx}", "plugins-private/**/*.{ts,tsx}"],
