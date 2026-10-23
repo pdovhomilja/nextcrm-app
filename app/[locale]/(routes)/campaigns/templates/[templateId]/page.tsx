@@ -1,4 +1,5 @@
 import { getTemplate } from "@/actions/campaigns/templates/get-template";
+import { getCanvaConnectionState } from "@/actions/canva/designs";
 import TemplateEditorForm from "../new/components/TemplateEditorForm";
 
 type Props = {
@@ -7,7 +8,10 @@ type Props = {
 
 export default async function EditTemplatePage({ params }: Props) {
   const { templateId } = await params;
-  const template = await getTemplate(templateId);
+  const [template, canva] = await Promise.all([
+    getTemplate(templateId),
+    getCanvaConnectionState().catch(() => ({ connected: false })),
+  ]);
 
   if (!template) {
     return (
@@ -26,6 +30,7 @@ export default async function EditTemplatePage({ params }: Props) {
         </p>
       </div>
       <TemplateEditorForm
+        canvaConnected={canva.connected}
         templateId={template.id}
         initialData={{
           name: template.name,

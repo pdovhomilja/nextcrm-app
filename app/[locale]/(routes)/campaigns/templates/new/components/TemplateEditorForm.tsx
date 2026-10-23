@@ -12,6 +12,7 @@ import { updateTemplate } from "@/actions/campaigns/templates/update-template";
 import { generateTemplate } from "@/actions/campaigns/templates/generate-template";
 import { previewTemplate } from "@/actions/campaigns/templates/preview-template";
 import { AiGenerateControls } from "@/components/campaigns/AiGenerateControls";
+import { CanvaDesignPanel } from "@/app/[locale]/(routes)/campaigns/templates/new/components/CanvaDesignPanel";
 import type { AiQualityMode } from "@/lib/llm/quality-modes";
 
 type InitialData = {
@@ -25,9 +26,10 @@ type InitialData = {
 type Props = {
   initialData?: InitialData;
   templateId?: string;
+  canvaConnected?: boolean;
 };
 
-export default function TemplateEditorForm({ initialData, templateId }: Props) {
+export default function TemplateEditorForm({ initialData, templateId, canvaConnected = false }: Props) {
   const router = useRouter();
   const isEditing = !!templateId;
 
@@ -203,6 +205,15 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
           {isGenerating ? "Generating..." : "Generate"}
         </Button>
       </div>
+
+      <CanvaDesignPanel
+        connected={canvaConnected}
+        defaultTitle={name}
+        onImported={(html) => {
+          setContentHtml(html);
+          setContentJson({});
+        }}
+      />
 
       {/* TipTap Editor */}
       <div className="flex flex-col gap-2">

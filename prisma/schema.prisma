@@ -1038,6 +1038,7 @@ model Users {
   emailAccounts        EmailAccount[]
   calendarConnections  CalendarConnection[]
   linkedInConnection   LinkedInConnection?
+  canvaConnection      CanvaConnection?
   emails               Email[]
   teamChatMessages     TeamChatMessage[]
   teamChatReads        TeamChatRead[]
@@ -1059,6 +1060,7 @@ model Users {
   invoiceActivity              Invoice_Activity[]    @relation("InvoiceActivityActor")
   ordersOwned crm_Orders[] @relation("OrderOwner")
   scheduleOrganized TeamScheduleEntry[] @relation("ScheduleOrganizer")
+  hrmCandidatesCreated HrmCandidate[] @relation("HrmCandidateCreatedBy")
   permissionGroups  PermissionGroupMember[]
   permissionOverrides UserPermission[]
   /** When false, user may only use assigned VenSai ventures (not CRM modules). */
@@ -1721,6 +1723,81 @@ model EmailEmbedding {
 
 enum CalendarProvider {
   google
+}
+
+enum HrmEmploymentType {
+  full_time
+  part_time
+  permanent
+  contract
+  internship
+  temporary
+}
+
+enum HrmCandidateStatus {
+  new
+  screening
+  interview
+  offer
+  hired
+  rejected
+}
+
+model HrmSettings {
+  id                    String   @id @default("default")
+  offerBrandTemplateId  String?
+  updatedAt             DateTime @updatedAt
+}
+
+model HrmCandidate {
+  id               String              @id @default(uuid()) @db.Uuid
+  fullName         String
+  email            String
+  phone            String?
+  location         String?
+  headline         String?
+  summary          String?             @db.Text
+  skills           String[]            @default([])
+  experience       Json                @default("[]")
+  education        Json                @default("[]")
+  jobTitle         String?
+  employmentType   HrmEmploymentType
+  compensation     String?
+  startDate        DateTime?
+  status           HrmCandidateStatus  @default(new)
+  resumeUrl        String?
+  resumeFileName   String?
+  resumeText       String?             @db.Text
+  offerDesignId    String?
+  offerEditUrl     String?
+  offerPdfUrl      String?
+  offerSentAt      DateTime?
+  createdBy        String?             @db.Uuid
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  creator Users? @relation("HrmCandidateCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([email])
+  @@index([createdBy])
+}
+
+model CanvaConnection {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @unique @db.Uuid
+  canvaUserId           String?
+  displayName           String?
+  accessTokenEncrypted  String
+  refreshTokenEncrypted String?
+  tokenExpiresAt        DateTime?
+  scope                 String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model LinkedInConnection {

@@ -23,6 +23,7 @@ import getScheduleMenuItem from "./menu-items/Schedule";
 import getReportsMenuItem from "./menu-items/Reports";
 import getDocumentsMenuItem from "./menu-items/Documents";
 import getInvoicesMenuItem from "./menu-items/Invoices";
+import getHrmMenuItem from "./menu-items/Hrm";
 import getAdministrationMenuItem from "./menu-items/Administration";
 import getCampaignsMenuItem from "./menu-items/Campaigns";
 import type { NavItem } from "./nav-main";
@@ -136,6 +137,7 @@ export function AppSidebar({
     getReportsMenuItem({ title: dict?.reports || "Reports" }),
     getDocumentsMenuItem({ title: dict?.documents || "Documents" }),
     getInvoicesMenuItem({ title: dict?.invoices || "Invoices" }),
+    getHrmMenuItem({ title: "Hiring" }),
   ];
   const navItems = filterNavByPermissions(allNavItems, permissions);
 

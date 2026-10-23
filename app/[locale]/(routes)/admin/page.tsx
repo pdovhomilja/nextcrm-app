@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Users,
   FileText,
+  Palette,
 } from "lucide-react";
 
 const ENV_HINTS = [
@@ -61,6 +62,7 @@ export default async function AdminPage() {
         <AdminLink href="/admin/llm-keys" icon={KeyRound} title="AI & API keys" desc="LLM and integration secrets" />
         <AdminLink href="/admin/crm-settings" icon={Settings} title="CRM settings" desc="Pipeline, defaults, modules" />
         <AdminLink href="/admin/invoices/settings" icon={FileText} title="Invoices & letterhead" desc="PDF branding (proposals / quotes next)" />
+        <AdminLink href="/admin/canva" icon={Palette} title="Canva" desc="Design campaign emails in Canva and import them" />
       </div>
     </div>
   );

@@ -33,6 +33,7 @@ export const FEATURES = [
   { key: "documents", label: "Documents", group: "Work", routes: ["/documents"] },
   { key: "reports", label: "Reports", group: "Insights", routes: ["/reports"] },
   { key: "invoices", label: "Invoices", group: "Finance", routes: ["/invoices"] },
+  { key: "hrm", label: "Hiring", group: "People", routes: ["/hrm"] },
 ] as const satisfies readonly FeatureDefinition[];
 
 export type FeatureKey = (typeof FEATURES)[number]["key"];
@@ -52,6 +53,7 @@ export type PermissionMatrix = Record<FeatureKey, Record<PermissionAction, boole
 
 const ALL: Record<PermissionAction, boolean> = { view: true, create: true, edit: true, delete: true };
 const VIEW_ONLY: Record<PermissionAction, boolean> = { view: true, create: false, edit: false, delete: false };
+const NONE: Record<PermissionAction, boolean> = { view: false, create: false, edit: false, delete: false };
 
 function matrixOf(
   base: Record<PermissionAction, boolean>,
@@ -72,10 +74,12 @@ export const ROLE_DEFAULTS: Record<AppRole, PermissionMatrix> = {
   user: matrixOf(ALL, {
     products: VIEW_ONLY,
     price_lists: VIEW_ONLY,
+    hrm: NONE,
   }),
   trainee: matrixOf(ALL, {
     products: VIEW_ONLY,
     price_lists: VIEW_ONLY,
+    hrm: NONE,
   }),
 };
 

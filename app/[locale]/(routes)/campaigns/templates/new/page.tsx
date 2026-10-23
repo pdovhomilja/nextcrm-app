@@ -1,6 +1,8 @@
 import TemplateEditorForm from "./components/TemplateEditorForm";
+import { getCanvaConnectionState } from "@/actions/canva/designs";
 
-export default function NewTemplatePage() {
+export default async function NewTemplatePage() {
+  const canva = await getCanvaConnectionState().catch(() => ({ connected: false }));
   return (
     <div className="flex flex-col gap-6 p-6">
       <div>
@@ -9,7 +11,7 @@ export default function NewTemplatePage() {
           Create a campaign email template
         </p>
       </div>
-      <TemplateEditorForm />
+      <TemplateEditorForm canvaConnected={canva.connected} />
     </div>
   );
 }
