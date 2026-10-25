@@ -146,7 +146,7 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "xmlbuilder2": "^4.0.3",
-    "zod": "^4.3.6"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
