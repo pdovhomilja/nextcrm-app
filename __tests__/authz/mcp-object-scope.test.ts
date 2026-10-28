@@ -122,6 +122,24 @@ describe("crm-contracts", () => {
     await call(crmContractTools, "crm_update_contract", { id: CONTRACT.other, title: `other-${tag}` }, boss);
   });
 
+  const accountOf = async (id: string) =>
+    (await prismadb.crm_Contracts.findUnique({ where: { id }, select: { account: true } }))!.account;
+
+  it("crm_update_contract: user cannot move his contract to another user's account", async () => {
+    await expect(
+      call(crmContractTools, "crm_update_contract", { id: CONTRACT.rep, account: ACC.other }, rep),
+    ).rejects.toThrow("NOT_FOUND");
+    expect(await accountOf(CONTRACT.rep)).toBeNull();
+  });
+
+  it("crm_update_contract: own account as user, any account as manager, unchanged account as user", async () => {
+    await call(crmContractTools, "crm_update_contract", { id: CONTRACT.rep, account: ACC.rep }, rep);
+    expect(await accountOf(CONTRACT.rep)).toBe(ACC.rep);
+    await call(crmContractTools, "crm_update_contract", { id: CONTRACT.rep, account: ACC.other }, boss);
+    expect(await accountOf(CONTRACT.rep)).toBe(ACC.other);
+    await call(crmContractTools, "crm_update_contract", { id: CONTRACT.rep, account: ACC.other, title: `rep-${tag}` }, rep);
+  });
+
   it("crm_create_contract: user cannot attach a contract to another user's account", async () => {
     await expect(
       call(crmContractTools, "crm_create_contract", { title: `new-${tag}-x`, value: 1, account: ACC.other }, rep),
