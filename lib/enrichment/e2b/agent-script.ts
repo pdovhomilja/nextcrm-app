@@ -9,7 +9,7 @@
 export function getAgentScript(): string {
   return `
 import Anthropic from '@anthropic-ai/sdk';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 const companyName    = process.env.COMPANY_NAME    || '';
 const companyWebsite = process.env.COMPANY_WEBSITE || '';
@@ -59,7 +59,7 @@ const tools = [
 
 function runBrowser(args) {
   try {
-    return execSync('agent-browser --ignore-https-errors ' + args.map(a => JSON.stringify(a)).join(' '), {
+    return execFileSync('agent-browser', ['--ignore-https-errors', ...args], {
       encoding: 'utf8',
       timeout: 30000,
     });
