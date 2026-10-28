@@ -97,6 +97,7 @@ Your client lists each tool's input schema (from its zod definition) when it con
 - **Single items** return `{ data }`.
 - **Deletes are mostly soft deletes.** CRM records, campaigns, documents and boards get `deletedAt` and `deletedBy`. `projects_delete_task` sets the task to `COMPLETE`. `projects_delete_section` hard-deletes, and only an empty section.
 - **Enrichment tools** queue Inngest jobs and return before the enrichment finishes.
+- **`crm_add_to_target_list`** adds only targets the caller can access, like the web app, and reports that number in `added`.
 - **Documents:** `crm_create_document` and `crm_get_upload_url` return a presigned URL. The client uploads the file to object storage itself.
 
 ### Errors
@@ -116,7 +117,7 @@ Failed calls return `isError: true` and a JSON body `{ "error": "...", "code": "
 ## Add a tool
 
 1. Add an object to the array in the right `lib/mcp/tools/*.ts` file: `name`, `description`, `schema` (a `z.object`) and `handler(args, userId, user)`.
-2. In the handler, check access with the `@/lib/authz` helpers or a `…ReadScopeWhere(user)` filter, exactly like the matching server action.
+2. In the handler, check access with the `@/lib/authz` helpers or a `…ReadScopeWhere(user)` filter, exactly like the matching server action. This covers every id the tool takes, not only the main record: a linked account, template, target list or a list of target ids needs the same check the web app makes. A denied id returns `NOT_FOUND`. Tools that take an id are listed in `__tests__/mcp/tool-id-inventory.test.ts`, which fails until a new one is added with a note on how its ids are checked.
 3. Throw with the helpers in `lib/mcp/helpers.ts` (`notFound`, `forbidden`, `conflict`, `validationError`) so the error maps to the right code.
 4. For a new file, export its array from `lib/mcp/tools/index.ts` and add it to `allTools`.
 5. Add a test under `lib/mcp/__tests__/` or `__tests__/mcp/`. Existing suites test scope for the `user` role.
