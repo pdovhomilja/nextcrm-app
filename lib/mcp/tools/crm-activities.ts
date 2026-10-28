@@ -1,7 +1,14 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz";
-import { assertCanReadActivityForEntity } from "@/lib/authz/scopes/crm";
+import {
+  assertCanReadActivityForEntity,
+  assertCanWriteAccount,
+  assertCanWriteContact,
+  assertCanWriteContract,
+  assertCanWriteLead,
+  assertCanWriteOpportunity,
+} from "@/lib/authz/scopes/crm";
 import {
   paginationSchema,
   paginationArgs,
@@ -17,6 +24,16 @@ const entityLinkSchema = z.object({
   entityType: z.enum(["account", "contact", "lead", "opportunity", "contract"]),
   entityId: z.string().uuid(),
 });
+
+// Linking an activity to a record is a write on that record (same map as the
+// createActivity action).
+const ASSERT_CAN_WRITE: Record<string, (user: AuthzUser, id: string) => Promise<void>> = {
+  account: assertCanWriteAccount,
+  contact: assertCanWriteContact,
+  lead: assertCanWriteLead,
+  opportunity: assertCanWriteOpportunity,
+  contract: assertCanWriteContract,
+};
 
 export const crmActivityTools = [
   {
@@ -112,8 +129,13 @@ export const crmActivityTools = [
         status: string;
         links?: Array<{ entityType: string; entityId: string }>;
       },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
+      for (const l of args.links ?? []) {
+        if (!Object.hasOwn(ASSERT_CAN_WRITE, l.entityType)) notFound(l.entityType);
+        await assertScopeOrNotFound(() => ASSERT_CAN_WRITE[l.entityType](user, l.entityId), l.entityType);
+      }
       const { links, date, ...rest } = args;
       const activity = await prismadb.crm_Activities.create({
         data: {

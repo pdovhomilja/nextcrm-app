@@ -9,6 +9,7 @@ jest.mock("@/lib/prisma", () => ({
       update: jest.fn(),
     },
     targetsToTargetLists: { createMany: jest.fn(), deleteMany: jest.fn() },
+    crm_Targets: { findMany: jest.fn() },
   },
 }));
 
@@ -79,6 +80,7 @@ describe.each([
   it("manager can act on any list", async () => {
     (prismadb.crm_TargetLists.findFirst as jest.Mock).mockResolvedValue({ id: LIST_ID });
     (prismadb.crm_TargetLists.update as jest.Mock).mockResolvedValue({ id: LIST_ID, deletedAt: null });
+    (prismadb.crm_Targets.findMany as jest.Mock).mockResolvedValue([{ id: LIST_ID }]);
     await run(name, args, MANAGER);
     const where = (prismadb.crm_TargetLists.findFirst as jest.Mock).mock.calls[0][0].where;
     expect(where).toEqual({ id: LIST_ID, deletedAt: null });

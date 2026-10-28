@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz";
-import { targetListReadScopeWhere } from "@/lib/authz/scopes/crm";
+import { filterAuthorizedTargetIds, targetListReadScopeWhere } from "@/lib/authz/scopes/crm";
 import {
   paginationSchema,
   paginationArgs,
@@ -129,8 +129,10 @@ export const crmTargetListTools = [
       user: AuthzUser
     ) {
       await assertTargetListInScope(user, args.target_list_id);
+      // Only attach targets the caller can access (same as the addTargetsToList action).
+      const authorizedIds = await filterAuthorizedTargetIds(user, args.target_ids);
       await prismadb.targetsToTargetLists.createMany({
-        data: args.target_ids.map((tid) => ({
+        data: authorizedIds.map((tid) => ({
           target_id: tid,
           target_list_id: args.target_list_id,
         })),
@@ -138,7 +140,7 @@ export const crmTargetListTools = [
       });
       return itemResponse({
         target_list_id: args.target_list_id,
-        added: args.target_ids.length,
+        added: authorizedIds.length,
       });
     },
   },
