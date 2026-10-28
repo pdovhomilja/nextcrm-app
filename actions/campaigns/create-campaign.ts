@@ -43,6 +43,15 @@ export const createCampaign = async (data: {
     }
   }
 
+  for (const templateId of Array.from(new Set(data.steps.map((s) => s.template_id)))) {
+    try {
+      await assertCanReadTemplate(user, templateId);
+    } catch (e) {
+      if (e instanceof AuthorizationError) return { error: "Forbidden" };
+      throw e;
+    }
+  }
+
   if (data.target_list_ids?.length) {
     const accessible = await prismadb.crm_TargetLists.findMany({
       where: {

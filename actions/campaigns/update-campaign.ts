@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import {
   requireAuthenticated,
   assertCanWriteCampaign,
+  assertCanReadTemplate,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -31,6 +32,15 @@ export const updateCampaign = async (
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Not found" };
     throw e;
+  }
+
+  if (data.template_id) {
+    try {
+      await assertCanReadTemplate(user, data.template_id);
+    } catch (e) {
+      if (e instanceof AuthorizationError) return { error: "Forbidden" };
+      throw e;
+    }
   }
 
   return prismadb.crm_campaigns.update({ where: { id }, data });
