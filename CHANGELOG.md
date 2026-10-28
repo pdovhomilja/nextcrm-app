@@ -5,6 +5,17 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.0...v0.37.1) (2026-10-28)
+
+
+### Fixed
+
+* **authz:** web UI checks templates and new contract accounts like MCP (F1b) ([#416](https://github.com/pdovhomilja/nextcrm-app/issues/416)) ([2d56139](https://github.com/pdovhomilja/nextcrm-app/commit/2d56139f8dda9034c2f32006e87d72f258520bfe))
+* **deps:** update next to 16.4.2 (CVE-2026-96889, GHSA-673q-mjm6-r5xr, GHSA-p3m5-59mp-jv5r) ([f6cb2da](https://github.com/pdovhomilja/nextcrm-app/commit/f6cb2da252c9d35853526734c336cb217d42872c))
+* **deps:** update next to 16.4.2 (security: CVE-2026-96889, GHSA-673q-mjm6-r5xr, GHSA-p3m5-59mp-jv5r) ([8c1a9e7](https://github.com/pdovhomilja/nextcrm-app/commit/8c1a9e7a58995f7dacb9975c65cfc1c4cbc29677))
+* **enrichment:** run agent-browser without a shell in the E2B agent ([#415](https://github.com/pdovhomilja/nextcrm-app/issues/415)) ([83b80f1](https://github.com/pdovhomilja/nextcrm-app/commit/83b80f1edf5221d0262ae70c1b21acc99698ab81))
+* **mcp:** apply the web UI's object-level checks in MCP tools ([#414](https://github.com/pdovhomilja/nextcrm-app/issues/414)) ([2ff9f2d](https://github.com/pdovhomilja/nextcrm-app/commit/2ff9f2db9522d901567de110f5d4b631bcddebb4))
+
 ## [0.37.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.36.0...v0.37.0) (2026-10-19)
 
 
