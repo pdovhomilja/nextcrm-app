@@ -138,6 +138,13 @@ export const crmContractTools = [
     }),
     async handler(args: Record<string, any>, userId: string, user: AuthzUser) {
       await assertScopeOrNotFound(() => assertCanWriteContract(user, args.id), "Contract");
+      // Same rule as the updateContract action: moving to another account needs write on it.
+      if (args.account) {
+        const current = await prismadb.crm_Contracts.findUnique({ where: { id: args.id }, select: { account: true } });
+        if (args.account !== current?.account) {
+          await assertScopeOrNotFound(() => assertCanWriteAccount(user, args.account), "Account");
+        }
+      }
       const { id, startDate, endDate, ...rest } = args;
       const contract = await prismadb.crm_Contracts.update({
         where: { id },

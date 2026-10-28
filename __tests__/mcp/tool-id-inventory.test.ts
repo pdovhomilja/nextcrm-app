@@ -46,7 +46,7 @@ const REVIEWED: Record<string, string> = {
   crm_list_contracts: "contractReadScopeWhere",
   crm_get_contract: "contractReadScopeWhere",
   crm_create_contract: "account: assertCanWriteAccount (as createContract)",
-  crm_update_contract: "assertCanWriteContract (as updateContract); a newly given account is NOT checked yet, same as the UI: follow-up F1b",
+  crm_update_contract: "assertCanWriteContract; changed account: assertCanWriteAccount (as updateContract)",
   crm_delete_contract: "assertCanWriteContract (as deleteContract)",
   crm_list_activities: "entityId: assertCanReadActivityForEntity",
   crm_get_activity: "createdBy = caller",

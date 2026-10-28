@@ -9,6 +9,7 @@ import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
 import {
   requireAuthenticated,
   assertCanWriteContract,
+  assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -58,6 +59,14 @@ const handler = async (data: InputType): Promise<ReturnType> => {
   }
 
   const before = await prismadb.crm_Contracts.findUnique({ where: { id, deletedAt: null } });
+
+  try {
+    // Parent-write, as createContract: moving the contract to another account requires write on it.
+    if (account && account !== before?.account) await assertCanWriteAccount(user, account);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   try {
     const defaultCurrency = await getDefaultCurrency();
