@@ -31,6 +31,8 @@ const boss: AuthzUser = { id: U.boss, role: "manager" };
 const ACC = { rep: randomUUID(), other: randomUUID() };
 const CONTRACT = { rep: randomUUID(), other: randomUUID() };
 const CONTACT = { rep: randomUUID(), other: randomUUID() };
+const LEAD = { rep: randomUUID(), other: randomUUID() };
+const OPP = { rep: randomUUID(), other: randomUUID() };
 const TARGET = { rep: randomUUID(), other: randomUUID() };
 const LIST = { rep: randomUUID(), other: randomUUID() };
 const TPL = { rep: randomUUID(), other: randomUUID() };
@@ -58,6 +60,12 @@ beforeAll(async () => {
     });
     await prismadb.crm_Contacts.create({
       data: { id: CONTACT[k], last_name: `${k}-${tag}`, email: `c-${k}-${tag}@mcp-scope.test`, assigned_to: U[k], createdBy: U[k] },
+    });
+    await prismadb.crm_Leads.create({
+      data: { id: LEAD[k], lastName: `${k}-${tag}`, assigned_to: U[k], createdBy: U[k] },
+    });
+    await prismadb.crm_Opportunities.create({
+      data: { id: OPP[k], name: `${k}-${tag}`, assigned_to: U[k], createdBy: U[k] },
     });
     await prismadb.crm_Targets.create({
       data: { id: TARGET[k], last_name: `${k}-${tag}`, email: `t-${k}-${tag}@mcp-scope.test`, created_by: U[k] },
@@ -90,6 +98,8 @@ afterAll(async () => {
   await prismadb.crm_Target_Enrichment.deleteMany({ where: { targetId: { in: Object.values(TARGET) } } });
   await prismadb.targetsToTargetLists.deleteMany({ where: { target_list_id: { in: Object.values(LIST) } } });
   await prismadb.crm_TargetLists.deleteMany({ where: { id: { in: Object.values(LIST) } } });
+  await prismadb.crm_Leads.deleteMany({ where: { id: { in: Object.values(LEAD) } } });
+  await prismadb.crm_Opportunities.deleteMany({ where: { id: { in: Object.values(OPP) } } });
   await prismadb.crm_Contacts.deleteMany({ where: { id: { in: Object.values(CONTACT) } } });
   await prismadb.crm_Targets.deleteMany({ where: { id: { in: Object.values(TARGET) } } });
   await prismadb.crm_Contracts.deleteMany({ where: { OR: [{ id: { in: Object.values(CONTRACT) } }, { title: { startsWith: `new-${tag}` } }] } });
@@ -174,6 +184,13 @@ describe("crm-target-lists", () => {
     expect(JSON.stringify(list)).not.toContain(TARGET.other);
   });
 
+  it("crm_add_to_target_list: user can add his own target to his own list", async () => {
+    await prismadb.targetsToTargetLists.deleteMany({ where: { target_list_id: LIST.rep } });
+    const res = await call(crmTargetListTools, "crm_add_to_target_list", { target_list_id: LIST.rep, target_ids: [TARGET.rep] }, rep);
+    expect(res.data.added).toBe(1);
+    expect(await members(LIST.rep)).toContain(TARGET.rep);
+  });
+
   it("crm_add_to_target_list: manager can add any target", async () => {
     await call(crmTargetListTools, "crm_add_to_target_list", { target_list_id: LIST.other, target_ids: [TARGET.other] }, boss);
     expect(await members(LIST.other)).toEqual([TARGET.other]);
@@ -226,13 +243,19 @@ describe("crm-activities", () => {
     ["account", ACC],
     ["contact", CONTACT],
     ["contract", CONTRACT],
+    ["lead", LEAD],
+    ["opportunity", OPP],
   ] as const)("crm_create_activity: user cannot link to another user's %s", async (entityType, ids) => {
     await expect(note(`act-${tag}-x`, entityType, ids.other, rep)).rejects.toThrow("NOT_FOUND");
     expect(await prismadb.crm_Activities.count({ where: { title: `act-${tag}-x` } })).toBe(0);
   });
 
-  it("crm_create_activity: own record as user, any record as manager", async () => {
-    await note(`act-${tag}-own`, "account", ACC.rep, rep);
-    await note(`act-${tag}-boss`, "account", ACC.other, boss);
+  it.each([
+    ["account", ACC],
+    ["lead", LEAD],
+    ["opportunity", OPP],
+  ] as const)("crm_create_activity: own %s as user, any as manager", async (entityType, ids) => {
+    await note(`act-${tag}-own`, entityType, ids.rep, rep);
+    await note(`act-${tag}-boss`, entityType, ids.other, boss);
   });
 });
