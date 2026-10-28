@@ -136,7 +136,7 @@
     "react-youtube": "^10.1.0",
     "recharts": "2.15.4",
     "resend": "6.9.2",
-    "sanitize-html": "^2.17.7",
+    "sanitize-html": "^2.18.1",
     "sharp": "^0.35.5",
     "sonner": "^2.0.7",
     "svix": "1.84.1",
