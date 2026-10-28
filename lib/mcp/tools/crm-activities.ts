@@ -133,7 +133,6 @@ export const crmActivityTools = [
       user: AuthzUser
     ) {
       for (const l of args.links ?? []) {
-        if (!Object.hasOwn(ASSERT_CAN_WRITE, l.entityType)) notFound(l.entityType);
         await assertScopeOrNotFound(() => ASSERT_CAN_WRITE[l.entityType](user, l.entityId), l.entityType);
       }
       const { links, date, ...rest } = args;
