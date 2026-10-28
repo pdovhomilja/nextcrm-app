@@ -3,6 +3,8 @@ import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
 import type { AuthzUser } from "@/lib/authz";
 import {
+  assertCanReadTargetList,
+  assertCanReadTemplate,
   campaignReadScopeWhere,
   campaignTemplateReadScopeWhere,
 } from "@/lib/authz/scopes/crm";
@@ -14,6 +16,7 @@ import {
   notFound,
   conflict,
   softDeleteData,
+  assertScopeOrNotFound,
 } from "../helpers";
 
 // Object-level authorization for campaign tools (GHSA-c9vg-c532-ppqx).
@@ -26,6 +29,12 @@ async function assertCampaignInScope(user: AuthzUser, campaignId: string): Promi
     select: { id: true },
   });
   if (!row) notFound("Campaign");
+}
+
+// A template used by a campaign or step must be one the caller can read
+// (same rule as the createCampaign action).
+async function assertTemplateInScope(user: AuthzUser, templateId: string | undefined): Promise<void> {
+  if (templateId) await assertScopeOrNotFound(() => assertCanReadTemplate(user, templateId), "Template");
 }
 
 export const campaignTools = [
@@ -84,8 +93,10 @@ export const campaignTools = [
     }),
     async handler(
       args: { name: string; description?: string; from_name?: string; reply_to?: string; template_id?: string },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
+      await assertTemplateInScope(user, args.template_id);
       const campaign = await prismadb.crm_campaigns.create({
         data: {
           v: 0,
@@ -118,6 +129,7 @@ export const campaignTools = [
       });
       if (!existing) notFound("Campaign");
       if (existing.status === "sending") conflict("Cannot update a campaign that is currently sending");
+      await assertTemplateInScope(user, args.template_id);
       const { id, ...updateData } = args;
       const campaign = await prismadb.crm_campaigns.update({ where: { id }, data: updateData });
       return itemResponse(campaign);
@@ -309,6 +321,7 @@ export const campaignTools = [
         where: { id: args.campaign_id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
+      await assertTemplateInScope(user, args.template_id);
       const step = await prismadb.crm_campaign_steps.create({ data: args });
       return itemResponse(step);
     },
@@ -328,6 +341,7 @@ export const campaignTools = [
       const existing = await prismadb.crm_campaign_steps.findUnique({ where: { id: args.id } });
       if (!existing) notFound("CampaignStep");
       await assertCampaignInScope(user, existing.campaign_id);
+      await assertTemplateInScope(user, args.template_id);
       const { id, ...updateData } = args;
       const step = await prismadb.crm_campaign_steps.update({ where: { id }, data: updateData });
       return itemResponse(step);
@@ -359,6 +373,8 @@ export const campaignTools = [
         where: { id: args.campaign_id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
+      // Same rule as the createCampaign action: only target lists the caller can read.
+      await assertScopeOrNotFound(() => assertCanReadTargetList(user, args.target_list_id), "TargetList");
       await prismadb.campaignToTargetLists.create({
         data: { campaign_id: args.campaign_id, target_list_id: args.target_list_id },
       });

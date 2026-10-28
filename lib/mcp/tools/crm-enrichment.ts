@@ -3,7 +3,14 @@ import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
 import { getApiKey } from "@/lib/api-keys";
 import { missingTargetEnrichmentKey } from "@/lib/enrichment/target-enrichment-keys";
-import { itemResponse, notFound, externalError } from "../helpers";
+import type { AuthzUser } from "@/lib/authz";
+import {
+  assertCanWriteContact,
+  assertCanWriteTarget,
+  filterAuthorizedTargetIds,
+  filterWritableContactIds,
+} from "@/lib/authz/scopes/crm";
+import { itemResponse, notFound, externalError, assertScopeOrNotFound } from "../helpers";
 
 export const crmEnrichmentTools = [
   {
@@ -23,7 +30,8 @@ export const crmEnrichmentTools = [
     }),
     async handler(
       args: { contactId: string; fields: Array<{ name: string; description?: string }> },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
       const firecrawlKey = await getApiKey("FIRECRAWL", userId);
       const openaiKey = await getApiKey("OPENAI", userId);
@@ -33,6 +41,7 @@ export const crmEnrichmentTools = [
         );
       }
 
+      await assertScopeOrNotFound(() => assertCanWriteContact(user, args.contactId), "Contact");
       const contact = await prismadb.crm_Contacts.findUnique({
         where: { id: args.contactId },
         select: { id: true, email: true },
@@ -80,13 +89,16 @@ export const crmEnrichmentTools = [
     }),
     async handler(
       args: { contactIds: string[]; fields: Array<{ name: string; description?: string }> },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
       const firecrawlKey = await getApiKey("FIRECRAWL", userId);
       const openaiKey = await getApiKey("OPENAI", userId);
       if (!firecrawlKey || !openaiKey) {
         externalError("Missing required API keys (FIRECRAWL and/or OPENAI).");
       }
+      const authorized = await filterWritableContactIds(user, args.contactIds);
+      if (authorized.length !== args.contactIds.length) notFound("Contact");
 
       await inngest.send({
         name: "enrich/contacts.bulk",
@@ -113,11 +125,13 @@ export const crmEnrichmentTools = [
     }),
     async handler(
       args: { targetId: string; fields: Array<{ name: string; description?: string }> },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
       const missingKey = await missingTargetEnrichmentKey(userId);
       if (missingKey) externalError(`Missing required API key (${missingKey}).`);
 
+      await assertScopeOrNotFound(() => assertCanWriteTarget(user, args.targetId), "Target");
       const target = await prismadb.crm_Targets.findUnique({
         where: { id: args.targetId },
         select: { id: true, email: true },
@@ -165,10 +179,13 @@ export const crmEnrichmentTools = [
     }),
     async handler(
       args: { targetIds: string[]; fields: Array<{ name: string; description?: string }> },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
       const missingKey = await missingTargetEnrichmentKey(userId);
       if (missingKey) externalError(`Missing required API key (${missingKey}).`);
+      const authorized = await filterAuthorizedTargetIds(user, args.targetIds);
+      if (authorized.length !== args.targetIds.length) notFound("Target");
 
       await inngest.send({
         name: "enrich/targets.bulk",

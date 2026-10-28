@@ -1,13 +1,18 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz";
-import { contractReadScopeWhere } from "@/lib/authz/scopes/crm";
+import {
+  assertCanWriteAccount,
+  assertCanWriteContract,
+  contractReadScopeWhere,
+} from "@/lib/authz/scopes/crm";
 import {
   paginationSchema,
   paginationArgs,
   listResponse,
   itemResponse,
   notFound,
+  assertScopeOrNotFound,
 } from "../helpers";
 
 const lineItemSchema = z.object({
@@ -86,7 +91,11 @@ export const crmContractTools = [
       currency: z.string().length(3).optional(),
       lineItems: z.array(lineItemSchema).optional(),
     }),
-    async handler(args: Record<string, any>, userId: string) {
+    async handler(args: Record<string, any>, userId: string, user: AuthzUser) {
+      // Same rule as the createContract action: attaching to an account needs write on it.
+      if (args.account) {
+        await assertScopeOrNotFound(() => assertCanWriteAccount(user, args.account), "Account");
+      }
       const { lineItems, startDate, endDate, ...contractData } = args;
       const contract = await prismadb.crm_Contracts.create({
         data: {
@@ -127,11 +136,8 @@ export const crmContractTools = [
       type: z.string().optional(),
       currency: z.string().length(3).optional(),
     }),
-    async handler(args: Record<string, any>, userId: string) {
-      const existing = await prismadb.crm_Contracts.findFirst({
-        where: { id: args.id, deletedAt: null },
-      });
-      if (!existing) notFound("Contract");
+    async handler(args: Record<string, any>, userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanWriteContract(user, args.id), "Contract");
       const { id, startDate, endDate, ...rest } = args;
       const contract = await prismadb.crm_Contracts.update({
         where: { id },
@@ -149,11 +155,8 @@ export const crmContractTools = [
     name: "crm_delete_contract",
     description: "Soft-delete a CRM contract (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string) {
-      const existing = await prismadb.crm_Contracts.findFirst({
-        where: { id: args.id, deletedAt: null },
-      });
-      if (!existing) notFound("Contract");
+    async handler(args: { id: string }, userId: string, user: AuthzUser) {
+      await assertScopeOrNotFound(() => assertCanWriteContract(user, args.id), "Contract");
       const contract = await prismadb.crm_Contracts.update({
         where: { id: args.id },
         data: { deletedAt: new Date(), deletedBy: userId },
