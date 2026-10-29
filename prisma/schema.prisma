@@ -1654,6 +1654,8 @@ model Session {
   userAgent String?
   userId    String   @db.Uuid
   user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Written by the BetterAuth admin plugin (impersonation); 1.7 checks it exists at startup.
+  impersonatedBy String?
 
   @@map("session")
 }
