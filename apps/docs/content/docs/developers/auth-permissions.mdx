@@ -12,6 +12,7 @@ Authentication uses [Better Auth](https://www.better-auth.com/), configured in `
 - **Sessions:** 7 days, refreshed every 24 hours.
 - **New users:** the first user becomes an active `admin`. Later users start as `PENDING` and admins are notified. A pending or inactive user cannot use the app until an admin activates them.
 - **Admin plugin:** the Better Auth admin plugin is enabled with the roles `admin`, `manager`, `user` and `partner` (`lib/auth-permissions.ts`). None of the roles is granted any of the plugin's permissions, so its `/api/auth/admin/*` endpoints are closed; user management uses the server actions in `actions/admin/users`.
+- **Schema check:** since Better Auth 1.7, startup compares `prisma/schema.prisma` with every table and column Better Auth and its plugins write (for example `session.impersonatedBy` from the admin plugin). If one is missing, every `/api/auth/*` request fails with "Prisma schema mismatch". Enabling a plugin or upgrading Better Auth therefore needs a Prisma migration for any new fields (`npx auth generate` lists them).
 - **Testing:** outside production the `testUtils` plugin captures OTPs. See [Local setup](/docs/developers/local-setup#sign-in-locally).
 
 On the server, `getSession()` from `lib/auth-server.ts` returns the Better Auth session for the current request, or `null` when the user is not `ACTIVE`. `getSessionAnyStatus()` skips that check and is only for the pages that route pending and inactive users. In feature code, use the `@/lib/authz` helpers below instead of reading the session directly.
