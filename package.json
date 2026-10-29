@@ -46,7 +46,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
     "@mendable/firecrawl-js": "^1.29.3",
-    "@modelcontextprotocol/sdk": "^1.31.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@openai/agents": "^0.8.0",
     "@prisma/adapter-pg": "7.6.0",
     "@prisma/client": "7.6.0",
@@ -116,7 +116,7 @@
     "next": "^16.4.2",
     "next-intl": "^4.11.1",
     "next-themes": "^0.4.6",
-    "nodemailer": "^10.0.9",
+    "nodemailer": "^10.2.1",
     "openai": "^6.25.0",
     "papaparse": "^5.5.3",
     "pdf-parse": "^2.4.5",
@@ -136,7 +136,7 @@
     "react-youtube": "^10.1.0",
     "recharts": "2.15.4",
     "resend": "6.9.2",
-    "sanitize-html": "^2.17.7",
+    "sanitize-html": "^2.18.1",
     "sharp": "^0.35.5",
     "sonner": "^2.0.7",
     "svix": "1.84.1",
@@ -146,7 +146,7 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "xmlbuilder2": "^4.0.3",
-    "zod": "^4.3.6"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
