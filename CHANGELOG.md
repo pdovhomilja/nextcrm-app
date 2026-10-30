@@ -5,6 +5,21 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.5](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.4...v0.37.5) (2026-10-30)
+
+
+### Fixed
+
+* check assignee, parent account and price list ids in createAccount and contracts ([4c86a10](https://github.com/pdovhomilja/nextcrm-app/commit/4c86a10af7741d32550c1f9152877850a1ffa6a3))
+* **deps:** raise axios override to &gt;=1.20.0 ([da4f28f](https://github.com/pdovhomilja/nextcrm-app/commit/da4f28fca701cfe28c264f44d42cf97a708c2405))
+* scope campaign performance sends to the caller's campaigns ([422aca4](https://github.com/pdovhomilja/nextcrm-app/commit/422aca457dd346ba617d5d8b631652733a9d2d06))
+* scope campaign performance, check input ids in createAccount and contracts, axios &gt;=1.20 ([3eef4a4](https://github.com/pdovhomilja/nextcrm-app/commit/3eef4a41d83582b2a3afcbc2c4099f3e014338e5))
+
+
+### Changed
+
+* assertAssignableUser(user, assigneeId) with a required actor ([e9aeeac](https://github.com/pdovhomilja/nextcrm-app/commit/e9aeeac89d87204c44566d1dda8cd334ed45c782))
+
 ## [0.37.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.3...v0.37.4) (2026-10-30)
 
 
