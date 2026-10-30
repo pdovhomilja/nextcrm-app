@@ -1,0 +1,81 @@
+/**
+ * Campaign performance (reports + /api/reports/export category "campaigns")
+ * counts only the sends of campaigns the caller may see (Sentinel N3).
+ * DB-backed: CI runs it in the integration job.
+ *
+ * Fixture: users A and B (role user) each own one campaign with sends dated
+ * in 2001.
+ */
+import { randomUUID } from "crypto";
+import { prismadb } from "@/lib/prisma";
+import { getReportScope } from "@/lib/authz/scopes/report-scope";
+import { getCampaignPerformance } from "@/actions/reports/campaigns";
+
+const tag = randomUUID().slice(0, 8);
+// No admin row: getReportScope needs only id + role, and an admin row would be
+// picked up by findFirst({ role: "admin" }) in suites running in parallel.
+const U = { A: randomUUID(), B: randomUUID() };
+const CAMPAIGN = { A: randomUUID(), B: randomUUID() };
+const TEMPLATE = randomUUID();
+const TARGETS = [randomUUID(), randomUUID()]; // one send per (step, target)
+const filters = { dateFrom: new Date("2001-01-01"), dateTo: new Date("2001-12-31") };
+
+beforeAll(async () => {
+  await prismadb.users.createMany({
+    data: [
+      { id: U.A, email: `a-${tag}@n3.test`, name: `a-${tag}`, role: "user", userStatus: "ACTIVE" },
+      { id: U.B, email: `b-${tag}@n3.test`, name: `b-${tag}`, role: "user", userStatus: "ACTIVE" },
+    ],
+  });
+  await prismadb.crm_campaign_templates.create({
+    data: { id: TEMPLATE, name: `t-${tag}`, content_html: "<p>x</p>", content_json: {} },
+  });
+  await prismadb.crm_Targets.createMany({ data: TARGETS.map((id) => ({ id, last_name: `target-${tag}` })) });
+  // A: 1 send, opened. B: 2 sends, one opened and clicked.
+  const sends = { A: [{ opened: true, clicked: false }], B: [{ opened: true, clicked: true }, { opened: false, clicked: false }] };
+  for (const k of ["A", "B"] as const) {
+    await prismadb.crm_campaigns.create({
+      data: { id: CAMPAIGN[k], v: 0, name: `${k}-${tag}`, status: "sent", created_by: U[k] },
+    });
+    const step = await prismadb.crm_campaign_steps.create({
+      data: { campaign_id: CAMPAIGN[k], order: 1, template_id: TEMPLATE, subject: "s" },
+    });
+    for (const [i, s] of Array.from(sends[k].entries())) {
+      await prismadb.crm_campaign_sends.create({
+        data: {
+          campaign_id: CAMPAIGN[k], step_id: step.id, target_id: TARGETS[i], email: `${k}@n3.test`, status: "sent",
+          sent_at: new Date("2001-06-01"),
+          opened_at: s.opened ? new Date("2001-06-02") : null,
+          clicked_at: s.clicked ? new Date("2001-06-02") : null,
+        },
+      });
+    }
+  }
+});
+
+afterAll(async () => {
+  const ids = Object.values(CAMPAIGN);
+  await prismadb.crm_campaign_sends.deleteMany({ where: { campaign_id: { in: ids } } });
+  await prismadb.crm_campaign_steps.deleteMany({ where: { campaign_id: { in: ids } } });
+  await prismadb.crm_campaigns.deleteMany({ where: { id: { in: ids } } });
+  await prismadb.crm_Targets.deleteMany({ where: { id: { in: TARGETS } } });
+  await prismadb.crm_campaign_templates.deleteMany({ where: { id: TEMPLATE } });
+  await prismadb.users.deleteMany({ where: { id: { in: Object.values(U) } } });
+  await prismadb.$disconnect();
+});
+
+describe("getCampaignPerformance", () => {
+  it("a user counts only the sends of his own campaigns, not another user's", async () => {
+    const perf = await getCampaignPerformance(filters, getReportScope({ id: U.A, role: "user" }));
+    expect(perf).toEqual({ sent: 1, opened: 1, clicked: 0, openRate: 100, clickRate: 0 });
+  });
+
+  it("an admin still counts every campaign's sends", async () => {
+    // At least both users' sends: suites running in parallel on the CI
+    // database may add their own in the same range.
+    const perf = await getCampaignPerformance(filters, getReportScope({ id: randomUUID(), role: "admin" }));
+    expect(perf.sent).toBeGreaterThanOrEqual(3);
+    expect(perf.opened).toBeGreaterThanOrEqual(2);
+    expect(perf.clicked).toBeGreaterThanOrEqual(1);
+  });
+});

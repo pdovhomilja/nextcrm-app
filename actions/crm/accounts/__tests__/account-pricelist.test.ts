@@ -5,7 +5,7 @@ jest.mock("@/lib/authz", () => ({
   AuthorizationError: class AuthorizationError extends Error {},
 }));
 jest.mock("@/lib/prisma", () => ({
-  prismadb: { crm_Accounts: { update: jest.fn().mockResolvedValue({ id: "acc-1" }), findUnique: jest.fn().mockResolvedValue({ id: "acc-1" }), create: jest.fn().mockResolvedValue({ id: "acc-1" }) } },
+  prismadb: { crm_Accounts: { update: jest.fn().mockResolvedValue({ id: "acc-1" }), findUnique: jest.fn().mockResolvedValue({ id: "acc-1" }), create: jest.fn().mockResolvedValue({ id: "acc-1" }) }, crm_PriceLists: { findUnique: jest.fn().mockResolvedValue({ id: "L" }) } },
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn(), diffObjects: jest.fn(() => null) }));

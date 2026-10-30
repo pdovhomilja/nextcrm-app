@@ -64,22 +64,6 @@ export function externalError(msg: string): never {
   throw new Error(`EXTERNAL_ERROR: ${msg}`);
 }
 
-// Reassignment targets must be a real, active user. The server actions rely on
-// the FK constraint alone; checking here keeps the failure a clean NOT_FOUND
-// instead of a Prisma error, and stops work being parked on a disabled account.
-// A partner may assign only to himself, never to an internal user.
-export async function assertAssignableUser(
-  assigneeId: string,
-  actor?: { id: string; role: string },
-): Promise<void> {
-  if (actor?.role === "partner" && assigneeId !== actor.id) notFound("User");
-  const row = await prismadb.users.findFirst({
-    where: { id: assigneeId, userStatus: "ACTIVE" },
-    select: { id: true },
-  });
-  if (!row) notFound("User");
-}
-
 // Run an object-level authorization assert (assertCanWriteBoard, etc.) and
 // convert a denial into NOT_FOUND so the caller cannot tell whether the id
 // exists (no existence oracle). Non-authorization errors propagate unchanged.

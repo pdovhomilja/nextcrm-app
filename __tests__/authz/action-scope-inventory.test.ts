@@ -10,7 +10,6 @@ import path from "path";
 import ts from "typescript";
 
 const REVIEWED: Record<string, string> = {
-  "actions/crm/accounts/create-account.ts#createAccount": "creates a new row owned by the caller; ids are FK fields of the new row",
   "actions/crm/accounts/restore-account.ts#restoreAccount": "admin only (session.user.role check)",
   "actions/crm/contacts/restore-contact.ts#restoreContact": "admin only (session.user.role check)",
   "actions/crm/contracts/restore-contract/index.ts#restoreContract": "admin only (session.user.role check)",
