@@ -26,7 +26,7 @@ A generated list of every variable the code reads, with the files that read it, 
 | Variable | Required | What it does |
 |---|---|---|
 | `BETTER_AUTH_SECRET` | Yes | Signs sessions. Generate with `openssl rand -base64 32`. Changing it logs everyone out. In Docker, if it is empty, the entrypoint generates one on the first start and keeps it in the `app_data` volume. |
-| `BETTER_AUTH_URL` | Yes | Public base URL of the instance, for example `https://crm.example.com`. Used by BetterAuth for callbacks. The compose files set it from `APP_URL`. |
+| `BETTER_AUTH_URL` | Yes | Public base URL of the instance, for example `https://crm.example.com`. Used by BetterAuth for callbacks, and as the only `Origin` accepted for browser writes to `/api` (see [Security](/docs/admins/security#cross-site-writes-and-uploads)). The compose files set it from `APP_URL`. |
 | `GOOGLE_ID`, `GOOGLE_SECRET` | No | OAuth client for "Sign in with Google". Redirect URI: `<your URL>/api/auth/callback/google`. |
 
 Sessions last 7 days and are refreshed every 24 hours. Password login is disabled; users sign in with an email code or Google.

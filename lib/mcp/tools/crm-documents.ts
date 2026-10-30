@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
-import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { minioPresignClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
+import { minioPresignClient, presignPut, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
+import { uploadExtension } from "@/lib/upload-content-types";
 import { randomUUID } from "crypto";
 import { AuthorizationError, type AuthzUser } from "@/lib/authz";
 import { isUnhandledRole } from "@/lib/authz/scopes/unhandled-role";
@@ -149,9 +150,8 @@ export const crmDocumentTools = [
     ) {
       // Document writes are for internal roles only (a partner never writes documents).
       if (isUnhandledRole(user)) forbidden();
-      const ext = args.document_name.includes(".")
-        ? args.document_name.split(".").pop()?.trim() || "bin"
-        : "bin";
+      const ext = uploadExtension(args.contentType);
+      if (!ext) validationError(`Content type not allowed: ${args.contentType}`);
       const key = `documents/${randomUUID()}.${ext}`;
       const fileUrl = `${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${key}`;
 
@@ -169,12 +169,7 @@ export const crmDocumentTools = [
         },
       });
 
-      const command = new PutObjectCommand({
-        Bucket: MINIO_BUCKET,
-        Key: key,
-        ContentType: args.contentType,
-      });
-      const presignedUrl = await getSignedUrl(minioPresignClient, command, { expiresIn: 600 });
+      const presignedUrl = await presignPut(key, args.contentType);
 
       return itemResponse({ ...doc, presignedUrl, expiresIn: 600 });
     },
@@ -191,12 +186,7 @@ export const crmDocumentTools = [
       });
       if (!doc) notFound("Document");
       if (!doc.key) validationError("Document has no storage key");
-      const command = new PutObjectCommand({
-        Bucket: MINIO_BUCKET,
-        Key: doc.key!,
-        ContentType: doc.document_file_mimeType,
-      });
-      const presignedUrl = await getSignedUrl(minioPresignClient, command, { expiresIn: 600 });
+      const presignedUrl = await presignPut(doc.key!, doc.document_file_mimeType);
       return itemResponse({ id: doc.id, url: presignedUrl, expiresIn: 600 });
     },
   },

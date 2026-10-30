@@ -17,6 +17,32 @@ const ADMIN_ONLY_PATHS = [
   "/api/admin",
 ];
 
+// Writes here authenticate with a token or signature of their own, or come
+// from mail links; the Origin check below does not apply to them.
+// (/api/auth and /api/inngest return before it.)
+const ORIGIN_CHECK_EXEMPT = [
+  "/api/mcp",
+  "/api/campaigns/unsubscribe",
+  "/api/crm/leads/create-lead-from-web",
+  "/api/crm/contacts/create-from-remote",
+];
+
+/**
+ * A cookie-authenticated write to /api must come from the app's own origin.
+ * A page on a same-site host (files.<domain>) can make the browser send the
+ * session cookie, but its Origin is its own. Browsers send Origin on every
+ * POST/PUT/PATCH/DELETE fetch, so a missing one is refused too.
+ */
+function isCrossOriginWrite(req: NextRequest, path: string, hasSessionCookie: boolean) {
+  if (!hasSessionCookie || ["GET", "HEAD", "OPTIONS"].includes(req.method)) return false;
+  if (req.headers.has("authorization")) return false;
+  if (path.includes("/webhooks/") || ORIGIN_CHECK_EXEMPT.some((p) => path.startsWith(p))) return false;
+  const appOrigin = process.env.BETTER_AUTH_URL
+    ? new URL(process.env.BETTER_AUTH_URL).origin
+    : req.nextUrl.origin;
+  return req.headers.get("origin") !== appOrigin;
+}
+
 export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
@@ -43,6 +69,10 @@ export async function proxy(req: NextRequest) {
       }
       return NextResponse.redirect(new URL("/", req.nextUrl));
     }
+  }
+
+  if (path.startsWith("/api") && isCrossOriginWrite(req, path, !!sessionCookie)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   // Admin-only routes — require session cookie (role checked server-side)

@@ -1,11 +1,10 @@
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-server";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { minioPresignClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
+import { presignPut, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
 import { randomUUID } from "crypto";
 import { DOCUMENT_FOLDERS } from "@/lib/documents/file-key";
+import { uploadExtension } from "@/lib/upload-content-types";
 
 const ALLOWED_FOLDERS = ["avatars", ...DOCUMENT_FOLDERS] as const;
 type AllowedFolder = (typeof ALLOWED_FOLDERS)[number];
@@ -27,29 +26,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "filename and contentType are required" }, { status: 400 });
   }
 
-  const ALLOWED_CONTENT_TYPES = new Set([
-    "image/jpeg", "image/png", "image/gif", "image/webp",
-    "application/pdf", "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "text/plain",
-  ]);
-  if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
+  // The extension follows the content type, never the filename. avatars/ is
+  // public, so it takes images only.
+  const ext = uploadExtension(contentType);
+  if (!ext || (folder === "avatars" && !contentType.startsWith("image/"))) {
     return NextResponse.json({ error: "Content type not allowed" }, { status: 400 });
   }
-
-  // Fall back to "bin" if filename has no extension or extension is empty (e.g., ".")
-  const ext = filename.includes(".") ? filename.split(".").pop()?.trim() || "bin" : "bin";
   const key = `${folder}/${randomUUID()}.${ext}`;
-
-  const command = new PutObjectCommand({
-    Bucket: MINIO_BUCKET,
-    Key: key,
-    ContentType: contentType,
-  });
 
   // Presigned URL valid for 10 minutes
   try {
-    const presignedUrl = await getSignedUrl(minioPresignClient, command, { expiresIn: 600 });
+    const presignedUrl = await presignPut(key, contentType);
 
     // Readable at this URL only under avatars/ (public); documents are read
     // through /api/documents/[documentId]/file.
