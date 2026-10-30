@@ -1,4 +1,4 @@
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 if (!process.env.MINIO_ENDPOINT) throw new Error("MINIO_ENDPOINT is not defined");
@@ -54,5 +54,17 @@ export function presignGet(key: string, expiresIn = 300): Promise<string> {
     minioPresignClient,
     new GetObjectCommand({ Bucket: MINIO_BUCKET, Key: key }),
     { expiresIn },
+  );
+}
+
+/**
+ * Short-lived PUT link. The Content-Type is part of the signature, so the
+ * storage refuses an upload sent with any other type.
+ */
+export function presignPut(key: string, contentType: string, expiresIn = 600): Promise<string> {
+  return getSignedUrl(
+    minioPresignClient,
+    new PutObjectCommand({ Bucket: MINIO_BUCKET, Key: key, ContentType: contentType }),
+    { expiresIn, signableHeaders: new Set(["content-type"]) },
   );
 }
