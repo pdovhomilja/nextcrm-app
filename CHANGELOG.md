@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.2...v0.37.3) (2026-10-30)
+
+
+### Fixed
+
+* check record scope in three server actions (requestApproval, setCaseStudyCandidate, disconnectDocumentFromTask) ([#421](https://github.com/pdovhomilja/nextcrm-app/issues/421)) ([9707780](https://github.com/pdovhomilja/nextcrm-app/commit/9707780e53e8fd58f2346c4b938ba73d0479998c))
+* sign upload content types and require the app Origin on cookie-authenticated /api writes ([#423](https://github.com/pdovhomilja/nextcrm-app/issues/423)) ([89b8a88](https://github.com/pdovhomilja/nextcrm-app/commit/89b8a88ca0dbf6facdbdd9fde44f1b0678c639b8))
+
 ## [0.37.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.1...v0.37.2) (2026-10-29)
 
 
