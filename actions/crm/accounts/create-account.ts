@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { inngest } from "@/inngest/client";
 import { writeAuditLog } from "@/lib/audit-log";
-import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import {
+  requireAuthenticated,
+  assertAssignableUser,
+  assertCanReadAccount,
+  AuthenticationError,
+  AuthorizationError,
+} from "@/lib/authz";
 
 export const createAccount = async (data: {
   name: string;
@@ -32,8 +38,8 @@ export const createAccount = async (data: {
   industry?: string;
   pricelist_id?: string | null;
 }) => {
-  // Plain create: the row is owned by its creator, so authentication is
-  // sufficient — no object-level write assert needed.
+  // Plain create: the row is owned by its creator, so no object-level write
+  // assert on the new row; the ids it points at are checked below.
   let user;
   try {
     user = await requireAuthenticated({ partner: true });
@@ -44,6 +50,20 @@ export const createAccount = async (data: {
 
   const { name } = data;
   if (!name) return { error: "name is required" };
+
+  // Ids from the input: the assignee must be assignable (a partner's is
+  // ignored below), the parent account readable, the price list real.
+  try {
+    if (data.assigned_to && user.role !== "partner") await assertAssignableUser(data.assigned_to, user);
+    if (data.member_of) await assertCanReadAccount(user, data.member_of);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+  if (data.pricelist_id) {
+    const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: data.pricelist_id }, select: { id: true } });
+    if (!pricelist) return { error: "Price list not found" };
+  }
 
   try {
     const account = await prismadb.crm_Accounts.create({

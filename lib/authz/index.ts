@@ -36,6 +36,7 @@ export {
   assertCanCancelTargetEnrichment,
 } from "./scopes/crm";
 export { assertCanWriteAccount } from "./scopes/crm";
+export { assertAssignableUser } from "./assignable-user";
 export { assertCanWritePriceList } from "./scopes/pricing";
 export { orderReadScopeWhere } from "./scopes/orders";
 export {

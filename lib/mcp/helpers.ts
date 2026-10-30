@@ -3,6 +3,7 @@ import { z } from "zod";
 // re-exports session helpers that pull in better-auth (ESM-only), which breaks
 // any jest suite transitively importing this file. errors.ts has no imports.
 import { AuthorizationError } from "@/lib/authz/errors";
+import { assertAssignableUser as assertAssignable } from "@/lib/authz/assignable-user";
 import { prismadb } from "@/lib/prisma";
 
 // ── Pagination ──────────────────────────────────────────────────
@@ -64,20 +65,13 @@ export function externalError(msg: string): never {
   throw new Error(`EXTERNAL_ERROR: ${msg}`);
 }
 
-// Reassignment targets must be a real, active user. The server actions rely on
-// the FK constraint alone; checking here keeps the failure a clean NOT_FOUND
-// instead of a Prisma error, and stops work being parked on a disabled account.
-// A partner may assign only to himself, never to an internal user.
+// Reassignment targets: the rule lives in lib/authz (shared with the server
+// actions); MCP reports a refusal as NOT_FOUND.
 export async function assertAssignableUser(
   assigneeId: string,
   actor?: { id: string; role: string },
 ): Promise<void> {
-  if (actor?.role === "partner" && assigneeId !== actor.id) notFound("User");
-  const row = await prismadb.users.findFirst({
-    where: { id: assigneeId, userStatus: "ACTIVE" },
-    select: { id: true },
-  });
-  if (!row) notFound("User");
+  await assertScopeOrNotFound(() => assertAssignable(assigneeId, actor), "User");
 }
 
 // Run an object-level authorization assert (assertCanWriteBoard, etc.) and
