@@ -4,9 +4,10 @@
  * read, a price list one that exists. DB-backed: CI runs it in the
  * integration job.
  *
- * Fixture: plain users `rep` and `other`, an inactive user `gone`; one
- * account each for rep and other; one price list. Real actions are called as
- * `rep` (session mocked, role read from the DB).
+ * Fixture: plain users `rep` and `other`, an inactive user `gone`, a partner
+ * `partner`; one account each for rep and other; one price list. Real actions
+ * and MCP handlers are called as `rep` unless a test says otherwise (session
+ * mocked, role read from the DB).
  */
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
@@ -18,9 +19,10 @@ import { getSession } from "@/lib/auth-server";
 import { createAccount } from "@/actions/crm/accounts/create-account";
 import { createNewContract } from "@/actions/crm/contracts/create-new-contract";
 import { updateContract } from "@/actions/crm/contracts/update-contract";
+import { crmAccountTools } from "@/lib/mcp/tools/crm-accounts";
 
 const tag = randomUUID().slice(0, 8);
-const U = { rep: randomUUID(), other: randomUUID(), gone: randomUUID() };
+const U = { rep: randomUUID(), other: randomUUID(), gone: randomUUID(), partner: randomUUID() };
 const ACC = { rep: randomUUID(), other: randomUUID() };
 const PRICELIST = randomUUID();
 // rep's contract assigned to other; rep's contract still assigned to the now inactive `gone`
@@ -32,8 +34,8 @@ const contractsTitled = (title: string) => prismadb.crm_Contracts.count({ where:
 
 beforeAll(async () => {
   await prismadb.users.createMany({
-    data: (["rep", "other", "gone"] as const).map((k) => ({
-      id: U[k], email: `${k}-${tag}@input-ids.test`, name: `${k}-${tag}`, role: "user",
+    data: (["rep", "other", "gone", "partner"] as const).map((k) => ({
+      id: U[k], email: `${k}-${tag}@input-ids.test`, name: `${k}-${tag}`, role: k === "partner" ? "partner" : "user",
       userStatus: k === "gone" ? "INACTIVE" : "ACTIVE",
     })),
   });
@@ -48,12 +50,14 @@ beforeAll(async () => {
       data: { id: CONTRACT[k], v: 0, title: `${k}-${tag}`, value: 1, account: ACC.rep, assigned_to: assignee, createdBy: U.rep },
     });
   }
-  (getSession as jest.Mock).mockResolvedValue({ user: { id: U.rep } });
 });
 
+const as = (who: keyof typeof U) => (getSession as jest.Mock).mockResolvedValue({ user: { id: U[who] } });
+beforeEach(() => as("rep"));
+
 afterAll(async () => {
-  const names = [`rep-${tag}`, `other-${tag}`].concat(["ok", "gone", "nobody", "member", "pricelist"].map((n) => `${n}-${tag}`));
-  await prismadb.crm_Contracts.deleteMany({ where: { createdBy: U.rep } });
+  const names = [`rep-${tag}`, `other-${tag}`].concat(["ok", "gone", "nobody", "member", "pricelist", "partner"].map((n) => `${n}-${tag}`));
+  await prismadb.crm_Contracts.deleteMany({ where: { createdBy: { in: [U.rep, U.partner] } } });
   await prismadb.crm_Accounts.deleteMany({ where: { name: { in: names } } });
   await prismadb.crm_PriceLists.deleteMany({ where: { id: PRICELIST } });
   await prismadb.users.deleteMany({ where: { id: { in: Object.values(U) } } });
@@ -122,5 +126,41 @@ describe("contracts assigned_to", () => {
 
   it("updateContract still saves when the form resends the current (inactive) assignee", async () => {
     expect(await update(CONTRACT.repGone, `repGone-edited-${tag}`, U.gone)).toEqual({ data: { title: `repGone-edited-${tag}` } });
+  });
+});
+
+describe("partner", () => {
+  beforeEach(() => as("partner"));
+
+  it("createAccount ignores a partner's assigned_to and stores no internal owner", async () => {
+    const r = await createAccount({ name: `partner-${tag}`, assigned_to: U.other });
+    expect(r).toHaveProperty("data");
+    const row = await prismadb.crm_Accounts.findFirstOrThrow({ where: { name: `partner-${tag}` } });
+    expect(row.assigned_to).toBeNull();
+  });
+
+  it("createNewContract naming another user as assignee is refused and creates nothing", async () => {
+    const d = new Date("2026-01-01");
+    const r = await createNewContract({
+      title: `c-partner-${tag}`, value: "1", startDate: d, endDate: d, renewalReminderDate: d, customerSignedDate: d,
+      companySignedDate: d, description: "", account: ACC.rep, assigned_to: U.other,
+    });
+    expect(r).toHaveProperty("error");
+    expect(await contractsTitled(`c-partner-${tag}`)).toBe(0);
+  });
+});
+
+describe("MCP crm_update_account assigned_to", () => {
+  const tool = crmAccountTools.find((t) => t.name === "crm_update_account")!;
+  const rep = { id: U.rep, role: "user" };
+  const call = (assigned_to: string) => (tool.handler as any)({ id: ACC.rep, assigned_to }, rep.id, rep);
+
+  it("refuses an inactive assignee as NOT_FOUND and leaves the owner", async () => {
+    await expect(call(U.gone)).rejects.toThrow("NOT_FOUND");
+    expect((await prismadb.crm_Accounts.findUniqueOrThrow({ where: { id: ACC.rep } })).assigned_to).toBe(U.rep);
+  });
+
+  it("accepts an active assignee", async () => {
+    await expect(call(U.other)).resolves.toHaveProperty("data.assigned_to", U.other);
   });
 });
