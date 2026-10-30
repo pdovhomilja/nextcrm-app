@@ -336,15 +336,19 @@ export const projectTools = [
   },
   {
     name: "projects_delete_task",
-    description: "Soft-delete a task (sets status to COMPLETE)",
+    description: "Delete a task and its comments (needs write access to its board, like the UI)",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string, user: AuthzUser) {
-      await assertScopeOrNotFound(() => assertCanWriteTask(user, args.id), "Task");
-      const task = await prismadb.tasks.update({
+      const task = await prismadb.tasks.findUnique({
         where: { id: args.id },
-        data: { taskStatus: "COMPLETE", updatedBy: user.id },
+        select: { assigned_section: { select: { board: true } } },
       });
-      return itemResponse({ id: task.id, status: "COMPLETE" });
+      const boardId = task?.assigned_section?.board;
+      if (!boardId) notFound("Task");
+      await assertScopeOrNotFound(() => assertCanWriteBoard(user, boardId), "Task");
+      // Comments and document links go with it (onDelete: Cascade).
+      await prismadb.tasks.delete({ where: { id: args.id } });
+      return itemResponse({ id: args.id, deleted: true });
     },
   },
 
