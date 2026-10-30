@@ -95,7 +95,7 @@ jobs:
         # __tests__/authz/ui-object-scope.test.ts,
         # __tests__/authz/action-write-scope.test.ts) are excluded here — keep this pattern and the integration job's test
         # list in sync when adding DB-backed suites.
-        run: pnpm exec jest --ci --testPathIgnorePatterns "__tests__/invoices/lifecycle" "__tests__/authz/partner-read-scope" "__tests__/authz/partner-leaks" "__tests__/authz/partner-writes" "__tests__/authz/link-write-checks" "__tests__/authz/mcp-object-scope" "__tests__/authz/ui-object-scope" "__tests__/authz/action-write-scope"
+        run: pnpm exec jest --ci --testPathIgnorePatterns "__tests__/invoices/lifecycle" "__tests__/authz/partner-read-scope" "__tests__/authz/partner-leaks" "__tests__/authz/partner-writes" "__tests__/authz/link-write-checks" "__tests__/authz/mcp-object-scope" "__tests__/authz/ui-object-scope" "__tests__/authz/action-write-scope" "__tests__/mcp/projects-tools-db"
 
   integration:
     name: Integration (fresh-DB migrations + DB suites)
@@ -129,7 +129,7 @@ jobs:
       - name: Apply all migrations to a fresh database
         run: pnpm exec prisma migrate deploy
       - name: Database-backed test suites
-        run: pnpm exec jest --ci __tests__/invoices/lifecycle.test.ts __tests__/authz/partner-read-scope.test.ts __tests__/authz/partner-leaks.test.ts __tests__/authz/partner-writes.test.ts __tests__/authz/link-write-checks.test.ts __tests__/authz/mcp-object-scope.test.ts __tests__/authz/ui-object-scope.test.ts __tests__/authz/action-write-scope.test.ts
+        run: pnpm exec jest --ci __tests__/invoices/lifecycle.test.ts __tests__/authz/partner-read-scope.test.ts __tests__/authz/partner-leaks.test.ts __tests__/authz/partner-writes.test.ts __tests__/authz/link-write-checks.test.ts __tests__/authz/mcp-object-scope.test.ts __tests__/authz/ui-object-scope.test.ts __tests__/authz/action-write-scope.test.ts __tests__/mcp/projects-tools-db.test.ts
 
   build:
     name: Production build (mirrors Coolify)

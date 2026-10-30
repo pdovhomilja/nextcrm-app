@@ -95,7 +95,7 @@ Your client lists each tool's input schema (from its zod definition) when it con
 
 - **Pagination:** paginated list tools take `limit` (1 to 100, default 20) and `offset` (default 0) and return `{ data, total, offset }`.
 - **Single items** return `{ data }`.
-- **Deletes are mostly soft deletes.** CRM records, campaigns, documents and boards get `deletedAt` and `deletedBy`. `projects_delete_task` sets the task to `COMPLETE`. `projects_delete_section` hard-deletes, and only an empty section.
+- **Deletes are mostly soft deletes.** CRM records, campaigns, documents and boards get `deletedAt` and `deletedBy`. `projects_delete_task` deletes the task and its comments, as the UI does, and needs write access to the task's board (being the assignee is not enough). `projects_delete_section` hard-deletes, and only an empty section.
 - **Enrichment tools** queue Inngest jobs and return before the enrichment finishes.
 - **`crm_add_to_target_list`** adds only targets the caller can access, like the web app, and reports that number in `added`.
 - **Documents:** `crm_create_document` and `crm_get_upload_url` return a presigned URL. The client uploads the file to object storage itself.

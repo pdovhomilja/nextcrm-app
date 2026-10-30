@@ -16,6 +16,7 @@ jest.mock("@/lib/prisma", () => ({
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
       aggregate: jest.fn().mockResolvedValue({ _max: { position: null } }),
     },
     sections: { findUnique: jest.fn() },
@@ -61,10 +62,12 @@ describe("projects_update_task", () => {
 });
 
 describe("projects_delete_task", () => {
-  it("denies and does not update status", async () => {
-    writeTask.mockRejectedValue(new AuthorizationError());
+  it("checks write access to the task's board and does not delete when denied", async () => {
+    (prismadb.tasks.findUnique as jest.Mock).mockResolvedValue({ assigned_section: { board: "b-victim" } });
+    writeBoard.mockRejectedValue(new AuthorizationError());
     await expect(call("projects_delete_task", { id: "t-victim" })).rejects.toThrow("NOT_FOUND");
-    expect(prismadb.tasks.update).not.toHaveBeenCalled();
+    expect(writeBoard).toHaveBeenCalledWith(USER, "b-victim");
+    expect(prismadb.tasks.delete).not.toHaveBeenCalled();
   });
 });
 

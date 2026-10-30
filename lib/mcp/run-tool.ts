@@ -11,7 +11,8 @@ export async function runMcpToolCall(getUser: () => Promise<McpUser>, call: (use
     const mcpUser = await getUser();
     const result = await runAsActor({ type: "token", userId: mcpUser.id, role: mcpUser.role }, () => call(mcpUser));
     return {
-      content: [{ type: "text" as const, text: JSON.stringify(result) }],
+      // BigInt columns (task/section position, likes) go out as strings.
+      content: [{ type: "text" as const, text: JSON.stringify(result, (_, v) => (typeof v === "bigint" ? v.toString() : v)) }],
     };
   } catch (err: any) {
     if (err instanceof PluginRuleError) {

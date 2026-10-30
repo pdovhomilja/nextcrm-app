@@ -96,7 +96,7 @@ const REVIEWED: Record<string, string> = {
   projects_create_task: "assertCanWriteBoard",
   projects_update_task: "assertCanWriteTask",
   projects_move_task: "assertCanWriteTask + assertCanWriteBoard",
-  projects_delete_task: "assertCanWriteTask",
+  projects_delete_task: "assertCanWriteBoard",
   projects_add_comment: "assertCanWriteTask",
   projects_list_comments: "assertCanReadTask",
   projects_assign_document: "assertCanWriteTask + assertCanReadDocument",
