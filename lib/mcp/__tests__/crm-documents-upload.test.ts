@@ -15,7 +15,6 @@ import type { AuthzUser } from "@/lib/authz";
 
 const user = { id: "u1", role: "user" } as unknown as AuthzUser;
 const tool = (name: string) => crmDocumentTools.find((t) => t.name === name)!;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const call = (name: string, args: unknown) => (tool(name).handler as any)(args, user.id, user);
 const signedHeaders = (url: string) =>
   new URL(url).searchParams.get("X-Amz-SignedHeaders")!.split(";");
