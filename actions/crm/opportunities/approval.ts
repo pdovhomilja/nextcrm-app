@@ -7,6 +7,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   requireRole,
+  assertCanWriteOpportunity,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -34,6 +35,12 @@ export async function requestApproval(
     user = await requireAuthenticated();
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteOpportunity(user, opportunityId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Opportunity not found" };
     throw e;
   }
 

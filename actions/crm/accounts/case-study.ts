@@ -6,6 +6,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   requireRole,
+  assertCanWriteAccount,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -21,6 +22,12 @@ export async function setCaseStudyCandidate(
     user = await requireAuthenticated();
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+  try {
+    await assertCanWriteAccount(user, accountId);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Account not found" };
     throw e;
   }
 
