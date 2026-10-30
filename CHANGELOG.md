@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.3...v0.37.4) (2026-10-30)
+
+
+### Fixed
+
+* Origin check with Authorization header, BigInt in MCP project results, real MCP task delete ([#424](https://github.com/pdovhomilja/nextcrm-app/issues/424)) ([79edd69](https://github.com/pdovhomilja/nextcrm-app/commit/79edd69b2863509896a7fba1420b85b90bbefb36))
+
 ## [0.37.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.2...v0.37.3) (2026-10-30)
 
 
