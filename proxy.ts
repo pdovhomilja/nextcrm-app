@@ -31,11 +31,12 @@ const ORIGIN_CHECK_EXEMPT = [
  * A cookie-authenticated write to /api must come from the app's own origin.
  * A page on a same-site host (files.<domain>) can make the browser send the
  * session cookie, but its Origin is its own. Browsers send Origin on every
- * POST/PUT/PATCH/DELETE fetch, so a missing one is refused too.
+ * POST/PUT/PATCH/DELETE fetch, so a missing one is refused too. An
+ * Authorization header does not exempt it: token callers (MCP, API tokens)
+ * send no session cookie, so they never reach the check.
  */
 function isCrossOriginWrite(req: NextRequest, path: string, hasSessionCookie: boolean) {
   if (!hasSessionCookie || ["GET", "HEAD", "OPTIONS"].includes(req.method)) return false;
-  if (req.headers.has("authorization")) return false;
   if (path.includes("/webhooks/") || ORIGIN_CHECK_EXEMPT.some((p) => path.startsWith(p))) return false;
   const appOrigin = process.env.BETTER_AUTH_URL
     ? new URL(process.env.BETTER_AUTH_URL).origin

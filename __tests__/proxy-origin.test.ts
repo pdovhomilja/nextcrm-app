@@ -55,9 +55,16 @@ describe("proxy: Origin check on cookie-authenticated /api writes", () => {
     expect(res.status).toBe(200);
   });
 
-  it("does not touch a request authenticated by a bearer token", async () => {
+  it("refuses a foreign-origin write that carries the session cookie and an Authorization header", async () => {
     const res = await proxy(
-      req("/api/crm/contacts/abc", "PATCH", { ...cookie, authorization: "Bearer nc_x" })
+      req("/api/crm/contacts/abc", "PATCH", { ...cookie, authorization: "Bearer x", origin: FILES })
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it("does not touch a bearer-token write without a session cookie", async () => {
+    const res = await proxy(
+      req("/api/crm/contacts/abc", "PATCH", { authorization: "Bearer nc_x", origin: FILES })
     );
     expect(res.status).toBe(200);
   });
