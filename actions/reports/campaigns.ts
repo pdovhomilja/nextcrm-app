@@ -12,11 +12,12 @@ export async function getCampaignPerformance(
 ): Promise<{
   sent: number; opened: number; clicked: number; openRate: number; clickRate: number;
 }> {
-  // crm_campaign_sends has no direct scope mapping; sends are scoped indirectly
-  // via the parent campaign. Manager/admin: no filter. User: rely on owning
-  // campaign via crm_campaigns relation in other queries.
-  void scope;
-  const dateFilter = { sent_at: { gte: filters.dateFrom, lte: filters.dateTo }, status: "sent" };
+  // Sends are scoped through their parent campaign.
+  const dateFilter = {
+    sent_at: { gte: filters.dateFrom, lte: filters.dateTo },
+    status: "sent",
+    campaign: scope.campaign,
+  };
   const sent = await prismadb.crm_campaign_sends.count({ where: dateFilter });
   const opened = await prismadb.crm_campaign_sends.count({ where: { ...dateFilter, opened_at: { not: null } } });
   const clicked = await prismadb.crm_campaign_sends.count({ where: { ...dateFilter, clicked_at: { not: null } } });
