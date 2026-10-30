@@ -59,6 +59,7 @@ All helpers are exported from `@/lib/authz`:
 | `assertHandledRole(user)` (in `lib/authz/scopes/unhandled-role.ts`) | Throw `AuthorizationError` for such a role, at the top of a new assert. |
 | `accountReadScopeWhere(user)`, `leadReadScopeWhere(user)`, ... | Build a Prisma `where` for list queries. Includes `deletedAt: null`. |
 | `assertCanReadAccount(user, id)`, `assertCanWriteAccount(user, id)`, ... | Check one object. Throws `AuthorizationError`. |
+| `assertAssignableUser(assigneeId, user)` | Check an `assigned_to` from the input: the user must exist and be `ACTIVE`, and a partner may only name himself. Throws `AuthorizationError`. On edits, check it only when the assignee changes (forms resend the current one). |
 | `filterAuthorizedAccountIds(user, ids)`, ... | Reduce a list of IDs to the ones the user may touch (bulk actions). |
 | `getReportScope(user)` | Scope for report queries. |
 
