@@ -14,8 +14,8 @@ import {
   notFound,
   softDeleteData,
   assertScopeOrNotFound,
-  assertAssignableUser,
 } from "../helpers";
+import { assertAssignableUser } from "@/lib/authz/assignable-user";
 
 // assertCanWriteAccount intentionally ignores deletedAt (the server actions
 // guard it separately), so the MCP write path keeps its own soft-delete check.
@@ -156,7 +156,8 @@ export const crmAccountTools = [
       user: AuthzUser
     ) {
       await assertWritableAccount(user, args.id);
-      if (args.assigned_to) await assertAssignableUser(args.assigned_to, user);
+      const assignee = args.assigned_to;
+      if (assignee) await assertScopeOrNotFound(() => assertAssignableUser(user, assignee), "User");
       const { id, assigned_to, ...updateData } = args;
       const account = await prismadb.crm_Accounts.update({
         where: { id },

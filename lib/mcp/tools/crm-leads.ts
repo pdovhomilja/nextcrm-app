@@ -11,8 +11,8 @@ import {
   notFound,
   softDeleteData,
   assertScopeOrNotFound,
-  assertAssignableUser,
 } from "../helpers";
+import { assertAssignableUser } from "@/lib/authz/assignable-user";
 
 // Status, source and type are rows in admin-managed lookup tables; agents read
 // their ids with crm_list_lead_options. A wrong id is NOT_FOUND, not an FK error.
@@ -203,7 +203,8 @@ export const crmLeadTools = [
     ) {
       await assertScopeOrNotFound(() => assertCanWriteLead(user, args.id), "Lead");
       await assertLeadOptions(args);
-      if (args.assigned_to) await assertAssignableUser(args.assigned_to, user);
+      const assignee = args.assigned_to;
+      if (assignee) await assertScopeOrNotFound(() => assertAssignableUser(user, assignee), "User");
       const { id, assigned_to, ...updateData } = args;
       const lead = await prismadb.crm_Leads.update({
         where: { id },

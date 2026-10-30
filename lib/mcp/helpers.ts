@@ -3,7 +3,6 @@ import { z } from "zod";
 // re-exports session helpers that pull in better-auth (ESM-only), which breaks
 // any jest suite transitively importing this file. errors.ts has no imports.
 import { AuthorizationError } from "@/lib/authz/errors";
-import { assertAssignableUser as assertAssignable } from "@/lib/authz/assignable-user";
 import { prismadb } from "@/lib/prisma";
 
 // ── Pagination ──────────────────────────────────────────────────
@@ -63,15 +62,6 @@ export function validationError(msg: string): never {
 
 export function externalError(msg: string): never {
   throw new Error(`EXTERNAL_ERROR: ${msg}`);
-}
-
-// Reassignment targets: the rule lives in lib/authz (shared with the server
-// actions); MCP reports a refusal as NOT_FOUND.
-export async function assertAssignableUser(
-  assigneeId: string,
-  actor?: { id: string; role: string },
-): Promise<void> {
-  await assertScopeOrNotFound(() => assertAssignable(assigneeId, actor), "User");
 }
 
 // Run an object-level authorization assert (assertCanWriteBoard, etc.) and

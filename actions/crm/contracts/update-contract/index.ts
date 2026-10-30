@@ -65,7 +65,7 @@ const handler = async (data: InputType): Promise<ReturnType> => {
     // Parent-write, as createContract: moving the contract to another account requires write on it.
     if (account && account !== before?.account) await assertCanWriteAccount(user, account);
     // Only a new assignee is checked: the form resends the current one.
-    if (assigned_to && assigned_to !== before?.assigned_to) await assertAssignableUser(assigned_to, user);
+    if (assigned_to && assigned_to !== before?.assigned_to) await assertAssignableUser(user, assigned_to);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;

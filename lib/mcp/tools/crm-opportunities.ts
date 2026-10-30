@@ -16,8 +16,8 @@ import {
   notFound,
   softDeleteData,
   assertScopeOrNotFound,
-  assertAssignableUser,
 } from "../helpers";
+import { assertAssignableUser } from "@/lib/authz/assignable-user";
 
 // Relinking an opportunity to an account/contact is a parent write: the row must
 // exist, must not be soft-deleted, and the caller must be allowed to write it.
@@ -183,7 +183,8 @@ export const crmOpportunityTools = [
       );
       if (args.account) await assertLinkableAccount(user, args.account);
       if (args.contact) await assertLinkableContact(user, args.contact);
-      if (args.assigned_to) await assertAssignableUser(args.assigned_to, user);
+      const assignee = args.assigned_to;
+      if (assignee) await assertScopeOrNotFound(() => assertAssignableUser(user, assignee), "User");
       const {
         id,
         budget,

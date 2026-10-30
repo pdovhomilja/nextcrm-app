@@ -38,7 +38,8 @@ import { bulkDeleteDocuments } from "@/actions/documents/bulk-delete-documents";
 import { bulkChangeType } from "@/actions/documents/bulk-change-type";
 import { bulkLinkToAccount } from "@/actions/documents/bulk-link-to-account";
 import { POST as enrichBulk } from "@/app/api/crm/contacts/enrich-bulk/route";
-import { assertAssignableUser } from "@/lib/mcp/helpers";
+import { assertAssignableUser } from "@/lib/authz/assignable-user";
+import { AuthorizationError } from "@/lib/authz/errors";
 import { crmDocumentTools } from "@/lib/mcp/tools/crm-documents";
 
 const tag = randomUUID().slice(0, 8);
@@ -281,8 +282,8 @@ describe("write paths that used read filters", () => {
 
   it("assertAssignableUser: a partner assigns only to himself", async () => {
     const partnerA = { id: U.A, role: "partner" as const };
-    await expect(assertAssignableUser(U.A, partnerA)).resolves.toBeUndefined();
-    await expect(assertAssignableUser(U.rep, partnerA)).rejects.toThrow("NOT_FOUND");
-    await expect(assertAssignableUser(U.rep, { id: U.rep, role: "user" })).resolves.toBeUndefined();
+    await expect(assertAssignableUser(partnerA, U.A)).resolves.toBeUndefined();
+    await expect(assertAssignableUser(partnerA, U.rep)).rejects.toBeInstanceOf(AuthorizationError);
+    await expect(assertAssignableUser({ id: U.rep, role: "user" }, U.rep)).resolves.toBeUndefined();
   });
 });
