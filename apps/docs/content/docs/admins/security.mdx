@@ -49,7 +49,7 @@ Outside `NODE_ENV=production`, NextCRM enables a BetterAuth test plugin and the 
 
 ## Cross-site writes and uploads
 
-- Browser writes (`POST`, `PUT`, `PATCH`, `DELETE`) to `/api/*` that carry the session cookie must send an `Origin` header equal to the origin of `BETTER_AUTH_URL`; anything else gets `403`. Open the app at exactly that URL (not an IP address or another hostname), or its own writes are refused. Requests with an `Authorization` header, MCP, webhooks, the unsubscribe link, `/api/auth`, `/api/inngest` and the two `NEXTCRM_TOKEN` endpoints are not checked.
+- Browser writes (`POST`, `PUT`, `PATCH`, `DELETE`) to `/api/*` that carry the session cookie must send an `Origin` header equal to the origin of `BETTER_AUTH_URL`; anything else gets `403`. Open the app at exactly that URL (not an IP address or another hostname), or its own writes are refused. An `Authorization` header does not skip the check when the session cookie is also sent; token callers without the cookie, MCP, webhooks, the unsubscribe link, `/api/auth`, `/api/inngest` and the two `NEXTCRM_TOKEN` endpoints are not checked.
 - Upload URLs are signed together with the file's content type, so the file store refuses an upload sent with another type. The stored file's extension follows the content type, not the file name. Avatars accept JPEG, PNG, GIF and WebP only.
 
 ## Server-side requests
