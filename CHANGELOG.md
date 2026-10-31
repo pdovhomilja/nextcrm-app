@@ -5,6 +5,16 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.6](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.5...v0.37.6) (2026-10-31)
+
+
+### Fixed
+
+* check updateAccount input ids like createAccount ([fc57e57](https://github.com/pdovhomilja/nextcrm-app/commit/fc57e57a05237da94d302ff6f0e9c1d3bda490b7))
+* member_of is a free-text label, not an account id ([4496f64](https://github.com/pdovhomilja/nextcrm-app/commit/4496f64549b2789b14a7ae537953e100c5b8be84))
+* scope target list growth and activities by type to the caller ([4803a4f](https://github.com/pdovhomilja/nextcrm-app/commit/4803a4f7409667baee7c087bbb01dece070b41e5))
+* scope target-list/activity reports, check updateAccount input ids ([983fc94](https://github.com/pdovhomilja/nextcrm-app/commit/983fc94b49a2a13f0e33604f51710c3d9eccb237))
+
 ## [0.37.5](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.4...v0.37.5) (2026-10-30)
 
 
