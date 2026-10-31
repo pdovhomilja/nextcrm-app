@@ -1,12 +1,12 @@
 /**
  * Ids a UI action takes from its input must point at something the caller may
- * use: an assignee must be an active user, a parent account one the caller can
- * read, a price list one that exists. DB-backed: CI runs it in the
- * integration job.
+ * use: an assignee must be an active user, a price list one that exists.
+ * member_of is a free-text label, not an id, and is stored as given.
+ * DB-backed: CI runs it in the integration job.
  *
  * Fixture: plain users `rep` and `other`, an inactive user `gone`, a partner
  * `partner`; one account each for rep and other, and rep's account `repGone`
- * still assigned to `gone` under other's account; one price list. Real actions
+ * still assigned to `gone`; one price list. Real actions
  * and MCP handlers are called as `rep` unless a test says otherwise (session
  * mocked, role read from the DB).
  */
@@ -47,7 +47,7 @@ beforeAll(async () => {
     });
   }
   await prismadb.crm_Accounts.create({
-    data: { id: ACC.repGone, v: 0, name: `repGone-${tag}`, assigned_to: U.gone, createdBy: U.rep, member_of: ACC.other },
+    data: { id: ACC.repGone, v: 0, name: `repGone-${tag}`, assigned_to: U.gone, createdBy: U.rep },
   });
   await prismadb.crm_PriceLists.create({ data: { id: PRICELIST, name: `pl-${tag}`, currency: "EUR" } });
   for (const [k, assignee] of [["rep", U.other], ["repGone", U.gone]] as const) {
@@ -80,9 +80,8 @@ describe("createAccount", () => {
     expect(await accountsNamed(`nobody-${tag}`)).toBe(0);
   });
 
-  it("refuses a parent account (member_of) the caller cannot read", async () => {
-    expect(await createAccount({ name: `member-${tag}`, member_of: ACC.other })).toEqual({ error: "Forbidden" });
-    expect(await accountsNamed(`member-${tag}`)).toBe(0);
+  it("accepts a free-text member_of and stores it as given", async () => {
+    expect(await createAccount({ name: `member-${tag}`, member_of: "Tesla Inc." })).toHaveProperty("data.member_of", "Tesla Inc.");
   });
 
   it("refuses a price list that does not exist", async () => {
@@ -90,12 +89,12 @@ describe("createAccount", () => {
     expect(await accountsNamed(`pricelist-${tag}`)).toBe(0);
   });
 
-  it("creates the account with an active assignee, a readable parent and an existing price list", async () => {
-    const r = await createAccount({ name: `ok-${tag}`, assigned_to: U.other, member_of: ACC.rep, pricelist_id: PRICELIST });
+  it("creates the account with an active assignee and an existing price list", async () => {
+    const r = await createAccount({ name: `ok-${tag}`, assigned_to: U.other, pricelist_id: PRICELIST });
     expect(r).toHaveProperty("data");
     const row = await prismadb.crm_Accounts.findFirstOrThrow({ where: { name: `ok-${tag}` } });
-    expect({ assigned_to: row.assigned_to, member_of: row.member_of, pricelist_id: row.pricelist_id })
-      .toEqual({ assigned_to: U.other, member_of: ACC.rep, pricelist_id: PRICELIST });
+    expect({ assigned_to: row.assigned_to, pricelist_id: row.pricelist_id })
+      .toEqual({ assigned_to: U.other, pricelist_id: PRICELIST });
   });
 });
 
@@ -112,14 +111,8 @@ describe("updateAccount", () => {
     expect((await account(ACC.rep)).assigned_to).toBe(U.rep);
   });
 
-  it("refuses a parent account (member_of) the caller cannot read", async () => {
-    expect(await updateAccount({ id: ACC.rep, member_of: ACC.other })).toEqual({ error: "Forbidden" });
-    expect((await account(ACC.rep)).member_of).toBeNull();
-  });
-
-  it("refuses the account as its own parent", async () => {
-    expect(await updateAccount({ id: ACC.rep, member_of: ACC.rep })).toEqual({ error: "Forbidden" });
-    expect((await account(ACC.rep)).member_of).toBeNull();
+  it("accepts a free-text member_of and stores it as given", async () => {
+    expect(await updateAccount({ id: ACC.rep, member_of: "Tesla Inc." })).toHaveProperty("data.member_of", "Tesla Inc.");
   });
 
   it("refuses a price list that does not exist", async () => {
@@ -127,17 +120,17 @@ describe("updateAccount", () => {
     expect((await account(ACC.rep)).pricelist_id).toBeNull();
   });
 
-  it("still saves when the form resends the current (inactive) assignee and unreadable parent", async () => {
-    const r = await updateAccount({ id: ACC.repGone, assigned_to: U.gone, member_of: ACC.other, description: `edited-${tag}` });
+  it("still saves when the form resends the current (inactive) assignee", async () => {
+    const r = await updateAccount({ id: ACC.repGone, assigned_to: U.gone, description: `edited-${tag}` });
     expect(r).toHaveProperty("data.description", `edited-${tag}`);
   });
 
-  it("saves an active assignee, a readable parent and an existing price list; an empty price list clears it", async () => {
-    const r = await updateAccount({ id: ACC.repGone, assigned_to: U.other, member_of: ACC.rep, pricelist_id: PRICELIST });
+  it("saves an active assignee and an existing price list; an empty price list clears it", async () => {
+    const r = await updateAccount({ id: ACC.repGone, assigned_to: U.other, pricelist_id: PRICELIST });
     expect(r).toHaveProperty("data");
     const row = await account(ACC.repGone);
-    expect({ assigned_to: row.assigned_to, member_of: row.member_of, pricelist_id: row.pricelist_id })
-      .toEqual({ assigned_to: U.other, member_of: ACC.rep, pricelist_id: PRICELIST });
+    expect({ assigned_to: row.assigned_to, pricelist_id: row.pricelist_id })
+      .toEqual({ assigned_to: U.other, pricelist_id: PRICELIST });
     // other now owns it; rep still created it, so he may write it.
     expect(await updateAccount({ id: ACC.repGone, pricelist_id: "" })).toHaveProperty("data.pricelist_id", null);
   });

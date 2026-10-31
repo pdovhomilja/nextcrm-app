@@ -8,7 +8,6 @@ import {
   requireAuthenticated,
   assertCanWriteAccount,
   assertAssignableUser,
-  assertCanReadAccount,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
@@ -60,14 +59,12 @@ export const updateAccount = async (data: {
 
   const before = await prismadb.crm_Accounts.findUnique({ where: { id, deletedAt: null } });
   // Ids from the input, as in createAccount. The form resends the stored
-  // assignee and parent, so those are checked only when they change; a
-  // partner's assigned_to is ignored below.
+  // assignee, so it is checked only when it changes; a partner's assigned_to
+  // is ignored below.
   try {
     if (rest.assigned_to && user.role !== "partner" && rest.assigned_to !== before?.assigned_to) {
       await assertAssignableUser(user, rest.assigned_to);
     }
-    if (rest.member_of === id) throw new AuthorizationError();
-    if (rest.member_of && rest.member_of !== before?.member_of) await assertCanReadAccount(user, rest.member_of);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
