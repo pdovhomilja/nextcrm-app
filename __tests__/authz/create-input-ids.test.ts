@@ -1,11 +1,12 @@
 /**
  * Ids a UI action takes from its input must point at something the caller may
- * use: an assignee must be an active user, a parent account one the caller can
- * read, a price list one that exists. DB-backed: CI runs it in the
- * integration job.
+ * use: an assignee must be an active user, a price list one that exists.
+ * member_of is a free-text label, not an id, and is stored as given.
+ * DB-backed: CI runs it in the integration job.
  *
  * Fixture: plain users `rep` and `other`, an inactive user `gone`, a partner
- * `partner`; one account each for rep and other; one price list. Real actions
+ * `partner`; one account each for rep and other, and rep's account `repGone`
+ * still assigned to `gone`; one price list. Real actions
  * and MCP handlers are called as `rep` unless a test says otherwise (session
  * mocked, role read from the DB).
  */
@@ -17,13 +18,14 @@ import { randomUUID } from "crypto";
 import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import { createAccount } from "@/actions/crm/accounts/create-account";
+import { updateAccount } from "@/actions/crm/accounts/update-account";
 import { createNewContract } from "@/actions/crm/contracts/create-new-contract";
 import { updateContract } from "@/actions/crm/contracts/update-contract";
 import { crmAccountTools } from "@/lib/mcp/tools/crm-accounts";
 
 const tag = randomUUID().slice(0, 8);
 const U = { rep: randomUUID(), other: randomUUID(), gone: randomUUID(), partner: randomUUID() };
-const ACC = { rep: randomUUID(), other: randomUUID() };
+const ACC = { rep: randomUUID(), other: randomUUID(), repGone: randomUUID() };
 const PRICELIST = randomUUID();
 // rep's contract assigned to other; rep's contract still assigned to the now inactive `gone`
 const CONTRACT = { rep: randomUUID(), repGone: randomUUID() };
@@ -44,6 +46,9 @@ beforeAll(async () => {
       data: { id: ACC[k], v: 0, name: `${k}-${tag}`, assigned_to: U[k], createdBy: U[k] },
     });
   }
+  await prismadb.crm_Accounts.create({
+    data: { id: ACC.repGone, v: 0, name: `repGone-${tag}`, assigned_to: U.gone, createdBy: U.rep },
+  });
   await prismadb.crm_PriceLists.create({ data: { id: PRICELIST, name: `pl-${tag}`, currency: "EUR" } });
   for (const [k, assignee] of [["rep", U.other], ["repGone", U.gone]] as const) {
     await prismadb.crm_Contracts.create({
@@ -56,7 +61,7 @@ const as = (who: keyof typeof U) => (getSession as jest.Mock).mockResolvedValue(
 beforeEach(() => as("rep"));
 
 afterAll(async () => {
-  const names = [`rep-${tag}`, `other-${tag}`].concat(["ok", "gone", "nobody", "member", "pricelist", "partner"].map((n) => `${n}-${tag}`));
+  const names = [`rep-${tag}`, `other-${tag}`, `repGone-${tag}`].concat(["ok", "gone", "nobody", "member", "pricelist", "partner"].map((n) => `${n}-${tag}`));
   await prismadb.crm_Contracts.deleteMany({ where: { createdBy: { in: [U.rep, U.partner] } } });
   await prismadb.crm_Accounts.deleteMany({ where: { name: { in: names } } });
   await prismadb.crm_PriceLists.deleteMany({ where: { id: PRICELIST } });
@@ -75,9 +80,8 @@ describe("createAccount", () => {
     expect(await accountsNamed(`nobody-${tag}`)).toBe(0);
   });
 
-  it("refuses a parent account (member_of) the caller cannot read", async () => {
-    expect(await createAccount({ name: `member-${tag}`, member_of: ACC.other })).toEqual({ error: "Forbidden" });
-    expect(await accountsNamed(`member-${tag}`)).toBe(0);
+  it("accepts a free-text member_of and stores it as given", async () => {
+    expect(await createAccount({ name: `member-${tag}`, member_of: "Tesla Inc." })).toHaveProperty("data.member_of", "Tesla Inc.");
   });
 
   it("refuses a price list that does not exist", async () => {
@@ -85,12 +89,50 @@ describe("createAccount", () => {
     expect(await accountsNamed(`pricelist-${tag}`)).toBe(0);
   });
 
-  it("creates the account with an active assignee, a readable parent and an existing price list", async () => {
-    const r = await createAccount({ name: `ok-${tag}`, assigned_to: U.other, member_of: ACC.rep, pricelist_id: PRICELIST });
+  it("creates the account with an active assignee and an existing price list", async () => {
+    const r = await createAccount({ name: `ok-${tag}`, assigned_to: U.other, pricelist_id: PRICELIST });
     expect(r).toHaveProperty("data");
     const row = await prismadb.crm_Accounts.findFirstOrThrow({ where: { name: `ok-${tag}` } });
-    expect({ assigned_to: row.assigned_to, member_of: row.member_of, pricelist_id: row.pricelist_id })
-      .toEqual({ assigned_to: U.other, member_of: ACC.rep, pricelist_id: PRICELIST });
+    expect({ assigned_to: row.assigned_to, pricelist_id: row.pricelist_id })
+      .toEqual({ assigned_to: U.other, pricelist_id: PRICELIST });
+  });
+});
+
+describe("updateAccount", () => {
+  const account = (id: string) => prismadb.crm_Accounts.findUniqueOrThrow({ where: { id } });
+
+  it("refuses reassigning to an inactive user and leaves the assignee", async () => {
+    expect(await updateAccount({ id: ACC.rep, assigned_to: U.gone })).toEqual({ error: "Forbidden" });
+    expect((await account(ACC.rep)).assigned_to).toBe(U.rep);
+  });
+
+  it("refuses an assignee id that is no user", async () => {
+    expect(await updateAccount({ id: ACC.rep, assigned_to: NOBODY })).toEqual({ error: "Forbidden" });
+    expect((await account(ACC.rep)).assigned_to).toBe(U.rep);
+  });
+
+  it("accepts a free-text member_of and stores it as given", async () => {
+    expect(await updateAccount({ id: ACC.rep, member_of: "Tesla Inc." })).toHaveProperty("data.member_of", "Tesla Inc.");
+  });
+
+  it("refuses a price list that does not exist", async () => {
+    expect(await updateAccount({ id: ACC.rep, pricelist_id: NOBODY })).toEqual({ error: "Price list not found" });
+    expect((await account(ACC.rep)).pricelist_id).toBeNull();
+  });
+
+  it("still saves when the form resends the current (inactive) assignee", async () => {
+    const r = await updateAccount({ id: ACC.repGone, assigned_to: U.gone, description: `edited-${tag}` });
+    expect(r).toHaveProperty("data.description", `edited-${tag}`);
+  });
+
+  it("saves an active assignee and an existing price list; an empty price list clears it", async () => {
+    const r = await updateAccount({ id: ACC.repGone, assigned_to: U.other, pricelist_id: PRICELIST });
+    expect(r).toHaveProperty("data");
+    const row = await account(ACC.repGone);
+    expect({ assigned_to: row.assigned_to, pricelist_id: row.pricelist_id })
+      .toEqual({ assigned_to: U.other, pricelist_id: PRICELIST });
+    // other now owns it; rep still created it, so he may write it.
+    expect(await updateAccount({ id: ACC.repGone, pricelist_id: "" })).toHaveProperty("data.pricelist_id", null);
   });
 });
 

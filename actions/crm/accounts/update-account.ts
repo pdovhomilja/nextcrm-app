@@ -7,6 +7,7 @@ import { writeAuditLog, diffObjects } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   assertCanWriteAccount,
+  assertAssignableUser,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
@@ -56,8 +57,24 @@ export const updateAccount = async (data: {
     throw e;
   }
 
+  const before = await prismadb.crm_Accounts.findUnique({ where: { id, deletedAt: null } });
+  // Ids from the input, as in createAccount. The form resends the stored
+  // assignee, so it is checked only when it changes; a partner's assigned_to
+  // is ignored below.
   try {
-    const before = await prismadb.crm_Accounts.findUnique({ where: { id, deletedAt: null } });
+    if (rest.assigned_to && user.role !== "partner" && rest.assigned_to !== before?.assigned_to) {
+      await assertAssignableUser(user, rest.assigned_to);
+    }
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
+  if (rest.pricelist_id) {
+    const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: rest.pricelist_id }, select: { id: true } });
+    if (!pricelist) return { error: "Price list not found" };
+  }
+
+  try {
     const account = await prismadb.crm_Accounts.update({
       where: { id },
       data: {

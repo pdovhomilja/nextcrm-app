@@ -59,12 +59,8 @@ export async function getActivitiesByType(
   filters: ReportFilters,
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
-  // crm_Activities has no direct ReportScope mapping; use task scope as a proxy
-  // (activities are typically created alongside tasks by the same user).
-  // Manager/admin scope is empty, so this is a no-op for them.
-  void scope;
   const activities = await prismadb.crm_Activities.findMany({
-    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo } },
+    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.activity },
     select: { type: true },
   });
   const grouped: Record<string, number> = {};

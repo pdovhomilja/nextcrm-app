@@ -7,7 +7,6 @@ import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   assertAssignableUser,
-  assertCanReadAccount,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -52,10 +51,9 @@ export const createAccount = async (data: {
   if (!name) return { error: "name is required" };
 
   // Ids from the input: the assignee must be assignable (a partner's is
-  // ignored below), the parent account readable, the price list real.
+  // ignored below), the price list real. member_of is a free-text label.
   try {
     if (data.assigned_to && user.role !== "partner") await assertAssignableUser(user, data.assigned_to);
-    if (data.member_of) await assertCanReadAccount(user, data.member_of);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;

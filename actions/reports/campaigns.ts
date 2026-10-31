@@ -60,11 +60,8 @@ export async function getTargetListGrowth(
   filters: ReportFilters,
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
-  // crm_TargetLists has no direct ReportScope mapping; treat as campaign-adjacent.
-  // Manager/admin: no filter. Future: add target-list scope key if user-scoping needed.
-  void scope;
   const lists = await prismadb.crm_TargetLists.findMany({
-    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo } },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.targetList },
     select: { created_on: true, _count: { select: { targets: true } } },
   });
   const grouped: Record<string, number> = {};

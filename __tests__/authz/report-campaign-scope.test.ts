@@ -1,15 +1,17 @@
 /**
  * Campaign performance (reports + /api/reports/export category "campaigns")
- * counts only the sends of campaigns the caller may see (Sentinel N3).
- * DB-backed: CI runs it in the integration job.
+ * counts only the sends of campaigns the caller may see (Sentinel N3); target
+ * list growth and activities by type count only the caller's own lists and
+ * activities. DB-backed: CI runs it in the integration job.
  *
- * Fixture: users A and B (role user) each own one campaign with sends dated
- * in 2001.
+ * Fixture: users A and B (role user) each own one campaign with sends, one
+ * target list and activities, all dated in 2001.
  */
 import { randomUUID } from "crypto";
 import { prismadb } from "@/lib/prisma";
 import { getReportScope } from "@/lib/authz/scopes/report-scope";
-import { getCampaignPerformance } from "@/actions/reports/campaigns";
+import { getCampaignPerformance, getTargetListGrowth } from "@/actions/reports/campaigns";
+import { getActivitiesByType } from "@/actions/reports/activity";
 
 const tag = randomUUID().slice(0, 8);
 // No admin row: getReportScope needs only id + role, and an admin row would be
@@ -18,6 +20,8 @@ const U = { A: randomUUID(), B: randomUUID() };
 const CAMPAIGN = { A: randomUUID(), B: randomUUID() };
 const TEMPLATE = randomUUID();
 const TARGETS = [randomUUID(), randomUUID()]; // one send per (step, target)
+const LIST = { A: randomUUID(), B: randomUUID() }; // A: 1 target, B: 2 targets
+const ACTIVITY_TITLE = `act-${tag}`; // A: 1 call, B: 2 notes
 const filters = { dateFrom: new Date("2001-01-01"), dateTo: new Date("2001-12-31") };
 
 beforeAll(async () => {
@@ -51,6 +55,21 @@ beforeAll(async () => {
       });
     }
   }
+  for (const k of ["A", "B"] as const) {
+    await prismadb.crm_TargetLists.create({
+      data: {
+        id: LIST[k], name: `list-${k}-${tag}`, created_by: U[k], created_on: new Date("2001-06-01"),
+        targets: { create: (k === "A" ? TARGETS.slice(0, 1) : TARGETS).map((target_id) => ({ target_id })) },
+      },
+    });
+  }
+  await prismadb.crm_Activities.createMany({
+    data: [
+      { type: "call" as const, createdBy: U.A },
+      { type: "note" as const, createdBy: U.B },
+      { type: "note" as const, createdBy: U.B },
+    ].map((a) => ({ ...a, title: ACTIVITY_TITLE, date: new Date("2001-06-01"), createdAt: new Date("2001-06-01") })),
+  });
 });
 
 afterAll(async () => {
@@ -58,6 +77,8 @@ afterAll(async () => {
   await prismadb.crm_campaign_sends.deleteMany({ where: { campaign_id: { in: ids } } });
   await prismadb.crm_campaign_steps.deleteMany({ where: { campaign_id: { in: ids } } });
   await prismadb.crm_campaigns.deleteMany({ where: { id: { in: ids } } });
+  await prismadb.crm_Activities.deleteMany({ where: { title: ACTIVITY_TITLE } });
+  await prismadb.crm_TargetLists.deleteMany({ where: { id: { in: Object.values(LIST) } } });
   await prismadb.crm_Targets.deleteMany({ where: { id: { in: TARGETS } } });
   await prismadb.crm_campaign_templates.deleteMany({ where: { id: TEMPLATE } });
   await prismadb.users.deleteMany({ where: { id: { in: Object.values(U) } } });
@@ -77,5 +98,42 @@ describe("getCampaignPerformance", () => {
     expect(perf.sent).toBeGreaterThanOrEqual(3);
     expect(perf.opened).toBeGreaterThanOrEqual(2);
     expect(perf.clicked).toBeGreaterThanOrEqual(1);
+  });
+});
+
+const partner = () => getReportScope({ id: randomUUID(), role: "partner" });
+const admin = () => getReportScope({ id: randomUUID(), role: "admin" });
+const countOf = (rows: { name: string; Number: number }[], name: string) =>
+  rows.find((r) => r.name === name)?.Number ?? 0;
+
+describe("getTargetListGrowth", () => {
+  it("a user counts only the targets on his own lists", async () => {
+    expect(await getTargetListGrowth(filters, getReportScope({ id: U.A, role: "user" })))
+      .toEqual([{ name: "2001-06", Number: 1 }]);
+  });
+
+  it("a partner counts no lists", async () => {
+    expect(await getTargetListGrowth(filters, partner())).toEqual([]);
+  });
+
+  it("an admin counts every list", async () => {
+    expect(countOf(await getTargetListGrowth(filters, admin()), "2001-06")).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("getActivitiesByType", () => {
+  it("a user counts only the activities he created", async () => {
+    expect(await getActivitiesByType(filters, getReportScope({ id: U.B, role: "user" })))
+      .toEqual([{ name: "note", Number: 2 }]);
+  });
+
+  it("a partner counts no activities", async () => {
+    expect(await getActivitiesByType(filters, partner())).toEqual([]);
+  });
+
+  it("an admin counts every activity", async () => {
+    const rows = await getActivitiesByType(filters, admin());
+    expect(countOf(rows, "call")).toBeGreaterThanOrEqual(1);
+    expect(countOf(rows, "note")).toBeGreaterThanOrEqual(2);
   });
 });
