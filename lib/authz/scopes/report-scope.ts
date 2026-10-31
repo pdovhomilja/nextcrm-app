@@ -10,6 +10,8 @@ export interface ReportScope {
   contact: Record<string, unknown>;
   task: Record<string, unknown>;
   campaign: Record<string, unknown>;
+  targetList: Record<string, unknown>;
+  activity: Record<string, unknown>;
   allowUserDirectory: boolean;
 }
 
@@ -20,14 +22,17 @@ const EMPTY: ReportScope = {
   contact: {},
   task: {},
   campaign: {},
+  targetList: {},
+  activity: {},
   allowUserDirectory: true,
 };
 
 export function getReportScope(user: AuthzUser): ReportScope {
   if (isManagerOrAdmin(user)) return EMPTY;
   if (user.role === "partner") {
-    // CRM records through his accounts only; `task` is the projects module
-    // and campaigns are internal: none for a partner.
+    // CRM records through his accounts only; `task` is the projects module,
+    // campaigns and target lists are internal, and activities have no read
+    // scope outside a record's feed: none for a partner.
     const account = partnerAccountWhere(user.id);
     const visible = partnerVisibleAccountWhere(user.id);
     return {
@@ -37,6 +42,8 @@ export function getReportScope(user: AuthzUser): ReportScope {
       contact: { assigned_accounts: visible },
       task: { ...NO_ROWS },
       campaign: { ...NO_ROWS },
+      targetList: { ...NO_ROWS },
+      activity: { ...NO_ROWS },
       allowUserDirectory: false,
     };
   }
@@ -48,6 +55,8 @@ export function getReportScope(user: AuthzUser): ReportScope {
       contact: { ...NO_ROWS },
       task: { ...NO_ROWS },
       campaign: { ...NO_ROWS },
+      targetList: { ...NO_ROWS },
+      activity: { ...NO_ROWS },
       allowUserDirectory: false,
     };
   }
@@ -71,6 +80,9 @@ export function getReportScope(user: AuthzUser): ReportScope {
     },
     task: { user: user.id },
     campaign: { created_by: user.id },
+    // Same owners as targetListReadScopeWhere and crm_list_activities.
+    targetList: { created_by: user.id },
+    activity: { createdBy: user.id },
     allowUserDirectory: false,
   };
 }

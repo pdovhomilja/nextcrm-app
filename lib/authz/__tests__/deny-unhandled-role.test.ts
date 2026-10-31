@@ -248,11 +248,13 @@ describe("partner: his own read scope, everything else denied", () => {
     },
   );
 
-  it("report scope: CRM fragments through his accounts; projects tasks, campaigns, directory: none", () => {
-    const { allowUserDirectory, task, campaign, ...crmFragments } = getReportScope(user);
+  it("report scope: CRM fragments through his accounts; projects tasks, campaigns, target lists, activities, directory: none", () => {
+    const { allowUserDirectory, task, campaign, targetList, activity, ...crmFragments } = getReportScope(user);
     expect(allowUserDirectory).toBe(false);
     expectNoRowsWhere(task, "report.task");
     expectNoRowsWhere(campaign, "report.campaign");
+    expectNoRowsWhere(targetList, "report.targetList");
+    expectNoRowsWhere(activity, "report.activity");
     expect(Object.keys(crmFragments).sort()).toEqual(["account", "contact", "lead", "opportunity"]);
     for (const [entity, where] of Object.entries(crmFragments)) {
       expectPartnerScoped(where, `report.${entity}`);
