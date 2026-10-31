@@ -33,7 +33,7 @@ export async function getCampaignROI(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const campaigns = await prismadb.crm_campaigns.findMany({
-    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, status: { in: ["sent", "sending"] }, ...scope.campaign },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, status: { in: ["sent", "sending"] }, ...scope.campaign },
     select: { name: true, _count: { select: { sends: true } } },
   });
   return campaigns.map((c: { name: string; _count: { sends: number } }) => ({ name: c.name, Number: c._count.sends }));
@@ -44,7 +44,7 @@ export async function getTopTemplates(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const campaigns = await prismadb.crm_campaigns.findMany({
-    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.campaign },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, status: { not: "deleted" }, ...scope.campaign },
     select: { template: { select: { name: true } }, _count: { select: { sends: true } } },
     orderBy: { sends: { _count: "desc" } },
     take: 10,
@@ -61,8 +61,8 @@ export async function getTargetListGrowth(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const lists = await prismadb.crm_TargetLists.findMany({
-    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.targetList },
-    select: { created_on: true, _count: { select: { targets: true } } },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.targetList },
+    select: { created_on: true, _count: { select: { targets: { where: { target: { deletedAt: null } } } } } },
   });
   const grouped: Record<string, number> = {};
   for (const l of lists) {

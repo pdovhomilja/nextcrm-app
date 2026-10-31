@@ -62,7 +62,7 @@ export async function getNewContacts(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const contacts = await prismadb.crm_Contacts.findMany({
-    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.contact },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.contact },
     select: { created_on: true },
   });
   return groupByMonth(contacts.map((c: { created_on: Date | null }) => ({ createdAt: c.created_on })));
@@ -73,7 +73,7 @@ export async function getContactsByAccount(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const contacts = await prismadb.crm_Contacts.findMany({
-    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.contact },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.contact },
     select: { assigned_accounts: { select: { name: true } } },
   });
   const grouped: Record<string, number> = {};

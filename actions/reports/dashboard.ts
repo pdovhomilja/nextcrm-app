@@ -84,12 +84,12 @@ export async function getDashboardKPIs(
     prismadb.crm_Opportunities.count({
       where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, status: "CLOSED", ...scope.opportunity },
     }),
-    // newContacts (crm_Contacts has created_on, no deletedAt)
+    // newContacts (crm_Contacts has created_on)
     prismadb.crm_Contacts.count({
-      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.contact },
+      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.contact },
     }),
     prismadb.crm_Contacts.count({
-      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, ...scope.contact },
+      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, ...scope.contact },
     }),
     // activeUsers (status = ACTIVE, not date-filtered) - global; manager/admin only typically read this KPI
     prismadb.users.count({

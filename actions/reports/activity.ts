@@ -60,7 +60,7 @@ export async function getActivitiesByType(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const activities = await prismadb.crm_Activities.findMany({
-    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.activity },
+    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.activity },
     select: { type: true },
   });
   const grouped: Record<string, number> = {};
