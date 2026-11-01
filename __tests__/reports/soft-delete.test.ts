@@ -6,7 +6,8 @@
  * Fixture: one user (role user) owns one live and one soft-deleted row of each
  * kind, all dated in 2002, so his scoped counts are exact. Admin checks use
  * labels only this fixture creates (account, campaign, template names), and
- * the unscoped campaignsSent KPI is read over this fixture's exact send time.
+ * campaignsSent is read over this fixture's exact send time. A second user
+ * owns one live campaign with one send, to prove campaignsSent is scoped.
  */
 import { randomUUID } from "crypto";
 import { prismadb } from "@/lib/prisma";
@@ -22,6 +23,8 @@ const tag = randomUUID().slice(0, 8);
 // No admin row: getReportScope needs only id + role, and an admin row would be
 // picked up by findFirst({ role: "admin" }) in suites running in parallel.
 const U = randomUUID();
+const OTHER = randomUUID();
+const OTHER_CAMPAIGN = randomUUID();
 const ACCOUNT = randomUUID();
 // removed = deleted in the campaigns UI (status "deleted", deletedAt stays null);
 // nostatus = live campaign whose status is NULL (the column has no default).
@@ -78,6 +81,21 @@ beforeAll(async () => {
       },
     });
   }
+  await prismadb.users.create({
+    data: { id: OTHER, email: `sd-o-${tag}@reports.test`, name: `sd-o-${tag}`, role: "user", userStatus: "ACTIVE" },
+  });
+  await prismadb.crm_campaigns.create({
+    data: { id: OTHER_CAMPAIGN, v: 0, name: `sd-other-${tag}`, status: "sent", created_by: OTHER, created_on: JUNE },
+  });
+  const otherStep = await prismadb.crm_campaign_steps.create({
+    data: { campaign_id: OTHER_CAMPAIGN, order: 1, template_id: TEMPLATE.live, subject: "s" },
+  });
+  await prismadb.crm_campaign_sends.create({
+    data: {
+      campaign_id: OTHER_CAMPAIGN, step_id: otherStep.id, target_id: TARGET.live, email: `sd-o@reports.test`,
+      status: "sent", sent_at: SENT_AT,
+    },
+  });
 
   // Target lists: the live list holds a live and a soft-deleted target; the
   // soft-deleted list holds the live target.
@@ -128,7 +146,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const campaigns = Object.values(CAMPAIGN);
+  const campaigns = [...Object.values(CAMPAIGN), OTHER_CAMPAIGN];
   await prismadb.crm_campaign_sends.deleteMany({ where: { campaign_id: { in: campaigns } } });
   await prismadb.crm_campaign_steps.deleteMany({ where: { campaign_id: { in: campaigns } } });
   await prismadb.crm_campaigns.deleteMany({ where: { id: { in: campaigns } } });
@@ -141,7 +159,7 @@ afterAll(async () => {
   await prismadb.boards.deleteMany({ where: { id: { in: Object.values(BOARD) } } });
   await prismadb.crm_Contacts.deleteMany({ where: { id: { in: Object.values(CONTACT) } } });
   await prismadb.crm_Accounts.deleteMany({ where: { id: ACCOUNT } });
-  await prismadb.users.deleteMany({ where: { id: U } });
+  await prismadb.users.deleteMany({ where: { id: { in: [U, OTHER] } } });
   await prismadb.$disconnect();
 });
 
@@ -235,9 +253,20 @@ describe("getDashboardKPIs", () => {
     expect(kpis.find((k) => k.label === "openTasks")?.value).toBe(2);
   });
 
-  it("campaignsSent does not count the sends of a deleted campaign", async () => {
-    const kpis = await getDashboardKPIs({ dateFrom: SENT_AT, dateTo: SENT_AT }, "EUR", admin());
-    expect(kpis.find((k) => k.label === "campaignsSent")?.value).toBe(2); // live + nostatus
+  const sentAt = async (scope: ReturnType<typeof admin>) =>
+    (await getDashboardKPIs({ dateFrom: SENT_AT, dateTo: SENT_AT }, "EUR", scope))
+      .find((k) => k.label === "campaignsSent")?.value;
+
+  it("campaignsSent: a user counts only his own live campaigns' sends", async () => {
+    expect(await sentAt(user())).toBe(2); // live + nostatus, not deleted/removed/other user's
+  });
+
+  it("campaignsSent: a partner counts no sends", async () => {
+    expect(await sentAt(getReportScope({ id: randomUUID(), role: "partner" }))).toBe(0);
+  });
+
+  it("campaignsSent: an admin counts every live campaign's sends", async () => {
+    expect(await sentAt(admin())).toBe(3); // live + nostatus + other user's
   });
 
   it("newContacts does not count a soft-deleted contact", async () => {

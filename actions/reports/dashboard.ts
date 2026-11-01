@@ -113,12 +113,12 @@ export async function getDashboardKPIs(
     prismadb.tasks.count({
       where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, taskStatus: "ACTIVE", AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     }),
-    // campaignsSent (sends have no direct scope; manager/admin = no-op)
+    // campaignsSent: sends are scoped through their parent campaign
     prismadb.crm_campaign_sends.count({
-      where: { sent_at: { gte: filters.dateFrom, lte: filters.dateTo }, campaign: CAMPAIGN_NOT_DELETED },
+      where: { sent_at: { gte: filters.dateFrom, lte: filters.dateTo }, campaign: { AND: [scope.campaign, CAMPAIGN_NOT_DELETED] } },
     }),
     prismadb.crm_campaign_sends.count({
-      where: { sent_at: { gte: prev.dateFrom, lte: prev.dateTo }, campaign: CAMPAIGN_NOT_DELETED },
+      where: { sent_at: { gte: prev.dateFrom, lte: prev.dateTo }, campaign: { AND: [scope.campaign, CAMPAIGN_NOT_DELETED] } },
     }),
     // newAccounts
     prismadb.crm_Accounts.count({
