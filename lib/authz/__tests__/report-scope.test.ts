@@ -9,6 +9,7 @@ describe("getReportScope", () => {
     expect(s.contact).toEqual({});
     expect(s.task).toEqual({});
     expect(s.campaign).toEqual({});
+    expect(s.contract).toEqual({});
     expect(s.allowUserDirectory).toBe(true);
   });
 
@@ -16,6 +17,7 @@ describe("getReportScope", () => {
     const s = getReportScope({ id: "m", role: "manager" });
     expect(s.opportunity).toEqual({});
     expect(s.lead).toEqual({});
+    expect(s.contract).toEqual({});
     expect(s.allowUserDirectory).toBe(true);
   });
 
@@ -45,6 +47,9 @@ describe("getReportScope", () => {
     });
     expect(s.task).toMatchObject({ user: "u1" });
     expect(s.campaign).toMatchObject({ created_by: "u1" });
+    expect(s.contract).toEqual({
+      OR: [{ assigned_to: "u1" }, { createdBy: "u1" }],
+    });
     expect(s.allowUserDirectory).toBe(false);
   });
 });

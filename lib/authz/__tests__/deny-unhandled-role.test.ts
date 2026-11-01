@@ -255,7 +255,7 @@ describe("partner: his own read scope, everything else denied", () => {
     expectNoRowsWhere(campaign, "report.campaign");
     expectNoRowsWhere(targetList, "report.targetList");
     expectNoRowsWhere(activity, "report.activity");
-    expect(Object.keys(crmFragments).sort()).toEqual(["account", "contact", "lead", "opportunity"]);
+    expect(Object.keys(crmFragments).sort()).toEqual(["account", "contact", "contract", "lead", "opportunity"]);
     for (const [entity, where] of Object.entries(crmFragments)) {
       expectPartnerScoped(where, `report.${entity}`);
     }

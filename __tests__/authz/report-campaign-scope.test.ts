@@ -6,12 +6,17 @@
  *
  * Fixture: users A and B (role user) each own one campaign with sends, one
  * target list and activities, all dated in 2001.
+ *
+ * The dashboard's contractsExpiring KPI counts only the contracts the caller
+ * may see: users A and B, partner P (on account PACC) and contracts ending at
+ * one exact instant only this suite uses.
  */
 import { randomUUID } from "crypto";
 import { prismadb } from "@/lib/prisma";
 import { getReportScope } from "@/lib/authz/scopes/report-scope";
 import { getCampaignPerformance, getTargetListGrowth } from "@/actions/reports/campaigns";
 import { getActivitiesByType } from "@/actions/reports/activity";
+import { getDashboardKPIs } from "@/actions/reports/dashboard";
 
 const tag = randomUUID().slice(0, 8);
 // No admin row: getReportScope needs only id + role, and an admin row would be
@@ -23,6 +28,11 @@ const TARGETS = [randomUUID(), randomUUID()]; // one send per (step, target)
 const LIST = { A: randomUUID(), B: randomUUID() }; // A: 1 target, B: 2 targets
 const ACTIVITY_TITLE = `act-${tag}`; // A: 1 call, B: 2 notes
 const filters = { dateFrom: new Date("2001-01-01"), dateTo: new Date("2001-12-31") };
+const P = randomUUID(); // partner of account PACC
+const ACC = { P: randomUUID(), other: randomUUID() };
+const CONTRACT_TITLE = `contract-${tag}`;
+// Random millisecond in 2001: no other suite's contract ends at this instant.
+const END = new Date(Date.UTC(2001, 7, 1) + Math.floor(Math.random() * 86_400_000));
 
 beforeAll(async () => {
   await prismadb.users.createMany({
@@ -30,6 +40,26 @@ beforeAll(async () => {
       { id: U.A, email: `a-${tag}@n3.test`, name: `a-${tag}`, role: "user", userStatus: "ACTIVE" },
       { id: U.B, email: `b-${tag}@n3.test`, name: `b-${tag}`, role: "user", userStatus: "ACTIVE" },
     ],
+  });
+  await prismadb.users.create({
+    data: { id: P, email: `p-${tag}@n3.test`, name: `p-${tag}`, role: "partner", userStatus: "ACTIVE" },
+  });
+  await prismadb.crm_Accounts.createMany({
+    data: [
+      { id: ACC.P, v: 0, name: `pacc-${tag}`, partnerUserId: P },
+      { id: ACC.other, v: 0, name: `oacc-${tag}` },
+    ],
+  });
+  // A sees 2 (assigned, created), B sees 2 (created, assigned), P sees 1 (on
+  // PACC), an admin sees 4. The soft-deleted one counts for nobody.
+  await prismadb.crm_Contracts.createMany({
+    data: [
+      { assigned_to: U.A, createdBy: U.B },
+      { createdBy: U.A },
+      { assigned_to: U.B, account: ACC.P },
+      { account: ACC.other },
+      { assigned_to: U.A, createdBy: U.A, account: ACC.P, deletedAt: new Date() },
+    ].map((c) => ({ ...c, v: 0, title: CONTRACT_TITLE, value: 1, endDate: END })),
   });
   await prismadb.crm_campaign_templates.create({
     data: { id: TEMPLATE, name: `t-${tag}`, content_html: "<p>x</p>", content_json: {} },
@@ -81,7 +111,9 @@ afterAll(async () => {
   await prismadb.crm_TargetLists.deleteMany({ where: { id: { in: Object.values(LIST) } } });
   await prismadb.crm_Targets.deleteMany({ where: { id: { in: TARGETS } } });
   await prismadb.crm_campaign_templates.deleteMany({ where: { id: TEMPLATE } });
-  await prismadb.users.deleteMany({ where: { id: { in: Object.values(U) } } });
+  await prismadb.crm_Contracts.deleteMany({ where: { title: CONTRACT_TITLE } });
+  await prismadb.crm_Accounts.deleteMany({ where: { id: { in: Object.values(ACC) } } });
+  await prismadb.users.deleteMany({ where: { id: { in: [...Object.values(U), P] } } });
   await prismadb.$disconnect();
 });
 
@@ -135,5 +167,29 @@ describe("getActivitiesByType", () => {
     const rows = await getActivitiesByType(filters, admin());
     expect(countOf(rows, "call")).toBeGreaterThanOrEqual(1);
     expect(countOf(rows, "note")).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("getDashboardKPIs contractsExpiring", () => {
+  // dateFrom = dateTo = END, so the previous period ends at END too and both
+  // counts cover the fixture.
+  const expiring = async (scope: ReturnType<typeof admin>) => {
+    const kpi = (await getDashboardKPIs({ dateFrom: END, dateTo: END }, "EUR", scope))
+      .find((k) => k.label === "contractsExpiring");
+    return [kpi?.value, kpi?.previousValue];
+  };
+
+  it("a user counts only contracts assigned to or created by him", async () => {
+    expect(await expiring(getReportScope({ id: U.A, role: "user" }))).toEqual([2, 2]);
+    expect(await expiring(getReportScope({ id: U.B, role: "user" }))).toEqual([2, 2]);
+  });
+
+  it("a partner counts only contracts on his accounts", async () => {
+    expect(await expiring(getReportScope({ id: P, role: "partner" }))).toEqual([1, 1]);
+  });
+
+  it("a manager and an admin count every live contract", async () => {
+    expect(await expiring(getReportScope({ id: randomUUID(), role: "manager" }))).toEqual([4, 4]);
+    expect(await expiring(admin())).toEqual([4, 4]);
   });
 });
