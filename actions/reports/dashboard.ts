@@ -1,5 +1,6 @@
 import { prismadb } from "@/lib/prisma";
 import type { ReportFilters, KPIData } from "./types";
+import { CAMPAIGN_NOT_DELETED, TASK_NOT_ON_DELETED_BOARD } from "./types";
 import { getExchangeRates, convertAmount } from "@/lib/currency";
 import { Decimal } from "@prisma/client/runtime/client";
 import type { ReportScope } from "@/lib/authz/scopes/report-scope";
@@ -84,12 +85,12 @@ export async function getDashboardKPIs(
     prismadb.crm_Opportunities.count({
       where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, status: "CLOSED", ...scope.opportunity },
     }),
-    // newContacts (crm_Contacts has created_on, no deletedAt)
+    // newContacts (crm_Contacts has created_on)
     prismadb.crm_Contacts.count({
-      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.contact },
+      where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.contact },
     }),
     prismadb.crm_Contacts.count({
-      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, ...scope.contact },
+      where: { created_on: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, ...scope.contact },
     }),
     // activeUsers (status = ACTIVE, not date-filtered) - global; manager/admin only typically read this KPI
     prismadb.users.count({
@@ -100,24 +101,24 @@ export async function getDashboardKPIs(
     }),
     // tasks total
     prismadb.tasks.count({
-      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.task },
+      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     }),
     prismadb.tasks.count({
-      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, ...scope.task },
+      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     }),
     // open tasks (ACTIVE = not completed)
     prismadb.tasks.count({
-      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, taskStatus: "ACTIVE", ...scope.task },
+      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, taskStatus: "ACTIVE", AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     }),
     prismadb.tasks.count({
-      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, taskStatus: "ACTIVE", ...scope.task },
+      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, taskStatus: "ACTIVE", AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     }),
-    // campaignsSent (sends have no direct scope; manager/admin = no-op)
+    // campaignsSent: sends are scoped through their parent campaign
     prismadb.crm_campaign_sends.count({
-      where: { sent_at: { gte: filters.dateFrom, lte: filters.dateTo } },
+      where: { sent_at: { gte: filters.dateFrom, lte: filters.dateTo }, campaign: { AND: [scope.campaign, CAMPAIGN_NOT_DELETED] } },
     }),
     prismadb.crm_campaign_sends.count({
-      where: { sent_at: { gte: prev.dateFrom, lte: prev.dateTo } },
+      where: { sent_at: { gte: prev.dateFrom, lte: prev.dateTo }, campaign: { AND: [scope.campaign, CAMPAIGN_NOT_DELETED] } },
     }),
     // newAccounts
     prismadb.crm_Accounts.count({

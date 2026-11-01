@@ -1,6 +1,6 @@
 import { prismadb } from "@/lib/prisma";
 import type { ReportFilters, ChartDataPoint } from "./types";
-import { groupedToChartData } from "./types";
+import { groupedToChartData, TASK_NOT_ON_DELETED_BOARD } from "./types";
 import type { ReportScope } from "@/lib/authz/scopes/report-scope";
 import { getReportScope } from "@/lib/authz/scopes/report-scope";
 
@@ -11,7 +11,7 @@ export async function getTasksCreatedCompleted(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<{ name: string; created: number; completed: number }[]> {
   const tasks = await prismadb.tasks.findMany({
-    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.task },
+    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     select: { createdAt: true, taskStatus: true },
   });
   const grouped: Record<string, { created: number; completed: number }> = {};
@@ -35,7 +35,7 @@ export async function getOverdueTasks(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<number> {
   return prismadb.tasks.count({
-    where: { dueDateAt: { lt: new Date(), gte: filters.dateFrom }, taskStatus: "ACTIVE", ...scope.task },
+    where: { dueDateAt: { lt: new Date(), gte: filters.dateFrom }, taskStatus: "ACTIVE", AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
   });
 }
 
@@ -44,7 +44,7 @@ export async function getTasksByAssignee(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const tasks = await prismadb.tasks.findMany({
-    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.task },
+    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     select: { assigned_user: { select: { name: true } } },
   });
   const grouped: Record<string, number> = {};
@@ -60,7 +60,7 @@ export async function getActivitiesByType(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const activities = await prismadb.crm_Activities.findMany({
-    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.activity },
+    where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.activity },
     select: { type: true },
   });
   const grouped: Record<string, number> = {};

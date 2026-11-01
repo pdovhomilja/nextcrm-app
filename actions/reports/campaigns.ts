@@ -1,6 +1,6 @@
 import { prismadb } from "@/lib/prisma";
 import type { ReportFilters, ChartDataPoint } from "./types";
-import { groupedToChartData } from "./types";
+import { groupedToChartData, CAMPAIGN_NOT_DELETED } from "./types";
 import type { ReportScope } from "@/lib/authz/scopes/report-scope";
 import { getReportScope } from "@/lib/authz/scopes/report-scope";
 
@@ -12,11 +12,11 @@ export async function getCampaignPerformance(
 ): Promise<{
   sent: number; opened: number; clicked: number; openRate: number; clickRate: number;
 }> {
-  // Sends are scoped through their parent campaign.
+  // Sends are scoped through their parent campaign; a deleted campaign's sends drop out.
   const dateFilter = {
     sent_at: { gte: filters.dateFrom, lte: filters.dateTo },
     status: "sent",
-    campaign: scope.campaign,
+    campaign: { AND: [scope.campaign, CAMPAIGN_NOT_DELETED] },
   };
   const sent = await prismadb.crm_campaign_sends.count({ where: dateFilter });
   const opened = await prismadb.crm_campaign_sends.count({ where: { ...dateFilter, opened_at: { not: null } } });
@@ -33,7 +33,7 @@ export async function getCampaignROI(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const campaigns = await prismadb.crm_campaigns.findMany({
-    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, status: { in: ["sent", "sending"] }, ...scope.campaign },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, AND: [CAMPAIGN_NOT_DELETED], status: { in: ["sent", "sending"] }, ...scope.campaign },
     select: { name: true, _count: { select: { sends: true } } },
   });
   return campaigns.map((c: { name: string; _count: { sends: number } }) => ({ name: c.name, Number: c._count.sends }));
@@ -44,7 +44,7 @@ export async function getTopTemplates(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const campaigns = await prismadb.crm_campaigns.findMany({
-    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.campaign },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, AND: [CAMPAIGN_NOT_DELETED], ...scope.campaign },
     select: { template: { select: { name: true } }, _count: { select: { sends: true } } },
     orderBy: { sends: { _count: "desc" } },
     take: 10,
@@ -61,8 +61,8 @@ export async function getTargetListGrowth(
   scope: ReportScope = DEFAULT_SCOPE,
 ): Promise<ChartDataPoint[]> {
   const lists = await prismadb.crm_TargetLists.findMany({
-    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.targetList },
-    select: { created_on: true, _count: { select: { targets: true } } },
+    where: { created_on: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.targetList },
+    select: { created_on: true, _count: { select: { targets: { where: { target: { deletedAt: null } } } } } },
   });
   const grouped: Record<string, number> = {};
   for (const l of lists) {
