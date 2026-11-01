@@ -127,12 +127,12 @@ export async function getDashboardKPIs(
     prismadb.crm_Accounts.count({
       where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, ...scope.account },
     }),
-    // contractsExpiring (no direct scope; manager/admin = no-op)
+    // contractsExpiring
     prismadb.crm_Contracts.count({
-      where: { endDate: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null },
+      where: { endDate: { gte: filters.dateFrom, lte: filters.dateTo }, deletedAt: null, ...scope.contract },
     }),
     prismadb.crm_Contracts.count({
-      where: { endDate: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null },
+      where: { endDate: { gte: prev.dateFrom, lte: prev.dateTo }, deletedAt: null, ...scope.contract },
     }),
   ]);
 

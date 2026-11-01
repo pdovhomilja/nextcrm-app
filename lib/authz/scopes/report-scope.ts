@@ -12,6 +12,7 @@ export interface ReportScope {
   campaign: Record<string, unknown>;
   targetList: Record<string, unknown>;
   activity: Record<string, unknown>;
+  contract: Record<string, unknown>;
   allowUserDirectory: boolean;
 }
 
@@ -24,6 +25,7 @@ const EMPTY: ReportScope = {
   campaign: {},
   targetList: {},
   activity: {},
+  contract: {},
   allowUserDirectory: true,
 };
 
@@ -44,6 +46,7 @@ export function getReportScope(user: AuthzUser): ReportScope {
       campaign: { ...NO_ROWS },
       targetList: { ...NO_ROWS },
       activity: { ...NO_ROWS },
+      contract: { assigned_account: account },
       allowUserDirectory: false,
     };
   }
@@ -57,6 +60,7 @@ export function getReportScope(user: AuthzUser): ReportScope {
       campaign: { ...NO_ROWS },
       targetList: { ...NO_ROWS },
       activity: { ...NO_ROWS },
+      contract: { ...NO_ROWS },
       allowUserDirectory: false,
     };
   }
@@ -83,6 +87,7 @@ export function getReportScope(user: AuthzUser): ReportScope {
     // Same owners as targetListReadScopeWhere and crm_list_activities.
     targetList: { created_by: user.id },
     activity: { createdBy: user.id },
+    contract: { OR: [{ assigned_to: user.id }, { createdBy: user.id }] },
     allowUserDirectory: false,
   };
 }
