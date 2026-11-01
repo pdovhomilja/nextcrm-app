@@ -1,5 +1,6 @@
 import { prismadb } from "@/lib/prisma";
 import type { ReportFilters, KPIData } from "./types";
+import { CAMPAIGN_NOT_DELETED, TASK_NOT_ON_DELETED_BOARD } from "./types";
 import { getExchangeRates, convertAmount } from "@/lib/currency";
 import { Decimal } from "@prisma/client/runtime/client";
 import type { ReportScope } from "@/lib/authz/scopes/report-scope";
@@ -100,24 +101,24 @@ export async function getDashboardKPIs(
     }),
     // tasks total
     prismadb.tasks.count({
-      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, ...scope.task },
+      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     }),
     prismadb.tasks.count({
-      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, ...scope.task },
+      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     }),
     // open tasks (ACTIVE = not completed)
     prismadb.tasks.count({
-      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, taskStatus: "ACTIVE", ...scope.task },
+      where: { createdAt: { gte: filters.dateFrom, lte: filters.dateTo }, taskStatus: "ACTIVE", AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     }),
     prismadb.tasks.count({
-      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, taskStatus: "ACTIVE", ...scope.task },
+      where: { createdAt: { gte: prev.dateFrom, lte: prev.dateTo }, taskStatus: "ACTIVE", AND: [TASK_NOT_ON_DELETED_BOARD], ...scope.task },
     }),
     // campaignsSent (sends have no direct scope; manager/admin = no-op)
     prismadb.crm_campaign_sends.count({
-      where: { sent_at: { gte: filters.dateFrom, lte: filters.dateTo } },
+      where: { sent_at: { gte: filters.dateFrom, lte: filters.dateTo }, campaign: CAMPAIGN_NOT_DELETED },
     }),
     prismadb.crm_campaign_sends.count({
-      where: { sent_at: { gte: prev.dateFrom, lte: prev.dateTo } },
+      where: { sent_at: { gte: prev.dateFrom, lte: prev.dateTo }, campaign: CAMPAIGN_NOT_DELETED },
     }),
     // newAccounts
     prismadb.crm_Accounts.count({

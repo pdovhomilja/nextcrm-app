@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 export type { ReportScope } from "@/lib/authz/scopes/report-scope";
 
 export type ReportCategory = "sales" | "leads" | "accounts" | "activity" | "campaigns" | "users";
@@ -82,3 +84,17 @@ export function filtersToSearchParams(filters: ReportFilters): string {
   if (filters.userRole) params.set("userRole", filters.userRole);
   return params.toString();
 }
+
+// Campaigns have two delete markers: the campaigns UI sets status "deleted",
+// the MCP tools set deletedAt. status is nullable, and Prisma's `not` would
+// drop NULL rows, hence the OR. Use inside AND so it can't clash with a scope.
+export const CAMPAIGN_NOT_DELETED: Prisma.crm_campaignsWhereInput = {
+  deletedAt: null,
+  OR: [{ status: null }, { status: { not: "deleted" } }],
+};
+
+// Tasks on a soft-deleted board drop out of reports (they stay in the DB);
+// tasks without a section still count. Use inside AND, like CAMPAIGN_NOT_DELETED.
+export const TASK_NOT_ON_DELETED_BOARD: Prisma.TasksWhereInput = {
+  OR: [{ section: null }, { assigned_section: { board_relation: { deletedAt: null } } }],
+};
