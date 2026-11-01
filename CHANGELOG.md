@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.8](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.7...v0.37.8) (2026-11-01)
+
+
+### Fixed
+
+* scope dashboard contracts expiring to the caller's contracts ([6cf080e](https://github.com/pdovhomilja/nextcrm-app/commit/6cf080e88b343a1c62efb46b75d8ad78343fc43a))
+* scope dashboard contracts expiring to the caller's contracts ([445a3db](https://github.com/pdovhomilja/nextcrm-app/commit/445a3dbc655e4584123eb3b5d55cba8311155160))
+
 ## [0.37.7](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.6...v0.37.7) (2026-11-01)
 
 
