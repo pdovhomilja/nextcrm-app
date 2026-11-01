@@ -5,6 +5,16 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.7](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.6...v0.37.7) (2026-11-01)
+
+
+### Fixed
+
+* reports exclude soft-deleted records ([26f7fdd](https://github.com/pdovhomilja/nextcrm-app/commit/26f7fddf5177850c470e4b4a1355e7024e64b9f2))
+* reports exclude soft-deleted records ([b96d463](https://github.com/pdovhomilja/nextcrm-app/commit/b96d463c3c5e80bb6cdf0c797c7b109398e66b07))
+* reports skip deleted campaigns' sends and tasks on deleted boards ([fb502be](https://github.com/pdovhomilja/nextcrm-app/commit/fb502bec8c6ddcc04c55f3570e1af138d956de26))
+* scope dashboard campaigns sent to the caller's campaigns ([c5da5d1](https://github.com/pdovhomilja/nextcrm-app/commit/c5da5d1fa9053deb2af5c685e5b8460b7551bac0))
+
 ## [0.37.6](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.5...v0.37.6) (2026-10-31)
 
 
