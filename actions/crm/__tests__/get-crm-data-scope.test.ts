@@ -34,7 +34,7 @@ import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 
-const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
+const mockUser = (role: "user" | "manager" | "admin" | "partner", id = "u1") => {
   (getSession as jest.Mock).mockResolvedValue({ user: { id } });
   (prismadb.users.findUnique as jest.Mock).mockResolvedValue({ id, role });
 };
@@ -81,6 +81,7 @@ describe("getAllCrmData scope", () => {
 
   // Campaign picker in the opportunity forms: same scope as the campaigns
   // list, and both delete markers (status "deleted", deletedAt) are hidden.
+  // Literal on purpose: pins the exact where shape, not the helper's output.
   const NOT_DELETED = {
     deletedAt: null,
     OR: [{ status: null }, { status: { not: "deleted" } }],
@@ -102,4 +103,13 @@ describe("getAllCrmData scope", () => {
       expect(campaignWhere()).toEqual({ AND: [NOT_DELETED] });
     },
   );
+
+  it("partner: no campaigns (partner is not a scoped role for campaigns)", async () => {
+    mockUser("partner", "p1");
+    await getAllCrmData();
+    expect(campaignWhere()).toEqual({
+      AND: [NOT_DELETED],
+      OR: [{ id: { in: [] } }],
+    });
+  });
 });
