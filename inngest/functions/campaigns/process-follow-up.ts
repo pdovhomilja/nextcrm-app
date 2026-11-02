@@ -1,7 +1,7 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { randomUUID } from "crypto";
-import { eligibleFollowUpSendsWhere } from "@/lib/campaigns/recipient-filters";
+import { campaignSkipReason, eligibleFollowUpSendsWhere } from "@/lib/campaigns/recipient-filters";
 
 export const campaignProcessFollowUp = inngest.createFunction(
   {
@@ -20,13 +20,14 @@ export const campaignProcessFollowUp = inngest.createFunction(
 
     const [campaign, followUpStep] = await step.run("load-step", async () => {
       return Promise.all([
-        prismadb.crm_campaigns.findUnique({ where: { id: campaignId }, select: { status: true } }),
+        prismadb.crm_campaigns.findUnique({ where: { id: campaignId }, select: { status: true, deletedAt: true } }),
         prismadb.crm_campaign_steps.findUnique({ where: { id: stepId } }),
       ]);
     });
 
-    if (!campaign || campaign.status === "paused" || !followUpStep) {
-      return { skipped: true, reason: campaign?.status };
+    const skipReason = campaign && campaignSkipReason(campaign);
+    if (!campaign || skipReason || !followUpStep) {
+      return { skipped: true, reason: skipReason ?? campaign?.status };
     }
 
     // Get step 0 to determine eligible recipients
