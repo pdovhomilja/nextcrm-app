@@ -1,7 +1,8 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { randomUUID } from "crypto";
-import { campaignSkipReason, subscribedTargetsInclude } from "@/lib/campaigns/recipient-filters";
+import { subscribedTargetsInclude } from "@/lib/campaigns/recipient-filters";
+import { campaignSkipReason } from "@/lib/authz/scopes/campaign-not-deleted";
 
 // Same logic as schedule-send but without sleepUntil
 export const campaignSendNow = inngest.createFunction(

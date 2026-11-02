@@ -57,7 +57,7 @@ const MCP_DELETED = { status: "sending", deletedAt: new Date("2026-11-01T10:00:0
 const step0 = { id: "step-0", campaign_id: "camp-1", order: 0, delay_days: 0, send_to: null };
 const followUp = { id: "step-1", campaign_id: "camp-1", order: 1, delay_days: 3, send_to: "all" };
 
-function seedCampaign(campaign: { status: string; deletedAt: Date | null }) {
+function seedCampaign(campaign: { status: string; deletedAt: Date | null }, sendRecord: Record<string, unknown> = {}) {
   db.crm_campaigns.findUnique.mockResolvedValue({ ...campaign, target_lists: [] });
   db.crm_campaign_steps.findFirst.mockResolvedValue(step0);
   db.crm_campaign_steps.findUnique.mockResolvedValue(followUp);
@@ -78,6 +78,7 @@ function seedCampaign(campaign: { status: string; deletedAt: Date | null }) {
     campaign: { ...campaign, from_name: null, reply_to: null },
     step: { subject: "Hi", template: { content_html: "<p>Hi</p>" } },
     target: { first_name: "A", last_name: "B", email: "a@example.com", company: null, position: null, do_not_email: false },
+    ...sendRecord,
   });
   db.crm_campaign_sends.update.mockResolvedValue({});
   mockResendSend.mockResolvedValue({ data: { id: "resend-1" }, error: null });
@@ -147,6 +148,20 @@ describe("campaign jobs skip deleted campaigns", () => {
       seedCampaign({ status: "paused", deletedAt: null });
 
       expect(await run(fakeStep())).toEqual({ skipped: true, reason: "paused" });
+      expect(mockResendSend).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["the send record was already sent", { status: "sent" }, "already sent"],
+      [
+        "the target globally opted out after fan-out",
+        { target: { first_name: "A", last_name: "B", email: "a@example.com", company: null, position: null, do_not_email: true } },
+        "recipient globally suppressed",
+      ],
+    ])("keeps skipping when %s", async (_label, sendRecord, reason) => {
+      seedCampaign(NORMAL, sendRecord);
+
+      expect(await run(fakeStep())).toEqual({ skipped: true, reason });
       expect(mockResendSend).not.toHaveBeenCalled();
     });
 

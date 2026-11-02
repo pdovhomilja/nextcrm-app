@@ -36,15 +36,3 @@ export function sendStepSkipReason(sendRecord: {
   if (sendRecord.target?.do_not_email) return "recipient globally suppressed";
   return null;
 }
-
-// Campaign-level guard for the campaign send jobs. Campaigns have two delete
-// markers (UI: status "deleted", MCP: deletedAt), see CAMPAIGN_NOT_DELETED.
-// deletedAt is a string when it comes back from an Inngest step.run.
-export function campaignSkipReason(campaign: {
-  status: string | null;
-  deletedAt: Date | string | null;
-}): "paused" | "deleted" | null {
-  if (campaign.status === "deleted" || campaign.deletedAt) return "deleted";
-  if (campaign.status === "paused") return "paused";
-  return null;
-}

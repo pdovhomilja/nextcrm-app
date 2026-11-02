@@ -3,7 +3,8 @@ import { prismadb } from "@/lib/prisma";
 import resendHelper from "@/lib/resend";
 import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
 import { renderCampaignEmail } from "@/lib/campaigns/render-email";
-import { campaignSkipReason, sendStepSkipReason } from "@/lib/campaigns/recipient-filters";
+import { sendStepSkipReason } from "@/lib/campaigns/recipient-filters";
+import { campaignSkipReason } from "@/lib/authz/scopes/campaign-not-deleted";
 import { buildUnsubscribeUrl } from "@/lib/campaigns/unsubscribe-url";
 
 export const campaignSendStep = inngest.createFunction(

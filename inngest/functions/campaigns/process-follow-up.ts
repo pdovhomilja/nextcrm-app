@@ -1,7 +1,8 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { randomUUID } from "crypto";
-import { campaignSkipReason, eligibleFollowUpSendsWhere } from "@/lib/campaigns/recipient-filters";
+import { eligibleFollowUpSendsWhere } from "@/lib/campaigns/recipient-filters";
+import { campaignSkipReason } from "@/lib/authz/scopes/campaign-not-deleted";
 
 export const campaignProcessFollowUp = inngest.createFunction(
   {
