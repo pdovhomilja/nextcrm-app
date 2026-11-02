@@ -2,6 +2,7 @@ import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import { subscribedTargetsInclude } from "@/lib/campaigns/recipient-filters";
+import { campaignSkipReason } from "@/lib/authz/scopes/campaign-not-deleted";
 
 // Same logic as schedule-send but without sleepUntil
 export const campaignSendNow = inngest.createFunction(
@@ -12,6 +13,15 @@ export const campaignSendNow = inngest.createFunction(
   },
   async ({ event, step }) => {
     const { campaignId } = event.data as { campaignId: string };
+
+    const campaign = await step.run("check-campaign-status", async () => {
+      return prismadb.crm_campaigns.findUnique({
+        where: { id: campaignId },
+        select: { status: true, deletedAt: true },
+      });
+    });
+    const skipReason = campaign && campaignSkipReason(campaign);
+    if (!campaign || skipReason) return { skipped: true, reason: skipReason ?? "campaign not found" };
 
     const step0 = await step.run("get-step-0", async () => {
       return prismadb.crm_campaign_steps.findFirst({ where: { campaign_id: campaignId, order: 0 } });

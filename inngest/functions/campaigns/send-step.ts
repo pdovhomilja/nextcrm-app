@@ -4,6 +4,7 @@ import resendHelper from "@/lib/resend";
 import { resolveMergeTags } from "@/lib/campaigns/merge-tags";
 import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 import { sendStepSkipReason } from "@/lib/campaigns/recipient-filters";
+import { campaignSkipReason } from "@/lib/authz/scopes/campaign-not-deleted";
 import { buildUnsubscribeUrl } from "@/lib/campaigns/unsubscribe-url";
 
 export const campaignSendStep = inngest.createFunction(
@@ -22,7 +23,7 @@ export const campaignSendStep = inngest.createFunction(
       return prismadb.crm_campaign_sends.findUnique({
         where: { id: sendId },
         include: {
-          campaign: { select: { status: true, from_name: true, reply_to: true } },
+          campaign: { select: { status: true, deletedAt: true, from_name: true, reply_to: true } },
           step: { include: { template: true } },
           target: true,
         },
@@ -30,7 +31,8 @@ export const campaignSendStep = inngest.createFunction(
     });
 
     if (!sendRecord) return { skipped: true, reason: "send record not found" };
-    if (sendRecord.campaign.status === "paused") return { skipped: true, reason: "paused" };
+    const campaignReason = campaignSkipReason(sendRecord.campaign);
+    if (campaignReason) return { skipped: true, reason: campaignReason };
 
     const skipReason = sendStepSkipReason(sendRecord);
     if (skipReason) return { skipped: true, reason: skipReason };

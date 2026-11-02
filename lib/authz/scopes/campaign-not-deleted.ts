@@ -9,3 +9,14 @@ export const CAMPAIGN_NOT_DELETED: Prisma.crm_campaignsWhereInput = {
   deletedAt: null,
   OR: [{ status: null }, { status: { not: "deleted" } }],
 };
+
+// Same rule for the campaign send jobs (Inngest), which load one campaign
+// instead of querying. deletedAt is a string when it comes back from step.run.
+export function campaignSkipReason(campaign: {
+  status: string | null;
+  deletedAt: Date | string | null;
+}): "paused" | "deleted" | null {
+  if (campaign.status === "deleted" || campaign.deletedAt) return "deleted";
+  if (campaign.status === "paused") return "paused";
+  return null;
+}

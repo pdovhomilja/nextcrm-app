@@ -2,6 +2,7 @@ import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import { subscribedTargetsInclude } from "@/lib/campaigns/recipient-filters";
+import { campaignSkipReason } from "@/lib/authz/scopes/campaign-not-deleted";
 
 export const campaignScheduleSend = inngest.createFunction(
   {
@@ -20,12 +21,13 @@ export const campaignScheduleSend = inngest.createFunction(
     const campaign = await step.run("check-campaign-status", async () => {
       return prismadb.crm_campaigns.findUnique({
         where: { id: campaignId },
-        select: { status: true, target_lists: true },
+        select: { status: true, deletedAt: true, target_lists: true },
       });
     });
 
-    if (!campaign || campaign.status === "paused" || campaign.status === "deleted") {
-      return { skipped: true, reason: campaign?.status };
+    const skipReason = campaign && campaignSkipReason(campaign);
+    if (!campaign || skipReason) {
+      return { skipped: true, reason: skipReason ?? campaign?.status };
     }
 
     // Get step 0
