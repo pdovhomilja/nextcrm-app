@@ -34,7 +34,7 @@ import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 
-const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
+const mockUser = (role: "user" | "manager" | "admin" | "partner", id = "u1") => {
   (getSession as jest.Mock).mockResolvedValue({ user: { id } });
   (prismadb.users.findUnique as jest.Mock).mockResolvedValue({ id, role });
 };
@@ -77,5 +77,39 @@ describe("getAllCrmData scope", () => {
     for (const model of ENTITIES) {
       expect(whereOf(model)).toEqual({ deletedAt: null });
     }
+  });
+
+  // Campaign picker in the opportunity forms: same scope as the campaigns
+  // list, and both delete markers (status "deleted", deletedAt) are hidden.
+  // Literal on purpose: pins the exact where shape, not the helper's output.
+  const NOT_DELETED = {
+    deletedAt: null,
+    OR: [{ status: null }, { status: { not: "deleted" } }],
+  };
+  const campaignWhere = () =>
+    (prismadb.crm_campaigns.findMany as jest.Mock).mock.calls[0][0].where;
+
+  it("user role: campaigns are limited to ones the caller created, deleted ones hidden", async () => {
+    mockUser("user", "u1");
+    await getAllCrmData();
+    expect(campaignWhere()).toEqual({ AND: [NOT_DELETED], created_by: "u1" });
+  });
+
+  it.each(["manager", "admin"] as const)(
+    "%s: all campaigns except deleted ones",
+    async (role) => {
+      mockUser(role, "m1");
+      await getAllCrmData();
+      expect(campaignWhere()).toEqual({ AND: [NOT_DELETED] });
+    },
+  );
+
+  it("partner: no campaigns (partner is not a scoped role for campaigns)", async () => {
+    mockUser("partner", "p1");
+    await getAllCrmData();
+    expect(campaignWhere()).toEqual({
+      AND: [NOT_DELETED],
+      OR: [{ id: { in: [] } }],
+    });
   });
 });
