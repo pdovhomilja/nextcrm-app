@@ -5,6 +5,19 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.10](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.9...v0.37.10) (2026-11-02)
+
+
+### Fixed
+
+* stop campaign sending jobs for deleted campaigns ([4fe2ca9](https://github.com/pdovhomilja/nextcrm-app/commit/4fe2ca9a04393c114422a38fd13b69d2a68dff31))
+* stop campaign sending jobs for deleted campaigns ([efcd495](https://github.com/pdovhomilja/nextcrm-app/commit/efcd4957119b0bd7f7b2fd8a4d695444ab3556f0))
+
+
+### Changed
+
+* keep campaignSkipReason next to CAMPAIGN_NOT_DELETED ([6277d50](https://github.com/pdovhomilja/nextcrm-app/commit/6277d50b35b1ee48b490aab6d7198366ce806974))
+
 ## [0.37.9](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.8...v0.37.9) (2026-11-02)
 
 
