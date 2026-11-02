@@ -9,6 +9,7 @@ jest.mock("@/lib/prisma", () => ({
 import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import { getCampaigns } from "@/actions/campaigns/get-campaigns";
+import { CAMPAIGN_NOT_DELETED } from "@/lib/authz/scopes/campaign-not-deleted";
 
 const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
   (getSession as jest.Mock).mockResolvedValue({ user: { id } });
@@ -25,21 +26,21 @@ describe("getCampaigns scope", () => {
     expect(prismadb.crm_campaigns.findMany).not.toHaveBeenCalled();
   });
 
-  it("user role: where scoped by created_by and status not deleted", async () => {
+  it("user role: where scoped by created_by and not deleted", async () => {
     mockUser("user", "u1");
     (prismadb.crm_campaigns.findMany as jest.Mock).mockResolvedValue([]);
     await getCampaigns();
     const call = (prismadb.crm_campaigns.findMany as jest.Mock).mock.calls[0][0];
     expect(call.where.created_by).toBe("u1");
-    expect(call.where.status).toEqual({ not: "deleted" });
+    expect(call.where.AND).toEqual([CAMPAIGN_NOT_DELETED]);
   });
 
-  it("manager: where = { status: { not: 'deleted' } } (no created_by)", async () => {
+  it("manager: where = not deleted only (no created_by)", async () => {
     mockUser("manager", "m1");
     (prismadb.crm_campaigns.findMany as jest.Mock).mockResolvedValue([]);
     await getCampaigns();
     const call = (prismadb.crm_campaigns.findMany as jest.Mock).mock.calls[0][0];
-    expect(call.where).toEqual({ status: { not: "deleted" } });
+    expect(call.where).toEqual({ AND: [CAMPAIGN_NOT_DELETED] });
     expect(call.where.created_by).toBeUndefined();
   });
 

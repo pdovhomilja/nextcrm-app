@@ -4,6 +4,7 @@ import { AuthorizationError } from "../errors";
 import { isManagerOrAdmin } from "../roles";
 import { NO_ROWS, assertHandledRole, isUnhandledRole } from "./unhandled-role";
 import { partnerAccountWhere, partnerVisibleAccountWhere } from "./partner";
+import { CAMPAIGN_NOT_DELETED } from "./campaign-not-deleted";
 
 // Partner writes (spec § Writes). A partner may create and edit contacts,
 // leads, opportunities, CRM tasks and activities on his partner accounts and
@@ -784,17 +785,19 @@ export async function assertCanReadActivityForEntity(
 
 // ---------------------------------------------------------------------------
 // E2.T1: Campaign + campaign-template read/write scope helpers.
-// crm_campaigns soft-deletes via `status: "deleted"` (string field).
+// crm_campaigns has two delete markers (UI: `status: "deleted"`, MCP:
+// `deletedAt`); CAMPAIGN_NOT_DELETED hides both and keeps NULL status. It sits
+// in AND so callers can still spread their own status/deletedAt/OR keys.
 // crm_campaign_templates uses `deletedAt: null` like other CRM entities.
 // Write helpers delegate to read for now; can split later if needed.
 // ---------------------------------------------------------------------------
 
 export function campaignReadScopeWhere(user: AuthzUser) {
   if (isManagerOrAdmin(user)) {
-    return { status: { not: "deleted" } };
+    return { AND: [CAMPAIGN_NOT_DELETED] };
   }
-  if (isUnhandledRole(user)) return { status: { not: "deleted" }, ...NO_ROWS };
-  return { status: { not: "deleted" }, created_by: user.id };
+  if (isUnhandledRole(user)) return { AND: [CAMPAIGN_NOT_DELETED], ...NO_ROWS };
+  return { AND: [CAMPAIGN_NOT_DELETED], created_by: user.id };
 }
 
 export function campaignTemplateReadScopeWhere(user: AuthzUser) {

@@ -16,6 +16,7 @@ import {
   assertCanReadTemplate,
   assertCanWriteTemplate,
 } from "../scopes/crm";
+import { CAMPAIGN_NOT_DELETED } from "../scopes/campaign-not-deleted";
 
 const findCampaign = prismadb.crm_campaigns.findFirst as jest.MockedFunction<
   typeof prismadb.crm_campaigns.findFirst
@@ -28,17 +29,17 @@ const findTemplate = prismadb.crm_campaign_templates
 beforeEach(() => jest.clearAllMocks());
 
 describe("campaignReadScopeWhere", () => {
-  it("admin/manager → { status: { not: 'deleted' } }", () => {
+  it("admin/manager → { AND: [CAMPAIGN_NOT_DELETED] }", () => {
     expect(campaignReadScopeWhere({ id: "x", role: "admin" })).toEqual({
-      status: { not: "deleted" },
+      AND: [CAMPAIGN_NOT_DELETED],
     });
     expect(campaignReadScopeWhere({ id: "x", role: "manager" })).toEqual({
-      status: { not: "deleted" },
+      AND: [CAMPAIGN_NOT_DELETED],
     });
   });
-  it("user → { status: { not: 'deleted' }, created_by: user.id }", () => {
+  it("user → { AND: [CAMPAIGN_NOT_DELETED], created_by: user.id }", () => {
     expect(campaignReadScopeWhere({ id: "u1", role: "user" })).toEqual({
-      status: { not: "deleted" },
+      AND: [CAMPAIGN_NOT_DELETED],
       created_by: "u1",
     });
   });
@@ -62,11 +63,11 @@ describe("campaignTemplateReadScopeWhere", () => {
 });
 
 describe("assertCanReadCampaign", () => {
-  it("admin: where { id, status:{not:'deleted'} } (200)", async () => {
+  it("admin: where { id, not deleted } (200)", async () => {
     findCampaign.mockResolvedValue({ id: "c1" } as any);
     await assertCanReadCampaign({ id: "x", role: "admin" }, "c1");
     expect(findCampaign).toHaveBeenCalledWith({
-      where: { id: "c1", status: { not: "deleted" } },
+      where: { id: "c1", AND: [CAMPAIGN_NOT_DELETED] },
       select: { id: true },
     });
   });
@@ -74,7 +75,7 @@ describe("assertCanReadCampaign", () => {
     findCampaign.mockResolvedValue({ id: "c1" } as any);
     await assertCanReadCampaign({ id: "u1", role: "user" }, "c1");
     expect(findCampaign).toHaveBeenCalledWith({
-      where: { id: "c1", status: { not: "deleted" }, created_by: "u1" },
+      where: { id: "c1", AND: [CAMPAIGN_NOT_DELETED], created_by: "u1" },
       select: { id: true },
     });
   });
@@ -91,7 +92,7 @@ describe("assertCanWriteCampaign", () => {
     findCampaign.mockResolvedValue({ id: "c1" } as any);
     await assertCanWriteCampaign({ id: "u1", role: "user" }, "c1");
     expect(findCampaign).toHaveBeenCalledWith({
-      where: { id: "c1", status: { not: "deleted" }, created_by: "u1" },
+      where: { id: "c1", AND: [CAMPAIGN_NOT_DELETED], created_by: "u1" },
       select: { id: true },
     });
   });

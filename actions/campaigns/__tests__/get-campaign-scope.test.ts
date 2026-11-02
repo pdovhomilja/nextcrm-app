@@ -9,6 +9,7 @@ jest.mock("@/lib/prisma", () => ({
 import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import { getCampaign } from "@/actions/campaigns/get-campaign";
+import { CAMPAIGN_NOT_DELETED } from "@/lib/authz/scopes/campaign-not-deleted";
 
 const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
   (getSession as jest.Mock).mockResolvedValue({ user: { id } });
@@ -45,7 +46,7 @@ describe("getCampaign scope", () => {
     const assertCall = (prismadb.crm_campaigns.findFirst as jest.Mock).mock.calls[0][0];
     expect(assertCall.where.id).toBe("c1");
     expect(assertCall.where.created_by).toBe("u1");
-    expect(assertCall.where.status).toEqual({ not: "deleted" });
+    expect(assertCall.where.AND).toEqual([CAMPAIGN_NOT_DELETED]);
   });
 
   it("manager: assert where has no created_by, detail returned", async () => {
@@ -57,6 +58,6 @@ describe("getCampaign scope", () => {
     expect(res).toEqual(detail);
     const assertCall = (prismadb.crm_campaigns.findFirst as jest.Mock).mock.calls[0][0];
     expect(assertCall.where.created_by).toBeUndefined();
-    expect(assertCall.where.status).toEqual({ not: "deleted" });
+    expect(assertCall.where.AND).toEqual([CAMPAIGN_NOT_DELETED]);
   });
 });

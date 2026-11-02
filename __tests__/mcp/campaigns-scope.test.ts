@@ -29,6 +29,7 @@ jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn() } }));
 
 import { prismadb } from "@/lib/prisma";
 import { campaignTools } from "@/lib/mcp/tools/campaigns";
+import { CAMPAIGN_NOT_DELETED } from "@/lib/authz/scopes/campaign-not-deleted";
 
 type Role = "user" | "manager" | "admin";
 const USER = { id: "u1", role: "user" as Role };
@@ -64,12 +65,12 @@ describe("campaigns_list scope", () => {
 });
 
 describe("campaigns_get scope", () => {
-  it("normal user: scope where includes created_by + status not deleted", async () => {
+  it("normal user: scope where includes created_by + not deleted", async () => {
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1" });
     await run("campaigns_get", { id: "c1" }, USER);
     const where = (prismadb.crm_campaigns.findFirst as jest.Mock).mock.calls[0][0].where;
     expect(where.created_by).toBe("u1");
-    expect(where.status).toEqual({ not: "deleted" });
+    expect(where.AND).toEqual([CAMPAIGN_NOT_DELETED]);
   });
 
   it("out-of-scope campaign returns NOT_FOUND", async () => {
