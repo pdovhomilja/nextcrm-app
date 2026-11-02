@@ -78,4 +78,28 @@ describe("getAllCrmData scope", () => {
       expect(whereOf(model)).toEqual({ deletedAt: null });
     }
   });
+
+  // Campaign picker in the opportunity forms: same scope as the campaigns
+  // list, and both delete markers (status "deleted", deletedAt) are hidden.
+  const NOT_DELETED = {
+    deletedAt: null,
+    OR: [{ status: null }, { status: { not: "deleted" } }],
+  };
+  const campaignWhere = () =>
+    (prismadb.crm_campaigns.findMany as jest.Mock).mock.calls[0][0].where;
+
+  it("user role: campaigns are limited to ones the caller created, deleted ones hidden", async () => {
+    mockUser("user", "u1");
+    await getAllCrmData();
+    expect(campaignWhere()).toEqual({ AND: [NOT_DELETED], created_by: "u1" });
+  });
+
+  it.each(["manager", "admin"] as const)(
+    "%s: all campaigns except deleted ones",
+    async (role) => {
+      mockUser(role, "m1");
+      await getAllCrmData();
+      expect(campaignWhere()).toEqual({ AND: [NOT_DELETED] });
+    },
+  );
 });

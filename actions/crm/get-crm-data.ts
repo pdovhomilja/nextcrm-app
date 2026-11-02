@@ -4,6 +4,7 @@ import { serializeDecimalsList } from "@/lib/serialize-decimals";
 import {
   requireAuthenticated,
   accountReadScopeWhere,
+  campaignReadScopeWhere,
   contactReadScopeWhere,
   contractReadScopeWhere,
   leadReadScopeWhere,
@@ -39,7 +40,7 @@ export const getAllCrmData = cache(async () => {
     prismadb.crm_Contracts.findMany({ where: contractReadScopeWhere(user) }),
     prismadb.crm_Opportunities_Type.findMany({}),
     prismadb.crm_Opportunities_Sales_Stages.findMany({}),
-    prismadb.crm_campaigns.findMany({ where: { deletedAt: null } }),
+    prismadb.crm_campaigns.findMany({ where: campaignReadScopeWhere(user) }),
     prismadb.crm_Industry_Type.findMany({}),
     prismadb.crm_Contact_Types.findMany({ orderBy: { name: "asc" } }),
     prismadb.crm_Lead_Sources.findMany({ orderBy: { name: "asc" } }),
