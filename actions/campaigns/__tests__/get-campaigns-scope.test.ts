@@ -25,21 +25,21 @@ describe("getCampaigns scope", () => {
     expect(prismadb.crm_campaigns.findMany).not.toHaveBeenCalled();
   });
 
-  it("user role: where scoped by created_by and status not deleted", async () => {
+  it("user role: where scoped by created_by and not deleted", async () => {
     mockUser("user", "u1");
     (prismadb.crm_campaigns.findMany as jest.Mock).mockResolvedValue([]);
     await getCampaigns();
     const call = (prismadb.crm_campaigns.findMany as jest.Mock).mock.calls[0][0];
     expect(call.where.created_by).toBe("u1");
-    expect(call.where.status).toEqual({ not: "deleted" });
+    expect(call.where.AND).toEqual([{ deletedAt: null, OR: [{ status: null }, { status: { not: "deleted" } }] }]);
   });
 
-  it("manager: where = { status: { not: 'deleted' } } (no created_by)", async () => {
+  it("manager: where = not deleted only (no created_by)", async () => {
     mockUser("manager", "m1");
     (prismadb.crm_campaigns.findMany as jest.Mock).mockResolvedValue([]);
     await getCampaigns();
     const call = (prismadb.crm_campaigns.findMany as jest.Mock).mock.calls[0][0];
-    expect(call.where).toEqual({ status: { not: "deleted" } });
+    expect(call.where).toEqual({ AND: [{ deletedAt: null, OR: [{ status: null }, { status: { not: "deleted" } }] }] });
     expect(call.where.created_by).toBeUndefined();
   });
 

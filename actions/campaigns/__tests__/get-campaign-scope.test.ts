@@ -45,7 +45,7 @@ describe("getCampaign scope", () => {
     const assertCall = (prismadb.crm_campaigns.findFirst as jest.Mock).mock.calls[0][0];
     expect(assertCall.where.id).toBe("c1");
     expect(assertCall.where.created_by).toBe("u1");
-    expect(assertCall.where.status).toEqual({ not: "deleted" });
+    expect(assertCall.where.AND).toEqual([{ deletedAt: null, OR: [{ status: null }, { status: { not: "deleted" } }] }]);
   });
 
   it("manager: assert where has no created_by, detail returned", async () => {
@@ -57,6 +57,6 @@ describe("getCampaign scope", () => {
     expect(res).toEqual(detail);
     const assertCall = (prismadb.crm_campaigns.findFirst as jest.Mock).mock.calls[0][0];
     expect(assertCall.where.created_by).toBeUndefined();
-    expect(assertCall.where.status).toEqual({ not: "deleted" });
+    expect(assertCall.where.AND).toEqual([{ deletedAt: null, OR: [{ status: null }, { status: { not: "deleted" } }] }]);
   });
 });

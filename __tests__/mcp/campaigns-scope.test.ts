@@ -64,12 +64,12 @@ describe("campaigns_list scope", () => {
 });
 
 describe("campaigns_get scope", () => {
-  it("normal user: scope where includes created_by + status not deleted", async () => {
+  it("normal user: scope where includes created_by + not deleted", async () => {
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1" });
     await run("campaigns_get", { id: "c1" }, USER);
     const where = (prismadb.crm_campaigns.findFirst as jest.Mock).mock.calls[0][0].where;
     expect(where.created_by).toBe("u1");
-    expect(where.status).toEqual({ not: "deleted" });
+    expect(where.AND).toEqual([{ deletedAt: null, OR: [{ status: null }, { status: { not: "deleted" } }] }]);
   });
 
   it("out-of-scope campaign returns NOT_FOUND", async () => {
