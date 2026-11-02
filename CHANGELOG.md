@@ -5,6 +5,19 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.9](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.8...v0.37.9) (2026-11-02)
+
+
+### Fixed
+
+* hide campaigns deleted by either marker and keep NULL-status ones ([ecce3cc](https://github.com/pdovhomilja/nextcrm-app/commit/ecce3cc714a8d96c854c8c4cfdcdb549ed0dd1e2))
+* hide campaigns deleted by either marker and keep NULL-status ones ([448bec0](https://github.com/pdovhomilja/nextcrm-app/commit/448bec0a081ee2e89d3ee1022bba940fd06a4a38))
+
+
+### Changed
+
+* move CAMPAIGN_NOT_DELETED into lib/authz ([88adb76](https://github.com/pdovhomilja/nextcrm-app/commit/88adb764c5c11d51419e97d478502021bb253124))
+
 ## [0.37.8](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.7...v0.37.8) (2026-11-01)
 
 
