@@ -4,7 +4,7 @@ import { AuthorizationError } from "../errors";
 import { isManagerOrAdmin } from "../roles";
 import { NO_ROWS, assertHandledRole, isUnhandledRole } from "./unhandled-role";
 import { partnerAccountWhere, partnerVisibleAccountWhere } from "./partner";
-import { CAMPAIGN_NOT_DELETED } from "@/actions/reports/types";
+import { CAMPAIGN_NOT_DELETED } from "./campaign-not-deleted";
 
 // Partner writes (spec § Writes). A partner may create and edit contacts,
 // leads, opportunities, CRM tasks and activities on his partner accounts and
