@@ -21,6 +21,8 @@ import { getCampaigns } from "@/actions/campaigns/get-campaigns";
 import { getCampaign } from "@/actions/campaigns/get-campaign";
 import { getCampaignsCount } from "@/actions/dashboard/get-campaigns-count";
 import { convertTargetToDeal } from "@/actions/crm/targets/convert-target-to-deal";
+import { inngest } from "@/inngest/client";
+import { createDataApi } from "@/lib/plugins/data-api";
 
 const tag = randomUUID().slice(0, 8);
 const U = { creator: randomUUID(), manager: randomUUID(), partner: randomUUID(), rep: randomUUID() };
@@ -159,5 +161,81 @@ describe("convert to deal campaign credit (convertTargetToDeal)", () => {
     if (!("opportunityId" in res)) throw new Error(`convert failed: ${JSON.stringify(res)}`);
     const opp = await prismadb.crm_Opportunities.findUnique({ where: { id: res.opportunityId } });
     expect(opp?.campaign).toBe(credited ? C[credited] : null);
+  });
+});
+
+// Plugins write opportunities through the data API (no user, admin-installed).
+// Pavel 2026-11-03: they may not link a deleted campaign, by either marker;
+// no user scope applies. Same rule as the UI actions since 0.37.12.
+describe("plugin data API opportunity campaign (createDataApi)", () => {
+  const api = createDataApi(`cdm-plugin-${tag}`, ["opportunities:read", "opportunities:write"]);
+  const send = inngest.send as jest.Mock;
+  const byName = async (name: string) => api.opportunities.find({ where: { name } });
+
+  beforeEach(() => send.mockReset().mockResolvedValue(undefined));
+
+  const laterDeleted = randomUUID();
+
+  afterAll(async () => {
+    await prismadb.crm_Opportunities.deleteMany({ where: { name: { contains: `cdm-opp-${tag}` } } });
+    await prismadb.crm_campaigns.deleteMany({ where: { id: laterDeleted } });
+  });
+
+  it.each(["normal", "nullStatus"] as const)("create links a %s campaign", async (k) => {
+    const row = await api.opportunities.create({ name: `cdm-opp-${tag}-create-${k}`, campaign: C[k] });
+    expect((await api.opportunities.get(row.id as string))?.campaign).toBe(C[k]);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["uiDeleted", "mcpDeleted"] as const)("create with a %s campaign is refused, nothing written, no event", async (k) => {
+    const name = `cdm-opp-${tag}-create-${k}`;
+    await expect(api.opportunities.create({ name, campaign: C[k] })).rejects.toThrow(`Invalid campaign: ${C[k]}`);
+    expect(await byName(name)).toEqual([]);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("update changing the campaign to a deleted one is refused and leaves the row unchanged", async () => {
+    const row = await api.opportunities.create({ name: `cdm-opp-${tag}-move`, campaign: C.normal });
+    send.mockClear();
+    for (const k of ["uiDeleted", "mcpDeleted"] as const) {
+      await expect(api.opportunities.update(row.id as string, { name: "renamed", campaign: C[k] })).rejects.toThrow(`Invalid campaign: ${C[k]}`);
+    }
+    expect(await api.opportunities.get(row.id as string)).toMatchObject({ name: `cdm-opp-${tag}-move`, campaign: C.normal });
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("update re-sending the stored campaign works after that campaign was deleted", async () => {
+    await prismadb.crm_campaigns.create({ data: { id: laterDeleted, name: `later-${tag}`, status: "sent", v: 0, created_by: U.creator } });
+    const row = await api.opportunities.create({ name: `cdm-opp-${tag}-resend`, campaign: laterDeleted });
+    await prismadb.crm_campaigns.update({ where: { id: laterDeleted }, data: { status: "deleted" } });
+    await api.opportunities.update(row.id as string, { name: `cdm-opp-${tag}-resend-2`, campaign: laterDeleted });
+    expect(await api.opportunities.get(row.id as string)).toMatchObject({ name: `cdm-opp-${tag}-resend-2`, campaign: laterDeleted });
+  });
+
+  it("update without a campaign runs no campaign lookup", async () => {
+    const row = await api.opportunities.create({ name: `cdm-opp-${tag}-plain` });
+    const spy = jest.spyOn(prismadb.crm_campaigns, "findFirst");
+    await api.opportunities.update(row.id as string, { name: `cdm-opp-${tag}-plain-2` });
+    await api.opportunities.update(row.id as string, { campaign: null });
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  // data goes to Prisma as is, so the relation and operator forms must not slip past the id check.
+  it("create linking a deleted campaign through the relation is refused, nothing written, no event", async () => {
+    const name = `cdm-opp-${tag}-connect`;
+    await expect(
+      api.opportunities.create({ name, assigned_campaings: { connect: { id: C.uiDeleted } } }),
+    ).rejects.toThrow("Invalid campaign");
+    expect(await byName(name)).toEqual([]);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("update setting a deleted campaign with { set } is refused and leaves the row unchanged", async () => {
+    const row = await api.opportunities.create({ name: `cdm-opp-${tag}-set`, campaign: C.normal });
+    send.mockClear();
+    await expect(api.opportunities.update(row.id as string, { campaign: { set: C.mcpDeleted } })).rejects.toThrow("Invalid campaign");
+    expect((await api.opportunities.get(row.id as string))?.campaign).toBe(C.normal);
+    expect(send).not.toHaveBeenCalled();
   });
 });

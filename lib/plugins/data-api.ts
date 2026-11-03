@@ -3,9 +3,11 @@ import { Prisma } from "@prisma/client";
 import { PluginPermissionError } from "./errors";
 import { runAsActor } from "./actor";
 import { writePluginLog } from "./log";
+import { CAMPAIGN_NOT_DELETED } from "@/lib/authz/scopes/campaign-not-deleted";
 
 type Delegate = {
   findUnique(a: unknown): Promise<unknown>;
+  findFirst(a: unknown): Promise<unknown>;
   findMany(a: unknown): Promise<unknown[]>;
   create(a: unknown): Promise<unknown>;
   update(a: unknown): Promise<unknown>;
@@ -33,6 +35,25 @@ function scalarFields(model: string): Set<string> {
   const name = `${model[0].toUpperCase()}${model.slice(1)}ScalarFieldEnum` as keyof typeof Prisma;
   const fields = Object.values((Prisma[name] ?? {}) as Record<string, string>);
   return new Set(fields.filter((f) => f !== "password"));
+}
+
+// Plugins may not link an opportunity to a deleted campaign (same rule as the UI since 0.37.12; no user
+// scope, Pavel 2026-11-03). On update only a changed campaign is checked: syncs re-send full records,
+// including a campaign deleted since it was linked. data reaches Prisma as is, so the campaign may be set
+// only as a plain id or null: the relation (connect) and operator ({ set }) forms are refused.
+async function assertCampaignLink(data: RecordData, id?: string): Promise<void> {
+  if ("assigned_campaings" in data) throw new Error("Invalid campaign: set the campaign field to an id or null");
+  const campaign = data.campaign;
+  if (campaign !== undefined && campaign !== null && typeof campaign !== "string") {
+    throw new Error("Invalid campaign: set the campaign field to an id or null");
+  }
+  if (!campaign) return;
+  if (id) {
+    const stored = (await (await db()).crm_Opportunities.findUnique({ where: { id }, select: { campaign: true } })) as { campaign: string | null } | null;
+    if (stored?.campaign === campaign) return;
+  }
+  const live = await (await db()).crm_campaigns.findFirst({ where: { id: campaign, AND: [CAMPAIGN_NOT_DELETED] }, select: { id: true } });
+  if (!live) throw new Error(`Invalid campaign: ${campaign} does not exist or is deleted`);
 }
 
 function assertFilter(value: unknown, allowed: Set<string>): void {
@@ -82,11 +103,24 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
       return row;
     },
   });
+  const opportunities = entity("crm_Opportunities", "opportunities:read", "opportunities:write");
   return {
     accounts: entity("crm_Accounts", "accounts:read", "accounts:write"),
     contacts: entity("crm_Contacts", "contacts:read", "contacts:write"),
     leads: entity("crm_Leads", "leads:read", "leads:write"),
-    opportunities: entity("crm_Opportunities", "opportunities:read", "opportunities:write"),
+    opportunities: {
+      ...opportunities,
+      async create(data) {
+        need("opportunities:write");
+        await assertCampaignLink(data);
+        return opportunities.create(data);
+      },
+      async update(id, data) {
+        need("opportunities:write");
+        await assertCampaignLink(data, id);
+        return opportunities.update(id, data);
+      },
+    },
     orders: {
       ...read("crm_Orders", "orders:read"),
       async get(id) {
