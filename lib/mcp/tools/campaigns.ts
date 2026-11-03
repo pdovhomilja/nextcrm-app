@@ -149,6 +149,7 @@ export const campaignTools = [
         where: { id: args.id },
         data: softDeleteData(userId),
       });
+      await inngest.send({ name: "campaigns/deleted", data: { campaignId: args.id } });
       return itemResponse({ id: args.id, deletedAt: new Date().toISOString() });
     },
   },
