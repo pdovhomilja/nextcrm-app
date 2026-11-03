@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.12](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.11...v0.37.12) (2026-11-03)
+
+
+### Fixed
+
+* **crm:** check campaign read scope when an opportunity links a campaign ([9023c14](https://github.com/pdovhomilja/nextcrm-app/commit/9023c14cd196aab723dbb426a9916c5df13472b9))
+* **crm:** check campaign read scope when an opportunity links a campaign ([ae61581](https://github.com/pdovhomilja/nextcrm-app/commit/ae61581a1c3f0a54af8645c440428721bb8dfce8))
+
 ## [0.37.11](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.10...v0.37.11) (2026-11-02)
 
 
