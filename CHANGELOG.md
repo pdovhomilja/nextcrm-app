@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.11](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.10...v0.37.11) (2026-11-02)
+
+
+### Fixed
+
+* **crm:** scope the opportunity campaign picker to the caller ([04aeb94](https://github.com/pdovhomilja/nextcrm-app/commit/04aeb94af467e3d24c6254d8583dc63d718a9d93))
+* **crm:** scope the opportunity campaign picker to the caller ([fc58ba9](https://github.com/pdovhomilja/nextcrm-app/commit/fc58ba9198822e6d46546b7ecba8264545136319))
+
 ## [0.37.10](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.9...v0.37.10) (2026-11-02)
 
 
