@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.13](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.12...v0.37.13) (2026-11-03)
+
+
+### Fixed
+
+* **crm:** convert to deal skips deleted campaigns when crediting a campaign ([e4d18d4](https://github.com/pdovhomilja/nextcrm-app/commit/e4d18d420519075487e22e8034fd8553af0eab69))
+* **crm:** convert to deal skips deleted campaigns when crediting a campaign ([94937f1](https://github.com/pdovhomilja/nextcrm-app/commit/94937f15eae39a35b90bd10bec27c62669ca601b))
+* **crm:** wrap CAMPAIGN_NOT_DELETED in AND, as its other callers do ([5d121e4](https://github.com/pdovhomilja/nextcrm-app/commit/5d121e4b110140e556ff41500024098ad8c575eb))
+
 ## [0.37.12](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.11...v0.37.12) (2026-11-03)
 
 
