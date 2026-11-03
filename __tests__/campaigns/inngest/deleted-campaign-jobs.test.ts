@@ -1,8 +1,11 @@
 // Runs the real campaign Inngest handlers (createFunction returns the handler)
 // against a mocked prismadb and Resend, with a fake `step` that JSON-serialises
-// step.run results the way Inngest does.
+// step.run results the way Inngest does. The function config is kept on the
+// handler as `.config` so the cancelOn wiring can be checked too.
 jest.mock("@/inngest/client", () => ({
-  inngest: { createFunction: jest.fn((_config: unknown, handler: unknown) => handler) },
+  inngest: {
+    createFunction: jest.fn((config: unknown, handler: object) => Object.assign(handler, { config })),
+  },
 }));
 
 const mockResendSend = jest.fn();
@@ -89,6 +92,17 @@ const jobs: Array<[string, Handler, Record<string, unknown>]> = [
   ["process-follow-up", campaignProcessFollowUp as unknown as Handler, { campaignId: "camp-1", stepId: "step-1", scheduledAt: "2026-11-05T08:00:00Z" }],
   ["send-now", campaignSendNow as unknown as Handler, { campaignId: "camp-1" }],
 ];
+
+describe("sleeping campaign jobs are cancelled when the campaign is deleted", () => {
+  it.each([
+    ["schedule-send", campaignScheduleSend],
+    ["process-follow-up", campaignProcessFollowUp],
+  ])("%s cancels on campaigns/deleted for the same campaignId", (_name, fn) => {
+    expect((fn as unknown as { config: { cancelOn?: unknown } }).config.cancelOn).toEqual([
+      { event: "campaigns/deleted", match: "data.campaignId" },
+    ]);
+  });
+});
 
 describe("campaign jobs skip deleted campaigns", () => {
   beforeEach(() => jest.clearAllMocks());
