@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.15](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.14...v0.37.15) (2026-11-03)
+
+
+### Fixed
+
+* **campaigns:** cancel sleeping campaign runs when a campaign is deleted ([7009bf3](https://github.com/pdovhomilja/nextcrm-app/commit/7009bf3dc443a49b474ec750ddaaa13c765209f4))
+* **campaigns:** cancel sleeping schedule/follow-up runs on campaigns/deleted ([52ed995](https://github.com/pdovhomilja/nextcrm-app/commit/52ed995e5efecbd8c1c58136c969c53039025891))
+* **campaigns:** send campaigns/deleted after a successful UI or MCP delete ([3eaefd8](https://github.com/pdovhomilja/nextcrm-app/commit/3eaefd86160f1c98937e63820e1a20b8701dffdd))
+
 ## [0.37.14](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.13...v0.37.14) (2026-11-03)
 
 
