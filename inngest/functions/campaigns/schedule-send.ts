@@ -9,6 +9,7 @@ export const campaignScheduleSend = inngest.createFunction(
     id: "campaign-schedule-send",
     name: "Campaign: Schedule Send",
     triggers: [{ event: "campaigns/schedule" }],
+    cancelOn: [{ event: "campaigns/deleted", match: "data.campaignId" }],
   },
   async ({ event, step }) => {
     const { campaignId, scheduledAt } = event.data as {

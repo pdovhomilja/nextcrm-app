@@ -28,6 +28,7 @@ jest.mock("@/lib/prisma", () => ({
 jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn() } }));
 
 import { prismadb } from "@/lib/prisma";
+import { inngest } from "@/inngest/client";
 import { campaignTools } from "@/lib/mcp/tools/campaigns";
 import { CAMPAIGN_NOT_DELETED } from "@/lib/authz/scopes/campaign-not-deleted";
 
@@ -102,6 +103,35 @@ describe("campaigns_delete scope", () => {
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue(null);
     await expect(run("campaigns_delete", { id: "victim" }, USER)).rejects.toThrow("NOT_FOUND");
     expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+    expect(inngest.send).not.toHaveBeenCalled();
+  });
+
+  it("missing campaign throws NOT_FOUND and sends no campaigns/deleted event", async () => {
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue(null);
+    await expect(run("campaigns_delete", { id: "missing" }, MANAGER)).rejects.toThrow("NOT_FOUND");
+    expect(inngest.send).not.toHaveBeenCalled();
+  });
+
+  it("a sending campaign is refused with CONFLICT and its jobs are not cancelled", async () => {
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status: "sending" });
+    await expect(run("campaigns_delete", { id: "c1" }, USER)).rejects.toThrow("CONFLICT");
+    expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+    expect(inngest.send).not.toHaveBeenCalled();
+  });
+
+  it("in-scope delete cancels the campaign's sleeping jobs (campaigns/deleted)", async () => {
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status: "scheduled" });
+    (prismadb.crm_campaigns.update as jest.Mock).mockResolvedValue({ id: "c1" });
+    await run("campaigns_delete", { id: "c1" }, USER);
+    expect(inngest.send).toHaveBeenCalledTimes(1);
+    expect(inngest.send).toHaveBeenCalledWith({ name: "campaigns/deleted", data: { campaignId: "c1" } });
+  });
+
+  it("failed soft delete sends no campaigns/deleted event", async () => {
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status: "scheduled" });
+    (prismadb.crm_campaigns.update as jest.Mock).mockRejectedValue(new Error("db down"));
+    await expect(run("campaigns_delete", { id: "c1" }, USER)).rejects.toThrow("db down");
+    expect(inngest.send).not.toHaveBeenCalled();
   });
 });
 

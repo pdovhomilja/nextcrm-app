@@ -48,6 +48,8 @@ Set `INNGEST_DEV=1` in `.env.local` so the SDK uses the dev server. The dev serv
 | `document-enrich`, `document-generate-thumbnail` | `document/uploaded` | Processes and previews uploaded documents |
 | `plugin-lifecycle-install` | `plugin/installed` | Runs a plugin's `onInstall` |
 
+Deleting a campaign (UI or MCP `campaigns_delete`) sends `campaigns/deleted` with its `campaignId`. That event cancels `campaign-schedule-send` and `campaign-process-follow-up` runs still sleeping for the campaign (`cancelOn`). A run that wakes anyway skips a deleted campaign.
+
 ### Scheduled
 
 | Function id | Cron (UTC) | What it does |

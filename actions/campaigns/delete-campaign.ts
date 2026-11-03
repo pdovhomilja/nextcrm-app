@@ -1,5 +1,6 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
+import { inngest } from "@/inngest/client";
 import {
   requireAuthenticated,
   assertCanWriteCampaign,
@@ -23,5 +24,7 @@ export const deleteCampaign = async (id: string) => {
     throw e;
   }
 
-  return prismadb.crm_campaigns.update({ where: { id }, data: { status: "deleted" } });
+  const campaign = await prismadb.crm_campaigns.update({ where: { id }, data: { status: "deleted" } });
+  await inngest.send({ name: "campaigns/deleted", data: { campaignId: id } });
+  return campaign;
 };
