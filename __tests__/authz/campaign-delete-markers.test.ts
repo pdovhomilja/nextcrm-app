@@ -220,4 +220,22 @@ describe("plugin data API opportunity campaign (createDataApi)", () => {
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
+
+  // data goes to Prisma as is, so the relation and operator forms must not slip past the id check.
+  it("create linking a deleted campaign through the relation is refused, nothing written, no event", async () => {
+    const name = `cdm-opp-${tag}-connect`;
+    await expect(
+      api.opportunities.create({ name, assigned_campaings: { connect: { id: C.uiDeleted } } }),
+    ).rejects.toThrow("Invalid campaign");
+    expect(await byName(name)).toEqual([]);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("update setting a deleted campaign with { set } is refused and leaves the row unchanged", async () => {
+    const row = await api.opportunities.create({ name: `cdm-opp-${tag}-set`, campaign: C.normal });
+    send.mockClear();
+    await expect(api.opportunities.update(row.id as string, { campaign: { set: C.mcpDeleted } })).rejects.toThrow("Invalid campaign");
+    expect((await api.opportunities.get(row.id as string))?.campaign).toBe(C.normal);
+    expect(send).not.toHaveBeenCalled();
+  });
 });

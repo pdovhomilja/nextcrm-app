@@ -7,6 +7,7 @@ import { CAMPAIGN_NOT_DELETED } from "@/lib/authz/scopes/campaign-not-deleted";
 
 type Delegate = {
   findUnique(a: unknown): Promise<unknown>;
+  findFirst(a: unknown): Promise<unknown>;
   findMany(a: unknown): Promise<unknown[]>;
   create(a: unknown): Promise<unknown>;
   update(a: unknown): Promise<unknown>;
@@ -38,16 +39,21 @@ function scalarFields(model: string): Set<string> {
 
 // Plugins may not link an opportunity to a deleted campaign (same rule as the UI since 0.37.12; no user
 // scope, Pavel 2026-11-03). On update only a changed campaign is checked: syncs re-send full records,
-// including a campaign deleted since it was linked.
-async function assertLiveCampaign(model: string, data: RecordData, id?: string): Promise<void> {
-  if (model !== "crm_Opportunities" || typeof data.campaign !== "string" || !data.campaign) return;
-  const { prismadb } = await import("@/lib/prisma");
-  if (id) {
-    const stored = await prismadb.crm_Opportunities.findUnique({ where: { id }, select: { campaign: true } });
-    if (stored?.campaign === data.campaign) return;
+// including a campaign deleted since it was linked. data reaches Prisma as is, so the campaign may be set
+// only as a plain id or null: the relation (connect) and operator ({ set }) forms are refused.
+async function assertCampaignLink(data: RecordData, id?: string): Promise<void> {
+  if ("assigned_campaings" in data) throw new Error("Invalid campaign: set the campaign field to an id or null");
+  const campaign = data.campaign;
+  if (campaign !== undefined && campaign !== null && typeof campaign !== "string") {
+    throw new Error("Invalid campaign: set the campaign field to an id or null");
   }
-  const live = await prismadb.crm_campaigns.findFirst({ where: { id: data.campaign, AND: [CAMPAIGN_NOT_DELETED] }, select: { id: true } });
-  if (!live) throw new Error(`Invalid campaign: ${data.campaign} does not exist or is deleted`);
+  if (!campaign) return;
+  if (id) {
+    const stored = (await (await db()).crm_Opportunities.findUnique({ where: { id }, select: { campaign: true } })) as { campaign: string | null } | null;
+    if (stored?.campaign === campaign) return;
+  }
+  const live = await (await db()).crm_campaigns.findFirst({ where: { id: campaign, AND: [CAMPAIGN_NOT_DELETED] }, select: { id: true } });
+  if (!live) throw new Error(`Invalid campaign: ${campaign} does not exist or is deleted`);
 }
 
 function assertFilter(value: unknown, allowed: Set<string>): void {
@@ -86,24 +92,35 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
     ...read(model, r),
     async create(data) {
       need(w);
-      await assertLiveCampaign(model, data);
       const row = (await runAsActor({ type: "plugin", pluginId }, async () => (await db())[model].create({ data: { v: 0, ...data } }))) as RecordData;
       await emitSaved(pluginId, model, row.id as string);
       return row;
     },
     async update(id, data) {
       need(w);
-      await assertLiveCampaign(model, data, id);
       const row = (await runAsActor({ type: "plugin", pluginId }, async () => (await db())[model].update({ where: { id }, data }))) as RecordData;
       await emitSaved(pluginId, model, id);
       return row;
     },
   });
+  const opportunities = entity("crm_Opportunities", "opportunities:read", "opportunities:write");
   return {
     accounts: entity("crm_Accounts", "accounts:read", "accounts:write"),
     contacts: entity("crm_Contacts", "contacts:read", "contacts:write"),
     leads: entity("crm_Leads", "leads:read", "leads:write"),
-    opportunities: entity("crm_Opportunities", "opportunities:read", "opportunities:write"),
+    opportunities: {
+      ...opportunities,
+      async create(data) {
+        need("opportunities:write");
+        await assertCampaignLink(data);
+        return opportunities.create(data);
+      },
+      async update(id, data) {
+        need("opportunities:write");
+        await assertCampaignLink(data, id);
+        return opportunities.update(id, data);
+      },
+    },
     orders: {
       ...read("crm_Orders", "orders:read"),
       async get(id) {
