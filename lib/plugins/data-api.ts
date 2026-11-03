@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { PluginPermissionError } from "./errors";
 import { runAsActor } from "./actor";
 import { writePluginLog } from "./log";
+import { CAMPAIGN_NOT_DELETED } from "@/lib/authz/scopes/campaign-not-deleted";
 
 type Delegate = {
   findUnique(a: unknown): Promise<unknown>;
@@ -33,6 +34,20 @@ function scalarFields(model: string): Set<string> {
   const name = `${model[0].toUpperCase()}${model.slice(1)}ScalarFieldEnum` as keyof typeof Prisma;
   const fields = Object.values((Prisma[name] ?? {}) as Record<string, string>);
   return new Set(fields.filter((f) => f !== "password"));
+}
+
+// Plugins may not link an opportunity to a deleted campaign (same rule as the UI since 0.37.12; no user
+// scope, Pavel 2026-11-03). On update only a changed campaign is checked: syncs re-send full records,
+// including a campaign deleted since it was linked.
+async function assertLiveCampaign(model: string, data: RecordData, id?: string): Promise<void> {
+  if (model !== "crm_Opportunities" || typeof data.campaign !== "string" || !data.campaign) return;
+  const { prismadb } = await import("@/lib/prisma");
+  if (id) {
+    const stored = await prismadb.crm_Opportunities.findUnique({ where: { id }, select: { campaign: true } });
+    if (stored?.campaign === data.campaign) return;
+  }
+  const live = await prismadb.crm_campaigns.findFirst({ where: { id: data.campaign, AND: [CAMPAIGN_NOT_DELETED] }, select: { id: true } });
+  if (!live) throw new Error(`Invalid campaign: ${data.campaign} does not exist or is deleted`);
 }
 
 function assertFilter(value: unknown, allowed: Set<string>): void {
@@ -71,12 +86,14 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
     ...read(model, r),
     async create(data) {
       need(w);
+      await assertLiveCampaign(model, data);
       const row = (await runAsActor({ type: "plugin", pluginId }, async () => (await db())[model].create({ data: { v: 0, ...data } }))) as RecordData;
       await emitSaved(pluginId, model, row.id as string);
       return row;
     },
     async update(id, data) {
       need(w);
+      await assertLiveCampaign(model, data, id);
       const row = (await runAsActor({ type: "plugin", pluginId }, async () => (await db())[model].update({ where: { id }, data }))) as RecordData;
       await emitSaved(pluginId, model, id);
       return row;
