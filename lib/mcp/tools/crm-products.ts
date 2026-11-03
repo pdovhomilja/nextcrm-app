@@ -37,7 +37,7 @@ export const crmProductTools = [
         prismadb.crm_Products.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           include: { category: true },
         }),
         prismadb.crm_Products.count({ where }),
