@@ -124,7 +124,7 @@ Every handler, hook and component receives `ctx`:
 - `find({ where, orderBy, take, skip })` filters only on the model's own scalar fields plus `AND`, `OR` and `NOT`. Relation filters throw `Invalid filter field: <key>`. `take` is capped at 100.
 - Reads are not limited to the actor's scope. A plugin with `accounts:read` can read every account.
 - Writes go through the normal Prisma client, so other plugins' rules run on them. Your own rules do not run on your own writes.
-- `opportunities.create` and `update` throw `Invalid campaign: <id> does not exist or is deleted` when `campaign` names a missing or deleted campaign, and nothing is written. An update that re-sends the opportunity's current campaign is accepted even if that campaign was deleted later.
+- `opportunities.create` and `update` take the campaign only as `campaign: <id>` or `campaign: null`; the relation (`assigned_campaings`) and operator forms (`{ set }`) throw `Invalid campaign`. A missing or deleted campaign throws `Invalid campaign: <id> does not exist or is deleted`, and nothing is written. An update that re-sends the opportunity's current campaign is accepted even if that campaign was deleted later.
 - After a create or update, the data API sends `crm/<entity>.saved` with `source: <pluginId>`.
 - `activities.findForRecord(entity, id, { types?, status?, since?, take?, skip? })` returns activities linked to one record, newest first, without soft-deleted rows, at most 100. `since` filters on the activity `date`.
 

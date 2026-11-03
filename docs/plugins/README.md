@@ -22,6 +22,7 @@ After adding or removing a plugin run `pnpm plugins:generate --public-only` and 
 - Declare every permission you use. `ctx.data`, `ctx.http` and `ctx.notify` throw `PluginPermissionError` otherwise.
 - `ctx.data.users` is read-only and never exposes credentials (the password hash is always omitted).
 - `ctx.data.<entity>.find()` filters (`where`, `orderBy`) may use only the model's own scalar fields plus `AND`/`OR`/`NOT`, never `password`. Relation filters throw `Invalid filter field: <key>`. `take` is capped at 100 rows.
+- `ctx.data.opportunities.create/update` set the campaign only as `campaign: <id>` or `null`, and the campaign must exist and not be deleted, else they throw `Invalid campaign` before writing (an update re-sending the stored campaign is allowed).
 - `crm/*.saved` events carry `source: <pluginId>` when the write came from a plugin's `ctx.data`, and a plugin's own `on` handlers skip events it caused.
 - Rules run inside the user's write and have 500 ms. `onError` defaults to `"allow"`; use `"block"` only when skipping the rule would break a guarantee (e.g. ownership protection). A blocking rule that throws or times out rejects the write with the core "rule unavailable" message.
 - Writes you make via `ctx.data` do not trigger your own rules; other plugins' rules still apply. Rule recursion depth is capped at 3.
