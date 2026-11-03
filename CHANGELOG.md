@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.14](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.13...v0.37.14) (2026-11-03)
+
+
+### Fixed
+
+* **plugins:** refuse deleted campaigns on plugin opportunity writes ([15cca10](https://github.com/pdovhomilja/nextcrm-app/commit/15cca10adb069bd8248ef2cbc3852ae1786f921d))
+* **plugins:** refuse deleted campaigns on plugin opportunity writes ([4acc4f1](https://github.com/pdovhomilja/nextcrm-app/commit/4acc4f11e721bf35d69bbc8d8bfd1bdccf2fbbfc))
+* **plugins:** refuse relation and operator campaign writes; own opportunities block ([c2ec7f9](https://github.com/pdovhomilja/nextcrm-app/commit/c2ec7f968a2db07869eb10e74d5ec718c2379acb))
+
 ## [0.37.13](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.12...v0.37.13) (2026-11-03)
 
 
