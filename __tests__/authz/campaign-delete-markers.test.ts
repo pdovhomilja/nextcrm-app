@@ -124,11 +124,13 @@ describe("convert to deal campaign credit (convertTargetToDeal)", () => {
       });
       steps[k] = step.id;
     }
-    for (const [i, [, owner, sends]] of CASES.entries()) {
+    for (let i = 0; i < CASES.length; i++) {
+      const [, owner, sends] = CASES[i];
       await prismadb.crm_Targets.create({
         data: { id: targets[i], last_name: `cdm-t${i}-${tag}`, company: `cdm-co${i}-${tag}`, created_by: U[owner] },
       });
-      for (const [j, k] of sends.entries()) {
+      for (let j = 0; j < sends.length; j++) {
+        const k = sends[j];
         await prismadb.crm_campaign_sends.create({
           data: {
             campaign_id: C[k], step_id: steps[k]!, target_id: targets[i], email: `t${i}-${k}@cdm.test`,
