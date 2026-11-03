@@ -11,6 +11,7 @@ import {
   requireAuthenticated,
   assertCanWriteAccount,
   assertCanWriteContact,
+  assertCanReadCampaign,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
@@ -62,6 +63,8 @@ export const createOpportunity = async (data: {
     if (user.role === "partner" && !account) throw new AuthorizationError();
     if (account) await assertCanWriteAccount(user, account, PARTNER_EDIT);
     if (user.role === "partner" && contact) await assertCanWriteContact(user, contact, PARTNER_EDIT);
+    // Linking a campaign requires read on it (same scope as the form's picker).
+    if (campaign) await assertCanReadCampaign(user, campaign);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;

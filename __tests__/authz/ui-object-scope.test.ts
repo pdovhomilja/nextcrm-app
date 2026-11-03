@@ -8,6 +8,8 @@
  * (allowed). The session is mocked; the role comes from the DB.
  */
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
+jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn(async () => undefined) } }));
+jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 
 import { randomUUID } from "crypto";
 import { prismadb } from "@/lib/prisma";
@@ -15,22 +17,28 @@ import { getSession } from "@/lib/auth-server";
 import { updateCampaign } from "@/actions/campaigns/update-campaign";
 import { createCampaign } from "@/actions/campaigns/create-campaign";
 import { updateContract } from "@/actions/crm/contracts/update-contract";
+import { createOpportunity } from "@/actions/crm/opportunities/create-opportunity";
+import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
 
 const tag = randomUUID().slice(0, 8);
-const U = { rep: randomUUID(), other: randomUUID(), boss: randomUUID() };
+const U = { rep: randomUUID(), other: randomUUID(), boss: randomUUID(), partner: randomUUID() };
 const TPL = { rep: randomUUID(), other: randomUUID() };
 const CAMP = { rep: randomUUID(), other: randomUUID() };
 const ACC = { rep: randomUUID(), other: randomUUID() };
 // rep's contract on his own account; rep's contract that a manager put on other's account; other's contract
 const CONTRACT = { rep: randomUUID(), repOnOther: randomUUID(), other: randomUUID() };
+// rep's opportunity on his campaign; rep's opportunity a manager linked to other's campaign;
+// an opportunity on the partner's account linked to other's campaign
+const OPP = { rep: randomUUID(), repOnOther: randomUUID(), partner: randomUUID() };
+const PARTNER_ACC = randomUUID();
 
 const as = (who: keyof typeof U) => (getSession as jest.Mock).mockResolvedValue({ user: { id: U[who] } });
 
 beforeAll(async () => {
   await prismadb.users.createMany({
-    data: (["rep", "other", "boss"] as const).map((k) => ({
+    data: (["rep", "other", "boss", "partner"] as const).map((k) => ({
       id: U[k], email: `${k}-${tag}@ui-scope.test`, name: `${k}-${tag}`,
-      role: k === "boss" ? "manager" : "user", userStatus: "ACTIVE",
+      role: k === "boss" ? "manager" : k === "partner" ? "partner" : "user", userStatus: "ACTIVE",
     })),
   });
   for (const k of ["rep", "other"] as const) {
@@ -54,9 +62,21 @@ beforeAll(async () => {
       data: { id: CONTRACT[k], v: 0, title: `${k}-${tag}`, value: 1, account, assigned_to: owner, createdBy: owner },
     });
   }
+  await prismadb.crm_Accounts.create({
+    data: { id: PARTNER_ACC, v: 0, name: `partner-${tag}`, assigned_to: U.rep, createdBy: U.rep, partnerUserId: U.partner },
+  });
+  for (const [k, campaign, account] of [
+    ["rep", CAMP.rep, ACC.rep], ["repOnOther", CAMP.other, ACC.rep], ["partner", CAMP.other, PARTNER_ACC],
+  ] as const) {
+    await prismadb.crm_Opportunities.create({
+      data: { id: OPP[k], name: `${k}-${tag}`, campaign, account, assigned_to: U.rep, createdBy: U.rep },
+    });
+  }
 });
 
 afterAll(async () => {
+  await prismadb.crm_Opportunities.deleteMany({ where: { name: { contains: tag } } });
+  await prismadb.crm_Accounts.deleteMany({ where: { id: PARTNER_ACC } });
   await prismadb.crm_Contracts.deleteMany({ where: { id: { in: Object.values(CONTRACT) } } });
   await prismadb.crm_Accounts.deleteMany({ where: { id: { in: Object.values(ACC) } } });
   const campaigns = await prismadb.crm_campaigns.findMany({ where: { name: { contains: tag } }, select: { id: true } });
@@ -146,5 +166,43 @@ describe("updateContract account", () => {
     as("boss");
     await update(CONTRACT.other, ACC.rep, U.other, `other-${tag}-2`);
     expect((await row(CONTRACT.other)).account).toBe(ACC.rep);
+  });
+});
+
+describe("opportunity campaign", () => {
+  const row = async (id: string) =>
+    (await prismadb.crm_Opportunities.findUnique({ where: { id }, select: { campaign: true, name: true } }))!;
+  const count = (name: string) => prismadb.crm_Opportunities.count({ where: { name } });
+
+  it("user cannot create an opportunity on another user's campaign", async () => {
+    as("rep");
+    expect(await createOpportunity({ name: `opp-${tag}-x`, campaign: CAMP.other })).toEqual({ error: "Forbidden" });
+    expect(await count(`opp-${tag}-x`)).toBe(0);
+  });
+
+  it("own campaign as user", async () => {
+    as("rep");
+    await createOpportunity({ name: `opp-${tag}-own`, campaign: CAMP.rep });
+    expect(await count(`opp-${tag}-own`)).toBe(1);
+  });
+
+  it("user cannot move his opportunity to another user's campaign", async () => {
+    as("rep");
+    expect(await updateOpportunity({ id: OPP.rep, name: `hijack-${tag}`, campaign: CAMP.other })).toEqual({ error: "Forbidden" });
+    expect(await row(OPP.rep)).toEqual({ campaign: CAMP.rep, name: `rep-${tag}` });
+  });
+
+  it("user can edit his opportunity that already sits on another user's campaign", async () => {
+    as("rep");
+    expect(await updateOpportunity({ id: OPP.repOnOther, name: `repOnOther-${tag}-2`, campaign: CAMP.other })).not.toHaveProperty("error");
+    expect(await row(OPP.repOnOther)).toEqual({ campaign: CAMP.other, name: `repOnOther-${tag}-2` });
+  });
+
+  it("partner cannot link any new campaign, but can save the stored one", async () => {
+    as("partner");
+    expect(await updateOpportunity({ id: OPP.partner, name: `p-${tag}-x`, campaign: CAMP.rep })).toEqual({ error: "Forbidden" });
+    expect(await row(OPP.partner)).toEqual({ campaign: CAMP.other, name: `partner-${tag}` });
+    expect(await updateOpportunity({ id: OPP.partner, name: `partner-${tag}-2`, campaign: CAMP.other })).not.toHaveProperty("error");
+    expect(await row(OPP.partner)).toEqual({ campaign: CAMP.other, name: `partner-${tag}-2` });
   });
 });
