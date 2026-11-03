@@ -57,7 +57,7 @@ export async function convertTargetToDeal(
     // Campaign attribution: the campaign that last emailed this target, if any,
     // skipping deleted campaigns. Credits it even when another user owns it.
     const lastSend = await prismadb.crm_campaign_sends.findFirst({
-      where: { target_id: targetId, campaign: CAMPAIGN_NOT_DELETED },
+      where: { target_id: targetId, campaign: { AND: [CAMPAIGN_NOT_DELETED] } },
       orderBy: { sent_at: "desc" },
       select: { campaign_id: true },
     });
