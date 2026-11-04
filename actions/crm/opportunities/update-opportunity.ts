@@ -99,7 +99,8 @@ export const updateOpportunity = async (data: {
         // A partner never changes the assignee.
         assigned_to: user.role === "partner" ? undefined : assigned_to || undefined,
         budget: budget ? parseFloat(budget) : undefined,
-        campaign: campaign || undefined,
+        // Not sent = unchanged; "" (empty select) or null clears the link.
+        campaign: campaign === undefined ? undefined : campaign || null,
         close_date,
         delivery_deadline,
         contact: contact || undefined,

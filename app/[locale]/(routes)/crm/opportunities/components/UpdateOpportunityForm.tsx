@@ -434,7 +434,7 @@ export function UpdateOpportunityForm({
                     <FormItem>
                       <FormLabel>From campaign</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -443,6 +443,7 @@ export function UpdateOpportunityForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="flex overflow-y-auto h-56">
+                          <SelectItem value="__none__">No campaign</SelectItem>
                           {campaigns.map((campaign: any) => (
                             <SelectItem key={campaign.id} value={campaign.id}>
                               {campaign.name}

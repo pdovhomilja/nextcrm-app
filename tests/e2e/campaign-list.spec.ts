@@ -1,4 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
+import { prismaBase as db } from "../../lib/prisma-base";
 
 async function assertSuccessToast(page: Page) {
   await expect(
@@ -214,14 +215,17 @@ test.describe.serial("Campaign List", () => {
     await page.waitForURL(/\/campaigns\/[a-z0-9-]+$/, { timeout: 10000 });
   });
 
-  test("should delete a campaign via row action", async ({ page }) => {
+  // Campaigns created with "Send now" earlier stay "sending" in CI (no Inngest),
+  // and a sending campaign can't be deleted. Seed one draft and one sending
+  // campaign so the test doesn't depend on which row is last.
+  async function deleteViaRowAction(page: Page, name: string) {
     await page.goto("/en/campaigns");
     await page.waitForLoadState("networkidle", { timeout: 15000 });
-    await waitForRows(page);
-
-    const lastRow = page.locator("table tbody tr").last();
-    await lastRow.hover();
-    await lastRow.locator("button:has(.sr-only)").first().click();
+    await page.getByPlaceholder("Filter by name ...").fill(name);
+    const row = page.locator("table tbody tr", { hasText: name });
+    await expect(row).toHaveCount(1, { timeout: 10000 });
+    await row.hover();
+    await row.locator("button:has(.sr-only)").first().click();
 
     await page.getByRole("menuitem", { name: "Delete" }).click();
 
@@ -230,8 +234,34 @@ test.describe.serial("Campaign List", () => {
     });
     await expect(confirmBtn).toBeVisible({ timeout: 5000 });
     await confirmBtn.click();
+  }
+
+  async function seedCampaign(name: string, status: "draft" | "sending") {
+    const admin = await db.users.findUniqueOrThrow({ where: { email: process.env.TEST_USER_EMAIL || "test@nextcrm.app" } });
+    return db.crm_campaigns.create({ data: { v: 0, name, status, created_by: admin.id } });
+  }
+
+  test("should delete a campaign via row action", async ({ page }) => {
+    const name = `PW-CL-Draft-${Date.now()}`;
+    const campaign = await seedCampaign(name, "draft");
+
+    await deleteViaRowAction(page, name);
 
     await assertSuccessToast(page);
+    await expect.poll(async () => (await db.crm_campaigns.findUnique({ where: { id: campaign.id } }))?.status).toBe("deleted");
+  });
+
+  test("should refuse to delete a sending campaign", async ({ page }) => {
+    const name = `PW-CL-Sending-${Date.now()}`;
+    const campaign = await seedCampaign(name, "sending");
+
+    await deleteViaRowAction(page, name);
+
+    await expect(
+      page.locator('[data-sonner-toast][data-type="error"]', { hasText: "Cannot delete a campaign that is currently sending" })
+    ).toBeVisible({ timeout: 15000 });
+    expect((await db.crm_campaigns.findUnique({ where: { id: campaign.id } }))?.status).toBe("sending");
+    await db.crm_campaigns.delete({ where: { id: campaign.id } });
   });
 
   test("should navigate to new campaign page", async ({ page }) => {

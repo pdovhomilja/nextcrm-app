@@ -135,6 +135,29 @@ describe("campaigns_delete scope", () => {
   });
 });
 
+describe("campaigns_pause cancels sleeping jobs", () => {
+  it("sends campaigns/paused after the status update", async () => {
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status: "sending" });
+    (prismadb.crm_campaigns.update as jest.Mock).mockResolvedValue({ id: "c1" });
+    await run("campaigns_pause", { id: "c1" }, USER);
+    expect(inngest.send).toHaveBeenCalledTimes(1);
+    expect(inngest.send).toHaveBeenCalledWith({ name: "campaigns/paused", data: { campaignId: "c1" } });
+  });
+
+  it("a refused pause (not sending) sends no event", async () => {
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status: "draft" });
+    await expect(run("campaigns_pause", { id: "c1" }, USER)).rejects.toThrow("CONFLICT");
+    expect(inngest.send).not.toHaveBeenCalled();
+  });
+
+  it("a failed status update sends no event", async () => {
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status: "sending" });
+    (prismadb.crm_campaigns.update as jest.Mock).mockRejectedValue(new Error("db down"));
+    await expect(run("campaigns_pause", { id: "c1" }, USER)).rejects.toThrow("db down");
+    expect(inngest.send).not.toHaveBeenCalled();
+  });
+});
+
 describe("campaigns_send / pause / resume scope", () => {
   it("send: out-of-scope throws NOT_FOUND, no status change", async () => {
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue(null);

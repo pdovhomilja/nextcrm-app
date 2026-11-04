@@ -50,6 +50,10 @@ Set `INNGEST_DEV=1` in `.env.local` so the SDK uses the dev server. The dev serv
 
 Deleting a campaign (UI or MCP `campaigns_delete`) sends `campaigns/deleted` with its `campaignId`. That event cancels `campaign-schedule-send` and `campaign-process-follow-up` runs still sleeping for the campaign (`cancelOn`). A run that wakes anyway skips a deleted campaign.
 
+Rescheduling a campaign sends `campaigns/schedule` again. The new event cancels the older `campaign-schedule-send` run for the same `campaignId` and starts a new one, so only the latest scheduled time sends.
+
+Pausing a campaign (UI or MCP `campaigns_pause`) sends `campaigns/paused` with its `campaignId`, which cancels sleeping `campaign-schedule-send` and `campaign-process-follow-up` runs. MCP `campaigns_resume` sends `campaigns/send-now`, which sends step 0 to recipients who have not had it yet and schedules every follow-up again, counted from the resume time. A send already fanned out before the pause still skips a paused campaign.
+
 ### Scheduled
 
 | Function id | Cron (UTC) | What it does |

@@ -187,6 +187,7 @@ export const campaignTools = [
       if (!campaign) notFound("Campaign");
       if (campaign.status !== "sending") conflict(`Cannot pause campaign in status: ${campaign.status}`);
       await prismadb.crm_campaigns.update({ where: { id: args.id }, data: { status: "paused" } });
+      await inngest.send({ name: "campaigns/paused", data: { campaignId: args.id } });
       return itemResponse({ id: args.id, status: "paused" });
     },
   },
