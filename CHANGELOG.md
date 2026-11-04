@@ -5,6 +5,17 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.16](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.15...v0.37.16) (2026-11-04)
+
+
+### Fixed
+
+* **campaigns:** campaign follow-ups to [#447](https://github.com/pdovhomilja/nextcrm-app/issues/447) (reschedule/pause cancel, delete while sending, clear deal campaign, partner lock-in, dead code, re-credit migration) ([cfc4b32](https://github.com/pdovhomilja/nextcrm-app/commit/cfc4b32d8978222c64a20738b3274495a01f31c6))
+* **campaigns:** cancel sleeping runs on reschedule and pause ([c232e9b](https://github.com/pdovhomilja/nextcrm-app/commit/c232e9bc5107848fc214c3eae4dd786dbdf415bd))
+* **campaigns:** UI delete refuses a campaign that is sending ([61cfb4d](https://github.com/pdovhomilja/nextcrm-app/commit/61cfb4d482017d8d50f20aea2696bcb1e105e4a1))
+* **crm:** re-credit converted deals that sit on a deleted campaign ([a386883](https://github.com/pdovhomilja/nextcrm-app/commit/a38688377f8e13cb6ae424ef822966cce403c9af))
+* **opportunities:** clearing the campaign on a deal saves NULL ([c5f624a](https://github.com/pdovhomilja/nextcrm-app/commit/c5f624ae2df08e875566c4774154d5f57c62e613))
+
 ## [0.37.15](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.14...v0.37.15) (2026-11-03)
 
 
