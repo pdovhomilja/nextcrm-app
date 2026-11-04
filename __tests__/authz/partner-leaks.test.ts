@@ -57,6 +57,8 @@ import { unifiedSearch } from "@/actions/fulltext/unified-search";
 import { crmContractTools } from "@/lib/mcp/tools/crm-contracts";
 import { crmDocumentTools } from "@/lib/mcp/tools/crm-documents";
 import { crmActivityTools } from "@/lib/mcp/tools/crm-activities";
+import { campaignTools } from "@/lib/mcp/tools/campaigns";
+import { getCampaigns } from "@/actions/campaigns/get-campaigns";
 import type { AuthzUser } from "@/lib/authz";
 import ContactEnrichmentPage from "@/app/[locale]/(routes)/crm/contacts/enrichment/page";
 import TargetEnrichmentPage from "@/app/[locale]/(routes)/campaigns/targets/enrichment/page";
@@ -72,7 +74,7 @@ const ACC_KEYS = Object.keys(ACC) as AccKey[];
 
 const ids: Record<string, Record<string, string>> = {
   contact: {}, lead: {}, contactEnrichment: {}, targetEnrichment: {}, opportunity: {}, contract: {}, invoice: {},
-  document: {}, task: {}, activity: {}, board: {}, projectTask: {}, target: {},
+  document: {}, task: {}, activity: {}, board: {}, projectTask: {}, target: {}, campaign: {},
 };
 let currency = "";
 
@@ -180,6 +182,12 @@ beforeAll(async () => {
   ids.targetEnrichment.A = (await prismadb.crm_Target_Enrichment.create({
     data: { targetId: ids.target.A, triggeredBy: U.A, fields: [] },
   })).id;
+  // Campaigns: one the rep owns, one recorded as created by A (trap).
+  for (const [k, by] of [["rep", U.rep], ["A", U.A]] as const) {
+    ids.campaign[k] = (await prismadb.crm_campaigns.create({
+      data: { v: 0, name: `campaign-${k}-${tag}`, status: "draft", created_by: by },
+    })).id;
+  }
 });
 
 afterAll(async () => {
@@ -187,6 +195,7 @@ afterAll(async () => {
   await prismadb.crm_Contact_Enrichment.deleteMany({ where: { id: { in: all("contactEnrichment") } } });
   await prismadb.crm_Target_Enrichment.deleteMany({ where: { id: { in: all("targetEnrichment") } } });
   await prismadb.crm_Targets.deleteMany({ where: { id: { in: all("target") } } });
+  await prismadb.crm_campaigns.deleteMany({ where: { id: { in: all("campaign") } } });
   await prismadb.tasks.deleteMany({ where: { id: { in: all("projectTask") } } });
   await prismadb.boards.deleteMany({ where: { id: { in: all("board") } } });
   await prismadb.crm_ActivityLinks.deleteMany({ where: { activityId: { in: all("activity") } } });
@@ -398,6 +407,27 @@ describe("enrichment job pages", () => {
       await (page as () => Promise<unknown>)().catch(() => undefined);
       expect(spy).not.toHaveBeenCalled();
       spy.mockRestore();
+    }
+  });
+});
+
+// Pavel's decision (2026-11-04): partners see no campaigns at all, not even one
+// recorded as created by them.
+describe("partner gets no campaigns", () => {
+  const partnerA: AuthzUser = { id: U.A, role: "partner" };
+  const run = (name: string, args: Record<string, unknown>) =>
+    (campaignTools.find((t) => t.name === name)!.handler as any)(args, partnerA.id, partnerA);
+
+  it("UI getCampaigns returns nothing", async () => {
+    signInAs(U.A);
+    expect(await getCampaigns()).toEqual([]);
+  });
+
+  it("MCP campaigns_list returns nothing and campaigns_get is NOT_FOUND", async () => {
+    const list = await run("campaigns_list", { limit: 50, offset: 0 });
+    expect({ data: list.data, total: list.total }).toEqual({ data: [], total: 0 });
+    for (const k of ["A", "rep"]) {
+      await expect(run("campaigns_get", { id: ids.campaign[k] })).rejects.toThrow("NOT_FOUND");
     }
   });
 });
