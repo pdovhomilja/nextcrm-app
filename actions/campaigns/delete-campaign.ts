@@ -24,6 +24,9 @@ export const deleteCampaign = async (id: string) => {
     throw e;
   }
 
+  const existing = await prismadb.crm_campaigns.findUnique({ where: { id }, select: { status: true } });
+  if (existing?.status === "sending") return { error: "Cannot delete a campaign that is currently sending" };
+
   const campaign = await prismadb.crm_campaigns.update({ where: { id }, data: { status: "deleted" } });
   await inngest.send({ name: "campaigns/deleted", data: { campaignId: id } });
   return campaign;
