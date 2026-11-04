@@ -205,4 +205,15 @@ describe("opportunity campaign", () => {
     expect(await updateOpportunity({ id: OPP.partner, name: `partner-${tag}-2`, campaign: CAMP.other })).not.toHaveProperty("error");
     expect(await row(OPP.partner)).toEqual({ campaign: CAMP.other, name: `partner-${tag}-2` });
   });
+
+  // The edit form sends "" for an empty campaign select; null comes from API callers.
+  it("leaves the campaign alone when the field is not sent, clears it on \"\" or null", async () => {
+    as("rep");
+    expect(await updateOpportunity({ id: OPP.repOnOther, name: `keep-${tag}` })).not.toHaveProperty("error");
+    expect(await row(OPP.repOnOther)).toEqual({ campaign: CAMP.other, name: `keep-${tag}` });
+    expect(await updateOpportunity({ id: OPP.repOnOther, name: `clear-${tag}`, campaign: "" })).not.toHaveProperty("error");
+    expect(await row(OPP.repOnOther)).toEqual({ campaign: null, name: `clear-${tag}` });
+    expect(await updateOpportunity({ id: OPP.rep, name: `null-${tag}`, campaign: null })).not.toHaveProperty("error");
+    expect(await row(OPP.rep)).toEqual({ campaign: null, name: `null-${tag}` });
+  });
 });
