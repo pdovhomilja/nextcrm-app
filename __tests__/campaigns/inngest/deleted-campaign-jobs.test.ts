@@ -98,9 +98,28 @@ describe("sleeping campaign jobs are cancelled when the campaign is deleted", ()
     ["schedule-send", campaignScheduleSend],
     ["process-follow-up", campaignProcessFollowUp],
   ])("%s cancels on campaigns/deleted for the same campaignId", (_name, fn) => {
-    expect((fn as unknown as { config: { cancelOn?: unknown } }).config.cancelOn).toEqual([
+    expect((fn as unknown as { config: { cancelOn?: unknown[] } }).config.cancelOn).toContainEqual(
       { event: "campaigns/deleted", match: "data.campaignId" },
-    ]);
+    );
+  });
+
+  // Rescheduling sends campaigns/schedule again; Inngest cancels the older
+  // run on the same campaignId and keeps the new one.
+  it("schedule-send cancels on a new campaigns/schedule for the same campaignId", () => {
+    expect((campaignScheduleSend as unknown as { config: { cancelOn?: unknown[] } }).config.cancelOn).toContainEqual(
+      { event: "campaigns/schedule", match: "data.campaignId" },
+    );
+  });
+
+  // Resume (campaigns/send-now) re-dispatches step 0 and every follow-up,
+  // so sleeping runs from before the pause can go.
+  it.each([
+    ["schedule-send", campaignScheduleSend],
+    ["process-follow-up", campaignProcessFollowUp],
+  ])("%s cancels on campaigns/paused for the same campaignId", (_name, fn) => {
+    expect((fn as unknown as { config: { cancelOn?: unknown[] } }).config.cancelOn).toContainEqual(
+      { event: "campaigns/paused", match: "data.campaignId" },
+    );
   });
 });
 

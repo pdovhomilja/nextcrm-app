@@ -9,7 +9,13 @@ export const campaignScheduleSend = inngest.createFunction(
     id: "campaign-schedule-send",
     name: "Campaign: Schedule Send",
     triggers: [{ event: "campaigns/schedule" }],
-    cancelOn: [{ event: "campaigns/deleted", match: "data.campaignId" }],
+    cancelOn: [
+      { event: "campaigns/deleted", match: "data.campaignId" },
+      // A reschedule sends campaigns/schedule again: the older sleeping run goes,
+      // the new one (started by the same event) stays.
+      { event: "campaigns/schedule", match: "data.campaignId" },
+      { event: "campaigns/paused", match: "data.campaignId" },
+    ],
   },
   async ({ event, step }) => {
     const { campaignId, scheduledAt } = event.data as {

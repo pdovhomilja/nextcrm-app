@@ -1,5 +1,6 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
+import { inngest } from "@/inngest/client";
 import {
   requireAuthenticated,
   assertCanWriteCampaign,
@@ -23,10 +24,10 @@ export const pauseCampaign = async (id: string) => {
     throw e;
   }
 
-  return prismadb.crm_campaigns.update({
+  const campaign = await prismadb.crm_campaigns.update({
     where: { id },
     data: { status: "paused" },
   });
-  // Note: in-flight Inngest jobs check campaign.status at execution start
-  // and exit early when status is "paused" — no Inngest API cancellation needed.
+  await inngest.send({ name: "campaigns/paused", data: { campaignId: id } });
+  return campaign;
 };

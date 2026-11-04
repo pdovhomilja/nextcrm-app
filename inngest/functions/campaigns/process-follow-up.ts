@@ -9,7 +9,11 @@ export const campaignProcessFollowUp = inngest.createFunction(
     id: "campaign-process-follow-up",
     name: "Campaign: Process Follow-up",
     triggers: [{ event: "campaigns/follow-up" }],
-    cancelOn: [{ event: "campaigns/deleted", match: "data.campaignId" }],
+    cancelOn: [
+      { event: "campaigns/deleted", match: "data.campaignId" },
+      // Resume goes through campaigns/send-now, which dispatches every follow-up again.
+      { event: "campaigns/paused", match: "data.campaignId" },
+    ],
   },
   async ({ event, step }) => {
     const { campaignId, stepId, scheduledAt } = event.data as {
