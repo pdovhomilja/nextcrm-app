@@ -7,11 +7,14 @@ description: "Every environment variable the app reads, from .env.example and th
 
 Every variable listed in `.env.example` or read as `process.env.NAME` in the app code (tests, scripts and the docs app excluded). **Required** is "yes" when the `.env.example` comment says so and empty when it says nothing; **Purpose** is that comment. Variables read under a computed name are not listed. What each variable does and when you need it: [Configuration reference](/docs/admins/configuration).
 
-57 variables.
+61 variables.
 
 | Variable | Required | In `.env.example` | Purpose | Read in |
 | --- | --- | --- | --- | --- |
 | `ANTHROPIC_API_KEY` |  | yes | AI. Leave empty to use keys saved in the admin panel. | `lib/enrichment/e2b/agent-script.ts` |
+| `ASGARDEO_CLIENT_ID` |  | yes | Asgardeo OAuth / OpenID Connect (optional) | `lib/auth.ts` |
+| `ASGARDEO_CLIENT_SECRET` |  | yes | Asgardeo OAuth / OpenID Connect (optional) | `lib/auth.ts` |
+| `ASGARDEO_DISCOVERY_URL` |  | yes | Asgardeo OAuth / OpenID Connect (optional) | `lib/auth.ts` |
 | `BETTER_AUTH_SECRET` |  | yes | Better Auth | `lib/auth.ts` |
 | `BETTER_AUTH_URL` |  | yes | Better Auth | `lib/auth.ts`, `proxy.ts` |
 | `CI` |  | no |  | `prisma/seeds/seed.ts` |
@@ -47,6 +50,7 @@ Every variable listed in `.env.example` or read as `process.env.NAME` in the app
 | `NEXT_PUBLIC_APP_DOMAIN` |  | no |  | `actions/invoices/send-invoice-email.ts` |
 | `NEXT_PUBLIC_APP_NAME` |  | no |  | `actions/admin/send-mail-to-all/index.ts`, `actions/admin/users/activate-user.ts`, `actions/admin/users/invite-user.ts` +27 more |
 | `NEXT_PUBLIC_APP_URL` |  | no |  | `actions/admin/users/activate-user.ts`, `actions/crm/contacts/create-contact.ts`, `actions/crm/leads/create-lead.ts` +27 more |
+| `NEXT_PUBLIC_ASGARDEO_ENABLED` |  | yes | Show the Asgardeo sign-in button (requires the server credentials above) | `app/[locale]/(auth)/sign-in/components/LoginComponent.tsx` |
 | `NEXT_PUBLIC_DISCORD_INVITE_URL` |  | no |  | `components/support.tsx` |
 | `NEXT_PUBLIC_GITHUB_ISSUES_URL` |  | no |  | `components/support.tsx` |
 | `NEXT_PUBLIC_GITHUB_REPO_API` |  | no |  | `actions/github/get-repo-stars.ts` |
