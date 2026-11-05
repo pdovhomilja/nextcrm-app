@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.17](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.16...v0.37.17) (2026-11-05)
+
+
+### Fixed
+
+* **campaigns:** backfill finished sending campaigns to sent ([2a04739](https://github.com/pdovhomilja/nextcrm-app/commit/2a047398e681c7e1d59998e1d27c2fbf64db2d04))
+* **campaigns:** mark a campaign sent once step 0 is finished ([ca0fe70](https://github.com/pdovhomilja/nextcrm-app/commit/ca0fe70414dd8f9a938f1ed193367a55e57fa3d9))
+* **campaigns:** mark a campaign sent once step 0 is finished ([6bbba0d](https://github.com/pdovhomilja/nextcrm-app/commit/6bbba0da68c2b6e11b54b3c9cff10d43d893ea57))
+
 ## [0.37.16](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.15...v0.37.16) (2026-11-04)
 
 
