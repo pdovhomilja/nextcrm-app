@@ -10,9 +10,13 @@ jest.mock("@/lib/prisma-base", () => ({
   prismaBase: { documents: { findUnique: jest.fn() } },
 }));
 jest.mock("@/lib/minio", () => ({
-  MINIO_BUCKET: "nextcrm",
-  MINIO_PUBLIC_URL: "https://files.example",
-  MINIO_ENDPOINT: "http://minio:9000",
+  getMinioConfig: jest.fn(() => ({
+    bucket: "nextcrm",
+    publicEndpoint: "https://files.example",
+    endpoint: "http://minio:9000",
+    accessKey: "test-access-key",
+    secretKey: "test-secret-key",
+  })),
   presignGet: jest.fn(async (key: string) => `https://files.example/nextcrm/${key}?X-Amz-Signature=sig`),
 }));
 

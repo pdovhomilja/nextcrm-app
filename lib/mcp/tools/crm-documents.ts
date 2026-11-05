@@ -2,7 +2,7 @@ import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { minioPresignClient, presignPut, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
+import { getMinioConfig, getMinioPresignClient, presignPut } from "@/lib/minio";
 import { uploadExtension } from "@/lib/upload-content-types";
 import { randomUUID } from "crypto";
 import { AuthorizationError, type AuthzUser } from "@/lib/authz";
@@ -153,7 +153,8 @@ export const crmDocumentTools = [
       const ext = uploadExtension(args.contentType);
       if (!ext) validationError(`Content type not allowed: ${args.contentType}`);
       const key = `documents/${randomUUID()}.${ext}`;
-      const fileUrl = `${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${key}`;
+      const { bucket, publicEndpoint } = getMinioConfig();
+      const fileUrl = `${publicEndpoint}/${bucket}/${key}`;
 
       const doc = await prismadb.documents.create({
         data: {
@@ -200,11 +201,12 @@ export const crmDocumentTools = [
       });
       if (!doc) notFound("Document");
       if (!doc.key) validationError("Document has no storage key");
+      const { bucket } = getMinioConfig();
       const command = new GetObjectCommand({
-        Bucket: MINIO_BUCKET,
+        Bucket: bucket,
         Key: doc.key!,
       });
-      const presignedUrl = await getSignedUrl(minioPresignClient, command, { expiresIn: 3600 });
+      const presignedUrl = await getSignedUrl(getMinioPresignClient(), command, { expiresIn: 3600 });
       return itemResponse({ id: doc.id, url: presignedUrl, expiresIn: 3600 });
     },
   },

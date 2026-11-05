@@ -56,14 +56,14 @@ describe("minioPublicEndpoint", () => {
   });
 });
 
-describe("minioPresignClient", () => {
+describe("MinIO presigning client", () => {
   it("signs browser URLs for the public endpoint, not the internal one", async () => {
-    const { minioPresignClient, MINIO_PUBLIC_URL } = loadMinio({
+    const { getMinioPresignClient, MINIO_PUBLIC_URL } = loadMinio({
       MINIO_PUBLIC_ENDPOINT: "https://files.example.com",
     });
     expect(MINIO_PUBLIC_URL).toBe("https://files.example.com");
     const url = await getSignedUrl(
-      minioPresignClient,
+      getMinioPresignClient(),
       new PutObjectCommand({ Bucket: "nextcrm", Key: "uploads/a.png" }),
       { expiresIn: 60 },
     );
@@ -71,7 +71,7 @@ describe("minioPresignClient", () => {
   });
 
   it("reuses the internal client when no public endpoint is set", () => {
-    const { minioPresignClient, minioClient } = loadMinio({});
-    expect(minioPresignClient).toBe(minioClient);
+    const { getMinioPresignClient, getMinioClient } = loadMinio({});
+    expect(getMinioPresignClient()).toBe(getMinioClient());
   });
 });

@@ -10,8 +10,16 @@ jest.mock("@/lib/prisma", () => ({
   },
 }));
 jest.mock("@/lib/minio", () => ({
-  minioClient: { send: jest.fn().mockResolvedValue(undefined) },
-  MINIO_BUCKET: "test-bucket",
+  getMinioConfig: jest.fn(() => ({
+    bucket: "test-bucket",
+    publicEndpoint: "https://files.example",
+    endpoint: "http://minio:9000",
+    accessKey: "test-access-key",
+    secretKey: "test-secret-key",
+  })),
+  getMinioClient: jest.fn(() => ({
+    send: jest.fn().mockResolvedValue(undefined),
+  })),
 }));
 jest.mock("@aws-sdk/client-s3", () => ({
   DeleteObjectCommand: jest.fn().mockImplementation((args) => args),

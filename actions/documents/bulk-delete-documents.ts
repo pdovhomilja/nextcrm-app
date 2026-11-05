@@ -7,7 +7,7 @@ import {
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { minioClient, MINIO_BUCKET } from "@/lib/minio";
+import { getMinioClient, getMinioConfig } from "@/lib/minio";
 
 export async function bulkDeleteDocuments(documentIds: string[]) {
   let user;
@@ -33,10 +33,13 @@ export async function bulkDeleteDocuments(documentIds: string[]) {
 
   // Delete from MinIO
   await Promise.allSettled(
-    documents.map((doc) =>
-      doc.key
-        ? minioClient.send(new DeleteObjectCommand({ Bucket: MINIO_BUCKET, Key: doc.key }))
-        : Promise.resolve()
+    documents.map(async (doc) => {
+      if (!doc.key) return;
+      const { bucket } = getMinioConfig();
+      await getMinioClient().send(
+        new DeleteObjectCommand({ Bucket: bucket, Key: doc.key })
+      );
+    }
     )
   );
 

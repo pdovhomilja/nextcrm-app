@@ -16,8 +16,13 @@ jest.mock("@/lib/prisma", () => {
   };
 });
 jest.mock("@/lib/minio", () => ({
-  MINIO_PUBLIC_URL: "https://files.example",
-  MINIO_BUCKET: "nextcrm",
+  getMinioConfig: jest.fn(() => ({
+    bucket: "nextcrm",
+    publicEndpoint: "https://files.example",
+    endpoint: "http://minio:9000",
+    accessKey: "test-access-key",
+    secretKey: "test-secret-key",
+  })),
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 jest.mock("@/inngest/client", () => ({

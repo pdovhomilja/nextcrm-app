@@ -1,27 +1,33 @@
 import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { minioClient, MINIO_BUCKET, presignGet } from "@/lib/minio";
+import { getMinioClient, getMinioConfig, presignGet } from "@/lib/minio";
 
 function invoiceKey(invoiceId: string) {
   return `invoices/${invoiceId}.pdf`;
 }
 
 export async function uploadInvoicePdf(invoiceId: string, pdf: Buffer): Promise<string> {
+  const { bucket } = getMinioConfig();
   const key = invoiceKey(invoiceId);
-  await minioClient.send(
+
+  await getMinioClient().send(
     new PutObjectCommand({
-      Bucket: MINIO_BUCKET,
+      Bucket: bucket,
       Key: key,
       Body: pdf,
       ContentType: "application/pdf",
     }),
   );
+
   return key;
 }
 
 export async function getInvoicePdfStream(key: string) {
-  const res = await minioClient.send(
-    new GetObjectCommand({ Bucket: MINIO_BUCKET, Key: key }),
+  const { bucket } = getMinioConfig();
+
+  const res = await getMinioClient().send(
+    new GetObjectCommand({ Bucket: bucket, Key: key }),
   );
+
   return res.Body;
 }
 
@@ -38,14 +44,17 @@ export async function uploadInvoiceAttachment(
   buf: Buffer,
   mime: string,
 ): Promise<string> {
+  const { bucket } = getMinioConfig();
   const key = `invoices/${invoiceId}/attachments/${attachmentId}`;
-  await minioClient.send(
+
+  await getMinioClient().send(
     new PutObjectCommand({
-      Bucket: MINIO_BUCKET,
+      Bucket: bucket,
       Key: key,
       Body: buf,
       ContentType: mime,
     }),
   );
+
   return key;
 }

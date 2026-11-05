@@ -1,7 +1,7 @@
 import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-server";
-import { presignPut, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
+import { getMinioConfig, presignPut } from "@/lib/minio";
 import { randomUUID } from "crypto";
 import { DOCUMENT_FOLDERS } from "@/lib/documents/file-key";
 import { uploadExtension } from "@/lib/upload-content-types";
@@ -36,15 +36,20 @@ export async function POST(req: NextRequest) {
 
   // Presigned URL valid for 10 minutes
   try {
+    const { bucket, publicEndpoint } = getMinioConfig();
     const presignedUrl = await presignPut(key, contentType);
 
     // Readable at this URL only under avatars/ (public); documents are read
     // through /api/documents/[documentId]/file.
-    const fileUrl = `${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${key}`;
+    const fileUrl = `${publicEndpoint}/${bucket}/${key}`;
 
     return NextResponse.json({ presignedUrl, fileUrl, key });
   } catch (err) {
     console.error("Failed to generate presigned URL:", err);
-    return NextResponse.json({ error: "Failed to generate upload URL" }, { status: 500 });
+    const storageUnavailable = err instanceof Error && err.message.startsWith("Object storage is not configured.");
+    return NextResponse.json(
+      { error: storageUnavailable ? "File storage is not configured" : "Failed to generate upload URL" },
+      { status: storageUnavailable ? 503 : 500 },
+    );
   }
 }

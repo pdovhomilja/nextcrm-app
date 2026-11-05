@@ -1,15 +1,16 @@
 import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { minioClient, MINIO_BUCKET, MINIO_PUBLIC_URL } from "@/lib/minio";
+import { getMinioClient, getMinioConfig } from "@/lib/minio";
 import sharp from "sharp";
 
 const THUMB_WIDTH = 200;
 const THUMB_HEIGHT = 200;
 
 async function fetchFileBuffer(key: string): Promise<Buffer> {
-  const response = await minioClient.send(
-    new GetObjectCommand({ Bucket: MINIO_BUCKET, Key: key })
+  const { bucket } = getMinioConfig();
+  const response = await getMinioClient().send(
+    new GetObjectCommand({ Bucket: bucket, Key: key })
   );
   const chunks: Uint8Array[] = [];
   for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
@@ -48,16 +49,17 @@ export const generateDocumentThumbnail = inngest.createFunction(
 
     const thumbnailKey = `thumbnails/${documentId}.png`;
 
-    await minioClient.send(
+    const { bucket, publicEndpoint } = getMinioConfig();
+    await getMinioClient().send(
       new PutObjectCommand({
-        Bucket: MINIO_BUCKET,
+        Bucket: bucket,
         Key: thumbnailKey,
         Body: thumbnail,
         ContentType: "image/png",
       })
     );
 
-    const thumbnailUrl = `${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${thumbnailKey}`;
+    const thumbnailUrl = `${publicEndpoint}/${bucket}/${thumbnailKey}`;
 
     await prismadb.documents.update({
       where: { id: documentId },

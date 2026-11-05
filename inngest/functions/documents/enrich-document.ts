@@ -6,7 +6,7 @@ import {
   computeContentHash,
 } from "@/inngest/lib/embedding-utils";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
-import { minioClient, MINIO_BUCKET } from "@/lib/minio";
+import { getMinioClient, getMinioConfig } from "@/lib/minio";
 import OpenAI from "openai";
 
 function getOpenAIClient(): OpenAI {
@@ -26,8 +26,9 @@ const CHUNK_OVERLAP = 50;
 const MAX_SINGLE_EMBED_CHARS = 8000 * 4; // ~8000 tokens
 
 async function fetchFileBuffer(key: string): Promise<Buffer> {
-  const response = await minioClient.send(
-    new GetObjectCommand({ Bucket: MINIO_BUCKET, Key: key })
+  const { bucket } = getMinioConfig();
+  const response = await getMinioClient().send(
+    new GetObjectCommand({ Bucket: bucket, Key: key })
   );
   const chunks: Uint8Array[] = [];
   for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
