@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import { subscribedTargetsInclude } from "@/lib/campaigns/recipient-filters";
 import { campaignSkipReason } from "@/lib/authz/scopes/campaign-not-deleted";
+import { markCampaignSentIfStep0Done } from "@/lib/campaigns/mark-campaign-sent";
 
 export const campaignScheduleSend = inngest.createFunction(
   {
@@ -120,6 +121,10 @@ export const campaignScheduleSend = inngest.createFunction(
       where: { id: campaignId },
       data: { status: "sending" },
     });
+
+    // After the status write: with no recipients, or if every send-step already
+    // finished while the campaign was still "scheduled", nothing else would.
+    await step.run("mark-campaign-sent", () => markCampaignSentIfStep0Done(campaignId));
 
     return { dispatched: sendRecords.length };
   }

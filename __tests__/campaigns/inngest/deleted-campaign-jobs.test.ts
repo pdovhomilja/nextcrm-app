@@ -20,10 +20,10 @@ jest.mock("@/lib/campaigns/render-email", () => ({
 
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    crm_campaigns: { findUnique: jest.fn(), update: jest.fn() },
+    crm_campaigns: { findUnique: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
     crm_campaign_steps: { findFirst: jest.fn(), findUnique: jest.fn(), findMany: jest.fn() },
     crm_TargetLists: { findMany: jest.fn() },
-    crm_campaign_sends: { createMany: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+    crm_campaign_sends: { createMany: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn(), count: jest.fn() },
   },
 }));
 
@@ -36,10 +36,10 @@ import { campaignSendNow } from "@/inngest/functions/campaigns/send-now";
 type Handler = (ctx: { event: { data: Record<string, unknown> }; step: unknown }) => Promise<unknown>;
 
 const db = prismadb as unknown as {
-  crm_campaigns: Record<"findUnique" | "update", jest.Mock>;
+  crm_campaigns: Record<"findUnique" | "update" | "updateMany", jest.Mock>;
   crm_campaign_steps: Record<"findFirst" | "findUnique" | "findMany", jest.Mock>;
   crm_TargetLists: Record<"findMany", jest.Mock>;
-  crm_campaign_sends: Record<"createMany" | "findMany" | "findUnique" | "update", jest.Mock>;
+  crm_campaign_sends: Record<"createMany" | "findMany" | "findUnique" | "update" | "count", jest.Mock>;
 };
 
 function fakeStep() {
@@ -84,6 +84,8 @@ function seedCampaign(campaign: { status: string; deletedAt: Date | null }, send
     ...sendRecord,
   });
   db.crm_campaign_sends.update.mockResolvedValue({});
+  db.crm_campaign_sends.count.mockResolvedValue(1);
+  db.crm_campaigns.updateMany.mockResolvedValue({ count: 0 });
   mockResendSend.mockResolvedValue({ data: { id: "resend-1" }, error: null });
 }
 

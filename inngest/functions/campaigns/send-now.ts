@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import { randomUUID } from "crypto";
 import { subscribedTargetsInclude } from "@/lib/campaigns/recipient-filters";
 import { campaignSkipReason } from "@/lib/authz/scopes/campaign-not-deleted";
+import { markCampaignSentIfStep0Done } from "@/lib/campaigns/mark-campaign-sent";
 
 // Same logic as schedule-send but without sleepUntil
 export const campaignSendNow = inngest.createFunction(
@@ -93,6 +94,9 @@ export const campaignSendNow = inngest.createFunction(
         }))
       );
     }
+
+    // With no recipients no send-step runs, so nothing else would finish the campaign.
+    await step.run("mark-campaign-sent", () => markCampaignSentIfStep0Done(campaignId));
 
     return { dispatched: sendRecords.length, followUps: followUpSteps.length };
   }

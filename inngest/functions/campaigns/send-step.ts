@@ -6,6 +6,7 @@ import { renderCampaignEmail } from "@/lib/campaigns/render-email";
 import { sendStepSkipReason } from "@/lib/campaigns/recipient-filters";
 import { campaignSkipReason } from "@/lib/authz/scopes/campaign-not-deleted";
 import { buildUnsubscribeUrl } from "@/lib/campaigns/unsubscribe-url";
+import { markCampaignSentIfStep0Done } from "@/lib/campaigns/mark-campaign-sent";
 
 export const campaignSendStep = inngest.createFunction(
   {
@@ -35,7 +36,11 @@ export const campaignSendStep = inngest.createFunction(
     if (campaignReason) return { skipped: true, reason: campaignReason };
 
     const skipReason = sendStepSkipReason(sendRecord);
-    if (skipReason) return { skipped: true, reason: skipReason };
+    if (skipReason) {
+      // A skipped recipient may be the last one step 0 was waiting for.
+      await step.run("mark-campaign-sent", () => markCampaignSentIfStep0Done(campaignId));
+      return { skipped: true, reason: skipReason };
+    }
 
     const unsubscribeUrl = buildUnsubscribeUrl(sendRecord.unsubscribe_token);
 
@@ -78,6 +83,8 @@ export const campaignSendStep = inngest.createFunction(
         },
       });
     });
+
+    await step.run("mark-campaign-sent", () => markCampaignSentIfStep0Done(campaignId));
 
     return { sent: !result.error };
   }
