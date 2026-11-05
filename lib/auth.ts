@@ -2,12 +2,37 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { emailOTP, testUtils } from "better-auth/plugins";
 import { admin as adminPlugin } from "better-auth/plugins";
+import { genericOAuth } from "better-auth/plugins/generic-oauth";
 import { prismadb } from "@/lib/prisma";
 import { ac, admin, manager, user, partner } from "@/lib/auth-permissions";
 import { newUserNotify } from "@/lib/new-user-notify";
 import resendHelper from "@/lib/resend";
 
 const isDemo = process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io";
+
+const asgardeoClientId = process.env.ASGARDEO_CLIENT_ID;
+const asgardeoClientSecret = process.env.ASGARDEO_CLIENT_SECRET;
+const asgardeoDiscoveryUrl = process.env.ASGARDEO_DISCOVERY_URL;
+
+const asgardeoOAuthPlugin =
+  asgardeoClientId && asgardeoClientSecret && asgardeoDiscoveryUrl
+    ? genericOAuth({
+        config: [
+          {
+            providerId: "asgardeo",
+            name: "Asgardeo",
+            clientId: asgardeoClientId,
+            clientSecret: asgardeoClientSecret,
+            discoveryUrl: asgardeoDiscoveryUrl,
+            scopes: ["openid", "profile", "email"],
+            pkce: true,
+            authentication: "post",
+            requireIdTokenVerification: true,
+            requireEmailVerification: true,
+          },
+        ],
+      })
+    : null;
 
 export const auth = betterAuth({
   database: prismaAdapter(prismadb, { provider: "postgresql" }),
@@ -96,6 +121,7 @@ export const auth = betterAuth({
       roles: { admin, manager, user, partner },
       defaultRole: "user",
     }),
+    ...(asgardeoOAuthPlugin ? [asgardeoOAuthPlugin] : []),
   ],
 
   account: {

@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { MailIcon } from "lucide-react";
+import { MailIcon, ShieldCheck } from "lucide-react";
 import {
   InputOTP,
   InputOTPGroup,
@@ -39,6 +39,20 @@ export function LoginComponent() {
       });
     } catch (error) {
       toast.error("Something went wrong with Google sign-in.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithAsgardeo = async () => {
+    setIsLoading(true);
+    try {
+      await authClient.signIn.social({
+        provider: "asgardeo",
+        callbackURL: "/",
+      });
+    } catch (error) {
+      toast.error("Something went wrong with Asgardeo sign-in.");
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +122,18 @@ export function LoginComponent() {
           <Icons.google className="mr-2 h-4 w-4" />
           Continue with Google
         </Button>
+
+        {process.env.NEXT_PUBLIC_ASGARDEO_ENABLED === "true" && (
+          <Button
+            variant="outline"
+            onClick={loginWithAsgardeo}
+            disabled={isLoading}
+            className="w-full"
+          >
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            Continue with Asgardeo
+          </Button>
+        )}
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">

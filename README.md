@@ -342,6 +342,46 @@ Read the docs at [docs.nextcrm.app](https://docs.nextcrm.app): user guide, admin
 
 </details>
 
+### Optional: Asgardeo OIDC Authentication
+
+NextCRM optionally supports [WSO2 Asgardeo](https://wso2.com/asgardeo/) as an additional OpenID Connect (OIDC) sign-in provider. Existing Google and email OTP authentication remain available.
+
+**1. Create an Asgardeo application**
+
+- Create a Standard-Based Application in your Asgardeo organization.
+- Configure OAuth 2.0 / OpenID Connect.
+- Enable the Authorization Code grant and PKCE.
+- Set client authentication to `Client Secret Post`.
+- Register this authorized redirect URL: `http://localhost:3000/api/auth/callback/asgardeo`
+- Add `http://localhost:3000` as an allowed origin.
+
+**2. Configure environment variables**
+
+Add these values to `.env.local`:
+
+    ASGARDEO_CLIENT_ID=your-client-id
+    ASGARDEO_CLIENT_SECRET=your-client-secret
+    ASGARDEO_DISCOVERY_URL=https://api.asgardeo.io/t/your-org/oauth2/token/.well-known/openid-configuration
+    NEXT_PUBLIC_ASGARDEO_ENABLED=true
+
+Replace `your-org` with your Asgardeo organization name. Keep the client secret private and never commit it to source control.
+
+**3. Configure identity claims**
+
+Ensure the OIDC application requests the `openid`, `profile`, and `email` scopes and provides a verified email claim (`email_verified=true`) for users whose email addresses have been verified.
+
+**4. Start NextCRM**
+
+Restart the Next.js development server after updating the environment variables:
+
+    pnpm dev
+
+The **Continue with Asgardeo** button will appear on the sign-in page. Users can authenticate through Asgardeo, including through social login providers configured in their Asgardeo login flow.
+
+For production deployments, configure the redirect URI and allowed origin using your actual application domain. The public feature flag must be available when the Next.js application is built. Docker deployment requires the corresponding environment-variable configuration in the Docker setup.
+
+---
+
 ## Docker Installation (Recommended for Self-Hosting)
 
 The fastest way to run NextCRM is with Docker Compose. The provided `docker-compose.yml` bundles everything you need: the app, PostgreSQL (with pgvector), MinIO for file storage, and Inngest for background jobs. No manual setup of databases, buckets, or migrations — it all happens automatically on first start.
