@@ -24,6 +24,11 @@ export const pauseCampaign = async (id: string) => {
     throw e;
   }
 
+  const existing = await prismadb.crm_campaigns.findUnique({ where: { id }, select: { status: true, deletedAt: true } });
+  if (!existing || existing.deletedAt || (existing.status !== "scheduled" && existing.status !== "sending")) {
+    return { error: "Only scheduled or sending campaigns can be paused" };
+  }
+
   const campaign = await prismadb.crm_campaigns.update({
     where: { id },
     data: { status: "paused" },
