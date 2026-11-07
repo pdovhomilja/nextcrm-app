@@ -5,7 +5,8 @@
  * and a fake `step` that JSON-round-trips results like Inngest.
  */
 jest.mock("@/inngest/client", () => ({
-  inngest: { createFunction: jest.fn((_config: unknown, handler: object) => handler) },
+  // Keep the options on the handler so tests can reach onFailure.
+  inngest: { createFunction: jest.fn((config: object, handler: object) => Object.assign(handler, { config })) },
 }));
 
 const mockResendSend = jest.fn();
@@ -76,6 +77,18 @@ async function seed(status: string, recipients: Array<{ do_not_email?: boolean; 
 
 const runSendStep = (campaignId: string, sendId: string) =>
   (campaignSendStep as unknown as Handler)({ event: { data: { sendId, campaignId } }, step: fakeStep() });
+
+// Inngest calls onFailure once the run has used up its retries, with the
+// original event under event.data.event and the final error.
+const runSendStepFailure = (campaignId: string, sendId: string, message: string) =>
+  (campaignSendStep as unknown as { config: { onFailure: Handler } }).config.onFailure({
+    event: { data: { event: { data: { sendId, campaignId } }, error: { name: "Error", message } } },
+    error: new Error(message),
+    step: fakeStep(),
+  } as Parameters<Handler>[0]);
+
+const send = (id: string) =>
+  prismadb.crm_campaign_sends.findUniqueOrThrow({ where: { id }, select: { status: true, error_message: true } });
 
 const campaign = (id: string) =>
   prismadb.crm_campaigns.findUniqueOrThrow({ where: { id }, select: { status: true, sent_at: true } });
@@ -149,6 +162,40 @@ describe("send-step marks the campaign sent when step 0 is finished", () => {
     expect(await runSendStep(campaignId, sendIds[0])).toEqual({ skipped: true, reason: "paused" });
 
     expect(await campaign(campaignId)).toEqual({ status: "paused", sent_at: null });
+  });
+});
+
+describe("send-step run that fails after its retries", () => {
+  it("marks the queued send failed and finishes the campaign when it was the last step-0 send", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+    mockResendSend.mockRejectedValue(new Error("Resend 503"));
+    await expect(runSendStep(campaignId, sendIds[0])).rejects.toThrow("Resend 503");
+    expect(await send(sendIds[0])).toEqual({ status: "queued", error_message: null });
+
+    await runSendStepFailure(campaignId, sendIds[0], "Resend 503");
+
+    expect(await send(sendIds[0])).toEqual({ status: "failed", error_message: "Resend 503" });
+    expect((await campaign(campaignId)).status).toBe("sent");
+  });
+
+  it("keeps the campaign sending while other step-0 sends are still queued", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}, {}]);
+
+    await runSendStepFailure(campaignId, sendIds[0], "Resend 503");
+
+    expect(await send(sendIds[0])).toEqual({ status: "failed", error_message: "Resend 503" });
+    expect((await campaign(campaignId)).status).toBe("sending");
+  });
+
+  // A run that got as far as recording the send must not be overwritten.
+  it("leaves a send that is already sent unchanged", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+    await runSendStep(campaignId, sendIds[0]);
+    expect(await send(sendIds[0])).toEqual({ status: "sent", error_message: null });
+
+    await runSendStepFailure(campaignId, sendIds[0], "late failure");
+
+    expect(await send(sendIds[0])).toEqual({ status: "sent", error_message: null });
   });
 });
 
