@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.19](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.18...v0.37.19) (2026-11-07)
+
+
+### Fixed
+
+* **campaigns:** pause only scheduled or sending campaigns ([722fa3a](https://github.com/pdovhomilja/nextcrm-app/commit/722fa3a22ace2de169339d56d6755f3ac6c2d95c))
+* **campaigns:** pause only scheduled or sending campaigns ([a0e007f](https://github.com/pdovhomilja/nextcrm-app/commit/a0e007fe5bd77a2cbb2d27d067b80a71ff78ca61))
+
 ## [0.37.18](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.17...v0.37.18) (2026-11-07)
 
 
