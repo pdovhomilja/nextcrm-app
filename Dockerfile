@@ -76,9 +76,9 @@ RUN addgroup --system --gid 1001 nodejs && \
 WORKDIR /opt/tools
 RUN printf '{"name":"nextcrm-tools","version":"0.0.0","private":true}\n' > package.json && \
     npm install --no-audit --no-fund \
-      prisma@7.6.0 \
-      @prisma/client@7.6.0 \
-      @prisma/adapter-pg@7.6.0 \
+      prisma@7.10.1 \
+      @prisma/client@7.10.1 \
+      @prisma/adapter-pg@7.10.1 \
       pg@8.18.0 \
       tsx@4.21.0 \
       dotenv@17.3.1 \
