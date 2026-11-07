@@ -5,6 +5,16 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.18](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.17...v0.37.18) (2026-11-07)
+
+
+### Fixed
+
+* **deps:** close 67 Dependabot alerts in the root lockfile ([dab9b3c](https://github.com/pdovhomilja/nextcrm-app/commit/dab9b3c6db910c91e0aecb13e6aa630b6f0bb1f3))
+* **deps:** close 68 of 72 Dependabot alerts (all critical) ([98872df](https://github.com/pdovhomilja/nextcrm-app/commit/98872dfe06595d7981ca8949c1454b37701a55f7))
+* **docker:** align runtime Prisma tools with 7.10.1 ([49e0fa2](https://github.com/pdovhomilja/nextcrm-app/commit/49e0fa2d667bdec2f69f7dcee2e50139fc8dd7cf))
+* **docs:** update zod to 4.6.7 in the docs lockfile (GHSA-mrhx-c7xc-m3w5) ([cd2151a](https://github.com/pdovhomilja/nextcrm-app/commit/cd2151a9c90b0a8d37e1e7debff417ab71ff86e2))
+
 ## [0.37.17](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.16...v0.37.17) (2026-11-05)
 
 
