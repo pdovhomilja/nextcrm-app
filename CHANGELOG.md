@@ -5,6 +5,16 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.38.0...v0.38.1) (2026-11-08)
+
+
+### Fixed
+
+* **campaigns:** do not email finished sends again on resume ([79aca25](https://github.com/pdovhomilja/nextcrm-app/commit/79aca25222b9a74888e24713edbef9b542bdd5ef))
+* **campaigns:** do not email finished sends again on resume ([f427641](https://github.com/pdovhomilja/nextcrm-app/commit/f42764160938c3852213fd93d2cb6a7c8106b6aa))
+* **campaigns:** refuse send, schedule and resume without step 0 ([26700a3](https://github.com/pdovhomilja/nextcrm-app/commit/26700a30a97880622f4aa5a7ad86c545294eb055))
+* **campaigns:** refuse send, schedule and resume without step 0 ([5c2e66b](https://github.com/pdovhomilja/nextcrm-app/commit/5c2e66b49e4f36d2ce28b67f3dff6fe81c0bcef5))
+
 ## [0.38.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.20...v0.38.0) (2026-11-08)
 
 
