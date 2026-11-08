@@ -23,6 +23,7 @@ import { crmEnrichmentTools } from "@/lib/mcp/tools/crm-enrichment";
 import { crmTargetListTools } from "@/lib/mcp/tools/crm-target-lists";
 import { campaignTools } from "@/lib/mcp/tools/campaigns";
 import { crmActivityTools } from "@/lib/mcp/tools/crm-activities";
+import { crmOpportunityTools } from "@/lib/mcp/tools/crm-opportunities";
 
 const tag = randomUUID().slice(0, 8);
 const U = { rep: randomUUID(), other: randomUUID(), boss: randomUUID() };
@@ -275,5 +276,76 @@ describe("crm-activities", () => {
   ] as const)("crm_create_activity: own %s as user, any as manager", async (entityType, ids) => {
     await note(`act-${tag}-own`, entityType, ids.rep, rep);
     await note(`act-${tag}-boss`, entityType, ids.other, boss);
+  });
+});
+
+describe("crm_update_opportunity: sales stage", () => {
+  const STAGE = { plain: randomUUID(), qualified: randomUUID() };
+  const move = (id: string, sales_stage_id: string, user: AuthzUser) =>
+    call(crmOpportunityTools, "crm_update_opportunity", { id, sales_stage_id }, user);
+  const stageChanged = () =>
+    (inngest.send as jest.Mock).mock.calls.filter(([e]) => e.name === "crm/opportunity.stage-changed").map(([e]) => e.data);
+
+  beforeAll(async () => {
+    await prismadb.crm_Opportunities_Sales_Stages.createMany({
+      data: [
+        { id: STAGE.plain, name: `plain-${tag}`, order: 9001 },
+        { id: STAGE.qualified, name: `qualified-${tag}`, order: 9002, stage_kind: "qualified" },
+      ],
+    });
+  });
+  beforeEach(() => (inngest.send as jest.Mock).mockClear());
+  afterAll(async () => {
+    await prismadb.crm_AuditLog.deleteMany({ where: { entityId: { in: Object.values(OPP) } } });
+    await prismadb.crm_Opportunities.updateMany({ where: { id: { in: Object.values(OPP) } }, data: { sales_stage: null } });
+    await prismadb.crm_Opportunities_Sales_Stages.deleteMany({ where: { id: { in: Object.values(STAGE) } } });
+  });
+
+  it("a user cannot move another user's opportunity: NOT_FOUND, nothing changes, no reaction", async () => {
+    await expect(move(OPP.other, STAGE.plain, rep)).rejects.toThrow("NOT_FOUND");
+    const row = await prismadb.crm_Opportunities.findUnique({ where: { id: OPP.other } });
+    expect(row?.sales_stage).toBeNull();
+    expect(inngest.send).not.toHaveBeenCalled();
+  });
+
+  it("moving an own deal saves the stage, stamps stage_entered_at, fires stage-changed and is audited", async () => {
+    const res = await move(OPP.rep, STAGE.plain, rep);
+    expect(res.data.sales_stage).toBe(STAGE.plain);
+    const row = await prismadb.crm_Opportunities.findUnique({ where: { id: OPP.rep } });
+    expect(row?.sales_stage).toBe(STAGE.plain);
+    expect(row?.stage_entered_at).toBeInstanceOf(Date);
+    expect(stageChanged()).toEqual([{ record_id: OPP.rep, to_stage: STAGE.plain }]);
+    const audit = await prismadb.crm_AuditLog.findFirst({ where: { entityId: OPP.rep, action: "updated", userId: U.rep } });
+    expect(audit?.changes).toEqual(expect.arrayContaining([{ field: "sales_stage", old: null, new: STAGE.plain }]));
+  });
+
+  it("a manager can move another user's deal", async () => {
+    await move(OPP.other, STAGE.plain, boss);
+    expect(stageChanged()).toEqual([{ record_id: OPP.other, to_stage: STAGE.plain }]);
+  });
+
+  it("the quote approval gate holds a deal out of a qualified stage until it is approved", async () => {
+    await expect(move(OPP.rep, STAGE.qualified, rep)).rejects.toThrow(/quote approval is required/i);
+    expect((await prismadb.crm_Opportunities.findUnique({ where: { id: OPP.rep } }))?.sales_stage).toBe(STAGE.plain);
+    expect(stageChanged()).toEqual([]);
+
+    await prismadb.crm_Opportunities.update({ where: { id: OPP.rep }, data: { approval_status: "APPROVED" } });
+    await move(OPP.rep, STAGE.qualified, rep);
+    expect(stageChanged()).toEqual([{ record_id: OPP.rep, to_stage: STAGE.qualified }]);
+  });
+
+  it("null clears the stage; a random id is NOT_FOUND, not an FK error", async () => {
+    await expect(move(OPP.rep, randomUUID(), rep)).rejects.toThrow("NOT_FOUND");
+    await call(crmOpportunityTools, "crm_update_opportunity", { id: OPP.rep, sales_stage_id: null }, rep);
+    expect((await prismadb.crm_Opportunities.findUnique({ where: { id: OPP.rep } }))?.sales_stage).toBeNull();
+  });
+
+  it("crm_list_opportunity_options lists the stages by order", async () => {
+    const { data } = await call(crmOpportunityTools, "crm_list_opportunity_options", {}, rep);
+    const orders = data.stages.map((s: { order: number | null }) => s.order).filter((o: number | null) => o !== null);
+    expect(orders).toEqual([...orders].sort((a: number, b: number) => a - b));
+    expect(data.stages).toEqual(
+      expect.arrayContaining([{ id: STAGE.plain, name: `plain-${tag}`, order: 9001, probability: null }]),
+    );
   });
 });

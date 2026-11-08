@@ -16,8 +16,13 @@ import {
   notFound,
   softDeleteData,
   assertScopeOrNotFound,
+  conflict,
 } from "../helpers";
 import { assertAssignableUser } from "@/lib/authz/assignable-user";
+import { inngest } from "@/inngest/client";
+import { writeAuditLog, diffObjects } from "@/lib/audit-log";
+import { handleStageTransition } from "@/lib/crm/stage-transition";
+import { qualifiedEntryBlockReason } from "@/lib/crm/approval-gate";
 
 // Relinking an opportunity to an account/contact is a parent write: the row must
 // exist, must not be soft-deleted, and the caller must be allowed to write it.
@@ -40,7 +45,43 @@ async function assertLinkableContact(user: AuthzUser, contactId: string) {
   await assertScopeOrNotFound(() => assertCanWriteContact(user, contactId), "Contact");
 }
 
+// Stages and types are rows in admin-managed lookup tables; agents read their ids
+// with crm_list_opportunity_options. A wrong id is NOT_FOUND, not an FK error.
+async function assertOpportunityOptions(args: {
+  sales_stage_id?: string | null;
+  type_id?: string | null;
+}) {
+  if (
+    args.sales_stage_id &&
+    !(await prismadb.crm_Opportunities_Sales_Stages.findUnique({ where: { id: args.sales_stage_id } }))
+  )
+    notFound("Sales stage");
+  if (args.type_id && !(await prismadb.crm_Opportunities_Type.findUnique({ where: { id: args.type_id } })))
+    notFound("Opportunity type");
+}
+
 export const crmOpportunityTools = [
+  {
+    name: "crm_list_opportunity_options",
+    description:
+      "List the opportunity sales stages (id, name, order, probability) and types (id, name, order) configured in this CRM, for sales_stage_id / type_id",
+    schema: z.object({}),
+    async handler() {
+      // order is nullable and not unique; name keeps the list stable.
+      const orderBy = [{ order: "asc" as const }, { name: "asc" as const }];
+      const [stages, types] = await Promise.all([
+        prismadb.crm_Opportunities_Sales_Stages.findMany({
+          select: { id: true, name: true, order: true, probability: true },
+          orderBy,
+        }),
+        prismadb.crm_Opportunities_Type.findMany({
+          select: { id: true, name: true, order: true },
+          orderBy,
+        }),
+      ]);
+      return itemResponse({ stages, types });
+    },
+  },
   {
     name: "crm_list_opportunities",
     description: "List CRM opportunities visible to the authenticated user",
@@ -112,6 +153,9 @@ export const crmOpportunityTools = [
       expected_revenue: z.number().int().min(0).optional(),
       currency: z.string().optional(),
       next_step: z.string().optional(),
+      // Ids from crm_list_opportunity_options.
+      sales_stage_id: z.string().uuid().optional(),
+      type_id: z.string().uuid().optional(),
     }),
     async handler(
       args: {
@@ -122,10 +166,20 @@ export const crmOpportunityTools = [
         expected_revenue?: number;
         currency?: string;
         next_step?: string;
+        sales_stage_id?: string;
+        type_id?: string;
       },
       userId: string
     ) {
-      const { name, budget, expected_revenue, close_date, ...rest } = args;
+      await assertOpportunityOptions(args);
+      const { name, budget, expected_revenue, close_date, sales_stage_id, type_id, ...rest } = args;
+      // A new deal has no approved quote, so the gate refuses a qualified stage here.
+      const blockReason = await qualifiedEntryBlockReason({
+        fromStage: null,
+        toStage: sales_stage_id ?? null,
+        approvalStatus: "NONE",
+      });
+      if (blockReason) conflict(blockReason);
       const opp = await prismadb.crm_Opportunities.create({
         data: {
           v: 0,
@@ -134,11 +188,26 @@ export const crmOpportunityTools = [
           ...(budget !== undefined && { budget }),
           ...(expected_revenue !== undefined && { expected_revenue }),
           ...(close_date !== undefined && { close_date: new Date(close_date) }),
+          ...(sales_stage_id !== undefined && { sales_stage: sales_stage_id }),
+          ...(type_id !== undefined && { type: type_id }),
           assigned_to: userId,
           createdBy: userId,
           updatedBy: userId,
         },
       });
+      await handleStageTransition({
+        opportunityId: opp.id,
+        fromStage: null,
+        toStage: opp.sales_stage ?? null,
+      });
+      await writeAuditLog({
+        entityType: "opportunity",
+        entityId: opp.id,
+        action: "created",
+        changes: null,
+        userId,
+      });
+      void inngest.send({ name: "crm/opportunity.saved", data: { record_id: opp.id } });
       return itemResponse(opp);
     },
   },
@@ -159,6 +228,9 @@ export const crmOpportunityTools = [
       contact: z.string().uuid().nullable().optional(),
       // Reassign the owner. Use crm_list_users to resolve a person to their ID.
       assigned_to: z.string().uuid().nullable().optional(),
+      // Ids from crm_list_opportunity_options; null clears the value.
+      sales_stage_id: z.string().uuid().nullable().optional(),
+      type_id: z.string().uuid().nullable().optional(),
     }),
     async handler(
       args: {
@@ -173,6 +245,8 @@ export const crmOpportunityTools = [
         account?: string | null;
         contact?: string | null;
         assigned_to?: string | null;
+        sales_stage_id?: string | null;
+        type_id?: string | null;
       },
       userId: string,
       user: AuthzUser
@@ -185,6 +259,7 @@ export const crmOpportunityTools = [
       if (args.contact) await assertLinkableContact(user, args.contact);
       const assignee = args.assigned_to;
       if (assignee) await assertScopeOrNotFound(() => assertAssignableUser(user, assignee), "User");
+      await assertOpportunityOptions(args);
       const {
         id,
         budget,
@@ -194,8 +269,20 @@ export const crmOpportunityTools = [
         account,
         contact,
         assigned_to,
+        sales_stage_id,
+        type_id,
         ...rest
       } = args;
+      const before = await prismadb.crm_Opportunities.findUnique({ where: { id } });
+      const fromStage = before?.sales_stage ?? null;
+      const blockReason = await qualifiedEntryBlockReason({
+        fromStage,
+        toStage: sales_stage_id ?? null,
+        approvalStatus: before?.approval_status ?? "NONE",
+      });
+      if (blockReason) conflict(blockReason);
+      // Moving a deal to another stage reactivates it, as every save in the web form does.
+      const stageMoved = Boolean(sales_stage_id) && sales_stage_id !== fromStage;
       const opp = await prismadb.crm_Opportunities.update({
         where: { id },
         data: {
@@ -207,9 +294,27 @@ export const crmOpportunityTools = [
           ...(account !== undefined && { account }),
           ...(contact !== undefined && { contact }),
           ...(assigned_to !== undefined && { assigned_to }),
+          ...(sales_stage_id !== undefined && { sales_stage: sales_stage_id }),
+          ...(type_id !== undefined && { type: type_id }),
+          ...(stageMoved && { status: "ACTIVE" as const }),
           updatedBy: userId,
         },
       });
+      await handleStageTransition({
+        opportunityId: id,
+        fromStage,
+        toStage: opp.sales_stage ?? null,
+      });
+      const serialize = (obj: unknown) =>
+        JSON.parse(JSON.stringify(obj, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
+      await writeAuditLog({
+        entityType: "opportunity",
+        entityId: id,
+        action: "updated",
+        changes: before ? diffObjects(serialize(before), serialize(opp)) : null,
+        userId,
+      });
+      void inngest.send({ name: "crm/opportunity.saved", data: { record_id: id } });
       return itemResponse(opp);
     },
   },
