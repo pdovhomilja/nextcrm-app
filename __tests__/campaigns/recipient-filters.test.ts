@@ -44,6 +44,27 @@ describe("recipient-filters", () => {
       ).toBe("already sent");
     });
 
+    it.each(["delivered", "bounced", "some-future-status"])("skips a %s send", (status) => {
+      expect(
+        sendStepSkipReason({ status, unsubscribed_at: null, target: { do_not_email: false } })
+      ).toBe(`already ${status}`);
+    });
+
+    it("lets a failed send go out again", () => {
+      expect(
+        sendStepSkipReason({ status: "failed", unsubscribed_at: null, target: { do_not_email: false } })
+      ).toBeNull();
+    });
+
+    it("does not retry a failed send to a recipient who unsubscribed or is suppressed", () => {
+      expect(
+        sendStepSkipReason({ status: "failed", unsubscribed_at: new Date("2026-01-01"), target: { do_not_email: false } })
+      ).toBe("recipient unsubscribed");
+      expect(
+        sendStepSkipReason({ status: "failed", unsubscribed_at: null, target: { do_not_email: true } })
+      ).toBe("recipient globally suppressed");
+    });
+
     it("skips when the recipient unsubscribed", () => {
       expect(
         sendStepSkipReason({

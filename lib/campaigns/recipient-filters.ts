@@ -31,7 +31,11 @@ export function sendStepSkipReason(sendRecord: {
   unsubscribed_at: Date | string | null;
   target?: { do_not_email: boolean } | null;
 }): string | null {
-  if (sendRecord.status === "sent") return "already sent";
+  // Only queued (not sent yet) and failed (did not go out) may go out; a resume
+  // fans out every send again, so anything else would be a duplicate.
+  if (sendRecord.status !== "queued" && sendRecord.status !== "failed") {
+    return `already ${sendRecord.status}`;
+  }
   if (sendRecord.unsubscribed_at) return "recipient unsubscribed";
   if (sendRecord.target?.do_not_email) return "recipient globally suppressed";
   return null;
