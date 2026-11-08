@@ -167,7 +167,7 @@ export const campaignTools = [
   // ── Send / Pause / Resume ─────────────────────────────
   {
     name: "campaigns_send",
-    description: "Trigger sending a campaign. Campaign must be in draft or scheduled status.",
+    description: "Trigger sending a campaign (manager or admin). Campaign must be in draft or scheduled status.",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       assertCanSendCampaign(user);
@@ -205,7 +205,7 @@ export const campaignTools = [
   },
   {
     name: "campaigns_resume",
-    description: "Resume a paused campaign",
+    description: "Resume a paused campaign (manager or admin)",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       assertCanSendCampaign(user);
