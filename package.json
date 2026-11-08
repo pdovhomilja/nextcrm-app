@@ -167,7 +167,7 @@
     "jest": "^30.3.0",
     "jest-environment-node": "^30.3.0",
     "prisma": "^7.10.1",
-    "shadcn": "^3.8.5",
+    "shadcn": "^4.23.0",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
