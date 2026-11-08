@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
 import type { AuthzUser } from "@/lib/authz";
+import { isManagerOrAdmin } from "@/lib/authz/roles";
 import {
   assertCanReadTargetList,
   assertCanReadTemplate,
@@ -25,7 +26,7 @@ import { campaignHasFirstStep, NO_FIRST_STEP_MESSAGE } from "@/lib/campaigns/fir
 // actions' requireRole(["manager", "admin"]). Checked before the scope lookup,
 // as they do: a plain user gets FORBIDDEN whether or not the campaign exists.
 function assertCanSendCampaign(user: AuthzUser): void {
-  if (user.role !== "manager" && user.role !== "admin") forbidden();
+  if (!isManagerOrAdmin(user)) forbidden();
 }
 
 // Object-level authorization for campaign tools (GHSA-c9vg-c532-ppqx).
