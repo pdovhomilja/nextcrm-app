@@ -48,13 +48,15 @@ Set `INNGEST_DEV=1` in `.env.local` so the SDK uses the dev server. The dev serv
 | `document-enrich`, `document-generate-thumbnail` | `document/uploaded` | Processes and previews uploaded documents |
 | `plugin-lifecycle-install` | `plugin/installed` | Runs a plugin's `onInstall` |
 
+Sending or scheduling a campaign (UI or MCP `campaigns_send`), and MCP `campaigns_resume`, is refused before any status change or event if the campaign has no step 0 (MCP returns a `CONFLICT` error).
+
 A campaign goes from `sending` to `sent` (and gets `sent_at`) once step 0 is finished: no step-0 send is still `queued`. Queued sends to recipients who unsubscribed or are globally suppressed do not count, since `campaign-send-step` skips them without updating the row; `failed` counts as finished. `campaign-send-step` checks this after each send or skip, `campaign-send-now` and `campaign-schedule-send` after the fan-out (a campaign with no recipients becomes `sent` there). Only a `sending` campaign moves, so a paused or deleted one stays as it is. Follow-ups still go out after the campaign is `sent`.
 
 Deleting a campaign (UI or MCP `campaigns_delete`) sends `campaigns/deleted` with its `campaignId`. That event cancels `campaign-schedule-send` and `campaign-process-follow-up` runs still sleeping for the campaign (`cancelOn`). A run that wakes anyway skips a deleted campaign.
 
 Rescheduling a campaign sends `campaigns/schedule` again. The new event cancels the older `campaign-schedule-send` run for the same `campaignId` and starts a new one, so only the latest scheduled time sends.
 
-Pausing a campaign (UI or MCP `campaigns_pause`) sends `campaigns/paused` with its `campaignId`, which cancels sleeping `campaign-schedule-send` and `campaign-process-follow-up` runs. MCP `campaigns_resume` sends `campaigns/send-now`, which sends step 0 to recipients who have not had it yet and schedules every follow-up again, counted from the resume time. A send already fanned out before the pause still skips a paused campaign.
+Pausing a campaign (UI or MCP `campaigns_pause`) sends `campaigns/paused` with its `campaignId`, which cancels sleeping `campaign-schedule-send` and `campaign-process-follow-up` runs. MCP `campaigns_resume` sends `campaigns/send-now`, which fans out step 0 again and schedules every follow-up again, counted from the resume time. `campaign-send-step` only sends a `queued` or `failed` send, so the resume sends the queued ones and retries the failed ones (the mail did not go out); `sent`, `delivered` and `bounced` are finished and are skipped. A send already fanned out before the pause still skips a paused campaign.
 
 ### Scheduled
 
