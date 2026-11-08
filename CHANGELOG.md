@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.20...v0.38.0) (2026-11-08)
+
+
+### Added
+
+* **mcp:** opportunity sales stage, type and options tool ([1c4632d](https://github.com/pdovhomilja/nextcrm-app/commit/1c4632d38140ea9aeeeefe2bb9a9097cccc32ee3))
+* **mcp:** opportunity sales stage, type and options tool ([8f4ac7c](https://github.com/pdovhomilja/nextcrm-app/commit/8f4ac7cddac7c1d93759b4a6afa43965f69ae8b3))
+* **mcp:** stage_kind in crm_list_opportunity_options ([2888a2e](https://github.com/pdovhomilja/nextcrm-app/commit/2888a2edfbade05355c5e197002a28e9c9cb721a))
+
 ## [0.37.20](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.19...v0.37.20) (2026-11-08)
 
 
