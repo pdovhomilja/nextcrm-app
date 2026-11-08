@@ -3,6 +3,7 @@ jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findUnique: jest.fn() },
     crm_campaigns: { findFirst: jest.fn(), update: jest.fn() },
+    crm_campaign_steps: { findFirst: jest.fn() },
   },
 }));
 jest.mock("@/inngest/client", () => ({
@@ -20,7 +21,13 @@ const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
 };
 
 describe("scheduleCampaign scope", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // c1 has a step 0; anything else (another campaign, another order) has none.
+    (prismadb.crm_campaign_steps.findFirst as jest.Mock).mockImplementation(async ({ where }) =>
+      where.campaign_id === "c1" && where.order === 0 ? { id: "s0" } : null
+    );
+  });
 
   const when = new Date("2026-06-01T00:00:00Z");
 
@@ -36,6 +43,15 @@ describe("scheduleCampaign scope", () => {
     mockUser("user", "u1");
     const res = await scheduleCampaign("c1", when);
     expect(res).toEqual({ error: "Forbidden" });
+    expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+    expect(inngest.send).not.toHaveBeenCalled();
+  });
+
+  it("no step 0: refused, no update / no inngest", async () => {
+    mockUser("manager", "m1");
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c2" });
+    const res = await scheduleCampaign("c2", when);
+    expect(res).toEqual({ error: "Campaign has no first step (step 0)" });
     expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
     expect(inngest.send).not.toHaveBeenCalled();
   });
