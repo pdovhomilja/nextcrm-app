@@ -3,9 +3,11 @@
 // by schema validation and silently dropped — the call returned 200 with the
 // column still null. These tests pin the link/unlink contract.
 
+jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn() } }));
+jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn(), diffObjects: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    crm_Opportunities: { findFirst: jest.fn(), update: jest.fn() },
+    crm_Opportunities: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     crm_Accounts: { findFirst: jest.fn(), update: jest.fn() },
     crm_Contacts: { findFirst: jest.fn(), update: jest.fn() },
   },

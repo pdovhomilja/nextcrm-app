@@ -3,10 +3,12 @@
 // hands every authenticated user id/name/avatar for ACTIVE users, while email,
 // role and status stay admin-module territory.
 
+jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn() } }));
+jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn(), diffObjects: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn() },
-    crm_Opportunities: { findFirst: jest.fn(), update: jest.fn() },
+    crm_Opportunities: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     crm_Accounts: { findFirst: jest.fn(), update: jest.fn() },
     crm_Contacts: { findFirst: jest.fn(), update: jest.fn() },
     crm_Leads: { findFirst: jest.fn(), update: jest.fn() },
