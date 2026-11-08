@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import FirecrawlApp from '@mendable/firecrawl-js';
+import { webResults } from '../../services/firecrawl';
 
 export type SearchType = 'discovery' | 'business' | 'news' | 'technical' | 'metrics';
 
@@ -52,20 +53,20 @@ export function createSmartSearchTool(firecrawlApiKey: string, searchType: Searc
             onProgress(`Executing search: ${enhancedQuery.substring(0, 80)}...`, 'info');
           }
           
-          const results = await firecrawl.search(enhancedQuery, {
+          const results = webResults(await firecrawl.search(enhancedQuery, {
             limit: searchType === 'discovery' ? 3 : 5,
             scrapeOptions: {
               formats: ['markdown'],
               onlyMainContent: true,
             }
-          });
+          }));
           
           // Process and rank results
-          if (results && results.data && Array.isArray(results.data)) {
+          if (results.length > 0) {
             if (onProgress) {
-              onProgress(`Processing ${results.data.length} results from search`, 'info');
+              onProgress(`Processing ${results.length} results from search`, 'info');
             }
-            for (const result of results.data) {
+            for (const result of results) {
               if (!result || !result.url) continue;
               
               const relevance = calculateRelevance({
