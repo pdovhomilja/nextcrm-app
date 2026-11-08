@@ -2,7 +2,6 @@ import { z } from 'zod';
 import FirecrawlApp from '@mendable/firecrawl-js';
 
 interface ScrapeResult {
-  success: boolean;
   markdown?: string;
   html?: string;
   metadata?: Record<string, unknown>;
@@ -31,15 +30,11 @@ export function createWebsiteScraperTool(firecrawlApiKey: string, onProgress?: (
           onProgress(`Starting to scrape ${url}`, 'info');
         }
         
-        const result = await firecrawl.scrapeUrl(url, {
+        const result = await firecrawl.scrape(url, {
           formats: ['markdown', 'html'],
           onlyMainContent: true,
           waitFor: 2000, // Wait for dynamic content
         });
-        
-        if (!result.success) {
-          throw new Error(`Failed to scrape ${url}`);
-        }
         
         if (onProgress) {
           onProgress(`Successfully scraped ${url} (${result.markdown?.length || 0} chars)`, 'success');
