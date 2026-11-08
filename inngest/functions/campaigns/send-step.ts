@@ -13,6 +13,22 @@ export const campaignSendStep = inngest.createFunction(
     id: "campaign-send-step",
     name: "Campaign: Send Step",
     triggers: [{ event: "campaigns/send-step" }],
+    // A thrown error (network, Resend 5xx, resendHelper) fails the run after its
+    // retries and leaves the send queued, which would keep the campaign sending.
+    onFailure: async ({ event, error, step }) => {
+      const { sendId, campaignId } = event.data.event.data as {
+        sendId: string;
+        campaignId: string;
+      };
+      // Conditional write: a send already recorded as sent/failed stays as it is.
+      await step.run("mark-send-failed", () =>
+        prismadb.crm_campaign_sends.updateMany({
+          where: { id: sendId, status: "queued" },
+          data: { status: "failed", error_message: error.message },
+        })
+      );
+      await step.run("mark-campaign-sent", () => markCampaignSentIfStep0Done(campaignId));
+    },
   },
   async ({ event, step }) => {
     const { sendId, campaignId } = event.data as {
