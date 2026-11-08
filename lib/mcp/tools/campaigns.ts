@@ -21,10 +21,6 @@ import {
 } from "../helpers";
 import { campaignHasFirstStep, NO_FIRST_STEP_MESSAGE } from "@/lib/campaigns/first-step";
 
-// Object-level authorization for campaign tools (GHSA-c9vg-c532-ppqx).
-// Normal users are scoped to campaigns/templates they created; managers and
-// admins see all. Out-of-scope access returns NOT_FOUND (no existence leak),
-// consistent with the owner-scoped CRM tools.
 // Sending emails real people, so it is manager/admin-only, matching the server
 // actions' requireRole(["manager", "admin"]). Checked before the scope lookup,
 // as they do: a plain user gets FORBIDDEN whether or not the campaign exists.
@@ -32,6 +28,10 @@ function assertCanSendCampaign(user: AuthzUser): void {
   if (user.role !== "manager" && user.role !== "admin") forbidden();
 }
 
+// Object-level authorization for campaign tools (GHSA-c9vg-c532-ppqx).
+// Normal users are scoped to campaigns/templates they created; managers and
+// admins see all. Out-of-scope access returns NOT_FOUND (no existence leak),
+// consistent with the owner-scoped CRM tools.
 async function assertCampaignInScope(user: AuthzUser, campaignId: string): Promise<void> {
   const row = await prismadb.crm_campaigns.findFirst({
     where: { id: campaignId, ...campaignReadScopeWhere(user) },
