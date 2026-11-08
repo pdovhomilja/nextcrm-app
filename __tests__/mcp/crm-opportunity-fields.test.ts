@@ -48,15 +48,18 @@ beforeEach(() => {
   db.crm_Opportunities_Type.findUnique.mockResolvedValue({ id: TYPE });
 });
 
-it("lists stages (with probability) and types, each sorted by order", async () => {
-  const stages = [{ id: STAGE, name: "Prospecting", order: 1, probability: 10 }];
+it("lists stages (with probability and stage_kind) and types, each sorted by order", async () => {
+  const stages = [
+    { id: STAGE, name: "Prospecting", order: 1, probability: 10, stage_kind: null },
+    { id: OTHER_STAGE, name: "Quote sent", order: 2, probability: 50, stage_kind: "qualified" },
+  ];
   const types = [{ id: TYPE, name: "New business", order: 1 }];
   db.crm_Opportunities_Sales_Stages.findMany.mockResolvedValue(stages);
   db.crm_Opportunities_Type.findMany.mockResolvedValue(types);
 
   await expect(run("crm_list_opportunity_options", {})).resolves.toEqual({ data: { stages, types } });
   expect(db.crm_Opportunities_Sales_Stages.findMany).toHaveBeenCalledWith({
-    select: { id: true, name: true, order: true, probability: true },
+    select: { id: true, name: true, order: true, probability: true, stage_kind: true },
     orderBy: [{ order: "asc" }, { name: "asc" }],
   });
   expect(db.crm_Opportunities_Type.findMany).toHaveBeenCalledWith({

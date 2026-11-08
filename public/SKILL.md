@@ -88,7 +88,7 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 
 ### Opportunities (7 tools)
 
-- **crm_list_opportunity_options** — List the sales stages (id, name, order, probability) and types (id, name, order) configured in this CRM
+- **crm_list_opportunity_options** — List the sales stages (id, name, order, probability, stage_kind) and types (id, name, order) configured in this CRM
 - **crm_list_opportunities** — List CRM opportunities assigned to the authenticated user
 - **crm_get_opportunity** — Get a single CRM opportunity by ID
 - **crm_search_opportunities** — Search opportunities by name or description (substring match)
@@ -96,7 +96,7 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 - **crm_update_opportunity** — Update an existing CRM opportunity by ID (accepts `assigned_to` to reassign, `account`/`contact` to link/unlink, `sales_stage_id`/`type_id` to set, `null` to clear)
 - **crm_delete_opportunity** — Soft-delete a CRM opportunity by ID
 
-A stage move over MCP behaves like one in the web app: it restarts the stage timers and sets a closed or inactive deal back to `ACTIVE`. Entering a stage of kind "qualified" needs an approved quote; without one the call fails with `INVALID_REQUEST` and changes nothing. Approval is requested on the deal page.
+A stage move over MCP behaves like one in the web app: it restarts the stage timers and sets a closed or inactive deal back to `ACTIVE`. Entering a stage whose `stage_kind` is `"qualified"` (see `crm_list_opportunity_options`) needs an approved quote first; without one the call fails with `INVALID_REQUEST` and changes nothing. Approval is requested on the deal page.
 
 ### Targets (6 tools)
 

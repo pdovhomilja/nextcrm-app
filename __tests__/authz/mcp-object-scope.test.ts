@@ -345,7 +345,10 @@ describe("crm_update_opportunity: sales stage", () => {
     const orders = data.stages.map((s: { order: number | null }) => s.order).filter((o: number | null) => o !== null);
     expect(orders).toEqual([...orders].sort((a: number, b: number) => a - b));
     expect(data.stages).toEqual(
-      expect.arrayContaining([{ id: STAGE.plain, name: `plain-${tag}`, order: 9001, probability: null }]),
+      expect.arrayContaining([
+        { id: STAGE.plain, name: `plain-${tag}`, order: 9001, probability: null, stage_kind: null },
+        { id: STAGE.qualified, name: `qualified-${tag}`, order: 9002, probability: null, stage_kind: "qualified" },
+      ]),
     );
   });
 });

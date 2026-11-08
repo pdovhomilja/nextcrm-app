@@ -64,14 +64,14 @@ export const crmOpportunityTools = [
   {
     name: "crm_list_opportunity_options",
     description:
-      "List the opportunity sales stages (id, name, order, probability) and types (id, name, order) configured in this CRM, for sales_stage_id / type_id",
+      "List the opportunity sales stages (id, name, order, probability, stage_kind) and types (id, name, order) configured in this CRM, for sales_stage_id / type_id. Entering a stage whose stage_kind is \"qualified\" needs an approved quote first",
     schema: z.object({}),
     async handler() {
       // order is nullable and not unique; name keeps the list stable.
       const orderBy = [{ order: "asc" as const }, { name: "asc" as const }];
       const [stages, types] = await Promise.all([
         prismadb.crm_Opportunities_Sales_Stages.findMany({
-          select: { id: true, name: true, order: true, probability: true },
+          select: { id: true, name: true, order: true, probability: true, stage_kind: true },
           orderBy,
         }),
         prismadb.crm_Opportunities_Type.findMany({
@@ -281,7 +281,7 @@ export const crmOpportunityTools = [
         approvalStatus: before?.approval_status ?? "NONE",
       });
       if (blockReason) conflict(blockReason);
-      // Moving a deal to another stage reactivates it, as every save in the web form does.
+      // The web form sets ACTIVE on every save; here only a real stage move does.
       const stageMoved = Boolean(sales_stage_id) && sales_stage_id !== fromStage;
       const opp = await prismadb.crm_Opportunities.update({
         where: { id },
