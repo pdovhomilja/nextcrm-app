@@ -36,6 +36,7 @@ import { CAMPAIGN_NOT_DELETED } from "@/lib/authz/scopes/campaign-not-deleted";
 type Role = "user" | "manager" | "admin";
 const USER = { id: "u1", role: "user" as Role };
 const MANAGER = { id: "m1", role: "manager" as Role };
+const ADMIN = { id: "a1", role: "admin" as Role };
 
 const tool = (name: string) => {
   const t = campaignTools.find((x) => x.name === name);
@@ -160,9 +161,9 @@ describe("campaigns_pause cancels sleeping jobs", () => {
 });
 
 describe("campaigns_send / pause / resume scope", () => {
-  it("send: out-of-scope throws NOT_FOUND, no status change", async () => {
+  it("send: plain user on someone else's campaign throws FORBIDDEN, no status change", async () => {
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue(null);
-    await expect(run("campaigns_send", { id: "victim" }, USER)).rejects.toThrow("NOT_FOUND");
+    await expect(run("campaigns_send", { id: "victim" }, USER)).rejects.toThrow("FORBIDDEN");
     expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
   });
 
@@ -172,12 +173,54 @@ describe("campaigns_send / pause / resume scope", () => {
     expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
   });
 
-  it("resume: out-of-scope throws NOT_FOUND, no status change", async () => {
+  it("resume: plain user on someone else's campaign throws FORBIDDEN, no status change", async () => {
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue(null);
-    await expect(run("campaigns_resume", { id: "victim" }, USER)).rejects.toThrow("NOT_FOUND");
+    await expect(run("campaigns_resume", { id: "victim" }, USER)).rejects.toThrow("FORBIDDEN");
     expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
   });
 });
+
+describe.each([
+  ["campaigns_send", "draft"],
+  ["campaigns_resume", "paused"],
+])(
+  "%s needs manager or admin, like sending from the web app",
+  (name, status) => {
+    beforeEach(() => {
+      (prismadb.crm_campaign_steps.findFirst as jest.Mock).mockResolvedValue({ id: "s0" });
+    });
+
+    it("plain user on their own campaign is refused: no update, no event", async () => {
+      (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status, created_by: USER.id });
+      await expect(run(name, { id: "c1" }, USER)).rejects.toThrow("FORBIDDEN");
+      expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+      expect(inngest.send).not.toHaveBeenCalled();
+    });
+
+    it("plain user gets the same answer for a campaign that does not exist", async () => {
+      (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue(null);
+      await expect(run(name, { id: "missing" }, USER)).rejects.toThrow("FORBIDDEN");
+    });
+
+    it("manager without a matching campaign still gets NOT_FOUND", async () => {
+      (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue(null);
+      await expect(run(name, { id: "missing" }, MANAGER)).rejects.toThrow("NOT_FOUND");
+      expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+      expect(inngest.send).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ["manager", MANAGER],
+      ["admin", ADMIN],
+    ])("%s can still do it", async (_label, user) => {
+      (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status });
+      (prismadb.crm_campaigns.update as jest.Mock).mockResolvedValue({ id: "c1" });
+      await run(name, { id: "c1" }, user);
+      expect((prismadb.crm_campaigns.update as jest.Mock).mock.calls[0][0].data.status).toBe("sending");
+      expect(inngest.send).toHaveBeenCalledWith({ name: "campaigns/send-now", data: { campaignId: "c1" } });
+    });
+  }
+);
 
 describe("campaigns_send / resume require step 0", () => {
   const ID = "c1";

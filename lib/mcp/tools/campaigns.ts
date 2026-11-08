@@ -14,6 +14,7 @@ import {
   listResponse,
   itemResponse,
   notFound,
+  forbidden,
   conflict,
   softDeleteData,
   assertScopeOrNotFound,
@@ -24,6 +25,13 @@ import { campaignHasFirstStep, NO_FIRST_STEP_MESSAGE } from "@/lib/campaigns/fir
 // Normal users are scoped to campaigns/templates they created; managers and
 // admins see all. Out-of-scope access returns NOT_FOUND (no existence leak),
 // consistent with the owner-scoped CRM tools.
+// Sending emails real people, so it is manager/admin-only, matching the server
+// actions' requireRole(["manager", "admin"]). Checked before the scope lookup,
+// as they do: a plain user gets FORBIDDEN whether or not the campaign exists.
+function assertCanSendCampaign(user: AuthzUser): void {
+  if (user.role !== "manager" && user.role !== "admin") forbidden();
+}
+
 async function assertCampaignInScope(user: AuthzUser, campaignId: string): Promise<void> {
   const row = await prismadb.crm_campaigns.findFirst({
     where: { id: campaignId, ...campaignReadScopeWhere(user) },
@@ -161,6 +169,7 @@ export const campaignTools = [
     description: "Trigger sending a campaign. Campaign must be in draft or scheduled status.",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      assertCanSendCampaign(user);
       const campaign = await prismadb.crm_campaigns.findFirst({
         where: { id: args.id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
@@ -198,6 +207,7 @@ export const campaignTools = [
     description: "Resume a paused campaign",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      assertCanSendCampaign(user);
       const campaign = await prismadb.crm_campaigns.findFirst({
         where: { id: args.id, ...campaignReadScopeWhere(user) },
       });
