@@ -17,6 +17,7 @@ jest.mock("@/lib/prisma", () => ({
       update: jest.fn(),
     },
     crm_campaign_steps: {
+      findFirst: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -176,6 +177,43 @@ describe("campaigns_send / pause / resume scope", () => {
     await expect(run("campaigns_resume", { id: "victim" }, USER)).rejects.toThrow("NOT_FOUND");
     expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
   });
+});
+
+describe("campaigns_send / resume require step 0", () => {
+  const ID = "c1";
+  const NO_STEP_0 = "Campaign has no first step (step 0)";
+
+  beforeEach(() => {
+    // c1 has a step 0 unless a test says otherwise; other orders never match.
+    (prismadb.crm_campaign_steps.findFirst as jest.Mock).mockImplementation(async ({ where }) =>
+      where.campaign_id === ID && where.order === 0 ? { id: "s0" } : null
+    );
+  });
+
+  const expectRefused = async (name: string, status: string) => {
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c2", status });
+    await expect(run(name, { id: "c2" }, MANAGER)).rejects.toThrow(`CONFLICT: ${NO_STEP_0}`);
+    expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+    expect(inngest.send).not.toHaveBeenCalled();
+  };
+
+  const expectSent = async (name: string, status: string) => {
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: ID, status });
+    (prismadb.crm_campaigns.update as jest.Mock).mockResolvedValue({ id: ID });
+    await run(name, { id: ID }, MANAGER);
+    expect((prismadb.crm_campaigns.update as jest.Mock).mock.calls[0][0].data.status).toBe("sending");
+    expect(inngest.send).toHaveBeenCalledWith({
+      name: "campaigns/send-now",
+      data: { campaignId: ID },
+    });
+  };
+
+  it("send: no step 0 is refused, no status change, no event", () =>
+    expectRefused("campaigns_send", "draft"));
+  it("send: with step 0 sends as before", () => expectSent("campaigns_send", "draft"));
+  it("resume: no step 0 is refused, no status change, no event", () =>
+    expectRefused("campaigns_resume", "paused"));
+  it("resume: with step 0 sends as before", () => expectSent("campaigns_resume", "paused"));
 });
 
 describe("campaigns_get_stats scope", () => {
