@@ -18,6 +18,7 @@ import {
   softDeleteData,
   assertScopeOrNotFound,
 } from "../helpers";
+import { campaignHasFirstStep, NO_FIRST_STEP_MESSAGE } from "@/lib/campaigns/first-step";
 
 // Object-level authorization for campaign tools (GHSA-c9vg-c532-ppqx).
 // Normal users are scoped to campaigns/templates they created; managers and
@@ -167,6 +168,7 @@ export const campaignTools = [
       if (!["draft", "scheduled"].includes(campaign.status ?? "")) {
         conflict(`Cannot send campaign in status: ${campaign.status}`);
       }
+      if (!(await campaignHasFirstStep(args.id))) conflict(NO_FIRST_STEP_MESSAGE);
       const now = new Date();
       await prismadb.crm_campaigns.update({
         where: { id: args.id },
@@ -201,6 +203,7 @@ export const campaignTools = [
       });
       if (!campaign) notFound("Campaign");
       if (campaign.status !== "paused") conflict(`Cannot resume campaign in status: ${campaign.status}`);
+      if (!(await campaignHasFirstStep(args.id))) conflict(NO_FIRST_STEP_MESSAGE);
       await prismadb.crm_campaigns.update({ where: { id: args.id }, data: { status: "sending" } });
       await inngest.send({ name: "campaigns/send-now", data: { campaignId: args.id } });
       return itemResponse({ id: args.id, status: "sending" });

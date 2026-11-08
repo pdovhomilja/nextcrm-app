@@ -7,6 +7,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { campaignHasFirstStep, NO_FIRST_STEP_MESSAGE } from "@/lib/campaigns/first-step";
 
 export const sendCampaignNow = async (id: string) => {
   let user;
@@ -24,6 +25,8 @@ export const sendCampaignNow = async (id: string) => {
     if (e instanceof AuthorizationError) return { error: "Not found" };
     throw e;
   }
+
+  if (!(await campaignHasFirstStep(id))) return { error: NO_FIRST_STEP_MESSAGE };
 
   const now = new Date();
   await prismadb.crm_campaigns.update({
