@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.20](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.19...v0.37.20) (2026-11-08)
+
+
+### Fixed
+
+* **campaigns:** mark send failed when the send-step run fails ([f537def](https://github.com/pdovhomilja/nextcrm-app/commit/f537def10fb8dc36bc1c7ce4b55f18e2bb29d434))
+* **campaigns:** mark send failed when the send-step run fails ([fc5b971](https://github.com/pdovhomilja/nextcrm-app/commit/fc5b97113d7eba920c941bb73ed08e117e9c9464))
+
 ## [0.37.19](https://github.com/pdovhomilja/nextcrm-app/compare/v0.37.18...v0.37.19) (2026-11-07)
 
 
