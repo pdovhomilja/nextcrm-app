@@ -252,6 +252,132 @@ describe("follow-ups after the campaign is sent", () => {
   });
 });
 
+describe("resuming a paused campaign", () => {
+  // A paused campaign whose step-0 sends already reached these statuses.
+  async function seedPaused(statuses: string[]) {
+    const seeded = await seed("paused", statuses.map(() => ({})));
+    for (let i = 0; i < statuses.length; i++) {
+      await prismadb.crm_campaign_sends.update({ where: { id: seeded.sendIds[i] }, data: { status: statuses[i] } });
+    }
+    return seeded;
+  }
+
+  // What campaigns_resume starts: the campaign back to sending, then send-now,
+  // then one send-step per event send-now fans out.
+  async function resume(campaignId: string) {
+    await prismadb.crm_campaigns.update({ where: { id: campaignId }, data: { status: "sending" } });
+    const step = fakeStep();
+    await (campaignSendNow as unknown as Handler)({ event: { data: { campaignId } }, step });
+    const calls = step.sendEvent.mock.calls as unknown as Array<[string, Array<{ data: { sendId: string } }>]>;
+    const [, events] = calls.find(([name]) => name === "fan-out-sends-now")!;
+    for (const e of events) await runSendStep(campaignId, e.data.sendId);
+  }
+
+  it.each(["sent", "delivered", "bounced"])("does not email a %s send again", async (status) => {
+    const { campaignId, sendIds } = await seedPaused([status]);
+
+    await resume(campaignId);
+
+    expect(mockResendSend).not.toHaveBeenCalled();
+    expect((await send(sendIds[0])).status).toBe(status);
+  });
+
+  it("the campaign reaches sent when every send is already finished", async () => {
+    const { campaignId } = await seedPaused(["sent", "delivered", "bounced"]);
+
+    await resume(campaignId);
+
+    expect(mockResendSend).not.toHaveBeenCalled();
+    const after = await campaign(campaignId);
+    expect(after.status).toBe("sent");
+    expect(after.sent_at).toBeInstanceOf(Date);
+  });
+
+  it("sends a queued send", async () => {
+    const { campaignId, sendIds } = await seedPaused(["queued"]);
+
+    await resume(campaignId);
+
+    expect(mockResendSend).toHaveBeenCalledTimes(1);
+    expect((await send(sendIds[0])).status).toBe("sent");
+    expect((await campaign(campaignId)).status).toBe("sent");
+  });
+
+  it("a failed send that succeeds on retry ends sent", async () => {
+    const { campaignId, sendIds } = await seedPaused(["failed"]);
+
+    await resume(campaignId);
+
+    expect(mockResendSend).toHaveBeenCalledTimes(1);
+    const row = await prismadb.crm_campaign_sends.findUniqueOrThrow({ where: { id: sendIds[0] } });
+    expect(row.status).toBe("sent");
+    expect(row.resend_message_id).toMatch(/^resend-/);
+    expect(row.sent_at).toBeInstanceOf(Date);
+    expect((await campaign(campaignId)).status).toBe("sent");
+  });
+
+  it("a failed send that fails again stays failed and still finishes the campaign", async () => {
+    const { campaignId, sendIds } = await seedPaused(["failed"]);
+    mockResendSend.mockResolvedValue({ data: null, error: { message: "still down" } });
+
+    await resume(campaignId);
+
+    expect(await send(sendIds[0])).toEqual({ status: "failed", error_message: "still down" });
+    expect((await campaign(campaignId)).status).toBe("sent");
+  });
+
+  it("in a mixed campaign emails only the queued and failed recipients", async () => {
+    const { campaignId, sendIds } = await seedPaused(["queued", "failed", "sent", "delivered", "bounced"]);
+    const rows = await prismadb.crm_campaign_sends.findMany({
+      where: { id: { in: sendIds.slice(0, 2) } },
+      select: { email: true },
+    });
+
+    await resume(campaignId);
+
+    const emailed = mockResendSend.mock.calls.map(([args]) => args.to).sort();
+    expect(emailed).toEqual(rows.map((r) => r.email).sort());
+    expect((await send(sendIds[3])).status).toBe("delivered");
+    expect((await send(sendIds[4])).status).toBe("bounced");
+    expect((await campaign(campaignId)).status).toBe("sent");
+  });
+});
+
+describe("a follow-up step dispatched again by a resume", () => {
+  it("emails only its queued and failed sends", async () => {
+    const { campaignId, stepId, sendIds } = await seed("sending", [{}, {}, {}, {}]);
+    await prismadb.crm_campaign_sends.updateMany({ where: { step_id: stepId }, data: { status: "delivered" } });
+    const followUpId = randomUUID();
+    await prismadb.crm_campaign_steps.create({
+      data: { id: followUpId, campaign_id: campaignId, order: 1, template_id: templateId, subject: "Again", delay_days: 3 },
+    });
+    const step0 = await prismadb.crm_campaign_sends.findMany({ where: { id: { in: sendIds } } });
+    const statuses = ["queued", "failed", "delivered", "bounced"];
+    await prismadb.crm_campaign_sends.createMany({
+      data: step0.map((s, i) => ({
+        campaign_id: campaignId,
+        step_id: followUpId,
+        target_id: s.target_id,
+        email: s.email,
+        status: statuses[i],
+      })),
+    });
+    const step = fakeStep();
+
+    await (campaignProcessFollowUp as unknown as Handler)({
+      event: { data: { campaignId, stepId: followUpId, scheduledAt: "2002-01-01T00:00:00Z" } },
+      step,
+    });
+    const [, events] = step.sendEvent.mock.calls[0] as unknown as [string, Array<{ data: { sendId: string } }>];
+    expect(events).toHaveLength(4);
+    for (const e of events) await runSendStep(campaignId, e.data.sendId);
+
+    expect(mockResendSend.mock.calls.map(([args]) => args.to).sort()).toEqual(
+      [step0[0].email, step0[1].email].sort()
+    );
+  });
+});
+
 describe("markCampaignSentIfStep0Done write", () => {
   it("many send-steps finishing at once mark the campaign sent", async () => {
     const { campaignId, sendIds } = await seed("sending", [{}, {}, {}, {}, {}, {}]);
