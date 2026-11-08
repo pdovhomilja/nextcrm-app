@@ -26,6 +26,11 @@ export const sendCampaignNow = async (id: string) => {
     throw e;
   }
 
+  const existing = await prismadb.crm_campaigns.findUnique({ where: { id }, select: { status: true } });
+  if (!["draft", "scheduled"].includes(existing?.status ?? "")) {
+    return { error: `Cannot send campaign in status: ${existing?.status}` };
+  }
+
   if (!(await campaignHasFirstStep(id))) return { error: NO_FIRST_STEP_MESSAGE };
 
   const now = new Date();

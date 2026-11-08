@@ -2,7 +2,7 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findUnique: jest.fn() },
-    crm_campaigns: { findFirst: jest.fn(), update: jest.fn() },
+    crm_campaigns: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     crm_campaign_steps: { findFirst: jest.fn() },
   },
 }));
@@ -45,9 +45,20 @@ describe("sendCampaignNow scope", () => {
     expect(inngest.send).not.toHaveBeenCalled();
   });
 
+  it("out of scope: Not found, status not revealed, no update / no inngest", async () => {
+    mockUser("manager", "m1");
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue(null);
+    (prismadb.crm_campaigns.findUnique as jest.Mock).mockResolvedValue({ status: "sent" });
+    const res = await sendCampaignNow("c1");
+    expect(res).toEqual({ error: "Not found" });
+    expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+    expect(inngest.send).not.toHaveBeenCalled();
+  });
+
   it("no step 0: refused, no update / no inngest", async () => {
     mockUser("manager", "m1");
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c2" });
+    (prismadb.crm_campaigns.findUnique as jest.Mock).mockResolvedValue({ status: "draft" });
     const res = await sendCampaignNow("c2");
     expect(res).toEqual({ error: "Campaign has no first step (step 0)" });
     expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
@@ -57,6 +68,7 @@ describe("sendCampaignNow scope", () => {
   it("manager: sends and emits inngest event", async () => {
     mockUser("manager", "m1");
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1" });
+    (prismadb.crm_campaigns.findUnique as jest.Mock).mockResolvedValue({ status: "draft" });
     (prismadb.crm_campaigns.update as jest.Mock).mockResolvedValue({ id: "c1" });
     await sendCampaignNow("c1");
     expect(prismadb.crm_campaigns.findFirst).toHaveBeenCalled();
@@ -71,9 +83,37 @@ describe("sendCampaignNow scope", () => {
   it("admin: sends and emits inngest event", async () => {
     mockUser("admin", "a1");
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1" });
+    (prismadb.crm_campaigns.findUnique as jest.Mock).mockResolvedValue({ status: "draft" });
     (prismadb.crm_campaigns.update as jest.Mock).mockResolvedValue({ id: "c1" });
     await sendCampaignNow("c1");
     expect(prismadb.crm_campaigns.update).toHaveBeenCalledTimes(1);
     expect(inngest.send).toHaveBeenCalledTimes(1);
   });
+
+  it.each(["draft", "scheduled"])("%s campaign: sends and emits inngest event", async (status) => {
+    mockUser("manager", "m1");
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1" });
+    (prismadb.crm_campaigns.findUnique as jest.Mock).mockResolvedValue({ status });
+    (prismadb.crm_campaigns.update as jest.Mock).mockResolvedValue({ id: "c1" });
+    const res = await sendCampaignNow("c1");
+    expect(res).toBeUndefined();
+    expect((prismadb.crm_campaigns.update as jest.Mock).mock.calls[0][0].data.status).toBe("sending");
+    expect(inngest.send).toHaveBeenCalledWith({
+      name: "campaigns/send-now",
+      data: { campaignId: "c1" },
+    });
+  });
+
+  it.each(["sent", "sending", "paused", "deleted", null])(
+    "%s campaign: refused, no update / no inngest",
+    async (status) => {
+      mockUser("manager", "m1");
+      (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1" });
+      (prismadb.crm_campaigns.findUnique as jest.Mock).mockResolvedValue({ status });
+      const res = await sendCampaignNow("c1");
+      expect(res).toEqual({ error: `Cannot send campaign in status: ${status}` });
+      expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+      expect(inngest.send).not.toHaveBeenCalled();
+    }
+  );
 });
