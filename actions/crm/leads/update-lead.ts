@@ -1,18 +1,9 @@
 "use server";
-import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
-import sendEmail from "@/lib/sendmail";
-import { inngest } from "@/inngest/client";
-import { writeAuditLog, diffObjects } from "@/lib/audit-log";
-import {
-  requireAuthenticated,
-  assertCanWriteLead,
-  assertCanWriteAccount,
-  PARTNER_EDIT,
-  AuthenticationError,
-  AuthorizationError,
-} from "@/lib/authz";
+import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import * as svc from "@/lib/crm/leads/service";
+import { LeadError } from "@/lib/crm/leads/types";
 
 export const updateLead = async (data: {
   id: string;
@@ -58,74 +49,30 @@ export const updateLead = async (data: {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;
   }
-  try {
-    await assertCanWriteLead(user, id, PARTNER_EDIT);
-    // A partner may relink a lead only to another of his accounts.
-    if (user.role === "partner" && accountIDs) await assertCanWriteAccount(user, accountIDs, PARTNER_EDIT);
-  } catch (e) {
-    if (e instanceof AuthorizationError) return { error: "Forbidden" };
-    throw e;
-  }
-  const userId = user.id;
 
   try {
-    const before = await prismadb.crm_Leads.findUnique({ where: { id, deletedAt: null } });
-    const lead = await prismadb.crm_Leads.update({
-      where: { id },
-      data: {
-        v: 1,
-        updatedBy: userId,
-        firstName,
-        lastName,
-        company,
-        jobTitle,
-        email,
-        phone,
-        description,
-        lead_source_id: lead_source_id || undefined,
-        lead_status_id: lead_status_id || undefined,
-        lead_type_id: lead_type_id || undefined,
-        refered_by,
-        campaign,
-        // A partner never changes the assignee or unlinks the account.
-        assigned_to: user.role === "partner" ? undefined : assigned_to || userId,
-        accountsIDs: user.role === "partner" ? accountIDs || undefined : accountIDs,
-      },
+    // The form always sends every field. An empty select keeps the stored
+    // status/source/type, and an empty assignee means the caller.
+    const lead = await svc.updateLead(user, id, {
+      firstName,
+      lastName,
+      company,
+      jobTitle,
+      email,
+      phone,
+      description,
+      lead_source_id: lead_source_id || undefined,
+      lead_status_id: lead_status_id || undefined,
+      lead_type_id: lead_type_id || undefined,
+      refered_by,
+      campaign,
+      assigned_to: assigned_to || user.id,
+      accountsIDs: accountIDs,
     });
-
-    if (assigned_to && assigned_to !== userId) {
-      const notifyRecipient = await prismadb.users.findFirst({
-        where: { id: assigned_to },
-      });
-
-      if (notifyRecipient?.email) {
-        await sendEmail({
-          from: process.env.EMAIL_FROM as string,
-          to: notifyRecipient.email,
-          subject:
-            notifyRecipient.userLanguage === "en"
-              ? `New lead ${firstName} ${lastName} has been added to the system and assigned to you.`
-              : `Nová příležitost ${firstName} ${lastName} byla přidána do systému a přidělena vám.`,
-          text:
-            notifyRecipient.userLanguage === "en"
-              ? `New lead ${firstName} ${lastName} has been added to the system and assigned to you. You can click here for detail: ${process.env.NEXT_PUBLIC_APP_URL}/crm/leads/${lead.id}`
-              : `Nová příležitost ${firstName} ${lastName} byla přidána do systému a přidělena vám. Detaily naleznete zde: ${process.env.NEXT_PUBLIC_APP_URL}/crm/leads/${lead.id}`,
-        });
-      }
-    }
-
-    const changes = before ? diffObjects(before as Record<string, unknown>, lead as Record<string, unknown>) : null;
-    await writeAuditLog({
-      entityType: "lead",
-      entityId: lead.id,
-      action: "updated",
-      changes,
-      userId: user.id,
-    });
-    void inngest.send({ name: "crm/lead.saved", data: { record_id: lead.id } });
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { data: lead };
   } catch (error) {
+    if (error instanceof LeadError && error.code === "forbidden") return { error: "Forbidden" };
     const ruleMessage = await pluginRuleErrorMessage(error);
     if (ruleMessage) return { error: ruleMessage };
     console.log("[UPDATE_LEAD]", error);

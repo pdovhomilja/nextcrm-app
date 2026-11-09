@@ -1,31 +1,27 @@
 "use server";
-import { getSession } from "@/lib/auth-server";
-import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { writeAuditLog } from "@/lib/audit-log";
+import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import * as svc from "@/lib/crm/leads/service";
+import { LeadError } from "@/lib/crm/leads/types";
 
 export const restoreLead = async (leadId: string) => {
-  const session = await getSession();
-  if (!session) return { error: "Unauthorized" };
-  if (session.user.role !== "admin") return { error: "Forbidden" };
   if (!leadId) return { error: "leadId is required" };
 
+  let user;
   try {
-    await prismadb.crm_Leads.update({
-      where: { id: leadId },
-      data: { deletedAt: null, deletedBy: null },
-    });
-    await writeAuditLog({
-      entityType: "lead",
-      entityId: leadId,
-      action: "restored",
-      changes: null,
-      userId: session.user.id,
-    });
+    user = await requireAuthenticated();
+  } catch (e) {
+    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
+    throw e;
+  }
+
+  try {
+    await svc.restoreLead(user, leadId);
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     revalidatePath("/[locale]/(routes)/admin/audit-log", "page");
     return { success: true };
   } catch (error) {
+    if (error instanceof LeadError && error.code === "forbidden") return { error: "Forbidden" };
     console.log("[RESTORE_LEAD]", error);
     return { error: "Failed to restore lead" };
   }

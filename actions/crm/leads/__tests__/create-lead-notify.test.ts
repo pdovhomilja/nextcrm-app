@@ -3,13 +3,12 @@
 
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn(),
-  assertCanWriteAccount: jest.fn(),
   AuthenticationError: class AuthenticationError extends Error {},
-  AuthorizationError: class AuthorizationError extends Error {},
 }));
+jest.mock("@/lib/authz/assignable-user", () => ({ assertAssignableUser: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    crm_Leads: { create: jest.fn().mockResolvedValue({ id: "l-1" }) },
+    crm_Leads: { create: jest.fn().mockResolvedValue({ id: "l-1", firstName: null, lastName: "X" }) },
     users: { findFirst: jest.fn() },
   },
 }));

@@ -1,14 +1,9 @@
 "use server";
-import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
-import { writeAuditLog } from "@/lib/audit-log";
-import {
-  requireAuthenticated,
-  assertCanWriteLead,
-  AuthenticationError,
-  AuthorizationError,
-} from "@/lib/authz";
+import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import * as svc from "@/lib/crm/leads/service";
+import { LeadError } from "@/lib/crm/leads/types";
 
 export const deleteLead = async (leadId: string) => {
   if (!leadId) return { error: "leadId is required" };
@@ -20,28 +15,13 @@ export const deleteLead = async (leadId: string) => {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;
   }
-  try {
-    await assertCanWriteLead(user, leadId);
-  } catch (e) {
-    if (e instanceof AuthorizationError) return { error: "Forbidden" };
-    throw e;
-  }
 
   try {
-    await prismadb.crm_Leads.update({
-      where: { id: leadId },
-      data: { deletedAt: new Date(), deletedBy: user.id },
-    });
-    await writeAuditLog({
-      entityType: "lead",
-      entityId: leadId,
-      action: "deleted",
-      changes: null,
-      userId: user.id,
-    });
+    await svc.deleteLead(user, leadId);
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { success: true };
   } catch (error) {
+    if (error instanceof LeadError && error.code === "forbidden") return { error: "Forbidden" };
     const ruleMessage = await pluginRuleErrorMessage(error);
     if (ruleMessage) return { error: ruleMessage };
     console.log("[DELETE_LEAD]", error);

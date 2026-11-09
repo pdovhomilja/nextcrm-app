@@ -13,7 +13,6 @@ const REVIEWED: Record<string, string> = {
   "actions/crm/accounts/restore-account.ts#restoreAccount": "admin only (session.user.role check)",
   "actions/crm/contacts/restore-contact.ts#restoreContact": "admin only (session.user.role check)",
   "actions/crm/contracts/restore-contract/index.ts#restoreContract": "admin only (session.user.role check)",
-  "actions/crm/leads/restore-lead.ts#restoreLead": "admin only (session.user.role check)",
   "actions/crm/opportunities/restore-opportunity.ts#restoreOpportunity": "admin only (session.user.role check)",
   "actions/emails/accounts.ts#deleteEmailAccount": "findFirst where { id, userId } before the write",
   "actions/emails/accounts.ts#setEmailAccountActive": "findFirst where { id, userId } before the write",
