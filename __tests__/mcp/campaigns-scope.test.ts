@@ -5,6 +5,7 @@
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_campaigns: {
+      updateMany: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
       findFirst: jest.fn(),
@@ -22,7 +23,7 @@ jest.mock("@/lib/prisma", () => ({
       update: jest.fn(),
       delete: jest.fn(),
     },
-    crm_campaign_sends: { findMany: jest.fn() },
+    crm_campaign_sends: { findMany: jest.fn(), updateMany: jest.fn() },
     campaignToTargetLists: { create: jest.fn(), delete: jest.fn() },
   },
 }));
@@ -168,6 +169,18 @@ describe("campaigns_send / pause / resume scope", () => {
   });
 });
 
+// campaigns_send moves the campaign with a conditional updateMany, campaigns_resume with update.
+const statusWrite = (name: string) =>
+  (name === "campaigns_send" ? prismadb.crm_campaigns.updateMany : prismadb.crm_campaigns.update) as jest.Mock;
+const mockStatusWrite = () => {
+  (prismadb.crm_campaigns.updateMany as jest.Mock).mockResolvedValue({ count: 1 });
+  (prismadb.crm_campaigns.update as jest.Mock).mockResolvedValue({ id: "c1" });
+};
+const expectNoStatusWrite = () => {
+  expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+  expect(prismadb.crm_campaigns.updateMany).not.toHaveBeenCalled();
+};
+
 describe.each([
   ["campaigns_send", "draft"],
   ["campaigns_resume", "paused"],
@@ -181,20 +194,20 @@ describe.each([
     it("plain user on their own campaign is refused: no update, no event", async () => {
       (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status, created_by: USER.id });
       await expect(run(name, { id: "c1" }, USER)).rejects.toThrow("FORBIDDEN");
-      expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+      expectNoStatusWrite();
       expect(inngest.send).not.toHaveBeenCalled();
     });
 
     it("plain user gets the same answer for a campaign that does not exist", async () => {
       (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue(null);
       await expect(run(name, { id: "missing" }, USER)).rejects.toThrow("FORBIDDEN");
-      expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+      expectNoStatusWrite();
     });
 
     it("manager without a matching campaign still gets NOT_FOUND", async () => {
       (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue(null);
       await expect(run(name, { id: "missing" }, MANAGER)).rejects.toThrow("NOT_FOUND");
-      expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+      expectNoStatusWrite();
       expect(inngest.send).not.toHaveBeenCalled();
     });
 
@@ -203,9 +216,9 @@ describe.each([
       ["admin", ADMIN],
     ])("%s can still do it", async (_label, user) => {
       (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status });
-      (prismadb.crm_campaigns.update as jest.Mock).mockResolvedValue({ id: "c1" });
+      mockStatusWrite();
       await run(name, { id: "c1" }, user);
-      expect((prismadb.crm_campaigns.update as jest.Mock).mock.calls[0][0].data.status).toBe("sending");
+      expect(statusWrite(name).mock.calls[0][0].data.status).toBe("sending");
       expect(inngest.send).toHaveBeenCalledWith({ name: "campaigns/send-now", data: { campaignId: "c1" } });
     });
   }
@@ -225,15 +238,15 @@ describe("campaigns_send / resume require step 0", () => {
   const expectRefused = async (name: string, status: string) => {
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c2", status });
     await expect(run(name, { id: "c2" }, MANAGER)).rejects.toThrow(`CONFLICT: ${NO_STEP_0}`);
-    expect(prismadb.crm_campaigns.update).not.toHaveBeenCalled();
+    expectNoStatusWrite();
     expect(inngest.send).not.toHaveBeenCalled();
   };
 
   const expectSent = async (name: string, status: string) => {
     (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: ID, status });
-    (prismadb.crm_campaigns.update as jest.Mock).mockResolvedValue({ id: ID });
+    mockStatusWrite();
     await run(name, { id: ID }, MANAGER);
-    expect((prismadb.crm_campaigns.update as jest.Mock).mock.calls[0][0].data.status).toBe("sending");
+    expect(statusWrite(name).mock.calls[0][0].data.status).toBe("sending");
     expect(inngest.send).toHaveBeenCalledWith({
       name: "campaigns/send-now",
       data: { campaignId: ID },
@@ -246,6 +259,29 @@ describe("campaigns_send / resume require step 0", () => {
   it("resume: no step 0 is refused, no status change, no event", () =>
     expectRefused("campaigns_resume", "paused"));
   it("resume: with step 0 sends as before", () => expectSent("campaigns_resume", "paused"));
+});
+
+describe("campaigns_send status write", () => {
+  it("only moves a draft or scheduled campaign", async () => {
+    (prismadb.crm_campaign_steps.findFirst as jest.Mock).mockResolvedValue({ id: "s0" });
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status: "draft" });
+    mockStatusWrite();
+    await run("campaigns_send", { id: "c1" }, MANAGER);
+    expect(statusWrite("campaigns_send").mock.calls[0][0].where).toEqual({
+      id: "c1",
+      status: { in: ["draft", "scheduled"] },
+    });
+  });
+
+  it("a call that loses the status write gets the conflict, no event", async () => {
+    (prismadb.crm_campaign_steps.findFirst as jest.Mock).mockResolvedValue({ id: "s0" });
+    (prismadb.crm_campaigns.findFirst as jest.Mock).mockResolvedValue({ id: "c1", status: "draft" });
+    (prismadb.crm_campaigns.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
+    await expect(run("campaigns_send", { id: "c1" }, MANAGER)).rejects.toThrow(
+      "CONFLICT: Cannot send campaign in status: sending"
+    );
+    expect(inngest.send).not.toHaveBeenCalled();
+  });
 });
 
 describe("campaigns_get_stats scope", () => {

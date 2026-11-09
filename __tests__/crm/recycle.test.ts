@@ -65,7 +65,7 @@ describe("findRecycleCandidates", () => {
     // The recent-activity query must look for sends after the cutoff or queued
     const recentWhere = (prismadb.crm_campaign_sends.findMany as jest.Mock).mock.calls[1][0].where;
     expect(recentWhere.target_id.in).toEqual(["t-done"]);
-    expect(recentWhere.OR).toBeDefined();
+    expect(recentWhere.OR).toContainEqual({ status: { in: ["queued", "sending"] } });
   });
 
   it("returns [] when no sequence has finished", async () => {

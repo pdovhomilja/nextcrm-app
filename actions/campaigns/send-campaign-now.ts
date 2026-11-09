@@ -34,10 +34,12 @@ export const sendCampaignNow = async (id: string) => {
   if (!(await campaignHasFirstStep(id))) return { error: NO_FIRST_STEP_MESSAGE };
 
   const now = new Date();
-  await prismadb.crm_campaigns.update({
-    where: { id },
+  // Conditional write: of two simultaneous calls only one moves the campaign and emits.
+  const { count } = await prismadb.crm_campaigns.updateMany({
+    where: { id, status: { in: ["draft", "scheduled"] } },
     data: { status: "sending", scheduled_at: now },
   });
+  if (count === 0) return { error: "Cannot send campaign in status: sending" };
 
   await inngest.send({
     name: "campaigns/send-now",
