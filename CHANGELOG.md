@@ -5,6 +5,22 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.38.1...v0.38.2) (2026-11-09)
+
+
+### Fixed
+
+* **mcp:** keep the scope comment on the scope helper ([0cb07f5](https://github.com/pdovhomilja/nextcrm-app/commit/0cb07f56e63ab6db3333cdc3c68171e4aba79a57)), closes [#467](https://github.com/pdovhomilja/nextcrm-app/issues/467)
+* **mcp:** require manager or admin for campaigns_send and campaigns_resume ([f7aec8f](https://github.com/pdovhomilja/nextcrm-app/commit/f7aec8fe47d8ea0f31c3a0e23422cbdac8f76e1e))
+* **mcp:** require manager or admin for campaigns_send and campaigns_resume ([98f5861](https://github.com/pdovhomilja/nextcrm-app/commit/98f5861923da5fa6dfcfcc5dc996ea8d06f07ced)), closes [#467](https://github.com/pdovhomilja/nextcrm-app/issues/467)
+* sendCampaignNow only accepts draft or scheduled campaigns ([441ccb1](https://github.com/pdovhomilja/nextcrm-app/commit/441ccb175a45d63175aa719c31ccf5a6ee31706d))
+* sendCampaignNow only accepts draft or scheduled campaigns ([dda8933](https://github.com/pdovhomilja/nextcrm-app/commit/dda89336d985232477b54abaa07d73f4cc92718f))
+
+
+### Changed
+
+* **mcp:** use isManagerOrAdmin in the campaign send check ([afe957a](https://github.com/pdovhomilja/nextcrm-app/commit/afe957a9dcb8d59885ea0cca97d5c71dfe3e3570)), closes [#467](https://github.com/pdovhomilja/nextcrm-app/issues/467)
+
 ## [0.38.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.38.0...v0.38.1) (2026-11-08)
 
 
