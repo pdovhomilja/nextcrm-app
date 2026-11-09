@@ -412,7 +412,7 @@ model crm_campaign_sends {
   step_id           String    @db.Uuid
   target_id         String    @db.Uuid
   email             String
-  status            String    @default("queued")  // queued | sent | delivered | bounced | failed
+  status            String    @default("queued")  // queued | sending | sent | delivered | bounced | failed
   resend_message_id String?
   unsubscribe_token String    @unique @default(uuid())
   opened_at         DateTime?

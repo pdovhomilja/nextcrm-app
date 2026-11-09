@@ -44,7 +44,7 @@ describe("recipient-filters", () => {
       ).toBe("already sent");
     });
 
-    it.each(["delivered", "bounced", "some-future-status"])("skips a %s send", (status) => {
+    it.each(["sending", "delivered", "bounced", "some-future-status"])("skips a %s send", (status) => {
       expect(
         sendStepSkipReason({ status, unsubscribed_at: null, target: { do_not_email: false } })
       ).toBe(`already ${status}`);

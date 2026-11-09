@@ -32,7 +32,8 @@ export function sendStepSkipReason(sendRecord: {
   target?: { do_not_email: boolean } | null;
 }): string | null {
   // Only queued (not sent yet) and failed (did not go out) may go out; a resume
-  // fans out every send again, so anything else would be a duplicate.
+  // fans out every send again, so anything else would be a duplicate, including
+  // sending (claimed by another run, mail in flight).
   if (sendRecord.status !== "queued" && sendRecord.status !== "failed") {
     return `already ${sendRecord.status}`;
   }
