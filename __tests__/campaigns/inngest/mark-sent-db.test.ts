@@ -6,8 +6,10 @@
  */
 jest.mock("@/inngest/client", () => ({
   // Keep the options on the handler so tests can reach onFailure.
-  inngest: { createFunction: jest.fn((config: object, handler: object) => Object.assign(handler, { config })) },
+  inngest: { send: jest.fn(async () => ({})), createFunction: jest.fn((config: object, handler: object) => Object.assign(handler, { config })) },
 }));
+
+jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 
 const mockResendSend = jest.fn();
 jest.mock("@/lib/resend", () => ({
@@ -26,6 +28,7 @@ import { campaignScheduleSend } from "@/inngest/functions/campaigns/schedule-sen
 import { campaignProcessFollowUp } from "@/inngest/functions/campaigns/process-follow-up";
 import { markCampaignSentIfStep0Done } from "@/lib/campaigns/mark-campaign-sent";
 import { eligibleFollowUpSendsWhere } from "@/lib/campaigns/recipient-filters";
+import { campaignTools } from "@/lib/mcp/tools/campaigns";
 
 type Handler = (ctx: { event: { data: Record<string, unknown> }; step: unknown }) => Promise<unknown>;
 
@@ -595,5 +598,74 @@ describe("Resend idempotency key", () => {
     await runSendStep(campaignId, sendIds[0]);
     expect((await send(sendIds[0])).status).toBe("sent");
     expect(keys).toEqual([`campaign-send/${sendIds[0]}`, `campaign-send/${sendIds[0]}`]);
+  });
+});
+
+describe("a send stuck in sending: its run died holding the claim (cancelled, no onFailure)", () => {
+  const MANAGER = { id: "m1", role: "manager" };
+  const pauseAndResume = async (campaignId: string) => {
+    await prismadb.crm_campaigns.update({ where: { id: campaignId }, data: { status: "paused" } });
+    const resume = campaignTools.find((t) => t.name === "campaigns_resume")!;
+    await (resume.handler as unknown as (a: object, id: string, u: object) => Promise<unknown>)(
+      { id: campaignId },
+      MANAGER.id,
+      MANAGER
+    );
+  };
+  const seedStuck = async () => {
+    const seeded = await seed("sending", [{}]);
+    await prismadb.crm_campaign_sends.update({ where: { id: seeded.sendIds[0] }, data: { status: "sending" } });
+    return seeded;
+  };
+
+  it("keeps the campaign sending and a new run does not email it", async () => {
+    const { campaignId, sendIds } = await seedStuck();
+
+    const result = await runSendStep(campaignId, sendIds[0]);
+
+    expect(result).toEqual({ skipped: true, reason: "already sending" });
+    expect(mockResendSend).not.toHaveBeenCalled();
+    expect((await campaign(campaignId)).status).toBe("sending");
+  });
+
+  it("pause and resume sends it and finishes the campaign", async () => {
+    const { campaignId, sendIds } = await seedStuck();
+
+    await pauseAndResume(campaignId);
+    await runSendStep(campaignId, sendIds[0]);
+
+    expect(mockResendSend).toHaveBeenCalledTimes(1);
+    expect((await send(sendIds[0])).status).toBe("sent");
+    expect((await campaign(campaignId)).status).toBe("sent");
+  });
+
+  it("resume does not touch a send of another campaign", async () => {
+    const stuck = await seedStuck();
+    const other = await seedStuck();
+
+    await pauseAndResume(stuck.campaignId);
+
+    expect((await send(other.sendIds[0])).status).toBe("sending");
+  });
+
+  it("a resume while the mail is really in flight still sends one mail: the key stops the second", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+    let inFlight = false;
+    let mails = 0;
+    mockResendSend.mockImplementation(async () => {
+      if (inFlight) {
+        return { data: null, error: { name: "concurrent_idempotent_requests", statusCode: 409, message: "in progress" } };
+      }
+      inFlight = true;
+      mails++;
+      await pauseAndResume(campaignId);
+      await expect(runSendStep(campaignId, sendIds[0])).rejects.toThrow("in progress");
+      return { data: { id: "resend-first" }, error: null };
+    });
+
+    await runSendStep(campaignId, sendIds[0]);
+
+    expect(mails).toBe(1);
+    expect((await send(sendIds[0])).status).toBe("sent");
   });
 });

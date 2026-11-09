@@ -23,7 +23,7 @@ jest.mock("@/lib/prisma", () => ({
       update: jest.fn(),
       delete: jest.fn(),
     },
-    crm_campaign_sends: { findMany: jest.fn() },
+    crm_campaign_sends: { findMany: jest.fn(), updateMany: jest.fn() },
     campaignToTargetLists: { create: jest.fn(), delete: jest.fn() },
   },
 }));

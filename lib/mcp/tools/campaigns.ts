@@ -217,6 +217,13 @@ export const campaignTools = [
       if (!campaign) notFound("Campaign");
       if (campaign.status !== "paused") conflict(`Cannot resume campaign in status: ${campaign.status}`);
       if (!(await campaignHasFirstStep(args.id))) conflict(NO_FIRST_STEP_MESSAGE);
+      // A run that died holding a claim (cancelled, so no onFailure) leaves its send
+      // in "sending", which would hold the campaign in sending forever. Release it for
+      // the fan-out; if the run is alive after all, the Resend key stops a second mail.
+      await prismadb.crm_campaign_sends.updateMany({
+        where: { campaign_id: args.id, status: "sending" },
+        data: { status: "queued" },
+      });
       await prismadb.crm_campaigns.update({ where: { id: args.id }, data: { status: "sending" } });
       await inngest.send({ name: "campaigns/send-now", data: { campaignId: args.id } });
       return itemResponse({ id: args.id, status: "sending" });
