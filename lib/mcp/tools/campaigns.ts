@@ -180,10 +180,12 @@ export const campaignTools = [
       }
       if (!(await campaignHasFirstStep(args.id))) conflict(NO_FIRST_STEP_MESSAGE);
       const now = new Date();
-      await prismadb.crm_campaigns.update({
-        where: { id: args.id },
+      // Conditional write: of two simultaneous calls only one moves the campaign and emits.
+      const { count } = await prismadb.crm_campaigns.updateMany({
+        where: { id: args.id, status: { in: ["draft", "scheduled"] } },
         data: { status: "sending", scheduled_at: now },
       });
+      if (count === 0) conflict("Cannot send campaign in status: sending");
       await inngest.send({ name: "campaigns/send-now", data: { campaignId: args.id } });
       return itemResponse({ id: args.id, status: "sending" });
     },
