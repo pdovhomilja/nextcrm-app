@@ -5,6 +5,11 @@
 // one it finds must be listed in REVIEWED with the reason it is safe; a new
 // action fails here until someone has looked at it. Behaviour is tested in
 // __tests__/authz/action-write-scope.test.ts and the other *-scope tests.
+//
+// Known gap: it scans actions/ only. Orders and leads write through a service
+// (lib/orders/service.ts, lib/crm/leads/service.ts) that checks scope itself, so
+// those writes are outside this scan; lib/orders/__tests__ and lib/crm/leads/__tests__
+// test their checks.
 import fs from "fs";
 import path from "path";
 import ts from "typescript";

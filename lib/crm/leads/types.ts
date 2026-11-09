@@ -28,3 +28,8 @@ export class LeadError extends Error {
     this.name = "LeadError";
   }
 }
+
+/** The server actions' message for a LeadError: "Lead status not found" for a wrong lookup id, else "Forbidden". */
+export function leadErrorMessage(e: LeadError): string {
+  return e.code === "notFound" ? `${e.message} not found` : "Forbidden";
+}

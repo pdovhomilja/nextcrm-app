@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 import * as svc from "@/lib/crm/leads/service";
-import { LeadError } from "@/lib/crm/leads/types";
+import { LeadError, leadErrorMessage } from "@/lib/crm/leads/types";
 
 export const updateLead = async (data: {
   id: string;
@@ -72,7 +72,7 @@ export const updateLead = async (data: {
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { data: lead };
   } catch (error) {
-    if (error instanceof LeadError && error.code === "forbidden") return { error: "Forbidden" };
+    if (error instanceof LeadError) return { error: leadErrorMessage(error) };
     const ruleMessage = await pluginRuleErrorMessage(error);
     if (ruleMessage) return { error: ruleMessage };
     console.log("[UPDATE_LEAD]", error);

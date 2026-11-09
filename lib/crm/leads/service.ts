@@ -69,7 +69,8 @@ export async function createLead(user: AuthzUser, input: LeadCreateInput) {
 /** Leads from the public web form (NEXTCRM_TOKEN): no signed-in user, so no scope check and no assignee. */
 export async function createWebLead(input: LeadCreateInput) {
   const lead = await prismadb.crm_Leads.create({ data: { v: 1, ...input } });
-  await writeAuditLog({ entityType: "lead", entityId: lead.id, action: "created", changes: null, userId: null });
+  // Marks the row as the web form's, as plugin writes record their plugin id.
+  await writeAuditLog({ entityType: "lead", entityId: lead.id, action: "created", changes: [{ field: "web_form", old: null, new: "create-lead-from-web" }] as never, userId: null });
   emitSaved(lead.id);
   return lead;
 }

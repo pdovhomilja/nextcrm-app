@@ -19,6 +19,7 @@ jest.mock("@/lib/prisma", () => ({
       findUnique: jest.fn().mockResolvedValue({ id: "l-1" }),
     },
     users: { findFirst: jest.fn().mockResolvedValue(null) },
+    crm_Lead_Statuses: { findUnique: jest.fn().mockResolvedValue(null) },
   },
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
@@ -56,6 +57,12 @@ describe("updateLead", () => {
     const res = await updateLead({ id: "victim", lastName: "X" } as any);
     expect(res).toEqual({ error: "Forbidden" });
     expect(assertLead).toHaveBeenCalledWith(OWNER, "victim", { partnerEdit: true });
+    expect(lUpdate).not.toHaveBeenCalled();
+  });
+
+  it("names a wrong status id instead of failing generically", async () => {
+    const res = await updateLead({ id: "l-1", lastName: "X", lead_status_id: "no-such-status" } as any);
+    expect(res).toEqual({ error: "Lead status not found" });
     expect(lUpdate).not.toHaveBeenCalled();
   });
 

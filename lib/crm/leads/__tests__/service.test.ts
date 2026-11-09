@@ -125,9 +125,11 @@ describe("deleteLead and restoreLead", () => {
   });
 });
 
-it("createWebLead writes an audit row without a user and sends crm/lead.saved", async () => {
+it("createWebLead writes an audit row marked as the web form's, without a user, and sends crm/lead.saved", async () => {
   await svc.createWebLead({ lastName: "X", email: "x@example.com" });
   expect(db.crm_Leads.create.mock.calls[0][0].data).toEqual({ v: 1, lastName: "X", email: "x@example.com" });
-  expect(writeAuditLog).toHaveBeenCalledWith(expect.objectContaining({ action: "created", userId: null }));
+  expect(writeAuditLog).toHaveBeenCalledWith(
+    expect.objectContaining({ action: "created", userId: null, changes: [{ field: "web_form", old: null, new: "create-lead-from-web" }] }),
+  );
   expect(inngest.send).toHaveBeenCalledWith({ name: "crm/lead.saved", data: { record_id: "L" } });
 });
