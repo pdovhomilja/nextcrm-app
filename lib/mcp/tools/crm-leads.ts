@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz";
-import { leadReadScopeWhere, assertCanWriteLead } from "@/lib/authz/scopes/crm";
+import { leadReadScopeWhere } from "@/lib/authz/scopes/crm";
+import { createLead, deleteLead, updateLead } from "@/lib/crm/leads/service";
+import { LeadError } from "@/lib/crm/leads/types";
 import {
   paginationSchema,
   paginationArgs,
@@ -9,24 +11,17 @@ import {
   itemResponse,
   ilike,
   notFound,
-  softDeleteData,
-  assertScopeOrNotFound,
 } from "../helpers";
-import { assertAssignableUser } from "@/lib/authz/assignable-user";
 
-// Status, source and type are rows in admin-managed lookup tables; agents read
-// their ids with crm_list_lead_options. A wrong id is NOT_FOUND, not an FK error.
-async function assertLeadOptions(args: {
-  lead_status_id?: string | null;
-  lead_source_id?: string | null;
-  lead_type_id?: string | null;
-}) {
-  if (args.lead_status_id && !(await prismadb.crm_Lead_Statuses.findUnique({ where: { id: args.lead_status_id } })))
-    notFound("Lead status");
-  if (args.lead_source_id && !(await prismadb.crm_Lead_Sources.findUnique({ where: { id: args.lead_source_id } })))
-    notFound("Lead source");
-  if (args.lead_type_id && !(await prismadb.crm_Lead_Types.findUnique({ where: { id: args.lead_type_id } })))
-    notFound("Lead type");
+// A denied lead or assignee is NOT_FOUND, like a missing one (no existence oracle).
+// Status, source and type ids come from crm_list_lead_options; a wrong one is NOT_FOUND too.
+async function guard<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (e instanceof LeadError) notFound("Lead");
+    throw e;
+  }
 }
 
 const leadDetailFields = {
@@ -155,13 +150,11 @@ export const crmLeadTools = [
         lead_source_id?: string;
         lead_type_id?: string;
       } & LeadDetailArgs,
-      userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
-      await assertLeadOptions(args);
-      const { lastName, ...rest } = args;
-      const lead = await prismadb.crm_Leads.create({
-        data: { v: 0, lastName, ...rest, assigned_to: userId, createdBy: userId },
-      });
+      // Always assigned to the caller, so there is nobody else to notify.
+      const lead = await guard(() => createLead(user, args));
       return itemResponse(lead);
     },
   },
@@ -198,22 +191,11 @@ export const crmLeadTools = [
         lead_source_id?: string | null;
         lead_type_id?: string | null;
       } & LeadDetailArgs,
-      userId: string,
+      _userId: string,
       user: AuthzUser
     ) {
-      await assertScopeOrNotFound(() => assertCanWriteLead(user, args.id), "Lead");
-      await assertLeadOptions(args);
-      const assignee = args.assigned_to;
-      if (assignee) await assertScopeOrNotFound(() => assertAssignableUser(user, assignee), "User");
-      const { id, assigned_to, ...updateData } = args;
-      const lead = await prismadb.crm_Leads.update({
-        where: { id },
-        data: {
-          ...updateData,
-          ...(assigned_to !== undefined && { assigned_to }),
-          updatedBy: userId,
-        },
-      });
+      const { id, ...input } = args;
+      const lead = await guard(() => updateLead(user, id, input));
       return itemResponse(lead);
     },
   },
@@ -221,12 +203,8 @@ export const crmLeadTools = [
     name: "crm_delete_lead",
     description: "Soft-delete a CRM lead by ID (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string, user: AuthzUser) {
-      await assertScopeOrNotFound(() => assertCanWriteLead(user, args.id), "Lead");
-      const lead = await prismadb.crm_Leads.update({
-        where: { id: args.id },
-        data: softDeleteData(userId),
-      });
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      const lead = await guard(() => deleteLead(user, args.id));
       return itemResponse({ id: lead.id, deletedAt: lead.deletedAt });
     },
   },
