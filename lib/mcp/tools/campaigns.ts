@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { inngest } from "@/inngest/client";
 import type { AuthzUser } from "@/lib/authz";
+import { isManagerOrAdmin } from "@/lib/authz/roles";
 import {
   assertCanReadTargetList,
   assertCanReadTemplate,
@@ -14,11 +15,19 @@ import {
   listResponse,
   itemResponse,
   notFound,
+  forbidden,
   conflict,
   softDeleteData,
   assertScopeOrNotFound,
 } from "../helpers";
 import { campaignHasFirstStep, NO_FIRST_STEP_MESSAGE } from "@/lib/campaigns/first-step";
+
+// Sending emails real people, so it is manager/admin-only, matching the server
+// actions' requireRole(["manager", "admin"]). Checked before the scope lookup,
+// as they do: a plain user gets FORBIDDEN whether or not the campaign exists.
+function assertCanSendCampaign(user: AuthzUser): void {
+  if (!isManagerOrAdmin(user)) forbidden();
+}
 
 // Object-level authorization for campaign tools (GHSA-c9vg-c532-ppqx).
 // Normal users are scoped to campaigns/templates they created; managers and
@@ -158,9 +167,10 @@ export const campaignTools = [
   // ── Send / Pause / Resume ─────────────────────────────
   {
     name: "campaigns_send",
-    description: "Trigger sending a campaign. Campaign must be in draft or scheduled status.",
+    description: "Trigger sending a campaign (manager or admin). Campaign must be in draft or scheduled status.",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      assertCanSendCampaign(user);
       const campaign = await prismadb.crm_campaigns.findFirst({
         where: { id: args.id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
@@ -170,10 +180,12 @@ export const campaignTools = [
       }
       if (!(await campaignHasFirstStep(args.id))) conflict(NO_FIRST_STEP_MESSAGE);
       const now = new Date();
-      await prismadb.crm_campaigns.update({
-        where: { id: args.id },
+      // Conditional write: of two simultaneous calls only one moves the campaign and emits.
+      const { count } = await prismadb.crm_campaigns.updateMany({
+        where: { id: args.id, status: { in: ["draft", "scheduled"] } },
         data: { status: "sending", scheduled_at: now },
       });
+      if (count === 0) conflict("Cannot send campaign in status: sending");
       await inngest.send({ name: "campaigns/send-now", data: { campaignId: args.id } });
       return itemResponse({ id: args.id, status: "sending" });
     },
@@ -195,15 +207,23 @@ export const campaignTools = [
   },
   {
     name: "campaigns_resume",
-    description: "Resume a paused campaign",
+    description: "Resume a paused campaign (manager or admin)",
     schema: z.object({ id: z.string().uuid() }),
     async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      assertCanSendCampaign(user);
       const campaign = await prismadb.crm_campaigns.findFirst({
         where: { id: args.id, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
       if (campaign.status !== "paused") conflict(`Cannot resume campaign in status: ${campaign.status}`);
       if (!(await campaignHasFirstStep(args.id))) conflict(NO_FIRST_STEP_MESSAGE);
+      // A run that died holding a claim (cancelled, so no onFailure) leaves its send
+      // in "sending", which would hold the campaign in sending forever. Release it for
+      // the fan-out; if the run is alive after all, the Resend key stops a second mail.
+      await prismadb.crm_campaign_sends.updateMany({
+        where: { campaign_id: args.id, status: "sending" },
+        data: { status: "queued" },
+      });
       await prismadb.crm_campaigns.update({ where: { id: args.id }, data: { status: "sending" } });
       await inngest.send({ name: "campaigns/send-now", data: { campaignId: args.id } });
       return itemResponse({ id: args.id, status: "sending" });

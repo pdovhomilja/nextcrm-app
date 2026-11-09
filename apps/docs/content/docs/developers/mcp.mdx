@@ -98,6 +98,7 @@ Your client lists each tool's input schema (from its zod definition) when it con
 - **Deletes are mostly soft deletes.** CRM records, campaigns, documents and boards get `deletedAt` and `deletedBy`. `projects_delete_task` deletes the task and its comments, as the UI does, and needs write access to the task's board (being the assignee is not enough). `projects_delete_section` hard-deletes, and only an empty section.
 - **Enrichment tools** queue Inngest jobs and return before the enrichment finishes.
 - **`crm_add_to_target_list`** adds only targets the caller can access, like the web app, and reports that number in `added`.
+- **Sending campaigns:** `campaigns_send` and `campaigns_resume` need the `manager` or `admin` role, like sending from the web app. A `user` token gets `FORBIDDEN`, whether or not the campaign exists. `campaigns_pause` stays open to a `user` on their own campaign, so a manager has to resume it.
 - **Documents:** `crm_create_document` and `crm_get_upload_url` return a presigned URL. The client uploads the file to object storage itself.
 
 ### Errors
@@ -107,7 +108,7 @@ Failed calls return `isError: true` and a JSON body `{ "error": "...", "code": "
 | Code | Meaning |
 | --- | --- |
 | `UNAUTHORIZED` | Missing, invalid, expired or revoked token, or the token's owner is not `ACTIVE` |
-| `FORBIDDEN` | The record exists but the user may not access it |
+| `FORBIDDEN` | The user's role may not use this tool, or the record exists but the user may not access it |
 | `NOT_FOUND` | No such record (or soft-deleted) |
 | `INVALID_PARAMS` | Validation failed |
 | `INVALID_REQUEST` | Conflict with existing data |

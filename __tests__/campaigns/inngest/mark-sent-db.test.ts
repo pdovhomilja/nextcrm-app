@@ -6,8 +6,10 @@
  */
 jest.mock("@/inngest/client", () => ({
   // Keep the options on the handler so tests can reach onFailure.
-  inngest: { createFunction: jest.fn((config: object, handler: object) => Object.assign(handler, { config })) },
+  inngest: { send: jest.fn(async () => ({})), createFunction: jest.fn((config: object, handler: object) => Object.assign(handler, { config })) },
 }));
+
+jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 
 const mockResendSend = jest.fn();
 jest.mock("@/lib/resend", () => ({
@@ -25,6 +27,8 @@ import { campaignSendNow } from "@/inngest/functions/campaigns/send-now";
 import { campaignScheduleSend } from "@/inngest/functions/campaigns/schedule-send";
 import { campaignProcessFollowUp } from "@/inngest/functions/campaigns/process-follow-up";
 import { markCampaignSentIfStep0Done } from "@/lib/campaigns/mark-campaign-sent";
+import { eligibleFollowUpSendsWhere } from "@/lib/campaigns/recipient-filters";
+import { campaignTools } from "@/lib/mcp/tools/campaigns";
 
 type Handler = (ctx: { event: { data: Record<string, unknown> }; step: unknown }) => Promise<unknown>;
 
@@ -166,11 +170,19 @@ describe("send-step marks the campaign sent when step 0 is finished", () => {
 });
 
 describe("send-step run that fails after its retries", () => {
-  it("marks the queued send failed and finishes the campaign when it was the last step-0 send", async () => {
+  it("marks a send that never got claimed failed", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+
+    await runSendStepFailure(campaignId, sendIds[0], "db down");
+
+    expect(await send(sendIds[0])).toEqual({ status: "failed", error_message: "db down" });
+  });
+
+  it("marks the claimed send failed and finishes the campaign when it was the last step-0 send", async () => {
     const { campaignId, sendIds } = await seed("sending", [{}]);
     mockResendSend.mockRejectedValue(new Error("Resend 503"));
     await expect(runSendStep(campaignId, sendIds[0])).rejects.toThrow("Resend 503");
-    expect(await send(sendIds[0])).toEqual({ status: "queued", error_message: null });
+    expect(await send(sendIds[0])).toEqual({ status: "sending", error_message: null });
 
     await runSendStepFailure(campaignId, sendIds[0], "Resend 503");
 
@@ -400,5 +412,260 @@ describe("markCampaignSentIfStep0Done write", () => {
 
     const after = await prismadb.crm_campaigns.findUniqueOrThrow({ where: { id: campaignId } });
     expect(after).toMatchObject({ status: data.status, sent_at: null });
+  });
+});
+
+// Holds every run after it loaded the row until all of them have, so each one
+// saw the row as sendable before any of them could write to it.
+function runOverlapping(campaignId: string, sendId: string, runs: number) {
+  let loaded = 0;
+  let open = () => {};
+  const allLoaded = new Promise<void>((resolve) => (open = resolve));
+  const step = () => {
+    const base = fakeStep();
+    return {
+      ...base,
+      run: async (name: string, fn: () => Promise<unknown>) => {
+        const result = await base.run(name, fn);
+        if (name === "load-send-record") {
+          if (++loaded === runs) open();
+          await allLoaded;
+        }
+        return result;
+      },
+    };
+  };
+  return Promise.all(
+    Array.from({ length: runs }, () =>
+      (campaignSendStep as unknown as Handler)({ event: { data: { sendId, campaignId } }, step: step() })
+    )
+  );
+}
+
+describe("overlapping send-step runs on one send", () => {
+  it.each([2, 8])("%i runs on a queued send make one Resend call", async (runs) => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+
+    await runOverlapping(campaignId, sendIds[0], runs);
+
+    expect(mockResendSend).toHaveBeenCalledTimes(1);
+    expect((await send(sendIds[0])).status).toBe("sent");
+    expect((await campaign(campaignId)).status).toBe("sent");
+  });
+
+  it("2 runs on a failed send being retried make one Resend call", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+    await prismadb.crm_campaign_sends.update({ where: { id: sendIds[0] }, data: { status: "failed" } });
+
+    await runOverlapping(campaignId, sendIds[0], 2);
+
+    expect(mockResendSend).toHaveBeenCalledTimes(1);
+    expect((await send(sendIds[0])).status).toBe("sent");
+  });
+});
+
+describe("a send claimed by a run, with its mail in flight", () => {
+  it("gets no follow-up yet: only a step-0 send that landed is eligible", async () => {
+    const { campaignId, stepId, sendIds } = await seed("sending", [{}]);
+    await prismadb.crm_campaign_sends.update({ where: { id: sendIds[0] }, data: { status: "sending" } });
+
+    const eligible = await prismadb.crm_campaign_sends.count({
+      where: eligibleFollowUpSendsWhere(stepId, "all"),
+    });
+
+    expect(eligible).toBe(0);
+  });
+
+  it("keeps the campaign sending while another recipient's run finishes", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}, { unsubscribed: true }]);
+    let statusInFlight;
+    mockResendSend.mockImplementation(async () => {
+      await runSendStep(campaignId, sendIds[1]);
+      statusInFlight = (await campaign(campaignId)).status;
+      return { data: { id: `resend-${randomUUID()}` }, error: null };
+    });
+
+    await runSendStep(campaignId, sendIds[0]);
+
+    expect(statusInFlight).toBe("sending");
+    expect((await campaign(campaignId)).status).toBe("sent");
+  });
+
+  it("a losing run that fails leaves one Resend call and a send recorded as sent", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+    let statusDuringLoserFailure;
+    mockResendSend.mockImplementation(async () => {
+      // Winner's mail is in flight; the loser used up its retries (e.g. on a DB blip).
+      await runSendStepFailure(campaignId, sendIds[0], "loser failed");
+      statusDuringLoserFailure = (await send(sendIds[0])).status;
+      return { data: { id: "resend-winner" }, error: null };
+    });
+
+    await runSendStep(campaignId, sendIds[0]);
+
+    expect(statusDuringLoserFailure).toBe("failed");
+    expect(mockResendSend).toHaveBeenCalledTimes(1);
+    expect((await send(sendIds[0])).status).toBe("sent");
+    expect((await campaign(campaignId)).status).toBe("sent");
+  });
+});
+
+describe("Resend idempotency key", () => {
+  // Resend as documented: an accepted request is stored per key and replayed; a
+  // failed one is not stored, so it can be retried with the same key.
+  function fakeResend() {
+    const accepted = new Map<string, string>();
+    const mails: string[] = [];
+    const respond = (_payload: unknown, options: { idempotencyKey: string }) => {
+      const replay = accepted.get(options.idempotencyKey);
+      if (replay) return { data: { id: replay }, error: null };
+      const id = `resend-${randomUUID()}`;
+      accepted.set(options.idempotencyKey, id);
+      mails.push(id);
+      return { data: { id }, error: null };
+    };
+    return { mails, respond };
+  }
+
+  // Inngest re-executes the handler on a step failure; finished steps are memoized.
+  function memoizingStep() {
+    const done = new Map<string, unknown>();
+    const base = fakeStep();
+    return {
+      ...base,
+      run: jest.fn(async (name: string, fn: () => Promise<unknown>) => {
+        if (!done.has(name)) done.set(name, await base.run(name, fn));
+        return done.get(name);
+      }),
+    };
+  }
+
+  const execute = (campaignId: string, sendId: string, step: unknown) =>
+    (campaignSendStep as unknown as Handler)({ event: { data: { sendId, campaignId } }, step });
+
+  it("a run retried after Resend accepted the mail but timed out sends one mail", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+    const resend = fakeResend();
+    mockResendSend
+      .mockImplementationOnce(async (...args: Parameters<typeof resend.respond>) => {
+        resend.respond(...args);
+        throw new Error("timeout");
+      })
+      .mockImplementation(async (...args: Parameters<typeof resend.respond>) => resend.respond(...args));
+    const step = memoizingStep();
+
+    await expect(execute(campaignId, sendIds[0], step)).rejects.toThrow("timeout");
+    await execute(campaignId, sendIds[0], step);
+
+    expect(mockResendSend).toHaveBeenCalledTimes(2);
+    expect(resend.mails).toHaveLength(1);
+    const row = await prismadb.crm_campaign_sends.findUniqueOrThrow({ where: { id: sendIds[0] } });
+    expect(row.status).toBe("sent");
+    expect(row.resend_message_id).toBe(resend.mails[0]);
+  });
+
+  it("the first attempt still in flight at Resend makes the step retry instead of failing the send", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+    mockResendSend.mockResolvedValueOnce({
+      data: null,
+      error: { name: "concurrent_idempotent_requests", statusCode: 409, message: "in progress" },
+    });
+    const step = memoizingStep();
+
+    await expect(execute(campaignId, sendIds[0], step)).rejects.toThrow("in progress");
+    expect((await send(sendIds[0])).status).toBe("sending");
+
+    await execute(campaignId, sendIds[0], step);
+    expect((await send(sendIds[0])).status).toBe("sent");
+  });
+
+  it("a send Resend refused can be retried with the same key on a resume", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+    const keys: string[] = [];
+    mockResendSend
+      .mockImplementationOnce(async (_payload: unknown, options: { idempotencyKey: string }) => {
+        keys.push(options.idempotencyKey);
+        return { data: null, error: { name: "rate_limit_exceeded", statusCode: 429, message: "slow down" } };
+      })
+      .mockImplementationOnce(async (_payload: unknown, options: { idempotencyKey: string }) => {
+        keys.push(options.idempotencyKey);
+        return { data: { id: "resend-retry" }, error: null };
+      });
+
+    await runSendStep(campaignId, sendIds[0]);
+    expect(await send(sendIds[0])).toEqual({ status: "failed", error_message: "slow down" });
+
+    await runSendStep(campaignId, sendIds[0]);
+    expect((await send(sendIds[0])).status).toBe("sent");
+    expect(keys).toEqual([`campaign-send/${sendIds[0]}`, `campaign-send/${sendIds[0]}`]);
+  });
+});
+
+describe("a send stuck in sending: its run died holding the claim (cancelled, no onFailure)", () => {
+  const MANAGER = { id: "m1", role: "manager" };
+  const pauseAndResume = async (campaignId: string) => {
+    await prismadb.crm_campaigns.update({ where: { id: campaignId }, data: { status: "paused" } });
+    const resume = campaignTools.find((t) => t.name === "campaigns_resume")!;
+    await (resume.handler as unknown as (a: object, id: string, u: object) => Promise<unknown>)(
+      { id: campaignId },
+      MANAGER.id,
+      MANAGER
+    );
+  };
+  const seedStuck = async () => {
+    const seeded = await seed("sending", [{}]);
+    await prismadb.crm_campaign_sends.update({ where: { id: seeded.sendIds[0] }, data: { status: "sending" } });
+    return seeded;
+  };
+
+  it("keeps the campaign sending and a new run does not email it", async () => {
+    const { campaignId, sendIds } = await seedStuck();
+
+    const result = await runSendStep(campaignId, sendIds[0]);
+
+    expect(result).toEqual({ skipped: true, reason: "already sending" });
+    expect(mockResendSend).not.toHaveBeenCalled();
+    expect((await campaign(campaignId)).status).toBe("sending");
+  });
+
+  it("pause and resume sends it and finishes the campaign", async () => {
+    const { campaignId, sendIds } = await seedStuck();
+
+    await pauseAndResume(campaignId);
+    await runSendStep(campaignId, sendIds[0]);
+
+    expect(mockResendSend).toHaveBeenCalledTimes(1);
+    expect((await send(sendIds[0])).status).toBe("sent");
+    expect((await campaign(campaignId)).status).toBe("sent");
+  });
+
+  it("resume does not touch a send of another campaign", async () => {
+    const stuck = await seedStuck();
+    const other = await seedStuck();
+
+    await pauseAndResume(stuck.campaignId);
+
+    expect((await send(other.sendIds[0])).status).toBe("sending");
+  });
+
+  it("a resume while the mail is really in flight still sends one mail: the key stops the second", async () => {
+    const { campaignId, sendIds } = await seed("sending", [{}]);
+    let inFlight = false;
+    let mails = 0;
+    mockResendSend.mockImplementation(async () => {
+      if (inFlight) {
+        return { data: null, error: { name: "concurrent_idempotent_requests", statusCode: 409, message: "in progress" } };
+      }
+      inFlight = true;
+      mails++;
+      await pauseAndResume(campaignId);
+      await expect(runSendStep(campaignId, sendIds[0])).rejects.toThrow("in progress");
+      return { data: { id: "resend-first" }, error: null };
+    });
+
+    await runSendStep(campaignId, sendIds[0]);
+
+    expect(mails).toBe(1);
+    expect((await send(sendIds[0])).status).toBe("sent");
   });
 });

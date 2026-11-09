@@ -15,6 +15,7 @@ type Send = {
 
 const STATUS_COLORS: Record<string, string> = {
   queued: "text-gray-500",
+  sending: "text-gray-500",
   sent: "text-blue-600",
   delivered: "text-green-600",
   bounced: "text-red-600",
@@ -51,7 +52,7 @@ export default function RecipientsTable({ sends }: { sends: Send[] }) {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          {["all", "queued", "sent", "delivered", "bounced", "failed"].map((s) => (
+          {["all", "queued", "sending", "sent", "delivered", "bounced", "failed"].map((s) => (
             <option key={s} value={s}>
               {s === "all" ? "All statuses" : s.charAt(0).toUpperCase() + s.slice(1)}
             </option>
