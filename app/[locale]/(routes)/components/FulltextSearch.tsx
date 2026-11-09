@@ -10,7 +10,7 @@ const FulltextSearch = () => {
   const router = useRouter();
 
   const handleSearch = async () => {
-    router.push(`/fulltext-search?q=${search}`);
+    router.push(`/fulltext-search?q=${encodeURIComponent(search)}`);
     setSearch("");
   };
 
