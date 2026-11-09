@@ -176,9 +176,9 @@ Writes (create/update/delete) require a manager or admin role; reads are open to
 - **campaigns_create** — Create a new campaign
 - **campaigns_update** — Update a campaign by ID
 - **campaigns_delete** — Soft-delete a campaign (sets deletedAt timestamp)
-- **campaigns_send** — Trigger sending a campaign (must be in draft or scheduled status)
+- **campaigns_send** — Trigger sending a campaign (must be in draft or scheduled status; manager or admin only)
 - **campaigns_pause** — Pause an active/sending campaign
-- **campaigns_resume** — Resume a paused campaign
+- **campaigns_resume** — Resume a paused campaign (manager or admin only)
 - **campaigns_list_templates** — List campaign email templates (org-wide)
 - **campaigns_get_template** — Get a campaign template by ID
 - **campaigns_create_template** — Create a campaign email template

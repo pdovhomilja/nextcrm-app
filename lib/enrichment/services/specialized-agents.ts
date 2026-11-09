@@ -1,6 +1,7 @@
 import { Agent, tool } from '@openai/agents';
 import { z } from 'zod';
-import FirecrawlApp from '@mendable/firecrawl-js';
+import FirecrawlApp, { type SearchRequest } from '@mendable/firecrawl-js';
+import { webResults } from './firecrawl';
 import type { EnrichmentField } from '../types';
 
 // Specialized search tool that each agent will use
@@ -16,13 +17,13 @@ const createSpecializedSearchTool = (firecrawl: FirecrawlApp) => tool({
     
     for (const query of queries) {
       try {
-        const options: { limit: number; scrapeOptions?: { formats: string[] } } = { limit: 3 };
+        const options: Omit<SearchRequest, 'query'> = { limit: 3, highlights: false };
         if (scrapeContent) {
           options.scrapeOptions = { formats: ['markdown'] };
         }
         
         const results = await firecrawl.search(query, options);
-        allResults.push(...results.data);
+        allResults.push(...webResults(results));
       } catch (error) {
         console.error(`Search failed for query "${query}":`, error);
       }
