@@ -5,6 +5,16 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.38.2...v0.38.3) (2026-11-09)
+
+
+### Fixed
+
+* claim a campaign send row before emailing it ([3ff3a91](https://github.com/pdovhomilja/nextcrm-app/commit/3ff3a91ed7b2aa2c1a42083ce1fe410bfd5f182c))
+* emit campaigns/send-now only from the call that moved the campaign ([e34504a](https://github.com/pdovhomilja/nextcrm-app/commit/e34504a0718bb2b0e2d5a1c21ac4d1fe94a3e629))
+* resuming a campaign releases sends stuck in sending ([36276b1](https://github.com/pdovhomilja/nextcrm-app/commit/36276b16590f117541f63b1c3529b09a93238402))
+* stop duplicate campaign sends with an atomic send claim and conditional send-now ([6412908](https://github.com/pdovhomilja/nextcrm-app/commit/64129087a9e1a23eb21d18e27b53bcffe2f3a309))
+
 ## [0.38.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.38.1...v0.38.2) (2026-11-09)
 
 
