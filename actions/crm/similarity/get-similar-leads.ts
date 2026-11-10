@@ -41,10 +41,11 @@ export async function getSimilarLeads(
     const similar = await prismadb.$queryRaw<
       { id: string; firstName: string | null; lastName: string; status: string | null; similarity: number }[]
     >`
-      SELECT l.id, l."firstName", l."lastName", l.status,
+      SELECT l.id, l."firstName", l."lastName", s.name AS status,
              1 - (e.embedding <=> ${sourceEmbedding}::vector) AS similarity
       FROM   "crm_Leads" l
       JOIN   "crm_Embeddings_Leads" e ON e.lead_id = l.id
+      LEFT JOIN "crm_Lead_Statuses" s ON s.id = l.lead_status_id
       WHERE  l.id != ${recordId}::uuid
       ORDER  BY e.embedding <=> ${sourceEmbedding}::vector
       LIMIT  ${overFetch}
