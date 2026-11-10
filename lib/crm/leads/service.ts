@@ -75,13 +75,18 @@ export async function createWebLead(input: LeadCreateInput) {
   return lead;
 }
 
-/** A partner never changes the assignee or unlinks the account, and may relink only to another of his accounts. */
+/**
+ * Linking a lead to another account needs write access to that account, as in createLead; re-saving the
+ * current link (the form sends it on every save) and unlinking are not checked. A partner never changes the
+ * assignee or unlinks the account, so he may relink only to another of his accounts.
+ */
 export async function updateLead(user: AuthzUser, id: string, input: LeadInput) {
   await guard(() => assertCanWriteLead(user, id, PARTNER_EDIT));
-  const partner = user.role === "partner";
-  if (partner && input.accountsIDs) await guard(() => assertCanWriteAccount(user, input.accountsIDs!, PARTNER_EDIT));
-  const data = partner ? { ...input, assigned_to: undefined, accountsIDs: input.accountsIDs || undefined } : input;
   const before = await prismadb.crm_Leads.findUnique({ where: { id, deletedAt: null } });
+  const { accountsIDs } = input;
+  if (accountsIDs && accountsIDs !== before?.accountsIDs) await guard(() => assertCanWriteAccount(user, accountsIDs, PARTNER_EDIT));
+  const partner = user.role === "partner";
+  const data = partner ? { ...input, assigned_to: undefined, accountsIDs: input.accountsIDs || undefined } : input;
   // Only a new assignee other than the caller is checked and mailed; re-saving the current one is neither.
   const { assigned_to } = data;
   const newAssignee = assigned_to && assigned_to !== before?.assigned_to && assigned_to !== user.id ? assigned_to : null;
