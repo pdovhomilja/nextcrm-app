@@ -62,7 +62,7 @@ beforeEach(() => {
   assertOpp.mockResolvedValue(undefined);
   assertAccount.mockResolvedValue(undefined);
   assertCampaign.mockResolvedValue(undefined);
-  oFind.mockResolvedValue({ id: "o-1", sales_stage: null, approval_status: "NONE", campaign: "stored-camp" });
+  oFind.mockResolvedValue({ id: "o-1", sales_stage: null, approval_status: "NONE", campaign: "stored-camp", account: "stored-acc" });
 });
 
 describe("updateOpportunity", () => {
@@ -164,6 +164,46 @@ describe("updateOpportunity campaign", () => {
     const res = await updateOpportunity({ id: "o-1", name: "New", campaign: "stored-camp" } as any);
     expect(res).not.toHaveProperty("error");
     expect(assertCampaign).not.toHaveBeenCalled();
+    expect(oUpdate).toHaveBeenCalled();
+  });
+});
+
+describe("updateOpportunity account", () => {
+  const PARTNER = { id: "partner", role: "partner" };
+
+  it("refuses a move to an account outside the user's write scope and does not update", async () => {
+    assertAccount.mockRejectedValue(new AuthorizationError());
+    const res = await updateOpportunity({ id: "o-1", account: "foreign-acc" } as any);
+    expect(res).toEqual({ error: "Forbidden" });
+    expect(assertAccount).toHaveBeenCalledWith(OWNER, "foreign-acc", { partnerEdit: true });
+    expect(oUpdate).not.toHaveBeenCalled();
+  });
+
+  it("saves when the form re-sends the stored account, even one outside the user's scope", async () => {
+    assertAccount.mockRejectedValue(new AuthorizationError());
+    const res = await updateOpportunity({ id: "o-1", name: "New", account: "stored-acc" } as any);
+    expect(res).not.toHaveProperty("error");
+    expect(assertAccount).not.toHaveBeenCalled();
+    expect(oUpdate).toHaveBeenCalled();
+  });
+
+  it("does not check an account when none is sent", async () => {
+    await updateOpportunity({ id: "o-1", name: "New" } as any);
+    expect(assertAccount).not.toHaveBeenCalled();
+    expect(oUpdate).toHaveBeenCalled();
+  });
+
+  it("partner: a new account is checked and refused, the stored one still saves", async () => {
+    authed.mockResolvedValue(PARTNER);
+    assertAccount.mockRejectedValue(new AuthorizationError());
+    expect(await updateOpportunity({ id: "o-1", account: "other-acc" } as any)).toEqual({ error: "Forbidden" });
+    expect(assertAccount).toHaveBeenCalledWith(PARTNER, "other-acc", { partnerEdit: true });
+    expect(oUpdate).not.toHaveBeenCalled();
+
+    assertAccount.mockClear();
+    const res = await updateOpportunity({ id: "o-1", name: "New", account: "stored-acc" } as any);
+    expect(res).not.toHaveProperty("error");
+    expect(assertAccount).not.toHaveBeenCalled();
     expect(oUpdate).toHaveBeenCalled();
   });
 });

@@ -65,15 +65,17 @@ export const updateOpportunity = async (data: {
   }
   try {
     await assertCanWriteOpportunity(user, id, PARTNER_EDIT);
-    // A partner may move an opportunity only to another of his accounts / contacts.
-    if (user.role === "partner" && account) await assertCanWriteAccount(user, account, PARTNER_EDIT);
+    // A new account or campaign link needs write on the account (as in createOpportunity) or read on the
+    // campaign. The form re-sends the stored ids, which must keep saving even when they are outside the
+    // user's scope.
+    const stored =
+      account || campaign
+        ? await prismadb.crm_Opportunities.findUnique({ where: { id }, select: { account: true, campaign: true } })
+        : null;
+    if (account && account !== stored?.account) await assertCanWriteAccount(user, account, PARTNER_EDIT);
+    // A partner may move an opportunity only to another of his contacts.
     if (user.role === "partner" && contact) await assertCanWriteContact(user, contact, PARTNER_EDIT);
-    // A new campaign link requires read on the campaign. The form re-sends the
-    // stored id, which must keep saving even when it is outside the user's scope.
-    if (campaign) {
-      const stored = await prismadb.crm_Opportunities.findUnique({ where: { id }, select: { campaign: true } });
-      if (campaign !== stored?.campaign) await assertCanReadCampaign(user, campaign);
-    }
+    if (campaign && campaign !== stored?.campaign) await assertCanReadCampaign(user, campaign);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
