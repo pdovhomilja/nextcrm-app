@@ -118,10 +118,10 @@ export class EnrichmentStrategy {
         console.log(`[EnrichmentStrategy] Attempting direct scrape of ${websiteUrl}`);
         const directScrape = await this.firecrawl.scrapeUrl(websiteUrl);
         
-        if (directScrape.data && directScrape.data.markdown) {
-          console.log(`[EnrichmentStrategy] Direct scrape successful for ${emailDomain}, content length: ${directScrape.data.markdown.length}`);
+        if (directScrape.markdown) {
+          console.log(`[EnrichmentStrategy] Direct scrape successful for ${emailDomain}, content length: ${directScrape.markdown.length}`);
           // Add the direct scrape as the first search result
-          const scrapeData = directScrape.data as Record<string, unknown>;
+          const scrapeData = directScrape.metadata as Record<string, unknown> | undefined;
           const metadata: SearchResult['metadata'] = {};
           // Only include string values in metadata
           if (scrapeData) {
@@ -136,7 +136,7 @@ export class EnrichmentStrategy {
             url: websiteUrl,
             title: scrapeData?.title as string || `${emailDomain} - Official Website`,
             description: scrapeData?.description as string || '',
-            markdown: directScrape.data.markdown,
+            markdown: directScrape.markdown,
             metadata
           });
         }
