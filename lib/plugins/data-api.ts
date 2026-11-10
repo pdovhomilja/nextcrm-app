@@ -4,6 +4,7 @@ import { PluginPermissionError } from "./errors";
 import { runAsActor } from "./actor";
 import { writePluginLog } from "./log";
 import { CAMPAIGN_NOT_DELETED } from "@/lib/authz/scopes/campaign-not-deleted";
+import type { AuditEntityType } from "@/lib/audit-log";
 
 type Delegate = {
   findUnique(a: unknown): Promise<unknown>;
@@ -25,6 +26,13 @@ const SAVED_EVENT: Record<string, string> = {
   crm_Leads: "crm/lead.saved",
   crm_Opportunities: "crm/opportunity.saved",
   crm_Orders: "crm/order.saved",
+};
+
+const AUDIT_TYPE: Record<string, AuditEntityType> = {
+  crm_Accounts: "account",
+  crm_Contacts: "contact",
+  crm_Leads: "lead",
+  crm_Opportunities: "opportunity",
 };
 
 const LOGICAL = new Set(["AND", "OR", "NOT"]);
@@ -93,12 +101,20 @@ export function createDataApi(pluginId: string, permissions: Permission[]): Data
     async create(data) {
       need(w);
       const row = (await runAsActor({ type: "plugin", pluginId }, async () => (await db())[model].create({ data: { v: 0, ...data } }))) as RecordData;
+      const { writeAuditLog } = await import("@/lib/audit-log");
+      await writeAuditLog({ entityType: AUDIT_TYPE[model], entityId: row.id as string, action: "created", changes: [{ field: "plugin", old: null, new: pluginId }], userId: null });
       await emitSaved(pluginId, model, row.id as string);
       return row;
     },
     async update(id, data) {
       need(w);
+      const before = (await (await db())[model].findUnique({ where: { id } })) as RecordData | null;
       const row = (await runAsActor({ type: "plugin", pluginId }, async () => (await db())[model].update({ where: { id }, data }))) as RecordData;
+      const { writeAuditLog, diffObjects } = await import("@/lib/audit-log");
+      const changes = [{ field: "plugin", old: null, new: pluginId }, ...(before ? diffObjects(before, row) : [])];
+      // A plugin soft-deletes or restores by setting deletedAt (EntityApi has no delete).
+      const action = !before?.deletedAt && row.deletedAt ? "deleted" : before?.deletedAt && !row.deletedAt ? "restored" : "updated";
+      await writeAuditLog({ entityType: AUDIT_TYPE[model], entityId: id, action, changes, userId: null });
       await emitSaved(pluginId, model, id);
       return row;
     },
