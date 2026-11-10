@@ -1,9 +1,6 @@
 "use server";
-import { revalidatePath } from "next/cache";
-import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
-import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 import * as svc from "@/lib/crm/leads/service";
-import { LeadError, leadErrorMessage } from "@/lib/crm/leads/types";
+import { runLeadAction } from "./run";
 
 export const createLead = async (data: {
   first_name?: string;
@@ -38,15 +35,7 @@ export const createLead = async (data: {
     accountIDs,
   } = data;
 
-  let user;
-  try {
-    user = await requireAuthenticated({ partner: true });
-  } catch (e) {
-    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
-    throw e;
-  }
-
-  try {
+  return runLeadAction({ verb: "create", auth: { partner: true } }, async (user) => {
     // The form sends "" for an empty select; that means "not set".
     const lead = await svc.createLead(user, {
       firstName: first_name,
@@ -64,13 +53,6 @@ export const createLead = async (data: {
       assigned_to: assigned_to || undefined,
       accountsIDs: accountIDs || undefined,
     });
-    revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { data: lead };
-  } catch (error) {
-    if (error instanceof LeadError) return { error: leadErrorMessage(error) };
-    const ruleMessage = await pluginRuleErrorMessage(error);
-    if (ruleMessage) return { error: ruleMessage };
-    console.log("[CREATE_LEAD]", error);
-    return { error: "Failed to create lead" };
-  }
+  });
 };
