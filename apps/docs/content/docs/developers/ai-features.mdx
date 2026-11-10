@@ -50,6 +50,8 @@ Uploaded documents follow a similar path: `document/uploaded` triggers `document
 
 Both apply the caller's permission scope: find similar checks the source record with `assertCanRead…` and filters results with `filterAuthorized…Ids`, and unified search uses `getReportScope`. Do the same when you add a new vector query.
 
+Embedding rows stay when a record is soft-deleted, so a restore needs no new embedding. Each vector query therefore joins the record's table and filters `"deletedAt" IS NULL` before `LIMIT`; otherwise deleted records closer to the query take result slots from live ones. Keep that filter in any new vector query.
+
 ## Enrichment
 
 Enrichment fills empty fields on contacts and targets from public web data. It runs as Inngest functions triggered from the UI, the `/api/crm/...` enrich routes, or the MCP enrichment tools.

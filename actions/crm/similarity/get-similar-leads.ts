@@ -46,7 +46,7 @@ export async function getSimilarLeads(
       FROM   "crm_Leads" l
       JOIN   "crm_Embeddings_Leads" e ON e.lead_id = l.id
       LEFT JOIN "crm_Lead_Statuses" s ON s.id = l.lead_status_id
-      WHERE  l.id != ${recordId}::uuid
+      WHERE  l.id != ${recordId}::uuid AND l."deletedAt" IS NULL
       ORDER  BY e.embedding <=> ${sourceEmbedding}::vector
       LIMIT  ${overFetch}
     `;
