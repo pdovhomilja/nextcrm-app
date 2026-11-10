@@ -1,17 +1,9 @@
 "use server";
-import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
-import sendEmail from "@/lib/sendmail";
-import { inngest } from "@/inngest/client";
-import { writeAuditLog } from "@/lib/audit-log";
-import {
-  requireAuthenticated,
-  assertCanWriteAccount,
-  PARTNER_EDIT,
-  AuthenticationError,
-  AuthorizationError,
-} from "@/lib/authz";
+import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import * as svc from "@/lib/crm/leads/service";
+import { LeadError, leadErrorMessage } from "@/lib/crm/leads/types";
 
 export const createLead = async (data: {
   first_name?: string;
@@ -53,73 +45,29 @@ export const createLead = async (data: {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;
   }
-  try {
-    // Parent-write: linking the new lead to an account requires write on it.
-    // A partner creates leads on his accounts only.
-    if (user.role === "partner" && !accountIDs) throw new AuthorizationError();
-    if (accountIDs) await assertCanWriteAccount(user, accountIDs, PARTNER_EDIT);
-  } catch (e) {
-    if (e instanceof AuthorizationError) return { error: "Forbidden" };
-    throw e;
-  }
-  const userId = user.id;
 
   try {
-    const lead = await prismadb.crm_Leads.create({
-      data: {
-        v: 1,
-        createdBy: userId,
-        updatedBy: userId,
-        firstName: first_name,
-        lastName: last_name,
-        company,
-        jobTitle,
-        email,
-        phone,
-        description,
-        lead_source_id: lead_source_id || undefined,
-        lead_status_id: lead_status_id || undefined,
-        lead_type_id: lead_type_id || undefined,
-        refered_by: refered_by || undefined,
-        campaign: campaign || undefined,
-        // A partner assigns only to himself.
-        assigned_to: user.role === "partner" ? userId : assigned_to || userId,
-        accountsIDs: accountIDs || undefined,
-      },
+    // The form sends "" for an empty select; that means "not set".
+    const lead = await svc.createLead(user, {
+      firstName: first_name,
+      lastName: last_name,
+      company,
+      jobTitle,
+      email,
+      phone,
+      description,
+      lead_source_id: lead_source_id || undefined,
+      lead_status_id: lead_status_id || undefined,
+      lead_type_id: lead_type_id || undefined,
+      refered_by: refered_by || undefined,
+      campaign: campaign || undefined,
+      assigned_to: assigned_to || undefined,
+      accountsIDs: accountIDs || undefined,
     });
-
-    if (assigned_to && assigned_to !== userId) {
-      const notifyRecipient = await prismadb.users.findFirst({
-        where: { id: assigned_to },
-      });
-
-      if (notifyRecipient?.email) {
-        await sendEmail({
-          from: process.env.EMAIL_FROM as string,
-          to: notifyRecipient.email,
-          subject:
-            notifyRecipient.userLanguage === "en"
-              ? `New lead ${first_name} ${last_name} has been added to the system and assigned to you.`
-              : `Nová příležitost ${first_name} ${last_name} byla přidána do systému a přidělena vám.`,
-          text:
-            notifyRecipient.userLanguage === "en"
-              ? `New lead ${first_name} ${last_name} has been added to the system and assigned to you. You can click here for detail: ${process.env.NEXT_PUBLIC_APP_URL}/crm/leads/${lead.id}`
-              : `Nová příležitost ${first_name} ${last_name} byla přidána do systému a přidělena vám. Detaily naleznete zde: ${process.env.NEXT_PUBLIC_APP_URL}/crm/leads/${lead.id}`,
-        });
-      }
-    }
-
-    await writeAuditLog({
-      entityType: "lead",
-      entityId: lead.id,
-      action: "created",
-      changes: null,
-      userId: user.id,
-    });
-    void inngest.send({ name: "crm/lead.saved", data: { record_id: lead.id } });
     revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { data: lead };
   } catch (error) {
+    if (error instanceof LeadError) return { error: leadErrorMessage(error) };
     const ruleMessage = await pluginRuleErrorMessage(error);
     if (ruleMessage) return { error: ruleMessage };
     console.log("[CREATE_LEAD]", error);

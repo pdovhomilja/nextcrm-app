@@ -2,9 +2,11 @@
 // (description, campaign, referral, status/source/type); crm_list_lead_options
 // exposes the lookup ids those fields need.
 
+jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn() } }));
+jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn(), diffObjects: jest.fn(() => []) }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    crm_Leads: { create: jest.fn(), update: jest.fn() },
+    crm_Leads: { create: jest.fn(), update: jest.fn(), findUnique: jest.fn() },
     crm_Lead_Statuses: { findMany: jest.fn(), findUnique: jest.fn() },
     crm_Lead_Sources: { findMany: jest.fn(), findUnique: jest.fn() },
     crm_Lead_Types: { findMany: jest.fn(), findUnique: jest.fn() },

@@ -2,15 +2,14 @@
 // (GHSA-qwhm-9fcm-p878). Denial tests must fail against the pre-guard code.
 
 jest.mock("@/lib/authz", () => ({
-  PARTNER_EDIT: { partnerEdit: true },
   requireAuthenticated: jest.fn(),
+  AuthenticationError: class AuthenticationError extends Error {},
+}));
+// The checks run in lib/crm/leads/service.ts, which imports the leaf modules.
+jest.mock("@/lib/authz/scopes/crm", () => ({
+  PARTNER_EDIT: { partnerEdit: true },
   assertCanWriteLead: jest.fn(),
   assertCanWriteAccount: jest.fn(),
-  AuthenticationError: class AuthenticationError extends Error {},
-  AuthorizationError: class AuthorizationError extends Error {},
-}));
-jest.mock("@/lib/auth-server", () => ({
-  getSession: jest.fn().mockResolvedValue({ user: { id: "owner" } }),
 }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
@@ -20,6 +19,7 @@ jest.mock("@/lib/prisma", () => ({
       findUnique: jest.fn().mockResolvedValue({ id: "l-1" }),
     },
     users: { findFirst: jest.fn().mockResolvedValue(null) },
+    crm_Lead_Statuses: { findUnique: jest.fn().mockResolvedValue(null) },
   },
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
@@ -27,16 +27,14 @@ jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn(), diffObjects: jes
 jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn() } }));
 jest.mock("@/lib/sendmail", () => ({ __esModule: true, default: jest.fn() }));
 
-import {
-  requireAuthenticated,
-  assertCanWriteLead,
-  assertCanWriteAccount,
-  AuthorizationError,
-} from "@/lib/authz";
+import { requireAuthenticated } from "@/lib/authz";
+import { assertCanWriteLead, assertCanWriteAccount } from "@/lib/authz/scopes/crm";
+import { AuthorizationError } from "@/lib/authz/errors";
 import { prismadb } from "@/lib/prisma";
 import { createLead } from "@/actions/crm/leads/create-lead";
 import { updateLead } from "@/actions/crm/leads/update-lead";
 import { deleteLead } from "@/actions/crm/leads/delete-lead";
+import { restoreLead } from "@/actions/crm/leads/restore-lead";
 
 const authed = requireAuthenticated as jest.Mock;
 const assertLead = assertCanWriteLead as jest.Mock;
@@ -59,6 +57,12 @@ describe("updateLead", () => {
     const res = await updateLead({ id: "victim", lastName: "X" } as any);
     expect(res).toEqual({ error: "Forbidden" });
     expect(assertLead).toHaveBeenCalledWith(OWNER, "victim", { partnerEdit: true });
+    expect(lUpdate).not.toHaveBeenCalled();
+  });
+
+  it("names a wrong status id instead of failing generically", async () => {
+    const res = await updateLead({ id: "l-1", lastName: "X", lead_status_id: "no-such-status" } as any);
+    expect(res).toEqual({ error: "Lead status not found" });
     expect(lUpdate).not.toHaveBeenCalled();
   });
 
@@ -97,5 +101,18 @@ describe("createLead", () => {
     await createLead({ last_name: "X" } as any);
     expect(assertAccount).not.toHaveBeenCalled();
     expect(lCreate).toHaveBeenCalled();
+  });
+});
+
+describe("restoreLead", () => {
+  it("refuses a non-admin and does not restore", async () => {
+    await expect(restoreLead("l-1")).resolves.toEqual({ error: "Forbidden" });
+    expect(lUpdate).not.toHaveBeenCalled();
+  });
+
+  it("restores for an admin", async () => {
+    authed.mockResolvedValue({ id: "admin", role: "admin" });
+    await expect(restoreLead("l-1")).resolves.toEqual({ success: true });
+    expect(lUpdate).toHaveBeenCalledWith({ where: { id: "l-1" }, data: { deletedAt: null, deletedBy: null } });
   });
 });
