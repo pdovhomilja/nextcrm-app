@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.0...v0.39.1) (2026-11-10)
+
+
+### Fixed
+
+* **search:** URL-encode the top search box query ([3a54fa9](https://github.com/pdovhomilja/nextcrm-app/commit/3a54fa97dc849b584663dabc63992a6e55b51801))
+
 ## [0.39.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.38.4...v0.39.0) (2026-11-10)
 
 
