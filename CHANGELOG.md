@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.1...v0.39.2) (2026-11-10)
+
+
+### Fixed
+
+* **campaigns:** scheduled run skips a campaign already sent now ([f0f6928](https://github.com/pdovhomilja/nextcrm-app/commit/f0f692888876d08f966185256b0c5376f60f3608))
+* **campaigns:** scheduled run skips a campaign already sent now ([f481efc](https://github.com/pdovhomilja/nextcrm-app/commit/f481efc59cb1eb1ae3d5131774ffba5a20196841))
+
 ## [0.39.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.0...v0.39.1) (2026-11-10)
 
 
