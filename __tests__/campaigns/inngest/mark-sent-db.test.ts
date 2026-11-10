@@ -36,6 +36,7 @@ const tag = randomUUID().slice(0, 8);
 const templateId = randomUUID();
 const campaignIds: string[] = [];
 const targetIds: string[] = [];
+const listIds: string[] = [];
 
 function fakeStep() {
   return {
@@ -111,6 +112,7 @@ beforeEach(() => {
 afterAll(async () => {
   await prismadb.crm_campaign_sends.deleteMany({ where: { campaign_id: { in: campaignIds } } });
   await prismadb.crm_campaigns.deleteMany({ where: { id: { in: campaignIds } } });
+  await prismadb.crm_TargetLists.deleteMany({ where: { id: { in: listIds } } });
   await prismadb.crm_Targets.deleteMany({ where: { id: { in: targetIds } } });
   await prismadb.crm_campaign_templates.deleteMany({ where: { id: templateId } });
   await prismadb.$disconnect();
@@ -667,5 +669,59 @@ describe("a send stuck in sending: its run died holding the claim (cancelled, no
 
     expect(mails).toBe(1);
     expect((await send(sendIds[0])).status).toBe("sent");
+  });
+});
+
+describe("the schedule-send run of a campaign that was sent early", () => {
+  // The campaign's target list: the recipients of its step-0 sends plus one
+  // added later, which only a run that should not happen would pick up.
+  async function linkList(campaignId: string, sendIds: string[]) {
+    const listId = randomUUID();
+    listIds.push(listId);
+    await prismadb.crm_TargetLists.create({ data: { id: listId, name: `ms-${tag}` } });
+    await prismadb.campaignToTargetLists.create({ data: { campaign_id: campaignId, target_list_id: listId } });
+    const sends = await prismadb.crm_campaign_sends.findMany({ where: { id: { in: sendIds } }, select: { target_id: true } });
+    const lateId = randomUUID();
+    targetIds.push(lateId);
+    await prismadb.crm_Targets.create({ data: { id: lateId, last_name: `ms-${tag}`, email: `late-${lateId.slice(0, 6)}@ms-${tag}.test` } });
+    for (const id of [...sends.map((s) => s.target_id), lateId]) {
+      await prismadb.targetsToTargetLists.create({ data: { target_id: id, target_list_id: listId } });
+    }
+  }
+
+  const runScheduleSend = (campaignId: string, step: ReturnType<typeof fakeStep>) =>
+    (campaignScheduleSend as unknown as Handler)({
+      event: { data: { campaignId, scheduledAt: "2002-01-01T00:00:00Z" } },
+      step,
+    });
+
+  // Covers a missed or late campaigns/send-now cancel: the woken run itself
+  // must see that the campaign is no longer scheduled.
+  it.each(["sending", "sent"])("does nothing when the campaign is already %s", async (status) => {
+    const { campaignId, sendIds } = await seed(status, [{}]);
+    await prismadb.crm_campaign_sends.update({ where: { id: sendIds[0] }, data: { status: "sent" } });
+    const sentAt = new Date("2002-01-01T10:00:00Z");
+    await prismadb.crm_campaigns.update({ where: { id: campaignId }, data: { sent_at: status === "sent" ? sentAt : null } });
+    await linkList(campaignId, sendIds);
+    const step = fakeStep();
+
+    expect(await runScheduleSend(campaignId, step)).toEqual({ skipped: true, reason: status });
+
+    expect(step.sendEvent).not.toHaveBeenCalled();
+    expect(await prismadb.crm_campaign_sends.count({ where: { campaign_id: campaignId } })).toBe(1);
+    expect(await campaign(campaignId)).toEqual({ status, sent_at: status === "sent" ? sentAt : null });
+  });
+
+  it("a scheduled campaign nobody touched still goes out at its time", async () => {
+    const { campaignId, sendIds } = await seed("scheduled", [{}]);
+    await linkList(campaignId, sendIds);
+    const step = fakeStep();
+
+    expect(await runScheduleSend(campaignId, step)).toEqual({ dispatched: 2 });
+
+    expect((await campaign(campaignId)).status).toBe("sending");
+    expect(step.sendEvent).toHaveBeenCalledWith("fan-out-sends", expect.arrayContaining([
+      { name: "campaigns/send-step", data: { sendId: sendIds[0], campaignId } },
+    ]));
   });
 });

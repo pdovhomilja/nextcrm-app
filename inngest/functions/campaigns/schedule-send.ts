@@ -16,6 +16,8 @@ export const campaignScheduleSend = inngest.createFunction(
       // the new one (started by the same event) stays.
       { event: "campaigns/schedule", match: "data.campaignId" },
       { event: "campaigns/paused", match: "data.campaignId" },
+      // Send now already sent it: the run sleeping until the old time must not again.
+      { event: "campaigns/send-now", match: "data.campaignId" },
     ],
   },
   async ({ event, step }) => {
@@ -45,6 +47,18 @@ export const campaignScheduleSend = inngest.createFunction(
       });
     });
     if (!step0) return { skipped: true, reason: "no step 0" };
+
+    // Only a campaign still "scheduled" goes out. One already sent early (send now)
+    // is skipped even if the cancel event was missed. Conditional write, like the
+    // send-now claim, inside a step so a replay keeps the first result.
+    const claimed = await step.run("claim-campaign", async () => {
+      const { count } = await prismadb.crm_campaigns.updateMany({
+        where: { id: campaignId, status: "scheduled", deletedAt: null },
+        data: { status: "sending" },
+      });
+      return count > 0;
+    });
+    if (!claimed) return { skipped: true, reason: campaign.status };
 
     // Resolve recipients (deduplicated by email)
     const targets = await step.run("resolve-recipients", async () => {
@@ -117,13 +131,7 @@ export const campaignScheduleSend = inngest.createFunction(
       );
     }
 
-    await prismadb.crm_campaigns.update({
-      where: { id: campaignId },
-      data: { status: "sending" },
-    });
-
-    // After the status write: with no recipients, or if every send-step already
-    // finished while the campaign was still "scheduled", nothing else would.
+    // With no recipients no send-step runs, so nothing else would finish the campaign.
     await step.run("mark-campaign-sent", () => markCampaignSentIfStep0Done(campaignId));
 
     return { dispatched: sendRecords.length };

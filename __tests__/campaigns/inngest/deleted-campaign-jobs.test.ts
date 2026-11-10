@@ -114,6 +114,14 @@ describe("sleeping campaign jobs are cancelled when the campaign is deleted", ()
     );
   });
 
+  // Send now on a scheduled campaign sends it at once: the run still sleeping
+  // until the scheduled time must not send it again.
+  it("schedule-send cancels on campaigns/send-now for the same campaignId", () => {
+    expect((campaignScheduleSend as unknown as { config: { cancelOn?: unknown[] } }).config.cancelOn).toContainEqual(
+      { event: "campaigns/send-now", match: "data.campaignId" },
+    );
+  });
+
   // Resume (campaigns/send-now) re-dispatches step 0 and every follow-up,
   // so sleeping runs from before the pause can go.
   it.each([
@@ -153,6 +161,8 @@ describe("campaign jobs skip deleted campaigns", () => {
   ])("%s still creates send records and fans out for a normal campaign", async (name, fanOutId) => {
     const [, handler, data] = jobs.find(([n]) => n === name)!;
     seedCampaign(NORMAL);
+    // schedule-send goes on only once it moved a still-scheduled campaign to sending.
+    if (name === "schedule-send") db.crm_campaigns.updateMany.mockResolvedValueOnce({ count: 1 });
     const step = fakeStep();
 
     await handler({ event: { data }, step });
