@@ -88,6 +88,74 @@ afterAll(async () => {
   await prismadb.$disconnect();
 });
 
+// A server action takes whatever the client posts, so the declared six fields
+// must hold at runtime. Cast: these payloads are exactly what the type forbids.
+describe("updateCampaign fields", () => {
+  const row = (id: string) =>
+    prismadb.crm_campaigns.findUnique({ where: { id }, include: { _count: { select: { steps: true, opportunities: true } } } });
+
+  // So one regression fails one case, not every case after a soft delete.
+  beforeEach(async () => {
+    await prismadb.crm_campaigns.update({
+      where: { id: CAMP.rep },
+      data: { status: "draft", deletedAt: null, sent_at: null, created_by: U.rep, template_id: TPL.rep },
+    });
+  });
+
+  it.each<[string, () => object]>([
+    ["status", () => ({ status: "sent" })],
+    ["deletedAt", () => ({ deletedAt: new Date("2026-01-01") })],
+    ["created_by", () => ({ created_by: U.other })],
+    ["sent_at", () => ({ sent_at: new Date("2026-01-01") })],
+    ["an allowed field next to a forbidden one", () => ({ name: `x-${tag}`, status: "sending" })],
+    ["relation write on template", () => ({ template: { connect: { id: TPL.other } } })],
+    ["relation write on owner", () => ({ created_by_user: { connect: { id: U.other } } })],
+    ["relation write on steps", () => ({ steps: { create: { order: 0, template_id: TPL.rep, subject: "x", delay_days: 0, send_to: "all" } } })],
+    ["relation write on opportunities", () => ({ opportunities: { connect: { id: OPP.partner } } })],
+  ])("refuses %s and changes nothing", async (_label, payload) => {
+    as("rep");
+    const before = await row(CAMP.rep);
+    expect(await updateCampaign(CAMP.rep, payload() as never)).toEqual({ error: "Invalid input" });
+    expect(await row(CAMP.rep)).toEqual(before);
+  });
+
+  it.each<[string, unknown]>([
+    ["scheduled_at that is not a date", { scheduled_at: "not-a-date" }],
+    ["scheduled_at that is a number", { scheduled_at: 12345 }],
+    ["scheduled_at that is an invalid Date", { scheduled_at: new Date("nope") }],
+    ["reply_to that is not an email", { reply_to: "not-an-email" }],
+    ["empty name", { name: "" }],
+    ["name that is not a string", { name: 123 }],
+    ["template_id that is not a uuid", { template_id: "nope" }],
+    ["data that is not an object", null],
+  ])("returns an error for %s and changes nothing", async (_label, payload) => {
+    as("rep");
+    const before = await row(CAMP.rep);
+    expect(await updateCampaign(CAMP.rep, payload as never)).toEqual({ error: "Invalid input" });
+    expect(await row(CAMP.rep)).toEqual(before);
+  });
+
+  it("writes all six declared fields", async () => {
+    as("rep");
+    await updateCampaign(CAMP.rep, {
+      name: `six-${tag}`,
+      description: "d",
+      from_name: "f",
+      reply_to: "r@example.com",
+      template_id: TPL.rep,
+      scheduled_at: new Date("2027-01-01T00:00:00Z"),
+    });
+    expect(await row(CAMP.rep)).toMatchObject({
+      name: `six-${tag}`,
+      description: "d",
+      from_name: "f",
+      reply_to: "r@example.com",
+      template_id: TPL.rep,
+      scheduled_at: new Date("2027-01-01T00:00:00Z"),
+    });
+  });
+});
+
 describe("updateCampaign template_id", () => {
   const templateOf = async (id: string) =>
     (await prismadb.crm_campaigns.findUnique({ where: { id }, select: { template_id: true } }))!.template_id;

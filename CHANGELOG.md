@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.38.3...v0.38.4) (2026-11-09)
+
+
+### Fixed
+
+* updateCampaign accepts only its six declared fields at runtime ([c2a2b7f](https://github.com/pdovhomilja/nextcrm-app/commit/c2a2b7f01e0687d353a0c24fd78a8a6eda45e67b))
+* updateCampaign accepts only its six declared fields at runtime ([d081f3f](https://github.com/pdovhomilja/nextcrm-app/commit/d081f3f290380fbcd6f7bdd938f37fcc1cc280ad))
+
 ## [0.38.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.38.2...v0.38.3) (2026-11-09)
 
 
