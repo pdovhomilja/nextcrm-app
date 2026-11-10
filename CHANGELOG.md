@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.38.4...v0.39.0) (2026-11-10)
+
+
+### Added
+
+* **leads:** one lead service for server actions, MCP tools and the web form ([0a12044](https://github.com/pdovhomilja/nextcrm-app/commit/0a12044e8e9dececa5513a172494a0d7ec55acbd))
+
 ## [0.38.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.38.3...v0.38.4) (2026-11-09)
 
 
