@@ -94,6 +94,34 @@ describe("updateLead", () => {
     expect(db.crm_Leads.update).not.toHaveBeenCalled();
   });
 
+  it("a user may not relink to an account he can't write, and nothing is written", async () => {
+    (assertCanWriteAccount as jest.Mock).mockRejectedValueOnce(new AuthorizationError());
+    expect(await code(svc.updateLead(USER, "L", { lastName: "X", accountsIDs: "foreign" }))).toBe("forbidden");
+    expect(assertCanWriteAccount).toHaveBeenCalledWith(USER, "foreign", { partnerEdit: true });
+    expect(db.crm_Leads.update).not.toHaveBeenCalled();
+    expect(writeAuditLog).not.toHaveBeenCalled();
+  });
+
+  it("a user may relink to an account he can write", async () => {
+    await svc.updateLead(USER, "L", { lastName: "X", accountsIDs: "mine" });
+    expect(assertCanWriteAccount).toHaveBeenCalledWith(USER, "mine", { partnerEdit: true });
+    expect(db.crm_Leads.update.mock.calls[0][0].data.accountsIDs).toBe("mine");
+  });
+
+  it("re-saving the current account link is not re-checked", async () => {
+    db.crm_Leads.findUnique.mockResolvedValue({ id: "L", assigned_to: "rep", accountsIDs: "theirs" });
+    await svc.updateLead(USER, "L", { lastName: "X", accountsIDs: "theirs" });
+    expect(assertCanWriteAccount).not.toHaveBeenCalled();
+    expect(db.crm_Leads.update).toHaveBeenCalled();
+  });
+
+  it.each([null, ""])("a user may unlink the account (%p) without an account check", async (accountsIDs) => {
+    db.crm_Leads.findUnique.mockResolvedValue({ id: "L", assigned_to: "rep", accountsIDs: "theirs" });
+    await svc.updateLead(USER, "L", { lastName: "X", accountsIDs });
+    expect(assertCanWriteAccount).not.toHaveBeenCalled();
+    expect(db.crm_Leads.update.mock.calls[0][0].data.accountsIDs).toBe(accountsIDs);
+  });
+
   it("re-saving the current assignee neither re-checks nor re-mails", async () => {
     await svc.updateLead(USER, "L", { lastName: "X", assigned_to: "rep" });
     expect(assertAssignableUser).not.toHaveBeenCalled();
