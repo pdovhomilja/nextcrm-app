@@ -1,5 +1,5 @@
-import { prismadb } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { createWebLead } from "@/lib/crm/leads/service";
 
 export async function POST(req: Request) {
   if (req.headers.get("content-type") !== "application/json") {
@@ -46,16 +46,13 @@ export async function POST(req: Request) {
       );
     }
     try {
-      await prismadb.crm_Leads.create({
-        data: {
-          v: 1,
-          firstName,
-          lastName,
-          company: account,
-          jobTitle: job,
-          email,
-          phone,
-        },
+      await createWebLead({
+        firstName,
+        lastName,
+        company: account,
+        jobTitle: job,
+        email,
+        phone,
       });
 
       return NextResponse.json({ message: "New lead created successfully" });

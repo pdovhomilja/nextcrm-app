@@ -21,7 +21,7 @@ Every variable listed in `.env.example` or read as `process.env.NAME` in the app
 | `E2B_API_KEY` |  | no |  | `inngest/functions/enrich-target-contact.ts`, `inngest/functions/enrich-target.ts`, `lib/enrichment/target-enrichment-keys.ts` |
 | `E2B_ENRICHMENT_TEMPLATE` |  | no |  | `inngest/functions/enrich-target-contact.ts`, `inngest/functions/enrich-target.ts` |
 | `EMAIL_ENCRYPTION_KEY` |  | yes | Encrypts stored mailbox passwords and API keys — generate with: openssl rand -hex 32 Set once and never change it, or the stored values become unreadable. | `lib/email-crypto.ts` |
-| `EMAIL_FROM` |  | yes | verified sender for login codes, e.g. noreply@yourdomain.com | `actions/admin/send-mail-to-all/index.ts`, `actions/admin/users/activate-user.ts`, `actions/admin/users/invite-user.ts` +16 more |
+| `EMAIL_FROM` |  | yes | verified sender for login codes, e.g. noreply@yourdomain.com | `actions/admin/send-mail-to-all/index.ts`, `actions/admin/users/activate-user.ts`, `actions/admin/users/invite-user.ts` +15 more |
 | `EMAIL_HOST` |  | no |  | `lib/sendmail.ts` |
 | `EMAIL_PASSWORD` |  | no |  | `lib/sendmail.ts` |
 | `EMAIL_USERNAME` |  | no |  | `lib/sendmail.ts` |
@@ -46,7 +46,7 @@ Every variable listed in `.env.example` or read as `process.env.NAME` in the app
 | `NEXTCRM_TOKEN` |  | no |  | `app/api/crm/contacts/create-from-remote/route.ts`, `app/api/crm/leads/create-lead-from-web/route.ts` |
 | `NEXT_PUBLIC_APP_DOMAIN` |  | no |  | `actions/invoices/send-invoice-email.ts` |
 | `NEXT_PUBLIC_APP_NAME` |  | no |  | `actions/admin/send-mail-to-all/index.ts`, `actions/admin/users/activate-user.ts`, `actions/admin/users/invite-user.ts` +27 more |
-| `NEXT_PUBLIC_APP_URL` |  | no |  | `actions/admin/users/activate-user.ts`, `actions/crm/contacts/create-contact.ts`, `actions/crm/leads/create-lead.ts` +27 more |
+| `NEXT_PUBLIC_APP_URL` |  | no |  | `actions/admin/users/activate-user.ts`, `actions/crm/contacts/create-contact.ts`, `actions/crm/opportunities/approval.ts` +26 more |
 | `NEXT_PUBLIC_DISCORD_INVITE_URL` |  | no |  | `components/support.tsx` |
 | `NEXT_PUBLIC_GITHUB_ISSUES_URL` |  | no |  | `components/support.tsx` |
 | `NEXT_PUBLIC_GITHUB_REPO_API` |  | no |  | `actions/github/get-repo-stars.ts` |
