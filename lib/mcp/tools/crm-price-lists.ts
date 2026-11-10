@@ -49,7 +49,7 @@ export const crmPriceListTools = [
     async handler(args: { includeArchived?: boolean; source?: "CRM" | "EXTERNAL"; limit: number; offset: number }) {
       const where = { ...(args.includeArchived ? {} : { isActive: true }), ...(args.source ? { source: args.source } : {}) };
       const [data, total] = await Promise.all([
-        prismadb.crm_PriceLists.findMany({ where, ...paginationArgs(args), orderBy: { name: "asc" } }),
+        prismadb.crm_PriceLists.findMany({ where, ...paginationArgs(args), orderBy: [{ name: "asc" }, { id: "asc" }] }),
         prismadb.crm_PriceLists.count({ where }),
       ]);
       return listResponse(data, total, args.offset);

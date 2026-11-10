@@ -45,7 +45,7 @@ export const crmAccountTools = [
         prismadb.crm_Accounts.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_Accounts.count({ where }),
       ]);
@@ -87,7 +87,7 @@ export const crmAccountTools = [
         prismadb.crm_Accounts.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_Accounts.count({ where }),
       ]);

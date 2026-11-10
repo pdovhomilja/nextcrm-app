@@ -32,7 +32,7 @@ export const projectTools = [
         prismadb.boards.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           include: { _count: { select: { sections: true } } },
         }),
         prismadb.boards.count({ where }),
@@ -221,7 +221,7 @@ export const projectTools = [
         prismadb.tasks.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         }),
         prismadb.tasks.count({ where }),
       ]);
@@ -382,7 +382,7 @@ export const projectTools = [
         prismadb.tasksComments.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           include: { assigned_user: { select: { id: true, name: true } } },
         }),
         prismadb.tasksComments.count({ where }),

@@ -66,7 +66,7 @@ export const campaignTools = [
         prismadb.crm_campaigns.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { created_on: "desc" },
+          orderBy: [{ created_on: "desc" }, { id: "desc" }],
           include: { _count: { select: { steps: true, sends: true } } },
         }),
         prismadb.crm_campaigns.count({ where }),
@@ -241,7 +241,7 @@ export const campaignTools = [
         prismadb.crm_campaign_templates.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { created_on: "desc" },
+          orderBy: [{ created_on: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_campaign_templates.count({ where }),
       ]);
