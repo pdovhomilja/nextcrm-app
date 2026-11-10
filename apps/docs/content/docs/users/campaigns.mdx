@@ -115,7 +115,7 @@ Each follow-up has:
 
 Follow-ups go only to recipients whose first email was sent and who have not unsubscribed.
 
-Every campaign starts with its first email (step 0). A campaign without one cannot be created as scheduled, sent or scheduled. Over MCP, `campaigns_delete_step` and `campaigns_update_step` (changing `order`) refuse to remove or move step 0 unless the campaign is a draft. Follow-up steps stay editable.
+Every campaign starts with its first email (step 0). A campaign without one cannot be sent, scheduled or created with a schedule date. Over MCP, `campaigns_delete_step` and `campaigns_update_step` (changing `order`) refuse to remove or move step 0 unless the campaign is a draft. Follow-up steps stay editable.
 
 ### Unsubscribes
 
