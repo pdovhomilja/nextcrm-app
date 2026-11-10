@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.2...v0.39.3) (2026-11-10)
+
+
+### Fixed
+
+* **leads:** check the account when updateLead relinks a lead ([896d699](https://github.com/pdovhomilja/nextcrm-app/commit/896d699686032d9e43e3a5c84a8f97cf545da732))
+
 ## [0.39.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.1...v0.39.2) (2026-11-10)
 
 
