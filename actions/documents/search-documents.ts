@@ -68,7 +68,7 @@ export async function searchDocuments(
       SELECT d.id, 1 - (e.embedding <=> ${vec}::vector) AS similarity
       FROM "Documents" d
       LEFT JOIN "crm_Embeddings_Documents" e ON e.document_id = d.id
-      WHERE e.embedding IS NOT NULL AND d."parent_document_id" IS NULL
+      WHERE e.embedding IS NOT NULL AND d."parent_document_id" IS NULL AND d."deletedAt" IS NULL
         AND 1 - (e.embedding <=> ${vec}::vector) > 0.7
       ORDER BY e.embedding <=> ${vec}::vector
       LIMIT 5`;

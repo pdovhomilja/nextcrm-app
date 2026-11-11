@@ -5,6 +5,8 @@ description: Review every change to CRM records and restore deleted ones.
 
 NextCRM records changes to accounts, contacts, leads, opportunities and contracts. Each entry stores the entity, the action, a before/after diff of changed fields, the user and the time. Users see the history of a single record on its **History** tab. Admins see everything under **Administration → Audit Log** (`/admin/audit-log`).
 
+Changes made by a plugin show the user as System and start with the change `plugin`, set to the plugin id.
+
 ## Filters
 
 - **Entity:** Account, Contact, Lead, Opportunity, Contract, or all.

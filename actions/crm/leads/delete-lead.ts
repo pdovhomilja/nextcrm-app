@@ -1,30 +1,12 @@
 "use server";
-import { revalidatePath } from "next/cache";
-import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
-import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 import * as svc from "@/lib/crm/leads/service";
-import { LeadError, leadErrorMessage } from "@/lib/crm/leads/types";
+import { runLeadAction } from "./run";
 
 export const deleteLead = async (leadId: string) => {
   if (!leadId) return { error: "leadId is required" };
 
-  let user;
-  try {
-    user = await requireAuthenticated();
-  } catch (e) {
-    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
-    throw e;
-  }
-
-  try {
+  return runLeadAction({ verb: "delete" }, async (user) => {
     await svc.deleteLead(user, leadId);
-    revalidatePath("/[locale]/(routes)/crm/leads", "page");
     return { success: true };
-  } catch (error) {
-    if (error instanceof LeadError) return { error: leadErrorMessage(error) };
-    const ruleMessage = await pluginRuleErrorMessage(error);
-    if (ruleMessage) return { error: ruleMessage };
-    console.log("[DELETE_LEAD]", error);
-    return { error: "Failed to delete lead" };
-  }
+  });
 };

@@ -57,7 +57,7 @@ export async function getSimilarAccounts(
              1 - (e.embedding <=> ${sourceEmbedding}::vector) AS similarity
       FROM   "crm_Accounts" a
       JOIN   "crm_Embeddings_Accounts" e ON e.account_id = a.id
-      WHERE  a.id != ${recordId}::uuid
+      WHERE  a.id != ${recordId}::uuid AND a."deletedAt" IS NULL
       ORDER  BY e.embedding <=> ${sourceEmbedding}::vector
       LIMIT  ${overFetch}
     `;
