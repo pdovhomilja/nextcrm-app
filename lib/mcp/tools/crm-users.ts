@@ -57,7 +57,7 @@ export const crmUserTools = [
           where,
           select: privileged ? PRIVILEGED_SELECT : BASE_SELECT,
           ...paginationArgs(args),
-          orderBy: { name: "asc" },
+          orderBy: [{ name: "asc" }, { id: "asc" }],
         }),
         prismadb.users.count({ where }),
       ]);

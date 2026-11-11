@@ -725,3 +725,50 @@ describe("the schedule-send run of a campaign that was sent early", () => {
     ]));
   });
 });
+
+describe("step 0 of a campaign that can still send (MCP step tools)", () => {
+  const MANAGER = { id: "m1", role: "manager" };
+  const callTool = (name: string, args: object) =>
+    (campaignTools.find((t) => t.name === name)!.handler as unknown as (a: object, id: string, u: object) => Promise<unknown>)(
+      args,
+      MANAGER.id,
+      MANAGER
+    );
+  const stepExists = async (id: string) => (await prismadb.crm_campaign_steps.count({ where: { id } })) === 1;
+
+  it.each(["scheduled", "sending", "paused", "sent"])("refuses to delete step 0 of a %s campaign", async (status) => {
+    const { stepId } = await seed(status, []);
+    await expect(callTool("campaigns_delete_step", { id: stepId })).rejects.toThrow(/CONFLICT: Step 0 can only be deleted or moved/);
+    expect(await stepExists(stepId)).toBe(true);
+  });
+
+  it("refuses to move step 0 of a scheduled campaign to another order", async () => {
+    const { stepId } = await seed("scheduled", []);
+    await expect(callTool("campaigns_update_step", { id: stepId, order: 5 })).rejects.toThrow(/CONFLICT: Step 0 can only be deleted or moved/);
+    expect((await prismadb.crm_campaign_steps.findUniqueOrThrow({ where: { id: stepId } })).order).toBe(0);
+  });
+
+  it("still edits step 0 of a scheduled campaign when the order stays", async () => {
+    const { stepId } = await seed("scheduled", []);
+    await callTool("campaigns_update_step", { id: stepId, subject: "New subject" });
+    expect((await prismadb.crm_campaign_steps.findUniqueOrThrow({ where: { id: stepId } })).subject).toBe("New subject");
+  });
+
+  it("still deletes a follow-up step of a scheduled campaign", async () => {
+    const { campaignId } = await seed("scheduled", []);
+    const followUp = await prismadb.crm_campaign_steps.create({
+      data: { campaign_id: campaignId, order: 1, template_id: templateId, subject: "Again", delay_days: 2 },
+    });
+    await callTool("campaigns_delete_step", { id: followUp.id });
+    expect(await stepExists(followUp.id)).toBe(false);
+  });
+
+  it("still deletes and moves step 0 of a draft", async () => {
+    const moved = await seed("draft", []);
+    await callTool("campaigns_update_step", { id: moved.stepId, order: 5 });
+    expect((await prismadb.crm_campaign_steps.findUniqueOrThrow({ where: { id: moved.stepId } })).order).toBe(5);
+    const deleted = await seed("draft", []);
+    await callTool("campaigns_delete_step", { id: deleted.stepId });
+    expect(await stepExists(deleted.stepId)).toBe(false);
+  });
+});

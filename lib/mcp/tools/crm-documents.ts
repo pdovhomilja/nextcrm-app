@@ -103,7 +103,7 @@ export const crmDocumentTools = [
         prismadb.documents.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         }),
         prismadb.documents.count({ where }),
       ]);

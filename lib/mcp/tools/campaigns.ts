@@ -41,6 +41,13 @@ async function assertCampaignInScope(user: AuthzUser, campaignId: string): Promi
   if (!row) notFound("Campaign");
 }
 
+// Every send starts from step 0 (schedule-send, send-now, follow-ups, resume),
+// so only a draft may lose it.
+async function assertStep0Removable(campaignId: string): Promise<void> {
+  const campaign = await prismadb.crm_campaigns.findUnique({ where: { id: campaignId }, select: { status: true } });
+  if (campaign?.status !== "draft") conflict("Step 0 can only be deleted or moved while the campaign is a draft");
+}
+
 // A template used by a campaign or step must be one the caller can read
 // (same rule as the createCampaign action).
 async function assertTemplateInScope(user: AuthzUser, templateId: string | undefined): Promise<void> {
@@ -66,7 +73,7 @@ export const campaignTools = [
         prismadb.crm_campaigns.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { created_on: "desc" },
+          orderBy: [{ created_on: "desc" }, { id: "desc" }],
           include: { _count: { select: { steps: true, sends: true } } },
         }),
         prismadb.crm_campaigns.count({ where }),
@@ -241,7 +248,7 @@ export const campaignTools = [
         prismadb.crm_campaign_templates.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { created_on: "desc" },
+          orderBy: [{ created_on: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_campaign_templates.count({ where }),
       ]);
@@ -366,6 +373,7 @@ export const campaignTools = [
       const existing = await prismadb.crm_campaign_steps.findUnique({ where: { id: args.id } });
       if (!existing) notFound("CampaignStep");
       await assertCampaignInScope(user, existing.campaign_id);
+      if (existing.order === 0 && args.order !== undefined) await assertStep0Removable(existing.campaign_id);
       await assertTemplateInScope(user, args.template_id);
       const { id, ...updateData } = args;
       const step = await prismadb.crm_campaign_steps.update({ where: { id }, data: updateData });
@@ -380,6 +388,7 @@ export const campaignTools = [
       const existing = await prismadb.crm_campaign_steps.findUnique({ where: { id: args.id } });
       if (!existing) notFound("CampaignStep");
       await assertCampaignInScope(user, existing.campaign_id);
+      if (existing.order === 0) await assertStep0Removable(existing.campaign_id);
       await prismadb.crm_campaign_steps.delete({ where: { id: args.id } });
       return itemResponse({ id: args.id, deleted: true });
     },

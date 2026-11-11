@@ -54,7 +54,7 @@ export const crmContactTools = [
         prismadb.crm_Contacts.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { created_on: "desc" },
+          orderBy: [{ created_on: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_Contacts.count({ where }),
       ]);
@@ -103,7 +103,7 @@ export const crmContactTools = [
         prismadb.crm_Contacts.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { created_on: "desc" },
+          orderBy: [{ created_on: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_Contacts.count({ where }),
       ]);

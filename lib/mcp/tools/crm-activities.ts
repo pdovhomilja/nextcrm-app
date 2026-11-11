@@ -84,7 +84,7 @@ export const crmActivityTools = [
         prismadb.crm_Activities.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { date: "desc" },
+          orderBy: [{ date: "desc" }, { id: "desc" }],
           include: { links: true },
         }),
         prismadb.crm_Activities.count({ where }),

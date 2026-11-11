@@ -21,7 +21,7 @@ export const crmTargetTools = [
         prismadb.crm_Targets.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { created_on: "desc" },
+          orderBy: [{ created_on: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_Targets.count({ where }),
       ]);
@@ -62,7 +62,7 @@ export const crmTargetTools = [
         prismadb.crm_Targets.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { created_on: "desc" },
+          orderBy: [{ created_on: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_Targets.count({ where }),
       ]);

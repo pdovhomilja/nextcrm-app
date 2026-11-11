@@ -13,7 +13,7 @@ export const crmEmailAccountTools = [
         prismadb.emailAccount.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           select: {
             id: true,
             label: true,

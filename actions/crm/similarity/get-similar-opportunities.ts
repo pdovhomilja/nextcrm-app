@@ -46,7 +46,7 @@ export async function getSimilarOpportunities(
       FROM   "crm_Opportunities" o
       JOIN   "crm_Embeddings_Opportunities" e ON e.opportunity_id = o.id
       LEFT JOIN "crm_Opportunities_Sales_Stages" s ON s.id = o.sales_stage
-      WHERE  o.id != ${recordId}::uuid
+      WHERE  o.id != ${recordId}::uuid AND o."deletedAt" IS NULL
       ORDER  BY e.embedding <=> ${sourceEmbedding}::vector
       LIMIT  ${overFetch}
     `;

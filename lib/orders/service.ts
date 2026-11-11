@@ -189,7 +189,7 @@ export async function listOrders(user: AuthzUser, args: { status?: string; accou
     ...(args.ownerId ? { ownerId: args.ownerId } : {}),
   };
   const [rows, total] = await Promise.all([
-    prismadb.crm_Orders.findMany({ where, orderBy: { createdAt: "desc" }, take: args.limit, skip: args.offset, include: { account: { select: { name: true } }, owner: { select: { name: true } } } }),
+    prismadb.crm_Orders.findMany({ where, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: args.limit, skip: args.offset, include: { account: { select: { name: true } }, owner: { select: { name: true } } } }),
     prismadb.crm_Orders.count({ where }),
   ]);
   return { data: rows.map((r) => serializeOrder(r)), total };

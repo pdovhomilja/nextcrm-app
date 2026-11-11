@@ -52,7 +52,7 @@ export const crmContractTools = [
         prismadb.crm_Contracts.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
           include: { lineItems: true, assigned_account: { select: { id: true, name: true } } },
         }),
         prismadb.crm_Contracts.count({ where }),

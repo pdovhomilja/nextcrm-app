@@ -32,7 +32,7 @@ export const reportTools = [
         prismadb.crm_Report_Config.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_Report_Config.count({ where }),
       ]);

@@ -69,4 +69,34 @@ describe("createCampaign scope", () => {
     expect(res).toEqual({ error: "Forbidden" });
     expect(prismadb.crm_campaigns.create).not.toHaveBeenCalled();
   });
+
+  const step = (order: number) => ({ order, template_id: "t1", subject: "S", delay_days: order, send_to: "all" as const });
+
+  it("refuses a scheduled campaign without step 0, no write", async () => {
+    mockUser("manager", "m1");
+    (prismadb.crm_campaign_templates.findFirst as jest.Mock).mockResolvedValue({ id: "t1" });
+    const res = await createCampaign({ ...baseInput, steps: [step(1)], scheduled_at: new Date("2030-01-01") });
+    expect(res).toEqual({ error: "Campaign has no first step (step 0)" });
+    expect(prismadb.crm_campaigns.create).not.toHaveBeenCalled();
+  });
+
+  // What the wizard sends: step 0 plus follow-ups, with a date.
+  it("creates a scheduled campaign that has step 0", async () => {
+    mockUser("manager", "m1");
+    (prismadb.crm_campaign_templates.findFirst as jest.Mock).mockResolvedValue({ id: "t1" });
+    (prismadb.crm_campaigns.create as jest.Mock).mockResolvedValue({ id: "c3" });
+    await createCampaign({ ...baseInput, steps: [step(0), step(1)], scheduled_at: new Date("2030-01-01") });
+    const call = (prismadb.crm_campaigns.create as jest.Mock).mock.calls[0][0];
+    expect(call.data.status).toBe("scheduled");
+    expect(call.data.steps.create).toHaveLength(2);
+  });
+
+  it("still creates a draft without step 0", async () => {
+    mockUser("manager", "m1");
+    (prismadb.crm_campaign_templates.findFirst as jest.Mock).mockResolvedValue({ id: "t1" });
+    (prismadb.crm_campaigns.create as jest.Mock).mockResolvedValue({ id: "c4" });
+    await createCampaign({ ...baseInput, steps: [step(1)] });
+    const call = (prismadb.crm_campaigns.create as jest.Mock).mock.calls[0][0];
+    expect(call.data.status).toBe("draft");
+  });
 });
