@@ -456,10 +456,10 @@ export class AgentOrchestrator {
       try {
         const scraped = await this.firecrawl.scrapeUrl(websiteUrl);
         
-        if (scraped.data && scraped.data.markdown && this.isValidCompanyWebsite({ markdown: scraped.data.markdown, metadata: scraped.data as Record<string, unknown> })) {
-          console.log(`[AGENT-DISCOVERY] Website scrape successful, content length: ${scraped.data.markdown?.length || 0}`);
+        if (scraped.markdown && this.isValidCompanyWebsite({ markdown: scraped.markdown, metadata: scraped.metadata })) {
+          console.log(`[AGENT-DISCOVERY] Website scrape successful, content length: ${scraped.markdown.length}`);
           if (onAgentProgress) {
-            onAgentProgress(`Successfully accessed company website (${scraped.data.markdown?.length || 0} chars)`, 'success');
+            onAgentProgress(`Successfully accessed company website (${scraped.markdown.length} chars)`, 'success');
             onAgentProgress(`Extracting data from website content...`, 'info');
           }
           
@@ -468,7 +468,7 @@ export class AgentOrchestrator {
             f.name.toLowerCase().includes('company') && f.name.toLowerCase().includes('name')
           );
           if (companyNameField) {
-            const companyName = this.extractCompanyName({ markdown: scraped.data.markdown, metadata: scraped.data as Record<string, unknown>, url: websiteUrl });
+            const companyName = this.extractCompanyName({ markdown: scraped.markdown, metadata: scraped.metadata, url: websiteUrl });
             if (companyName) {
               console.log(`[AGENT-DISCOVERY] Found company name: ${String(companyName)}`);
               if (onAgentProgress) {
@@ -508,7 +508,7 @@ export class AgentOrchestrator {
             f.description.toLowerCase().includes('description')
           );
           if (descField) {
-            const description = this.extractDescription({ markdown: scraped.data.markdown, metadata: scraped.data as Record<string, unknown> });
+            const description = this.extractDescription({ markdown: scraped.markdown, metadata: scraped.metadata });
             if (description) {
               if (onAgentProgress) {
                 onAgentProgress(`Extracted company description (${description.length} chars)`, 'success');
@@ -1244,8 +1244,8 @@ export class AgentOrchestrator {
       try {
         console.log(`[AGENT-TECH-STACK] Fetching HTML from company website for analysis`);
         const websiteData = await this.firecrawl.scrapeUrl(`https://${companyDomain}`);
-        if (websiteData.data && websiteData.data.html) {
-          websiteHtml = websiteData.data.html;
+        if (websiteData.html) {
+          websiteHtml = websiteData.html;
           console.log(`[AGENT-TECH-STACK] HTML fetched, length: ${websiteHtml.length}`);
           
           // Analyze HTML for technology indicators
@@ -1486,12 +1486,12 @@ export class AgentOrchestrator {
             onAgentProgress(`Checking ${url.split('/').pop()} page...`, 'info');
           }
           const scraped = await this.firecrawl.scrapeUrl(url);
-          if (scraped.data && scraped.data.markdown) {
+          if (scraped.markdown) {
             allSearchResults.push({
               url,
               title: 'Company Leadership Page',
               description: 'Company leadership and team information',
-              markdown: scraped.data.markdown || ''
+              markdown: scraped.markdown
             });
             console.log(`[AGENT-GENERAL] Successfully scraped ${url}`);
             if (onAgentProgress) {
