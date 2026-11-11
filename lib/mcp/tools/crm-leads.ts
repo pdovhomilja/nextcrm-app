@@ -67,7 +67,7 @@ export const crmLeadTools = [
         prismadb.crm_Leads.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_Leads.count({ where }),
       ]);
@@ -115,7 +115,7 @@ export const crmLeadTools = [
         prismadb.crm_Leads.findMany({
           where,
           ...paginationArgs(args),
-          orderBy: { createdAt: "desc" },
+          orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         }),
         prismadb.crm_Leads.count({ where }),
       ]);
