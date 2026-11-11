@@ -102,9 +102,7 @@ export class FirecrawlService {
     return allResults;
   }
 
-  // `data` is never set: the fields come at the top level, as they did with the
-  // 1.x SDK, so callers that read `.data` still skip their scrape branch.
-  async scrapeUrl(url: string): Promise<Document & { data?: { markdown?: string; html?: string }; error?: string }> {
+  async scrapeUrl(url: string): Promise<Document & { error?: string }> {
     const maxRetries = 3;
     const baseDelay = 1000;
     

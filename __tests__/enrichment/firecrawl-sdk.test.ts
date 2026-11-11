@@ -159,7 +159,7 @@ describe("FirecrawlService.scrapeUrl", () => {
     expect(result.markdown).toBe(scrapedDoc.markdown);
     expect(result.html).toBe(scrapedDoc.html);
     expect(result.metadata).toEqual(scrapedDoc.metadata);
-    expect(result.data).toBeUndefined();
+    expect("data" in result).toBe(false);
   });
 
   it("retries on a retryable SdkError status", async () => {
