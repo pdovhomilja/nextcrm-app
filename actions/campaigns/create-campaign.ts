@@ -7,6 +7,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { NO_FIRST_STEP_MESSAGE } from "@/lib/campaigns/first-step";
 
 type StepInput = {
   order: number;
@@ -32,6 +33,11 @@ export const createCampaign = async (data: {
   } catch (e) {
     if (e instanceof AuthenticationError) return { error: "Unauthorized" };
     throw e;
+  }
+
+  // A campaign stored as "scheduled" must have the step it starts with.
+  if (data.scheduled_at && !data.steps.some((s) => s.order === 0)) {
+    return { error: NO_FIRST_STEP_MESSAGE };
   }
 
   if (data.template_id) {

@@ -11,7 +11,7 @@
  */
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn() } }));
-jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn() }));
+jest.mock("@/lib/audit-log", () => ({ ...jest.requireActual("@/lib/audit-log"), writeAuditLog: jest.fn() }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 
 import { randomUUID } from "crypto";
