@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.6](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.5...v0.39.6) (2026-11-11)
+
+
+### Fixed
+
+* **enrichment:** use the scraped website content instead of dropping it ([#491](https://github.com/pdovhomilja/nextcrm-app/issues/491)) ([7739d8d](https://github.com/pdovhomilja/nextcrm-app/commit/7739d8d14a87ae4aa4e23c9b68ddae085731a499))
+
 ## [0.39.5](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.4...v0.39.5) (2026-11-11)
 
 
