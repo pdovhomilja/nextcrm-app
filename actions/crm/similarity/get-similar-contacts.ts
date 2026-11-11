@@ -45,7 +45,7 @@ export async function getSimilarContacts(
              1 - (e.embedding <=> ${sourceEmbedding}::vector) AS similarity
       FROM   "crm_Contacts" c
       JOIN   "crm_Embeddings_Contacts" e ON e.contact_id = c.id
-      WHERE  c.id != ${recordId}::uuid
+      WHERE  c.id != ${recordId}::uuid AND c."deletedAt" IS NULL
       ORDER  BY e.embedding <=> ${sourceEmbedding}::vector
       LIMIT  ${overFetch}
     `;
