@@ -5,6 +5,21 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.5](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.4...v0.39.5) (2026-11-11)
+
+
+### Fixed
+
+* keep step 0 on campaigns that will send (createCampaign, MCP step delete/move) ([#487](https://github.com/pdovhomilja/nextcrm-app/issues/487)) ([fcc62f7](https://github.com/pdovhomilja/nextcrm-app/commit/fcc62f7095f34524a5cc51d3347152a4f29f6782))
+* **mcp:** stable ordering for offset-paged MCP list tools ([#492](https://github.com/pdovhomilja/nextcrm-app/issues/492)) ([dc02d39](https://github.com/pdovhomilja/nextcrm-app/commit/dc02d3959384d09b800fa80a2068a53527784f6f))
+* **plugins:** write audit rows for plugin writes of accounts, contacts, leads and opportunities ([#489](https://github.com/pdovhomilja/nextcrm-app/issues/489)) ([3486034](https://github.com/pdovhomilja/nextcrm-app/commit/34860345f03161085d115d8d74a648121cd07cd3))
+* **search:** skip soft-deleted rows in vector queries before LIMIT ([#488](https://github.com/pdovhomilja/nextcrm-app/issues/488)) ([416a18f](https://github.com/pdovhomilja/nextcrm-app/commit/416a18ff239d744c47326a40ebd015b75309661e))
+
+
+### Changed
+
+* **leads:** one runLeadAction wrapper for the four lead actions ([#490](https://github.com/pdovhomilja/nextcrm-app/issues/490)) ([1b00921](https://github.com/pdovhomilja/nextcrm-app/commit/1b00921843a40d6df157d68469bc9c9cb3369e7b))
+
 ## [0.39.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.3...v0.39.4) (2026-11-10)
 
 
