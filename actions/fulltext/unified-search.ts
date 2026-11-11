@@ -231,7 +231,7 @@ export async function unifiedSearch(
             SELECT a.id, 1 - (e.embedding <=> ${queryVec}::vector) AS similarity
             FROM "crm_Accounts" a
             LEFT JOIN "crm_Embeddings_Accounts" e ON e.account_id = a.id
-            WHERE e.embedding IS NOT NULL
+            WHERE e.embedding IS NOT NULL AND a."deletedAt" IS NULL
             ORDER BY e.embedding <=> ${queryVec}::vector
             LIMIT 10`
         : noSemantic,
@@ -240,7 +240,7 @@ export async function unifiedSearch(
             SELECT c.id, 1 - (e.embedding <=> ${queryVec}::vector) AS similarity
             FROM "crm_Contacts" c
             LEFT JOIN "crm_Embeddings_Contacts" e ON e.contact_id = c.id
-            WHERE e.embedding IS NOT NULL
+            WHERE e.embedding IS NOT NULL AND c."deletedAt" IS NULL
             ORDER BY e.embedding <=> ${queryVec}::vector
             LIMIT 10`
         : noSemantic,
@@ -249,7 +249,7 @@ export async function unifiedSearch(
             SELECT l.id, 1 - (e.embedding <=> ${queryVec}::vector) AS similarity
             FROM "crm_Leads" l
             LEFT JOIN "crm_Embeddings_Leads" e ON e.lead_id = l.id
-            WHERE e.embedding IS NOT NULL
+            WHERE e.embedding IS NOT NULL AND l."deletedAt" IS NULL
             ORDER BY e.embedding <=> ${queryVec}::vector
             LIMIT 10`
         : noSemantic,
@@ -258,7 +258,7 @@ export async function unifiedSearch(
             SELECT o.id, 1 - (e.embedding <=> ${queryVec}::vector) AS similarity
             FROM "crm_Opportunities" o
             LEFT JOIN "crm_Embeddings_Opportunities" e ON e.opportunity_id = o.id
-            WHERE e.embedding IS NOT NULL
+            WHERE e.embedding IS NOT NULL AND o."deletedAt" IS NULL
             ORDER BY e.embedding <=> ${queryVec}::vector
             LIMIT 10`
         : noSemantic,
@@ -267,7 +267,7 @@ export async function unifiedSearch(
             SELECT d.id, 1 - (e.embedding <=> ${queryVec}::vector) AS similarity
             FROM "Documents" d
             LEFT JOIN "crm_Embeddings_Documents" e ON e.document_id = d.id
-            WHERE e.embedding IS NOT NULL AND d."parent_document_id" IS NULL
+            WHERE e.embedding IS NOT NULL AND d."parent_document_id" IS NULL AND d."deletedAt" IS NULL
             ORDER BY e.embedding <=> ${queryVec}::vector
             LIMIT 10`
         : noSemantic,
@@ -277,7 +277,7 @@ export async function unifiedSearch(
                    MAX(1 - (c.embedding <=> ${queryVec}::vector)) AS similarity
             FROM "crm_Document_Chunks" c
             JOIN "Documents" d ON d.id = c."document_id"
-            WHERE d."parent_document_id" IS NULL
+            WHERE d."parent_document_id" IS NULL AND d."deletedAt" IS NULL
             GROUP BY c."document_id"
             ORDER BY similarity DESC
             LIMIT 10`
