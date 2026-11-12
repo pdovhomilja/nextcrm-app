@@ -55,11 +55,14 @@ const submitStep4 = async (data: Record<string, unknown>) => {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.mocked(createCampaign).mockResolvedValue({ id: "camp-1" } as never);
+  jest.mocked(createCampaign).mockResolvedValue({ id: "camp-1" } as Awaited<ReturnType<typeof createCampaign>>);
 });
 
+type SendResult = Awaited<ReturnType<typeof sendCampaignNow>>;
+type ScheduleResult = Awaited<ReturnType<typeof scheduleCampaign>>;
+
 it("shows a refused send and opens the draft campaign", async () => {
-  jest.mocked(sendCampaignNow).mockResolvedValue({ error: "Forbidden" } as never);
+  jest.mocked(sendCampaignNow).mockResolvedValue({ error: "Forbidden" } satisfies SendResult);
 
   await submitStep4({ send_now: true });
 
@@ -68,7 +71,7 @@ it("shows a refused send and opens the draft campaign", async () => {
 });
 
 it("shows a refused schedule and opens the campaign", async () => {
-  jest.mocked(scheduleCampaign).mockResolvedValue({ error: "Forbidden" } as never);
+  jest.mocked(scheduleCampaign).mockResolvedValue({ error: "Forbidden" } satisfies ScheduleResult);
 
   await submitStep4({ send_now: false, scheduled_at: new Date("2030-01-01T09:00:00Z") });
 
@@ -76,11 +79,47 @@ it("shows a refused schedule and opens the campaign", async () => {
   expect(push).toHaveBeenCalledWith("/campaigns/camp-1");
 });
 
-it("goes to the campaign list after an accepted send", async () => {
-  jest.mocked(sendCampaignNow).mockResolvedValue({ id: "camp-1", status: "sending" } as never);
+it("shows a thrown send failure and opens the campaign", async () => {
+  jest.mocked(sendCampaignNow).mockRejectedValue(new Error("fetch failed"));
 
   await submitStep4({ send_now: true });
 
+  expect(toast.error).toHaveBeenCalledWith("Campaign saved, but it could not be sent or scheduled");
+  expect(push).toHaveBeenCalledWith("/campaigns/camp-1");
+});
+
+it("shows a thrown schedule failure and opens the campaign", async () => {
+  jest.mocked(scheduleCampaign).mockRejectedValue(new Error("db down"));
+
+  await submitStep4({ send_now: false, scheduled_at: new Date("2030-01-01T09:00:00Z") });
+
+  expect(toast.error).toHaveBeenCalledWith("Campaign saved, but it could not be sent or scheduled");
+  expect(push).toHaveBeenCalledWith("/campaigns/camp-1");
+});
+
+it("goes to the campaign list after an accepted send", async () => {
+  jest.mocked(sendCampaignNow).mockResolvedValue(undefined satisfies SendResult);
+
+  await submitStep4({ send_now: true });
+
+  expect(toast.error).not.toHaveBeenCalled();
+  expect(push).toHaveBeenCalledWith("/campaigns");
+});
+
+it("goes to the campaign list after an accepted schedule", async () => {
+  jest.mocked(scheduleCampaign).mockResolvedValue({ id: "camp-1", status: "scheduled" } as ScheduleResult);
+
+  await submitStep4({ send_now: false, scheduled_at: new Date("2030-01-01T09:00:00Z") });
+
+  expect(toast.error).not.toHaveBeenCalled();
+  expect(push).toHaveBeenCalledWith("/campaigns");
+});
+
+it("goes to the campaign list without sending when neither is chosen", async () => {
+  await submitStep4({ send_now: false });
+
+  expect(sendCampaignNow).not.toHaveBeenCalled();
+  expect(scheduleCampaign).not.toHaveBeenCalled();
   expect(toast.error).not.toHaveBeenCalled();
   expect(push).toHaveBeenCalledWith("/campaigns");
 });
