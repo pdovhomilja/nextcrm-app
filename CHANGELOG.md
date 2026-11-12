@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.7](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.6...v0.39.7) (2026-11-12)
+
+
+### Fixed
+
+* **campaigns:** show a refused send or schedule in the wizard ([#496](https://github.com/pdovhomilja/nextcrm-app/issues/496)) ([de4f4ce](https://github.com/pdovhomilja/nextcrm-app/commit/de4f4cee037ac394f69f17eb3038dfa758e8dd06))
+
 ## [0.39.6](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.5...v0.39.6) (2026-11-11)
 
 
