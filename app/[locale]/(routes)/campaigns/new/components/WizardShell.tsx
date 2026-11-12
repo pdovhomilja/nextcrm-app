@@ -96,10 +96,23 @@ export function WizardShell({
         return;
       }
 
-      if (merged.send_now) {
-        await sendCampaignNow(campaign.id);
-      } else if (merged.scheduled_at) {
-        await scheduleCampaign(campaign.id, merged.scheduled_at);
+      // The campaign already exists: on a refusal or failure show why it was
+      // not sent and open it, so a second submit cannot create a duplicate.
+      let result;
+      try {
+        if (merged.send_now) {
+          result = await sendCampaignNow(campaign.id);
+        } else if (merged.scheduled_at) {
+          result = await scheduleCampaign(campaign.id, merged.scheduled_at);
+        }
+      } catch {
+        result = { error: "Campaign saved, but it could not be sent or scheduled" };
+      }
+
+      if (result && "error" in result) {
+        toast.error(String(result.error));
+        router.push(`/campaigns/${campaign.id}`);
+        return;
       }
 
       router.push("/campaigns");
