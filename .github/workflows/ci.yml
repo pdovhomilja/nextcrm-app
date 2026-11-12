@@ -135,7 +135,9 @@ jobs:
       - name: Apply all migrations to a fresh database
         run: pnpm exec prisma migrate deploy
       - name: Database-backed test suites
-        run: pnpm exec jest --ci __tests__/invoices/lifecycle.test.ts __tests__/authz/partner-read-scope.test.ts __tests__/authz/partner-leaks.test.ts __tests__/authz/partner-writes.test.ts __tests__/authz/link-write-checks.test.ts __tests__/authz/mcp-object-scope.test.ts __tests__/authz/ui-object-scope.test.ts __tests__/authz/action-write-scope.test.ts __tests__/mcp/projects-tools-db.test.ts __tests__/authz/report-campaign-scope.test.ts __tests__/authz/create-input-ids.test.ts __tests__/reports/soft-delete.test.ts __tests__/authz/campaign-delete-markers.test.ts __tests__/campaigns/inngest/mark-sent-db.test.ts __tests__/campaigns/send-overlap-db.test.ts __tests__/search/vector-deleted-rows.test.ts
+        # 30 s per test and hook: on a cold runner a suite's first DB write can take
+        # over 5 s while the parallel workers compile (seed beforeAll timed out twice).
+        run: pnpm exec jest --ci --testTimeout=30000 __tests__/invoices/lifecycle.test.ts __tests__/authz/partner-read-scope.test.ts __tests__/authz/partner-leaks.test.ts __tests__/authz/partner-writes.test.ts __tests__/authz/link-write-checks.test.ts __tests__/authz/mcp-object-scope.test.ts __tests__/authz/ui-object-scope.test.ts __tests__/authz/action-write-scope.test.ts __tests__/mcp/projects-tools-db.test.ts __tests__/authz/report-campaign-scope.test.ts __tests__/authz/create-input-ids.test.ts __tests__/reports/soft-delete.test.ts __tests__/authz/campaign-delete-markers.test.ts __tests__/campaigns/inngest/mark-sent-db.test.ts __tests__/campaigns/send-overlap-db.test.ts __tests__/search/vector-deleted-rows.test.ts
 
   build:
     name: Production build (mirrors Coolify)
