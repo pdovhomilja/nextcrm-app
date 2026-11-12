@@ -96,10 +96,18 @@ export function WizardShell({
         return;
       }
 
-      if (merged.send_now) {
-        await sendCampaignNow(campaign.id);
-      } else if (merged.scheduled_at) {
-        await scheduleCampaign(campaign.id, merged.scheduled_at);
+      const result = merged.send_now
+        ? await sendCampaignNow(campaign.id)
+        : merged.scheduled_at
+          ? await scheduleCampaign(campaign.id, merged.scheduled_at)
+          : undefined;
+
+      // The campaign already exists: show why it was not sent and open it,
+      // so a second submit cannot create a duplicate.
+      if (result && "error" in result) {
+        toast.error(String(result.error));
+        router.push(`/campaigns/${campaign.id}`);
+        return;
       }
 
       router.push("/campaigns");
