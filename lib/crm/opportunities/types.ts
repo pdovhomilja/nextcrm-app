@@ -32,7 +32,7 @@ export class OpportunityError extends Error {
   }
 }
 
-/** The server actions' message: "Account not found" for a missing row, the gate's reason when blocked, else "Forbidden". */
+/** The server actions' message: "<what> not found" for a missing row (the error's message names it, e.g. "Sales stage not found"), the gate's reason when blocked, else "Forbidden". */
 export function opportunityErrorMessage(e: OpportunityError): string {
   if (e.code === "notFound") return `${e.message} not found`;
   if (e.code === "blocked") return e.message;

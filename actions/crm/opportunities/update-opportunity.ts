@@ -1,10 +1,7 @@
 "use server";
 import * as svc from "@/lib/crm/opportunities/service";
+import { serializeDecimals } from "@/lib/serialize-decimals";
 import { runOpportunityAction } from "./run";
-
-// Decimal and BigInt columns as plain values, for the client component.
-const serialize = (obj: unknown) =>
-  JSON.parse(JSON.stringify(obj, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
 
 export const updateOpportunity = async (data: {
   id: string;
@@ -64,6 +61,7 @@ export const updateOpportunity = async (data: {
       // The form reactivates the deal on every save, as it always has.
       status: "ACTIVE",
     });
-    return { data: serialize(opportunity) };
+    // crm_Opportunities has Decimal columns and no BigInt ones.
+    return { data: serializeDecimals(opportunity) };
   });
 };
