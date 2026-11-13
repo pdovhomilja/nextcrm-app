@@ -5,8 +5,8 @@ FROM node:22-alpine AS deps
 
 WORKDIR /app
 
-# Enable corepack and prepare pnpm in a single layer for better caching
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Enable corepack; pnpm resolves to the packageManager pin in package.json
+RUN corepack enable
 
 # Copy lock files first (changes less frequently) for maximum cache efficiency
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
@@ -21,8 +21,8 @@ FROM node:22-alpine AS build
 
 WORKDIR /app
 
-# Enable corepack (reuse from deps if cached)
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Enable corepack; pnpm resolves to the packageManager pin in package.json
+RUN corepack enable
 
 # Copy dependencies from previous stage
 COPY --from=deps /app/node_modules ./node_modules
