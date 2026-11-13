@@ -44,6 +44,7 @@ import {
   crm_campaigns,
 } from "@prisma/client";
 import { createOpportunity } from "@/actions/crm/opportunities/create-opportunity";
+import { stagesOpenForCreate } from "@/lib/crm/stage-kind";
 import { useSession } from "@/lib/auth-client";
 
 //TODO: fix all the types
@@ -340,7 +341,7 @@ export function NewOpportunityForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="flex overflow-y-auto h-56">
-                          {saleStages.map((stage) => (
+                          {stagesOpenForCreate(saleStages).map((stage) => (
                             <SelectItem key={stage.id} value={stage.id}>
                               {stage.name}
                             </SelectItem>

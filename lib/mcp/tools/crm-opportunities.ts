@@ -1,12 +1,9 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz";
-import {
-  opportunityReadScopeWhere,
-  assertCanWriteOpportunity,
-  assertCanWriteAccount,
-  assertCanWriteContact,
-} from "@/lib/authz/scopes/crm";
+import { opportunityReadScopeWhere } from "@/lib/authz/scopes/crm";
+import { createOpportunity, deleteOpportunity, updateOpportunity } from "@/lib/crm/opportunities/service";
+import { OpportunityError } from "@/lib/crm/opportunities/types";
 import {
   paginationSchema,
   paginationArgs,
@@ -14,50 +11,22 @@ import {
   itemResponse,
   ilike,
   notFound,
-  softDeleteData,
-  assertScopeOrNotFound,
   conflict,
 } from "../helpers";
-import { assertAssignableUser } from "@/lib/authz/assignable-user";
-import { inngest } from "@/inngest/client";
-import { writeAuditLog, diffObjects } from "@/lib/audit-log";
-import { handleStageTransition } from "@/lib/crm/stage-transition";
-import { qualifiedEntryBlockReason } from "@/lib/crm/approval-gate";
 
-// Relinking an opportunity to an account/contact is a parent write: the row must
-// exist, must not be soft-deleted, and the caller must be allowed to write it.
-// Mirrors create-opportunity.ts / update-contact.ts, which assert the same way.
-async function assertLinkableAccount(user: AuthzUser, accountId: string) {
-  const row = await prismadb.crm_Accounts.findFirst({
-    where: { id: accountId, deletedAt: null },
-    select: { id: true },
-  });
-  if (!row) notFound("Account");
-  await assertScopeOrNotFound(() => assertCanWriteAccount(user, accountId), "Account");
-}
-
-async function assertLinkableContact(user: AuthzUser, contactId: string) {
-  const row = await prismadb.crm_Contacts.findFirst({
-    where: { id: contactId, deletedAt: null },
-    select: { id: true },
-  });
-  if (!row) notFound("Contact");
-  await assertScopeOrNotFound(() => assertCanWriteContact(user, contactId), "Contact");
-}
-
-// Stages and types are rows in admin-managed lookup tables; agents read their ids
-// with crm_list_opportunity_options. A wrong id is NOT_FOUND, not an FK error.
-async function assertOpportunityOptions(args: {
-  sales_stage_id?: string | null;
-  type_id?: string | null;
-}) {
-  if (
-    args.sales_stage_id &&
-    !(await prismadb.crm_Opportunities_Sales_Stages.findUnique({ where: { id: args.sales_stage_id } }))
-  )
-    notFound("Sales stage");
-  if (args.type_id && !(await prismadb.crm_Opportunities_Type.findUnique({ where: { id: args.type_id } })))
-    notFound("Opportunity type");
+// The writes run in lib/crm/opportunities/service.ts, as the server actions do.
+// A denied or missing opportunity, parent, assignee or lookup id is NOT_FOUND (no
+// existence oracle); the approval gate's refusal is CONFLICT with its reason.
+async function mapErrors<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (e instanceof OpportunityError) {
+      if (e.code === "blocked") conflict(e.message);
+      notFound("Opportunity");
+    }
+    throw e;
+  }
 }
 
 export const crmOpportunityTools = [
@@ -169,45 +138,19 @@ export const crmOpportunityTools = [
         sales_stage_id?: string;
         type_id?: string;
       },
-      userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
-      await assertOpportunityOptions(args);
-      const { name, budget, expected_revenue, close_date, sales_stage_id, type_id, ...rest } = args;
-      // A new deal has no approved quote, so the gate refuses a qualified stage here.
-      const blockReason = await qualifiedEntryBlockReason({
-        fromStage: null,
-        toStage: sales_stage_id ?? null,
-        approvalStatus: "NONE",
-      });
-      if (blockReason) conflict(blockReason);
-      const opp = await prismadb.crm_Opportunities.create({
-        data: {
-          v: 0,
-          name,
+      const { close_date, sales_stage_id, type_id, ...rest } = args;
+      // Assigned to the caller. A new deal has no approved quote, so the gate refuses a qualified stage.
+      const opp = await mapErrors(() =>
+        createOpportunity(user, {
           ...rest,
-          ...(budget !== undefined && { budget }),
-          ...(expected_revenue !== undefined && { expected_revenue }),
           ...(close_date !== undefined && { close_date: new Date(close_date) }),
           ...(sales_stage_id !== undefined && { sales_stage: sales_stage_id }),
           ...(type_id !== undefined && { type: type_id }),
-          assigned_to: userId,
-          createdBy: userId,
-          updatedBy: userId,
-        },
-      });
-      await handleStageTransition({
-        opportunityId: opp.id,
-        fromStage: null,
-        toStage: opp.sales_stage ?? null,
-      });
-      await writeAuditLog({
-        entityType: "opportunity",
-        entityId: opp.id,
-        action: "created",
-        changes: null,
-        userId,
-      });
-      void inngest.send({ name: "crm/opportunity.saved", data: { record_id: opp.id } });
+        })
+      );
       return itemResponse(opp);
     },
   },
@@ -248,73 +191,19 @@ export const crmOpportunityTools = [
         sales_stage_id?: string | null;
         type_id?: string | null;
       },
-      userId: string,
+      _userId: string,
       user: AuthzUser
     ) {
-      await assertScopeOrNotFound(
-        () => assertCanWriteOpportunity(user, args.id),
-        "Opportunity"
-      );
-      if (args.account) await assertLinkableAccount(user, args.account);
-      if (args.contact) await assertLinkableContact(user, args.contact);
-      const assignee = args.assigned_to;
-      if (assignee) await assertScopeOrNotFound(() => assertAssignableUser(user, assignee), "User");
-      await assertOpportunityOptions(args);
-      const {
-        id,
-        budget,
-        expected_revenue,
-        close_date,
-        currency,
-        account,
-        contact,
-        assigned_to,
-        sales_stage_id,
-        type_id,
-        ...rest
-      } = args;
-      const before = await prismadb.crm_Opportunities.findUnique({ where: { id } });
-      const fromStage = before?.sales_stage ?? null;
-      const blockReason = await qualifiedEntryBlockReason({
-        fromStage,
-        toStage: sales_stage_id ?? null,
-        approvalStatus: before?.approval_status ?? "NONE",
-      });
-      if (blockReason) conflict(blockReason);
+      const { id, close_date, sales_stage_id, type_id, ...rest } = args;
       // The web form sets ACTIVE on every save; here only a real stage move does.
-      const stageMoved = Boolean(sales_stage_id) && sales_stage_id !== fromStage;
-      const opp = await prismadb.crm_Opportunities.update({
-        where: { id },
-        data: {
+      const opp = await mapErrors(() =>
+        updateOpportunity(user, id, {
           ...rest,
-          ...(currency !== undefined && { currency }),
-          ...(budget !== undefined && { budget }),
-          ...(expected_revenue !== undefined && { expected_revenue }),
           ...(close_date !== undefined && { close_date: new Date(close_date) }),
-          ...(account !== undefined && { account }),
-          ...(contact !== undefined && { contact }),
-          ...(assigned_to !== undefined && { assigned_to }),
           ...(sales_stage_id !== undefined && { sales_stage: sales_stage_id }),
           ...(type_id !== undefined && { type: type_id }),
-          ...(stageMoved && { status: "ACTIVE" as const }),
-          updatedBy: userId,
-        },
-      });
-      await handleStageTransition({
-        opportunityId: id,
-        fromStage,
-        toStage: opp.sales_stage ?? null,
-      });
-      const serialize = (obj: unknown) =>
-        JSON.parse(JSON.stringify(obj, (_, v) => (typeof v === "bigint" ? v.toString() : v)));
-      await writeAuditLog({
-        entityType: "opportunity",
-        entityId: id,
-        action: "updated",
-        changes: before ? diffObjects(serialize(before), serialize(opp)) : null,
-        userId,
-      });
-      void inngest.send({ name: "crm/opportunity.saved", data: { record_id: id } });
+        })
+      );
       return itemResponse(opp);
     },
   },
@@ -322,15 +211,8 @@ export const crmOpportunityTools = [
     name: "crm_delete_opportunity",
     description: "Soft-delete a CRM opportunity by ID",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string, user: AuthzUser) {
-      await assertScopeOrNotFound(
-        () => assertCanWriteOpportunity(user, args.id),
-        "Opportunity"
-      );
-      const opp = await prismadb.crm_Opportunities.update({
-        where: { id: args.id },
-        data: softDeleteData(userId),
-      });
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      const opp = await mapErrors(() => deleteOpportunity(user, args.id));
       return itemResponse({ id: opp.id, deletedAt: opp.deletedAt });
     },
   },

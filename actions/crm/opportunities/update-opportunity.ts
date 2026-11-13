@@ -1,22 +1,7 @@
 "use server";
-import { prismadb } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
-import { inngest } from "@/inngest/client";
-import { writeAuditLog, diffObjects } from "@/lib/audit-log";
-import { getSnapshotRate, getDefaultCurrency } from "@/lib/currency";
-import { handleStageTransition } from "@/lib/crm/stage-transition";
-import { qualifiedEntryBlockReason } from "@/lib/crm/approval-gate";
-import {
-  requireAuthenticated,
-  assertCanWriteOpportunity,
-  assertCanWriteAccount,
-  assertCanWriteContact,
-  assertCanReadCampaign,
-  PARTNER_EDIT,
-  AuthenticationError,
-  AuthorizationError,
-} from "@/lib/authz";
+import * as svc from "@/lib/crm/opportunities/service";
+import { serializeDecimals } from "@/lib/serialize-decimals";
+import { runOpportunityAction } from "./run";
 
 export const updateOpportunity = async (data: {
   id: string;
@@ -55,90 +40,28 @@ export const updateOpportunity = async (data: {
 
   if (!id) return { error: "id is required" };
 
-  // Authorization runs before the approval gate and the update.
-  let user;
-  try {
-    user = await requireAuthenticated({ partner: true });
-  } catch (e) {
-    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
-    throw e;
-  }
-  try {
-    await assertCanWriteOpportunity(user, id, PARTNER_EDIT);
-    // A new account or campaign link needs write on the account (as in createOpportunity) or read on the
-    // campaign. The form re-sends the stored ids, which must keep saving even when they are outside the
-    // user's scope.
-    const stored =
-      account || campaign
-        ? await prismadb.crm_Opportunities.findUnique({ where: { id }, select: { account: true, campaign: true } })
-        : null;
-    if (account && account !== stored?.account) await assertCanWriteAccount(user, account, PARTNER_EDIT);
-    // A partner may move an opportunity only to another of his contacts.
-    if (user.role === "partner" && contact) await assertCanWriteContact(user, contact, PARTNER_EDIT);
-    if (campaign && campaign !== stored?.campaign) await assertCanReadCampaign(user, campaign);
-  } catch (e) {
-    if (e instanceof AuthorizationError) return { error: "Forbidden" };
-    throw e;
-  }
-  const userId = user.id;
-
-  try {
-    const defaultCurrency = await getDefaultCurrency();
-    const snapshotRate = currency
-      ? await getSnapshotRate(currency, defaultCurrency)
-      : null;
-    const before = await prismadb.crm_Opportunities.findUnique({ where: { id, deletedAt: null } });
-    const blockReason = await qualifiedEntryBlockReason({
-      fromStage: before?.sales_stage ?? null,
-      toStage: sales_stage || null,
-      approvalStatus: before?.approval_status ?? "NONE",
+  return runOpportunityAction({ verb: "update", auth: { partner: true } }, async (user) => {
+    // The form sends every field on every save. "" for a select or a number keeps the stored value.
+    const opportunity = await svc.updateOpportunity(user, id, {
+      account: account || undefined,
+      assigned_to: assigned_to || undefined,
+      budget: budget ? parseFloat(budget) : undefined,
+      // Not sent = unchanged; "" (empty select) or null clears the link.
+      campaign: campaign === undefined ? undefined : campaign || null,
+      close_date,
+      delivery_deadline,
+      contact: contact || undefined,
+      currency: currency || undefined,
+      description,
+      expected_revenue: expected_revenue ? parseFloat(expected_revenue) : undefined,
+      name,
+      next_step,
+      sales_stage: sales_stage || undefined,
+      type: type || undefined,
+      // The form reactivates the deal on every save, as it always has.
+      status: "ACTIVE",
     });
-    if (blockReason) return { error: blockReason };
-    const opportunity = await prismadb.crm_Opportunities.update({
-      where: { id },
-      data: {
-        account: account || undefined,
-        // A partner never changes the assignee.
-        assigned_to: user.role === "partner" ? undefined : assigned_to || undefined,
-        budget: budget ? parseFloat(budget) : undefined,
-        // Not sent = unchanged; "" (empty select) or null clears the link.
-        campaign: campaign === undefined ? undefined : campaign || null,
-        close_date,
-        delivery_deadline,
-        contact: contact || undefined,
-        updatedBy: userId,
-        currency: currency || undefined,
-        description,
-        expected_revenue: expected_revenue ? parseFloat(expected_revenue) : undefined,
-        snapshot_rate: snapshotRate ? parseFloat(snapshotRate.toString()) : undefined,
-        name,
-        next_step,
-        sales_stage: sales_stage || undefined,
-        status: "ACTIVE",
-        type: type || undefined,
-      },
-    });
-    await handleStageTransition({
-      opportunityId: opportunity.id,
-      fromStage: before?.sales_stage ?? null,
-      toStage: opportunity.sales_stage ?? null,
-    });
-    const serialize = (obj: any) => JSON.parse(JSON.stringify(obj, (_, v) => typeof v === "bigint" ? v.toString() : v));
-    const changes = before ? diffObjects(serialize(before), serialize(opportunity)) : null;
-    await writeAuditLog({
-      entityType: "opportunity",
-      entityId: opportunity.id,
-      action: "updated",
-      changes,
-      userId: user.id,
-    });
-    void inngest.send({ name: "crm/opportunity.saved", data: { record_id: opportunity.id } });
-    revalidatePath("/[locale]/(routes)/crm/opportunities", "page");
-    return { data: serialize(opportunity) };
-  } catch (error) {
-    const ruleMessage = await pluginRuleErrorMessage(error);
-    if (ruleMessage) return { error: ruleMessage };
-    console.log("[UPDATE_OPPORTUNITY]", error);
-    return { error: "Failed to update opportunity" };
-  }
+    // crm_Opportunities has Decimal columns and no BigInt ones.
+    return { data: serializeDecimals(opportunity) };
+  });
 };
