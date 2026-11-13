@@ -5,6 +5,14 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.8](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.7...v0.39.8) (2026-11-13)
+
+
+### Fixed
+
+* **dev:** db:reset removes the volume of the active compose project ([#499](https://github.com/pdovhomilja/nextcrm-app/issues/499)) ([bb05e4f](https://github.com/pdovhomilja/nextcrm-app/commit/bb05e4fadfda6e89ca0b7ccfa3fcf115a13ca9bc))
+* use packageManager pnpm pin in Dockerfile instead of pnpm@latest ([#498](https://github.com/pdovhomilja/nextcrm-app/issues/498)) ([52f8812](https://github.com/pdovhomilja/nextcrm-app/commit/52f881252a5805294b31064ae9f099adf8c950c1)), closes [#236](https://github.com/pdovhomilja/nextcrm-app/issues/236)
+
 ## [0.39.7](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.6...v0.39.7) (2026-11-12)
 
 
