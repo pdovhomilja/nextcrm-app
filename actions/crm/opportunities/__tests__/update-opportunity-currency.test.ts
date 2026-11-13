@@ -3,9 +3,11 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 // authz behavior is covered by the *-scope tests, so pass it through here.
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn(),
-  assertCanWriteOpportunity: jest.fn(),
   AuthenticationError: class AuthenticationError extends Error {},
-  AuthorizationError: class AuthorizationError extends Error {},
+}));
+jest.mock("@/lib/authz/scopes/crm", () => ({
+  PARTNER_EDIT: { partnerEdit: true },
+  assertCanWriteOpportunity: jest.fn(),
 }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
@@ -30,7 +32,8 @@ jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 
 import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
-import { requireAuthenticated, assertCanWriteOpportunity } from "@/lib/authz";
+import { requireAuthenticated } from "@/lib/authz";
+import { assertCanWriteOpportunity } from "@/lib/authz/scopes/crm";
 import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
 
 describe("updateOpportunity currency handling", () => {

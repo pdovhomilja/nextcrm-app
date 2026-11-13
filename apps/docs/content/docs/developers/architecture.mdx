@@ -96,7 +96,7 @@ Actions return `{ error: "..." }` instead of throwing for expected failures. If 
 
 `actions/crm/accounts/update-account.ts` is a good reference implementation.
 
-Orders and leads keep steps 2 to 5 in a service function instead (`lib/orders/service.ts`, `lib/crm/leads/service.ts`). It takes the `AuthzUser`, checks permissions itself and throws a typed error (`OrderError`, `LeadError`). The server action and the MCP tool both call it and map the error to their own response; the action still calls `revalidatePath()`. That way both paths leave the same side effects.
+Orders, leads and opportunities keep steps 2 to 5 in a service function instead (`lib/orders/service.ts`, `lib/crm/leads/service.ts`, `lib/crm/opportunities/service.ts`). It takes the `AuthzUser`, checks permissions itself and throws a typed error (`OrderError`, `LeadError`, `OpportunityError`). The server action and the MCP tool both call it and map the error to their own response; the action still calls `revalidatePath()`. That way both paths leave the same side effects.
 
 ### API routes
 

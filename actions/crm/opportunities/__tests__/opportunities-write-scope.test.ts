@@ -2,17 +2,18 @@
 // (GHSA-qwhm-9fcm-p878). Denial tests must fail against the pre-guard code.
 
 jest.mock("@/lib/authz", () => ({
-  PARTNER_EDIT: { partnerEdit: true },
   requireAuthenticated: jest.fn(),
+  AuthenticationError: class AuthenticationError extends Error {},
+}));
+// The checks run in lib/crm/opportunities/service.ts, which imports the leaf modules.
+jest.mock("@/lib/authz/scopes/crm", () => ({
+  PARTNER_EDIT: { partnerEdit: true },
   assertCanWriteOpportunity: jest.fn(),
   assertCanWriteAccount: jest.fn(),
+  assertCanWriteContact: jest.fn(),
   assertCanReadCampaign: jest.fn(),
-  AuthenticationError: class AuthenticationError extends Error {},
-  AuthorizationError: class AuthorizationError extends Error {},
 }));
-jest.mock("@/lib/auth-server", () => ({
-  getSession: jest.fn().mockResolvedValue({ user: { id: "owner" } }),
-}));
+jest.mock("@/lib/authz/assignable-user", () => ({ assertAssignableUser: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_Opportunities: {
@@ -20,6 +21,8 @@ jest.mock("@/lib/prisma", () => ({
       findUnique: jest.fn().mockResolvedValue({ id: "o-1", sales_stage: null, approval_status: "NONE" }),
       create: jest.fn().mockResolvedValue({ id: "o-1", sales_stage: null }),
     },
+    crm_Accounts: { findFirst: jest.fn().mockResolvedValue({ id: "acc" }) },
+    crm_Contacts: { findFirst: jest.fn().mockResolvedValue({ id: "c" }) },
     users: { findFirst: jest.fn().mockResolvedValue(null) },
   },
 }));
@@ -34,13 +37,13 @@ jest.mock("@/lib/currency", () => ({
 jest.mock("@/lib/crm/stage-transition", () => ({ handleStageTransition: jest.fn() }));
 jest.mock("@/lib/crm/approval-gate", () => ({ qualifiedEntryBlockReason: jest.fn().mockResolvedValue(null) }));
 
+import { requireAuthenticated } from "@/lib/authz";
 import {
-  requireAuthenticated,
   assertCanWriteOpportunity,
   assertCanWriteAccount,
   assertCanReadCampaign,
-  AuthorizationError,
-} from "@/lib/authz";
+} from "@/lib/authz/scopes/crm";
+import { AuthorizationError } from "@/lib/authz/errors";
 import { prismadb } from "@/lib/prisma";
 import { createOpportunity } from "@/actions/crm/opportunities/create-opportunity";
 import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
