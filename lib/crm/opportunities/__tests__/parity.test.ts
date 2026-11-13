@@ -242,16 +242,16 @@ describe("a closed deal", () => {
   });
 });
 
-describe("a partner on his partner account's deal", () => {
+describe("a partner on their partner account's deal", () => {
   const PARTNER = { id: "66666666-6666-4666-8666-666666666666", role: "partner" as const };
-  const HIS = "77777777-7777-4777-8777-777777777777";
+  const OWN_ACCOUNT = "77777777-7777-4777-8777-777777777777";
   const OTHER = "88888888-8888-4888-8888-888888888888";
   beforeEach(() => {
     accounts = {
-      [HIS]: { id: HIS, partnerUserId: PARTNER.id, deletedAt: null },
+      [OWN_ACCOUNT]: { id: OWN_ACCOUNT, partnerUserId: PARTNER.id, deletedAt: null },
       [OTHER]: { id: OTHER, partnerUserId: null, assigned_to: OWNER.id, deletedAt: null },
     };
-    stored = { ...STORED, account: HIS };
+    stored = { ...STORED, account: OWN_ACCOUNT };
     signIn(PARTNER);
   });
 
@@ -273,7 +273,7 @@ describe("a partner on his partner account's deal", () => {
     });
   });
 
-  it("cannot move it to an account that is not his, on either path", async () => {
+  it("cannot move it to an account that is not theirs, on either path", async () => {
     await expect(updateOpportunity({ id: OPP, name: "Deal", account: OTHER })).resolves.toEqual({ error: "Forbidden" });
     await expect(mcp("crm_update_opportunity", { id: OPP, account: OTHER }, PARTNER)).rejects.toThrow("NOT_FOUND");
     expect(db.crm_Opportunities.update).not.toHaveBeenCalled();
