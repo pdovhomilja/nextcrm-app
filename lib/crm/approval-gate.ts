@@ -1,4 +1,5 @@
 import { prismadb } from "@/lib/prisma";
+import { isQualifiedStage } from "@/lib/crm/stage-kind";
 
 // Spec §3.5 hard gate (2026-07-19 decision): a deal may only ENTER a stage
 // whose stage_kind is "qualified" (quote sent) when its SOW/quote is
@@ -17,7 +18,7 @@ export async function qualifiedEntryBlockReason(opts: {
     where: { id: toStage },
     select: { stage_kind: true },
   });
-  if (target?.stage_kind !== "qualified") return null;
+  if (!isQualifiedStage(target)) return null;
 
   return "Quote approval is required before moving this deal to the Qualified stage. Request approval from the deal page first.";
 }

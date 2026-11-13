@@ -46,6 +46,7 @@ import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import { NewOpportunityForm } from "../../opportunities/components/NewOpportunityForm";
 import { setInactiveOpportunity } from "@/actions/crm/opportunity/dashboard/set-inactive";
 import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
+import { isQualifiedStage } from "@/lib/crm/stage-kind";
 import {
   HoverCard,
   HoverCardContent,
@@ -396,13 +397,16 @@ const CRMKanban = ({
             >
               <CardTitle className="flex gap-2 p-3 justify-between">
                 <span className="text-sm font-bold">{col.name}</span>
-                <PlusCircledIcon
-                  className="w-5 h-5 cursor-pointer"
-                  onClick={() => {
-                    setSelectedStage(col.id);
-                    setIsDialogOpen(true);
-                  }}
-                />
+                {/* A new deal has no approved quote, so it cannot start in a qualified stage. */}
+                {!isQualifiedStage(col) && (
+                  <PlusCircledIcon
+                    className="w-5 h-5 cursor-pointer"
+                    onClick={() => {
+                      setSelectedStage(col.id);
+                      setIsDialogOpen(true);
+                    }}
+                  />
+                )}
               </CardTitle>
               <CardContent className="w-full h-full overflow-y-auto">
                 <SortableContext
