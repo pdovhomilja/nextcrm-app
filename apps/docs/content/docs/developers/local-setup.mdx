@@ -11,7 +11,7 @@ This page sets up the "host dev" workflow: the app runs on your machine with `pn
 | --- | --- | --- |
 | Node.js | 22.12.0 or newer | `engines.node` in `package.json` |
 | pnpm | 10 or newer (the repo pins `pnpm@11.20.0`) | `engines.pnpm` and `packageManager` |
-| Docker | Docker Desktop or Docker Engine with Compose | used by `docker-compose.dev.yml` |
+| Docker | Docker Desktop or Docker Engine with Compose v2.30 or newer | used by `docker-compose.dev.yml`; older Compose can delete the Inngest volume on `pnpm db:reset` |
 | Git | any recent version | |
 
 Corepack picks up the pinned pnpm version from `packageManager` if you have it enabled (`corepack enable`).
