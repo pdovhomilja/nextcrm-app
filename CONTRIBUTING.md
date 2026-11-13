@@ -39,7 +39,7 @@ Before you begin, ensure you have the following installed:
 
 - **Node.js** ≥22.12.0
 - **pnpm** ≥10 (package manager)
-- **Docker** (runs the local PostgreSQL via `pnpm db:up`)
+- **Docker** with Compose v2.30 or newer (runs the local PostgreSQL via `pnpm db:up`)
 - **Git** (version control)
 
 The full guide is at [docs.nextcrm.app → Local setup](https://docs.nextcrm.app/docs/developers/local-setup).
