@@ -5,6 +5,18 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.8...v0.40.0) (2026-11-13)
+
+
+### Added
+
+* **opportunities:** one opportunity service for server actions and MCP tools ([#501](https://github.com/pdovhomilja/nextcrm-app/issues/501)) ([25860d2](https://github.com/pdovhomilja/nextcrm-app/commit/25860d22c05d43d35fb864d0598dd9fed78152a9))
+
+
+### Fixed
+
+* **plugins:** skip the upgrade transaction when no installed plugin is behind ([#500](https://github.com/pdovhomilja/nextcrm-app/issues/500)) ([b17f75e](https://github.com/pdovhomilja/nextcrm-app/commit/b17f75e34e900f1472f35c0c3d8be32d67ffc046))
+
 ## [0.39.8](https://github.com/pdovhomilja/nextcrm-app/compare/v0.39.7...v0.39.8) (2026-11-13)
 
 
