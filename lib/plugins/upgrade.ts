@@ -9,18 +9,34 @@ import { writePluginLog } from "./log";
 
 const LOCK_KEY = 735_201_004; // arbitrary constant for pg advisory lock
 
+// An installed row is pending when its compiled-in registry entry is newer. Returns that entry, or
+// undefined when the row is current or unknown to the registry. Used by both the pre-check and the loop.
+function pendingPlugin(row: { id: string; version: string }, plugins: ReturnType<typeof getRegistry>) {
+  const plugin = plugins.find((p) => p.definition.id === row.id);
+  return plugin && compareVersions(plugin.definition.version, row.version) > 0 ? plugin : undefined;
+}
+
 export async function runPluginUpgrades(): Promise<void> {
-  if (getRegistry().length === 0) return; // zero-plugin instances: no transaction, no queries
+  const plugins = getRegistry();
+  if (plugins.length === 0) return; // zero-plugin instances: no transaction, no queries
+  // Cheap pre-check outside any transaction: most cold starts have nothing to upgrade (nothing installed,
+  // or every installed plugin already at its registry version), so they make one plain query and open no
+  // interactive transaction. On a small serverless pool, starting a transaction can fail with P2028
+  // ("Unable to start a transaction in the given time"), so don't start one when there is no work.
+  const installed = await prismaBase.installedPlugin.findMany();
+  if (!installed.some((row) => pendingPlugin(row, plugins))) return;
   // Transaction-scoped lock: released automatically on commit/rollback, on the same connection that took it.
   await prismaBase.$transaction(
     async (tx) => {
       const [{ locked }] = await tx.$queryRaw<{ locked: boolean }[]>`SELECT pg_try_advisory_xact_lock(${LOCK_KEY}) AS locked`;
       if (!locked) return;
-      const rows = await prismaBase.installedPlugin.findMany();
-      const registry = new Map(getRegistry().map((p) => [p.definition.id, p]));
+      // Re-read under the lock, on the lock's own connection: another replica may have upgraded since the
+      // pre-check. Read-only, so it takes no row locks that an onUpgrade hook (which runs on other
+      // connections) could wait on. The updates below stay on prismaBase for the same reason.
+      const rows = await tx.installedPlugin.findMany();
       for (const row of rows) {
-        const plugin = registry.get(row.id);
-        if (!plugin || compareVersions(plugin.definition.version, row.version) <= 0) continue;
+        const plugin = pendingPlugin(row, plugins);
+        if (!plugin) continue;
         try {
           if (plugin.definition.onUpgrade) {
             const actor = { type: "plugin" as const, pluginId: row.id };
