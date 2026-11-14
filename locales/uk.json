@@ -52,7 +52,7 @@
     "cardTitle": "Створити новий обліковий запис",
     "cardDescription": "Створіть обліковий запис, увійшовши за допомогою",
     "label": "Мова",
-    "locale": "{locale, select, de {German} en {Engish} cz {Czech} uk {Ukrainian} other {Unknown}}"
+    "locale": "{locale, select, de {German} en {Engish} cz {Czech} uk {Ukrainian} nb {Norwegian} other {Unknown}}"
   },
   "CrmModuleMenuComponent": {
     "menuTitle": "Продажі"
@@ -81,6 +81,7 @@
     "czech": "Чеська",
     "german": "Німецька",
     "ukrainian": "Українська",
+    "norwegian": "Норвезька",
     "selectPlaceholder": "Виберіть мову...",
     "searchPlaceholder": "Пошук мови...",
     "noResult": "Мову не знайдено.",

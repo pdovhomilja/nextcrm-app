@@ -6,7 +6,7 @@ Plugins are trusted code written by the NextCRM team. They ship in the product i
 
 ```
 plugins/<id>/plugin.ts            default export of definePlugin(...)
-plugins/<id>/messages/{en,cz,de,uk}.json
+plugins/<id>/messages/{en,cz,de,uk,nb}.json
 plugins/<id>/__tests__/*.test.ts  unit tests with createTestContext
 ```
 
@@ -39,4 +39,4 @@ After adding or removing a plugin run `pnpm plugins:generate --public-only` and 
 
 ## Testing
 
-Use `createTestContext` from `@nextcrm/plugin-sdk/testing` for unit tests. It gives in-memory `ctx.data`, `ctx.store`, a mockable `ctx.http.fetch`, and records `ctx.logs` and `ctx.notifications`. `ctx.t` returns the key. CI also runs the contract test (`__tests__/plugins/contract.test.ts`): manifest, sdk range, settings schema, and translations in all four locales. It also fails on duplicate Inngest function ids (`plugin-<id>-cron-<slug>`, `plugin-<id>-on-<slug>`, `plugin-<id>-after`) and invalid cron expressions.
+Use `createTestContext` from `@nextcrm/plugin-sdk/testing` for unit tests. It gives in-memory `ctx.data`, `ctx.store`, a mockable `ctx.http.fetch`, and records `ctx.logs` and `ctx.notifications`. `ctx.t` returns the key. CI also runs the contract test (`__tests__/plugins/contract.test.ts`): manifest, sdk range, settings schema, and translations in every locale. It also fails on duplicate Inngest function ids (`plugin-<id>-cron-<slug>`, `plugin-<id>-on-<slug>`, `plugin-<id>-after`) and invalid cron expressions.
