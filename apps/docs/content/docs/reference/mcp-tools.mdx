@@ -32,14 +32,25 @@ The MCP server registers **123 tools** in 18 modules, every entry of `allTools` 
 
 ### `crm_create_account`
 
-Create a new CRM account
+Create a new CRM account (optionally with company id, VAT, billing/shipping address and external_ref)
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
+| `billing_city` | `string` | no |  |  |
+| `billing_country` | `string` | no |  |  |
+| `billing_postal_code` | `string` | no |  |  |
+| `billing_street` | `string` | no |  |  |
+| `company_id` | `string` | no |  | Company registration number |
 | `description` | `string` | no |  |  |
 | `email` | `string (email)` | no |  |  |
+| `external_ref` | `string` | no |  | Id of this account's record in another system; find it again with crm_search_accounts |
 | `name` | `string` | yes |  |  |
 | `office_phone` | `string` | no |  |  |
+| `shipping_city` | `string` | no |  |  |
+| `shipping_country` | `string` | no |  |  |
+| `shipping_postal_code` | `string` | no |  |  |
+| `shipping_street` | `string` | no |  |  |
+| `vat` | `string` | no |  | VAT number |
 | `website` | `string` | no |  |  |
 
 ### `crm_delete_account`
@@ -69,26 +80,40 @@ List CRM accounts visible to the authenticated user
 
 ### `crm_search_accounts`
 
-Search accounts visible to the authenticated user by name or website (substring match)
+Search accounts visible to the authenticated user by name or website (substring match) and/or by exact external_ref, company_id or vat. Give at least one of them; all given filters must match.
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
+| `company_id` | `string` | no |  | Exact match |
+| `external_ref` | `string` | no |  | Exact match |
 | `limit` | `number` | no | `20` |  |
 | `offset` | `number` | no | `0` |  |
-| `query` | `string` | yes |  |  |
+| `query` | `string` | no |  | Substring of the name or website |
+| `vat` | `string` | no |  | Exact match |
 
 ### `crm_update_account`
 
-Update an existing CRM account by ID
+Update an existing CRM account by ID (including company id, VAT, billing/shipping address and external_ref)
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
 | `assigned_to` | <code>{"string (uuid) \u007c null"}</code> | no |  |  |
+| `billing_city` | `string` | no |  |  |
+| `billing_country` | `string` | no |  |  |
+| `billing_postal_code` | `string` | no |  |  |
+| `billing_street` | `string` | no |  |  |
+| `company_id` | `string` | no |  | Company registration number |
 | `description` | `string` | no |  |  |
 | `email` | `string (email)` | no |  |  |
+| `external_ref` | `string` | no |  | Id of this account's record in another system; find it again with crm_search_accounts |
 | `id` | `string (uuid)` | yes |  |  |
 | `name` | `string` | no |  |  |
 | `office_phone` | `string` | no |  |  |
+| `shipping_city` | `string` | no |  |  |
+| `shipping_country` | `string` | no |  |  |
+| `shipping_postal_code` | `string` | no |  |  |
+| `shipping_street` | `string` | no |  |  |
+| `vat` | `string` | no |  | VAT number |
 | `website` | `string` | no |  |  |
 
 ## Activities
@@ -342,10 +367,11 @@ Update a campaign template by ID
 
 ### `crm_create_contact`
 
-Create a new CRM contact
+Create a new CRM contact (optionally linked to an account)
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
+| `account` | `string (uuid)` | no |  | Account id to link the new contact to |
 | `email` | `string (email)` | no |  |  |
 | `first_name` | `string` | no |  |  |
 | `last_name` | `string` | yes |  |  |

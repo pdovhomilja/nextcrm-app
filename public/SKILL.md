@@ -62,9 +62,9 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 
 - **crm_list_accounts** — List CRM accounts assigned to the authenticated user
 - **crm_get_account** — Get a single CRM account by ID
-- **crm_search_accounts** — Search accounts by name or website (substring match)
-- **crm_create_account** — Create a new CRM account
-- **crm_update_account** — Update an existing CRM account by ID (accepts `assigned_to` to reassign the owner)
+- **crm_search_accounts** — Search accounts by name or website (substring match) and/or exact `external_ref`, `company_id` or `vat`
+- **crm_create_account** — Create a new CRM account (accepts `company_id`, `vat`, `billing_*` / `shipping_*` street, city, postal code, country, and `external_ref`)
+- **crm_update_account** — Update an existing CRM account by ID (accepts `assigned_to` to reassign the owner, plus the same company, address and `external_ref` fields as create)
 - **crm_delete_account** — Soft-delete a CRM account by ID (sets deletedAt timestamp)
 
 ### Contacts (6 tools)
@@ -72,7 +72,7 @@ All tools require a valid Bearer token. Tokens are generated from the Developer 
 - **crm_list_contacts** — List CRM contacts assigned to the authenticated user
 - **crm_get_contact** — Get a single CRM contact by ID
 - **crm_search_contacts** — Search contacts by name, email, or phone (substring match)
-- **crm_create_contact** — Create a new CRM contact
+- **crm_create_contact** — Create a new CRM contact (accepts `account` to link it to an account)
 - **crm_update_contact** — Update an existing CRM contact by ID (accepts `assigned_to` to reassign, `account` to link/unlink a parent account)
 - **crm_delete_contact** — Soft-delete a CRM contact by ID (sets deletedAt timestamp)
 
@@ -220,7 +220,7 @@ Writes (create/update/delete) require a manager or admin role; reads are open to
 ## Common Workflows
 
 ### Research a company and create an account
-1. `crm_search_accounts` — check if it already exists
+1. `crm_search_accounts` — check if it already exists (by name, or exactly by `company_id`, `vat` or `external_ref`)
 2. `crm_create_account` — create the account with company details
 3. `crm_create_contact` — add key contacts
 4. `crm_create_activity` — log the research as a note
