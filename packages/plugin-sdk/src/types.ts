@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { z } from "zod";
 
-export const LOCALES = ["en", "cz", "de", "uk"] as const;
+export const LOCALES = ["en", "cz", "de", "uk", "nb"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 /** `partner` is an external user (a distributor); plugin slots never include him unless they list the role. */

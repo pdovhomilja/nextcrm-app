@@ -14,7 +14,7 @@ function strings(value: unknown): string[] {
 }
 
 it("quotes literal braces in every order message (ICU)", () => {
-  for (const loc of ["en", "cz", "de", "uk"]) {
+  for (const loc of ["en", "cz", "de", "uk", "nb"]) {
     const json = JSON.parse(readFileSync(`locales/${loc}.json`, "utf8"));
     for (const s of [...strings(json.OrdersPage), ...strings(json.OrdersAdminPage)]) expect([loc, s, unquotedBraces(s)]).toEqual([loc, s, []]);
   }

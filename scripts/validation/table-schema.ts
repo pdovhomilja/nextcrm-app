@@ -87,7 +87,7 @@ export const TABLE_SCHEMAS: Record<string, TableSchema> = {
     foreignKeys: [],
     fieldDefinitions: [
       { name: 'userStatus', type: 'Enum', enumValues: ['ACTIVE', 'INACTIVE', 'PENDING'] },
-      { name: 'userLanguage', type: 'Enum', enumValues: ['cz', 'en', 'de', 'uk'] },
+      { name: 'userLanguage', type: 'Enum', enumValues: ['cz', 'en', 'de', 'uk', 'nb'] },
       { name: 'role', type: 'Enum', enumValues: ['admin', 'member', 'viewer'] },
       { name: 'created_on', type: 'DateTime' },
       { name: 'lastLoginAt', type: 'DateTime' },

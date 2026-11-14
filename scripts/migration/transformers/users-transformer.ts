@@ -6,7 +6,7 @@
 import { convertDateToISO, validateEnum, nullableString, toBoolean } from '../utils';
 
 const VALID_USER_STATUS = ['ACTIVE', 'INACTIVE', 'PENDING'] as const;
-const VALID_LANGUAGES = ['cz', 'en', 'de', 'uk'] as const;
+const VALID_LANGUAGES = ['cz', 'en', 'de', 'uk', 'nb'] as const;
 
 export function transformUsers(mongoRecord: any, uuidMapper: any): any {
   const newUuid = uuidMapper.generateAndMapUuid(mongoRecord._id);

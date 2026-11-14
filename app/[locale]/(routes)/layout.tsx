@@ -12,6 +12,7 @@ import { getTranslations } from "next-intl/server";
 import { AvatarProvider } from "@/context/avatar-context";
 import { CurrencyProvider } from "@/context/currency-context";
 import { getEnabledCurrencies, getDefaultCurrency } from "@/lib/currency";
+import type { Locale } from "@nextcrm/plugin-sdk";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -107,7 +108,7 @@ export default async function AppLayout({
   const { getPluginNavItems } = await import("@/lib/plugins/nav");
   const { mapLegacyRole } = await import("@/lib/authz/roles");
   const { getLocale } = await import("next-intl/server");
-  const pluginNav = await getPluginNavItems(mapLegacyRole(user?.role), (await getLocale()) as "en" | "cz" | "de" | "uk");
+  const pluginNav = await getPluginNavItems(mapLegacyRole(user?.role), (await getLocale()) as Locale);
 
   //console.log(typeof build, "build");
   return (

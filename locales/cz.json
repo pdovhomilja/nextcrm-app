@@ -52,7 +52,7 @@
     "cardTitle": "Vytvořit nový účet",
     "cardDescription": "Vytvořte si účet přihlášením pomocí",
     "label": "Jazyk",
-    "locale": "{locale, select, de {Němčina} en {Angličtina} cz {Čeština} uk {Ukrainian} other {Neznámý}}"
+    "locale": "{locale, select, de {Němčina} en {Angličtina} cz {Čeština} uk {Ukrainian} nb {Norština} other {Neznámý}}"
   },
   "CrmModuleMenuComponent": {
     "menuTitle": "Obchod",
@@ -84,6 +84,7 @@
     "czech": "Čeština",
     "german": "Němčina",
     "ukrainian": "Ukrajinština",
+    "norwegian": "Norština",
     "selectPlaceholder": "Vyberte jazyk...",
     "searchPlaceholder": "Hledat jazyk...",
     "noResult": "Jazyk nenalezen.",

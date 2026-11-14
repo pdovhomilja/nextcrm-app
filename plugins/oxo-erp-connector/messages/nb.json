@@ -1,0 +1,107 @@
+{
+  "name": "OXO ERP-kobling",
+  "admin": {
+    "test": "Test tilkoblingen",
+    "syncNow": "Synkroniser nå",
+    "loadLists": "Hent prislister",
+    "queued": "Lagt i kø: starter innen 5 minutter.",
+    "listsLoaded": "Hentet {count} prislister fra OXO ERP.",
+    "running": "En synkronisering kjører allerede.",
+    "connected": "Koblet til OXO ERP ({lists} aktive prislister).",
+    "dryRun": "Prøvekjøring er på: synkroniseringen rapporterer bare hva den ville endret. Les rapporten nedenfor, og slå deretter av prøvekjøring i innstillingene.",
+    "lastRun": "Siste kjøring",
+    "never": "ikke ennå",
+    "nextRun": "Neste kjøring",
+    "failed": "Feilet: {error}",
+    "customerCounts": "Kunder: {linked} allerede koblet, {number} funnet via IČO, {vat} via DIČ, {name} via navn og postnummer, {created} nye, {updated} oppdatert, {conflicts} konflikter, {skipped} inaktive, {failed} feilet",
+    "catalogCounts": "Katalog: kategorier {categoriesMatched} funnet, {categoriesCreated} nye · produkter {productsUpdated} oppdatert, {productsCreated} nye, {productsFailed} feilet · prislister erstattet {listsReplaced} · prislister satt på kunder {accountLists}",
+    "orderCounts": "Ordrer: {checked} kontrollert, {moved} flyttet, {imported} importert, {updated} oppdatert, {pending} venter på kunden sin",
+    "listsMissing": "Fant ikke disse prislistene i OXO ERP: {ids}",
+    "report": "Rapport fra prøvekjøring ({date})",
+    "nameLinks": "Koblet via navn og postnummer (kontroller disse)",
+    "createdRows": "Ville blitt opprettet",
+    "conflicts": "Kunder i OXO ERP som passer med mer enn én kunde i CRM",
+    "conflictsEmpty": "Ingen konflikter.",
+    "conflictsHelp": "Rett dataene i CRM (slå sammen duplikatkunden eller rett IČO); neste synkronisering kobler kunden.",
+    "reason": {
+      "number": "samme IČO",
+      "vat": "samme DIČ",
+      "name": "samme navn og postnummer",
+      "linked": "allerede koblet til en annen kunde i OXO ERP"
+    },
+    "catalog": "Katalog",
+    "priceListsHelp": "Velg prislister i innstillingen priceLists: OXO ERP-liste-ID-er skilt med komma, f.eks. 3, 7. Lister de bygger på, blir også med.",
+    "listsLoadedAt": "Prislister i OXO ERP (hentet {date})",
+    "listsNotLoaded": "Klikk Hent prislister for å se prislistene i OXO ERP.",
+    "skippedRules": "Regler CRM ikke kan bruke",
+    "syncQueued": "Synkroniseringen er lagt i kø.",
+    "orders": "Ordrer",
+    "ordersOff": "Sending av ordrer er slått av. Slå på sendOrders i innstillingene for å sende klare ordrer (READY) til OXO ERP.",
+    "ordersCounts": "Venter på sending {waiting} · sendt de siste 7 dagene {sent} · feilet {failed}",
+    "ordersPaused": "Sendingen har vært satt på pause siden {date}: {reason}. Når OXO ERP tar imot ordrer igjen, klikker du Test tilkoblingen.",
+    "pending": "{count} ordrer i OXO ERP venter på at kunden deres blir koblet"
+  },
+  "needsOwner": {
+    "title": "Kunder fra OXO ERP uten eier",
+    "nav": "Mangler eier",
+    "help": "Åpne kunden og sett eier; da forsvinner den fra denne listen.",
+    "empty": "Alle koblede kunder har en eier."
+  },
+  "panel": {
+    "linked": "OXO ERP-kunde #{id}",
+    "synced": "Sist synkronisert {date}",
+    "fields": "OXO ERP styrer: navn, IČO, DIČ, fakturaadresse, e-post, telefon.",
+    "inactive": "Inaktiv i OXO ERP.",
+    "priceList": "Prisliste fra OXO ERP: {name}",
+    "priceListMissing": "OXO ERP-prisliste #{id} er ikke importert",
+    "addresses": "Leveringsadresser"
+  },
+  "product": {
+    "linked": "OXO ERP-produkt #{id}"
+  },
+  "order": {
+    "linked": "OXO ERP-ordre {number}",
+    "state": "Status i OXO ERP: {state}",
+    "delivery": {
+      "none": "ikke sendt",
+      "partial": "delvis sendt",
+      "full": "sendt"
+    },
+    "deliveries": "Leveranser",
+    "belowList": "Under listepris i OXO ERP: {lines}",
+    "waiting": "Har ventet på OXO ERP siden {date}",
+    "lastError": "Siste feil: {error}",
+    "failed": "Ikke sendt: {reason}",
+    "missing": "Finnes ikke i OXO ERP",
+    "imported": "Importert fra OXO ERP"
+  },
+  "orders": {
+    "noAccount": "Kunden på ordren har ikke navn",
+    "notOxoProduct": "Produktet {product} kommer ikke fra OXO ERP",
+    "linesMissing": "{count} linjer vises ikke: produktene finnes ikke i CRM"
+  },
+  "mail": {
+    "failingSubject": "Synkroniseringen med OXO ERP feiler",
+    "failingText": "Synkroniseringen med OXO ERP har feilet tre ganger på rad. Siste feil: {error}",
+    "pausedSubject": "OXO ERP tar ikke imot ordrer",
+    "pausedText": "Sending av ordrer til OXO ERP er satt på pause: {error}. Når OXO ERP tar imot ordrer igjen, klikker du Test tilkoblingen.",
+    "orderFailedSubject": "Ordre {number} ble ikke sendt til OXO ERP",
+    "orderFailedText": "Ordre {number} kunne ikke sendes til OXO ERP: {error}. Rett årsaken, og klikk deretter Prøv igjen på ordren.",
+    "stuckSubject": "Ordre {number} har ventet på OXO ERP i et døgn",
+    "stuckText": "Ordre {number} har ventet på å bli sendt til OXO ERP siden {since}. Siste feil: {error}. Koblingen fortsetter å prøve; sjekk OXO ERP.",
+    "missingSubject": "Ordre {number}: finnes ikke i OXO ERP",
+    "missingText": "Koblingen finner ikke lenger CRM-ordre {number} i OXO ERP. CRM-ordren beholder statusen sin; kanseller den manuelt hvis ordren ble fjernet."
+  },
+  "tab": {
+    "title": "OXO ERP",
+    "notLinked": "Ikke koblet til en kunde i OXO ERP",
+    "orders": "Ordrer",
+    "ordersEmpty": "Ingen ordrer ennå",
+    "number": "Nummer",
+    "oxo": "OXO ERP",
+    "date": "Dato",
+    "total": "Totalt",
+    "status": "Status",
+    "delivery": "Levering"
+  }
+}

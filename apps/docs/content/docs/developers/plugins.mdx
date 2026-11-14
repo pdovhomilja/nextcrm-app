@@ -20,7 +20,7 @@ SDK version: `0.1.1` (`SDK_VERSION` in `packages/plugin-sdk/src/version.ts`).
 
 ```text
 plugins/<id>/plugin.ts              default export of definePlugin(...) (plugin.tsx also works)
-plugins/<id>/messages/en.json       translations, also cz.json, de.json, uk.json
+plugins/<id>/messages/en.json       translations, also cz.json, de.json, uk.json, nb.json
 plugins/<id>/__tests__/*.test.ts    unit tests with createTestContext
 plugins-private/<id>/...            same structure, private plugins
 ```
@@ -107,7 +107,7 @@ Every handler, hook and component receives `ctx`:
 | --- | --- |
 | `ctx.plugin` | `{ id, version }` |
 | `ctx.actor` | Who caused the call: `{ type: "user", userId, role }`, `{ type: "token", userId, role }` (MCP), `{ type: "system" }`, or `{ type: "plugin", pluginId }` |
-| `ctx.locale` | `en`, `cz`, `de` or `uk` |
+| `ctx.locale` | `en`, `cz`, `de`, `uk` or `nb` |
 | `ctx.settings`, `ctx.secrets` | Parsed values, typed from your zod schemas |
 | `ctx.data` | Data API for CRM records (permission-gated) |
 | `ctx.store` | Key-value store |
@@ -245,7 +245,7 @@ Tabs, panels, pages and admin sections are React Server Components. They render 
 
 ## Translations
 
-Put messages in `plugins/<id>/messages/{en,cz,de,uk}.json`. They are merged into the app's messages under `plugins.<id>`. `ctx.t("key")` reads from that namespace, and `reject("key")` messages are translated the same way. If a locale file is missing at runtime, the English file is used. Tab and page `title` values are keys in these files.
+Put messages in `plugins/<id>/messages/{en,cz,de,uk,nb}.json`. They are merged into the app's messages under `plugins.<id>`. `ctx.t("key")` reads from that namespace, and `reject("key")` messages are translated the same way. If a locale file is missing at runtime, the English file is used. Tab and page `title` values are keys in these files.
 
 ## Lifecycle
 
