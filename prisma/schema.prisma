@@ -44,6 +44,8 @@ model crm_Accounts {
   type                 String?   @default("Customer")
   vat                  String?
   website              String?
+  /// Id of this account's record in another system (set by integrations, e.g. over MCP).
+  external_ref         String?
   deletedAt            DateTime?
   deletedBy            String?   @db.Uuid
   /// External partner (role partner) who looks after this account; one per account.
@@ -76,6 +78,7 @@ model crm_Accounts {
   @@index([type])
   @@index([createdAt])
   @@index([deletedAt])
+  @@index([external_ref])
   pricelist_id String?         @db.Uuid
   pricelist    crm_PriceLists? @relation(fields: [pricelist_id], references: [id], onDelete: SetNull)
 
