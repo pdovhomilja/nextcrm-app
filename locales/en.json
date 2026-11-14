@@ -17,7 +17,11 @@
       "priceLists": "Price lists",
       "orders": "Orders",
       "targets": "Targets",
-      "targetLists": "Target Lists"
+      "targetLists": "Target Lists",
+      "dashboard": "Dashboard",
+      "myDashboard": "My Dashboard",
+      "overview": "Overview",
+      "approvals": "Approvals"
     },
     "projects": "Projects",
     "emails": "E-mails",

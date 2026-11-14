@@ -17,7 +17,11 @@
       "priceLists": "Ceníky",
       "orders": "Objednávky",
       "targets": "Cílové osoby",
-      "targetLists": "Seznamy cílů"
+      "targetLists": "Seznamy cílů",
+      "dashboard": "Přehled",
+      "myDashboard": "Můj přehled",
+      "overview": "Souhrn",
+      "approvals": "Schvalování"
     },
     "projects": "Projekty",
     "emails": "Pošta",
