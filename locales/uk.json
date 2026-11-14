@@ -23,6 +23,15 @@
     "emails": "електронні листи",
     "tasks": "завдання",
     "reports": "Звіти",
+    "reportsMenu": {
+      "dashboard": "Панель приладів",
+      "sales": "Продажі",
+      "leads": "Ліди",
+      "accounts": "Компанії",
+      "activity": "Активність",
+      "campaigns": "Кампанії",
+      "users": "Користувачі"
+    },
     "documents": "Документи",
     "invoices": "Рахунки",
     "storage": "Зберігання",
