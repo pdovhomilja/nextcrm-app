@@ -100,11 +100,11 @@ export function AppSidebar({
     getCrmMenuItem({ localizations: dict.crm, role: session?.user?.role ?? undefined }),
     getCampaignsMenuItem({
       localizations: {
-        title: "Campaigns",
-        campaigns: "All Campaigns",
-        templates: "Templates",
-        targets: "Targets",
-        targetLists: "Target Lists",
+        title: dict.campaigns.title,
+        campaigns: dict.campaigns.all,
+        templates: dict.campaigns.templates,
+        targets: dict.campaigns.targets,
+        targetLists: dict.campaigns.targetLists,
       },
     }),
     getProjectsMenuItem({ title: dict?.projects || "Projects" }),
