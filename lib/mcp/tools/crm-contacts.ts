@@ -112,7 +112,7 @@ export const crmContactTools = [
   },
   {
     name: "crm_create_contact",
-    description: "Create a new CRM contact",
+    description: "Create a new CRM contact (optionally linked to an account)",
     schema: z.object({
       first_name: z.string().min(1).optional(),
       last_name: z.string().min(1),
@@ -120,6 +120,7 @@ export const crmContactTools = [
       office_phone: z.string().optional(),
       mobile_phone: z.string().optional(),
       position: z.string().optional(),
+      account: z.string().uuid().optional().describe("Account id to link the new contact to"),
     }),
     async handler(
       args: {
@@ -129,15 +130,19 @@ export const crmContactTools = [
         office_phone?: string;
         mobile_phone?: string;
         position?: string;
+        account?: string;
       },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
-      const { last_name, ...rest } = args;
+      if (args.account) await assertLinkableAccount(user, args.account);
+      const { last_name, account, ...rest } = args;
       const contact = await prismadb.crm_Contacts.create({
         data: {
           v: 0,
           last_name,
           ...rest,
+          ...(account && { accountsIDs: account }),
           assigned_to: userId,
           createdBy: userId,
           updatedBy: userId,

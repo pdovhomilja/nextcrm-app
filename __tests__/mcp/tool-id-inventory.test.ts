@@ -10,9 +10,12 @@ import { allTools } from "@/lib/mcp/tools";
 
 const REVIEWED: Record<string, string> = {
   crm_get_account: "accountReadScopeWhere",
-  crm_update_account: "assertCanWriteAccount; assigned_to: assertAssignableUser",
+  crm_search_accounts: "accountReadScopeWhere; company_id is a registration number, not a record id",
+  crm_create_account: "company_id is a registration number, not a record id",
+  crm_update_account: "assertCanWriteAccount; assigned_to: assertAssignableUser; company_id is a registration number",
   crm_delete_account: "assertCanWriteAccount",
   crm_get_contact: "contactReadScopeWhere",
+  crm_create_contact: "account: assertCanWriteAccount",
   crm_update_contact: "assertCanWriteContact; account: assertCanWriteAccount; assigned_to: assertAssignableUser",
   crm_delete_contact: "assertCanWriteContact",
   crm_get_lead: "leadReadScopeWhere",
