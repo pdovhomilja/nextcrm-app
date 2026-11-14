@@ -144,6 +144,15 @@ describe("crm_create_contact account link", () => {
     expect(contacts.create).not.toHaveBeenCalled();
   });
 
+  it("a plain user cannot link to an existing account outside their write scope", async () => {
+    // The account exists (unscoped lookup), but the user-scoped write lookup finds nothing.
+    accounts.findFirst.mockImplementation(async ({ where }: any) => (where.OR ? null : { id: ACC }));
+    await expect(
+      run("crm_create_contact", { last_name: "Novak", account: ACC }, { id: "u1", role: "user" })
+    ).rejects.toThrow("NOT_FOUND");
+    expect(contacts.create).not.toHaveBeenCalled();
+  });
+
   it("omitting account creates an unlinked contact", async () => {
     await run("crm_create_contact", { last_name: "Novak" });
     expect(contacts.create.mock.calls[0][0].data).not.toHaveProperty("accountsIDs");
