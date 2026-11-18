@@ -4,6 +4,7 @@ const currencies = [
   { code: "EUR", name: "Euro", symbol: "€", isEnabled: true, isDefault: true },
   { code: "USD", name: "US Dollar", symbol: "$", isEnabled: true, isDefault: false },
   { code: "CZK", name: "Czech Koruna", symbol: "Kč", isEnabled: true, isDefault: false },
+  { code: "BRL", name: "Brazilian Real", symbol: "R$", isEnabled: true, isDefault: false },
 ];
 
 const rates = [

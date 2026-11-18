@@ -69,6 +69,12 @@ describe("formatCurrency", () => {
     expect(result).toContain("CZK");
   });
 
+  it("formats BRL amounts using Brazilian Portuguese conventions", () => {
+    const result = formatCurrency(new Decimal("1234.56"), "BRL");
+    expect(result).toContain("R$");
+    expect(result).toContain("1.234,56");
+  });
+
   it("formats whole numbers without unnecessary decimals", () => {
     const result = formatCurrency(new Decimal("1000"), "EUR");
     expect(result).not.toContain(".00");
