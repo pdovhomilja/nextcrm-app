@@ -85,7 +85,36 @@ const CZ: PdfStrings = {
   of: "z",
 };
 
-const bundles: Record<string, PdfStrings> = { en: EN, cs: CZ };
+const PT_BR: PdfStrings = {
+  invoice: "Fatura",
+  creditNote: "Nota de crédito",
+  proforma: "Fatura pro forma",
+  issueDate: "Data de emissão",
+  dueDate: "Data de vencimento",
+  taxableSupplyDate: "Data da prestação tributável",
+  supplier: "Fornecedor",
+  customer: "Cliente",
+  vatId: "CNPJ",
+  regId: "Inscrição estadual",
+  description: "Descrição",
+  qty: "Qtd.",
+  unitPrice: "Preço unitário",
+  discount: "Desconto",
+  vat: "Imposto",
+  lineTotal: "Total",
+  subtotal: "Subtotal",
+  vatTotal: "Total de impostos",
+  grandTotal: "Total geral",
+  paymentInstructions: "Instruções de pagamento",
+  bank: "Banco",
+  iban: "IBAN",
+  swift: "SWIFT",
+  variableSymbol: "Código de referência",
+  page: "Página",
+  of: "de",
+};
+
+const bundles: Record<string, PdfStrings> = { en: EN, cs: CZ, "pt-BR": PT_BR };
 
 export function getPdfStrings(locale: string): PdfStrings {
   return bundles[locale] ?? EN;

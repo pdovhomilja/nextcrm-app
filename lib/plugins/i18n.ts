@@ -5,8 +5,9 @@ import en from "@/locales/en.json";
 import cz from "@/locales/cz.json";
 import de from "@/locales/de.json";
 import uk from "@/locales/uk.json";
+import ptBR from "@/locales/pt-BR.json";
 
-const CORE = { en, cz, de, uk } as Record<Locale, Record<string, unknown>>;
+const CORE = { en, cz, de, uk, "pt-BR": ptBR } as Record<Locale, Record<string, unknown>>;
 
 export function mergePluginMessages<T extends Record<string, unknown>>(base: T, locale: Locale): T & { plugins: Record<string, unknown> } {
   const plugins: Record<string, unknown> = {};

@@ -53,6 +53,7 @@ it("formats days in UTC per locale", () => {
   expect(isoDay("2026-12-30T23:30:00.000Z")).toBe("2026-12-30");
   expect(formatDay("2027-01-12T23:30:00.000Z", "en")).toBe("12 Jan 2027");
   expect(formatDay("2027-01-12T23:30:00.000Z", "cz")).toBe("12. 1. 2027");
+  expect(formatDay("2027-01-12T23:30:00.000Z", "pt-BR")).toBe("12 de jan. de 2027");
 });
 
 describe("orders (rule 3)", () => {

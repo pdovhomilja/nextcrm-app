@@ -6,7 +6,7 @@ import { join } from "node:path";
 
 const ROOT = process.cwd();
 const OUT = join(ROOT, "lib/plugins/plugins.generated.ts");
-const LOCALES = ["en", "cz", "de", "uk"];
+const LOCALES = ["en", "cz", "de", "uk", "pt-BR"];
 const check = process.argv.includes("--check");
 const publicOnly = check || process.argv.includes("--public-only");
 const sources = [["public", "plugins"], ...(publicOnly ? [] : [["private", "plugins-private"]])];
@@ -25,9 +25,10 @@ for (const [source, dir] of sources) {
     imports.push(`import ${v} from "@/${dir}/${id}/plugin";`);
     const msgs = [];
     for (const loc of LOCALES) {
+      const localeVar = loc.replace(/-/g, "_");
       if (existsSync(join(base, id, "messages", `${loc}.json`))) {
-        imports.push(`import ${v}_${loc} from "@/${dir}/${id}/messages/${loc}.json";`);
-        msgs.push(`${loc}: ${v}_${loc}`);
+        imports.push(`import ${v}_${localeVar} from "@/${dir}/${id}/messages/${loc}.json";`);
+        msgs.push(`${loc}: ${v}_${localeVar}`);
       }
     }
     entries.push(`  { source: "${source}", definition: ${v}, messages: { ${msgs.join(", ")} } },`);

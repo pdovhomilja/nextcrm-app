@@ -58,6 +58,7 @@ export function SetLanguage({ userId }: Props) {
     { label: t("czech"), value: "cz" },
     { label: t("german"), value: "de" },
     { label: t("ukrainian"), value: "uk" },
+    { label: t("brazilianPortuguese"), value: "pt-BR" },
   ] as const;
 
   const form = useForm<z.infer<typeof FormSchema>>({
