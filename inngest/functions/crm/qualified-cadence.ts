@@ -38,11 +38,12 @@ export const qualifiedCadence = inngest.createFunction(
         const opp = await prismadb.crm_Opportunities.findUnique({
           where: { id: record_id },
           select: {
-            status: true, sales_stage: true, account: true, assigned_to: true, name: true,
+            status: true, deletedAt: true, sales_stage: true, account: true, assigned_to: true, name: true,
             assigned_sales_stage: { select: { stage_kind: true } },
           },
         });
-        if (!opp || opp.status !== "ACTIVE") return null;
+        // Soft delete sets deletedAt and leaves status ACTIVE, so check it too.
+        if (!opp || opp.status !== "ACTIVE" || opp.deletedAt) return null;
         if (opp.assigned_sales_stage?.stage_kind !== "qualified") return null;
         return createAutoTask({
           title: touch.title,

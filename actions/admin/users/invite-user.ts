@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import InviteUserEmail from "@/emails/InviteUser";
 import resendHelper from "@/lib/resend";
 import { revalidatePath } from "next/cache";
+import { writeAuditLog } from "@/lib/audit-log";
 import { Language } from "@prisma/client";
 import {
   requireRole,
@@ -74,6 +75,17 @@ export const inviteUser = async (data: {
     if (!user) {
       return { error: "User not created" };
     }
+
+    // Record who invited the user when the account is created, so an invited
+    // user can be told apart from one who signed up. Written before the email,
+    // because the user exists whether or not the email goes out.
+    await writeAuditLog({
+      entityType: "user",
+      entityId: user.id,
+      action: "created",
+      changes: [{ field: "invitedBy", old: null, new: actor.id }],
+      userId: actor.id,
+    });
 
     await resend.emails.send({
       from: `${process.env.NEXT_PUBLIC_APP_NAME} <${process.env.EMAIL_FROM}>`,
