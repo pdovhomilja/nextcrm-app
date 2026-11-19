@@ -172,7 +172,7 @@ jobs:
   e2e:
     name: E2E (Playwright)
     needs: fast
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright has no chromium build for ubuntu-latest (26.04) yet
     timeout-minutes: 30
     services:
       postgres:
