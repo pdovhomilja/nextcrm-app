@@ -68,13 +68,14 @@ describe("partnerNavItems (navigation shows only the partner modules)", () => {
   it("keeps the dashboard and his CRM modules, drops everything else", () => {
     const crm = { title: "CRM", accounts: "Accounts", contacts: "Contacts", leads: "Leads",
       opportunities: "Opportunities", contracts: "Contracts", products: "Products",
-      priceLists: "Price lists", orders: "Orders" };
+      priceLists: "Price lists", orders: "Orders", dashboard: "Dashboard",
+      myDashboard: "My Dashboard", overview: "Overview", approvals: "Approvals" };
     const items = [
       getDashboardMenuItem({ title: "Dashboard" }),
       getCrmMenuItem({ localizations: crm, role: "partner" }),
       getCampaignsMenuItem({ localizations: { title: "Campaigns", campaigns: "c", templates: "t", targets: "t", targetLists: "l" } }),
       getProjectsMenuItem({ title: "Projects" }),
-      getReportsMenuItem({ title: "Reports" }),
+      getReportsMenuItem({ title: "Reports", localizations: { dashboard: "d", sales: "s", leads: "l", accounts: "a", activity: "a", campaigns: "c", users: "u" } }),
       getInvoicesMenuItem({ title: "Invoices" }),
       { title: "Plugins", items: [{ title: "OXO ERP", url: "/p/oxo-erp-connector" }] },
       getAdministrationMenuItem({ title: "Administration" }),

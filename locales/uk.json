@@ -17,12 +17,25 @@
       "priceLists": "Прайс-листи",
       "orders": "Замовлення",
       "targets": "Цільові особи",
-      "targetLists": "Списки цілей"
+      "targetLists": "Списки цілей",
+      "dashboard": "Панель приладів",
+      "myDashboard": "Моя панель приладів",
+      "overview": "Огляд",
+      "approvals": "Схвалення"
     },
     "projects": "Проекти",
     "emails": "електронні листи",
     "tasks": "завдання",
     "reports": "Звіти",
+    "reportsMenu": {
+      "dashboard": "Панель приладів",
+      "sales": "Продажі",
+      "leads": "Ліди",
+      "accounts": "Компанії",
+      "activity": "Активність",
+      "campaigns": "Кампанії",
+      "users": "Користувачі"
+    },
     "documents": "Документи",
     "invoices": "Рахунки",
     "storage": "Зберігання",

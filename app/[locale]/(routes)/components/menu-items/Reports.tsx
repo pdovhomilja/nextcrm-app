@@ -15,27 +15,38 @@ import { NavItem } from "../nav-main"
 
 interface GetReportsMenuItemProps {
   title: string
+  localizations: {
+    dashboard: string
+    sales: string
+    leads: string
+    accounts: string
+    activity: string
+    campaigns: string
+    users: string
+  }
 }
 
 /**
  * Returns navigation item configuration for Reports module
  * @param title - Localized title for the menu item
+ * @param localizations - Localized titles for the sub-items
  * @returns NavItem object compatible with NavMain component
  */
 export default function getReportsMenuItem({
   title,
+  localizations,
 }: GetReportsMenuItemProps): NavItem {
   return {
     title,
     icon: FileBarChart,
     items: [
-      { title: "Dashboard", url: "/reports", exact: true },
-      { title: "Sales", url: "/reports/sales" },
-      { title: "Leads", url: "/reports/leads" },
-      { title: "Accounts", url: "/reports/accounts" },
-      { title: "Activity", url: "/reports/activity" },
-      { title: "Campaigns", url: "/reports/campaigns" },
-      { title: "Users", url: "/reports/users" },
+      { title: localizations.dashboard, url: "/reports", exact: true },
+      { title: localizations.sales, url: "/reports/sales" },
+      { title: localizations.leads, url: "/reports/leads" },
+      { title: localizations.accounts, url: "/reports/accounts" },
+      { title: localizations.activity, url: "/reports/activity" },
+      { title: localizations.campaigns, url: "/reports/campaigns" },
+      { title: localizations.users, url: "/reports/users" },
     ],
   }
 }
