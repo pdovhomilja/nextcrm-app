@@ -39,7 +39,14 @@
     "documents": "Documents",
     "invoices": "Invoices",
     "storage": "Storage",
-    "settings": "Administration"
+    "settings": "Administration",
+    "campaigns": {
+      "title": "Campaigns",
+      "all": "All Campaigns",
+      "templates": "Templates",
+      "targets": "Targets",
+      "targetLists": "Target Lists"
+    }
   },
   "DashboardPage": {
     "containerTitle": "Dashboard",

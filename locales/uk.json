@@ -39,7 +39,14 @@
     "documents": "Документи",
     "invoices": "Рахунки",
     "storage": "Зберігання",
-    "settings": "Адміністрація"
+    "settings": "Адміністрація",
+    "campaigns": {
+      "title": "Кампанії",
+      "all": "Усі кампанії",
+      "templates": "Шаблони",
+      "targets": "Цільові особи",
+      "targetLists": "Списки цілей"
+    }
   },
   "DashboardPage": {
     "containerTitle": "Панель приладів",

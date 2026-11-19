@@ -88,6 +88,13 @@ export default async function AppLayout({
       overview: dict("crm.overview"),
       approvals: dict("crm.approvals"),
     },
+    campaigns: {
+      title: dict("campaigns.title"),
+      all: dict("campaigns.all"),
+      templates: dict("campaigns.templates"),
+      targets: dict("campaigns.targets"),
+      targetLists: dict("campaigns.targetLists"),
+    },
     projects: dict("projects"),
     emails: dict("emails"),
     reports: dict("reports"),

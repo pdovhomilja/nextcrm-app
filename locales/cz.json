@@ -39,7 +39,14 @@
     "documents": "Dokumenty",
     "invoices": "Faktury",
     "storage": "Úložiště",
-    "settings": "Nastavení"
+    "settings": "Nastavení",
+    "campaigns": {
+      "title": "Kampaně",
+      "all": "Všechny kampaně",
+      "templates": "Šablony",
+      "targets": "Cílové osoby",
+      "targetLists": "Seznamy cílů"
+    }
   },
   "DashboardPage": {
     "containerTitle": "Přehled",
