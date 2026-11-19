@@ -27,6 +27,15 @@
     "emails": "Pošta",
     "tasks": "Úkoly",
     "reports": "Reporty",
+    "reportsMenu": {
+      "dashboard": "Přehled",
+      "sales": "Prodej",
+      "leads": "Leady",
+      "accounts": "Firmy",
+      "activity": "Aktivity",
+      "campaigns": "Kampaně",
+      "users": "Uživatelé"
+    },
     "documents": "Dokumenty",
     "invoices": "Faktury",
     "storage": "Úložiště",

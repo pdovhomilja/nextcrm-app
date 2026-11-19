@@ -27,6 +27,15 @@
     "emails": "E-mails",
     "tasks": "Tasks",
     "reports": "Reports",
+    "reportsMenu": {
+      "dashboard": "Dashboard",
+      "sales": "Sales",
+      "leads": "Leads",
+      "accounts": "Accounts",
+      "activity": "Activity",
+      "campaigns": "Campaigns",
+      "users": "Users"
+    },
     "documents": "Documents",
     "invoices": "Invoices",
     "storage": "Storage",
