@@ -22,6 +22,10 @@ type Props = {
     products: string;
     priceLists: string;
     orders: string;
+    dashboard: string;
+    myDashboard: string;
+    overview: string;
+    approvals: string;
   };
   /** Current user's role — the Approvals queue is manager/admin only. */
   role?: string;
@@ -33,15 +37,15 @@ export const getCrmMenuItem = ({ localizations, role }: Props): NavItem => {
     icon: Coins,
     items: [
       {
-        title: "Dashboard",
+        title: localizations.dashboard,
         url: "/crm/dashboard",
       },
       {
-        title: "My Dashboard",
+        title: localizations.myDashboard,
         url: "/crm/dashboard/user",
       },
       {
-        title: "Overview",
+        title: localizations.overview,
         url: "/crm",
       },
       {
@@ -77,7 +81,7 @@ export const getCrmMenuItem = ({ localizations, role }: Props): NavItem => {
         url: "/crm/orders",
       },
       ...(role === "manager" || role === "admin"
-        ? [{ title: "Approvals", url: "/crm/approvals" }]
+        ? [{ title: localizations.approvals, url: "/crm/approvals" }]
         : []),
     ],
   };

@@ -17,16 +17,36 @@
       "priceLists": "Ceníky",
       "orders": "Objednávky",
       "targets": "Cílové osoby",
-      "targetLists": "Seznamy cílů"
+      "targetLists": "Seznamy cílů",
+      "dashboard": "Přehled",
+      "myDashboard": "Můj přehled",
+      "overview": "Souhrn",
+      "approvals": "Schvalování"
     },
     "projects": "Projekty",
     "emails": "Pošta",
     "tasks": "Úkoly",
     "reports": "Reporty",
+    "reportsMenu": {
+      "dashboard": "Přehled",
+      "sales": "Prodej",
+      "leads": "Leady",
+      "accounts": "Firmy",
+      "activity": "Aktivity",
+      "campaigns": "Kampaně",
+      "users": "Uživatelé"
+    },
     "documents": "Dokumenty",
     "invoices": "Faktury",
     "storage": "Úložiště",
-    "settings": "Nastavení"
+    "settings": "Nastavení",
+    "campaigns": {
+      "title": "Kampaně",
+      "all": "Všechny kampaně",
+      "templates": "Šablony",
+      "targets": "Cílové osoby",
+      "targetLists": "Seznamy cílů"
+    }
   },
   "DashboardPage": {
     "containerTitle": "Přehled",

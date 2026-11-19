@@ -35,7 +35,7 @@ Only `ACTIVE` users get through: pages, server actions, API routes and the MCP s
 
 ### Invitation
 
-At the top of the Users page, enter a name, email and language and send the invitation. NextCRM creates the user with role `user` and status `ACTIVE` and sends an invitation email through Resend. Inviting fails with an error if no Resend key is configured.
+At the top of the Users page, enter a name, email and language and send the invitation. NextCRM creates the user with role `user` and status `ACTIVE` and sends an invitation email through Resend. Inviting fails with an error if no Resend key is configured. Each invitation is recorded in the [audit log](/docs/admins/audit-log) as a Created entry for the new user, naming the admin who invited them.
 
 ### Self sign-up
 
