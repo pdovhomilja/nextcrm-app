@@ -17,16 +17,36 @@
       "priceLists": "Prislister",
       "orders": "Ordrer",
       "targets": "Mål",
-      "targetLists": "Mållister"
+      "targetLists": "Mållister",
+      "dashboard": "Dashbord",
+      "myDashboard": "Mitt dashbord",
+      "overview": "Oversikt",
+      "approvals": "Godkjenninger"
     },
     "projects": "Prosjekter",
     "emails": "E-post",
     "tasks": "Oppgaver",
     "reports": "Rapporter",
+    "reportsMenu": {
+      "dashboard": "Dashbord",
+      "sales": "Salg",
+      "leads": "Leads",
+      "accounts": "Kunder",
+      "activity": "Aktivitet",
+      "campaigns": "Kampanjer",
+      "users": "Brukere"
+    },
     "documents": "Dokumenter",
     "invoices": "Fakturaer",
     "storage": "Lagring",
-    "settings": "Administrasjon"
+    "settings": "Administrasjon",
+    "campaigns": {
+      "title": "Kampanjer",
+      "all": "Alle kampanjer",
+      "templates": "Maler",
+      "targets": "Mål",
+      "targetLists": "Mållister"
+    }
   },
   "DashboardPage": {
     "containerTitle": "Oversikt",
