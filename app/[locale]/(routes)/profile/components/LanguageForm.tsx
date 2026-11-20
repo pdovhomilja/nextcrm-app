@@ -25,6 +25,7 @@ export function LanguageForm({ userId }: { userId: string }) {
     { label: t("czech"), value: "cz" },
     { label: t("german"), value: "de" },
     { label: t("ukrainian"), value: "uk" },
+    { label: t("norwegian"), value: "nb" },
   ];
 
   async function handleChange(language: string) {

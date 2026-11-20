@@ -3,6 +3,7 @@ import en from "../messages/en.json";
 import cz from "../messages/cz.json";
 import de from "../messages/de.json";
 import uk from "../messages/uk.json";
+import nb from "../messages/nb.json";
 
 const keys = (o: Record<string, unknown>, p = ""): string[] => Object.entries(o).flatMap(([k, v]) => (v && typeof v === "object" ? keys(v as Record<string, unknown>, `${p}${k}.`) : [`${p}${k}`])).sort();
 
@@ -19,7 +20,7 @@ it("declares the OXO ERP connector", () => {
 });
 
 it("has the same message keys in every locale", () => {
-  for (const m of [cz, de, uk]) expect(keys(m)).toEqual(keys(en));
+  for (const m of [cz, de, uk, nb]) expect(keys(m)).toEqual(keys(en));
 });
 
 it("never fails an install", async () => {

@@ -84,7 +84,7 @@ export function summarize(hasKey: boolean, reg: Registration | null, contactAt: 
   return { kind: "protected", date: reg.protectedUntil };
 }
 
-const INTL_LOCALE: Record<string, string> = { en: "en-GB", cz: "cs", de: "de", uk: "uk" };
+const INTL_LOCALE: Record<string, string> = { en: "en-GB", cz: "cs", de: "de", uk: "uk", nb: "nb" };
 
 export function formatDay(iso: string, locale: string): string {
   return new Intl.DateTimeFormat(INTL_LOCALE[locale] ?? "en-GB", { day: "numeric", month: locale === "cz" ? "numeric" : "short", year: "numeric", timeZone: "UTC" })

@@ -17,16 +17,36 @@
       "priceLists": "Price lists",
       "orders": "Orders",
       "targets": "Targets",
-      "targetLists": "Target Lists"
+      "targetLists": "Target Lists",
+      "dashboard": "Dashboard",
+      "myDashboard": "My Dashboard",
+      "overview": "Overview",
+      "approvals": "Approvals"
     },
     "projects": "Projects",
     "emails": "E-mails",
     "tasks": "Tasks",
     "reports": "Reports",
+    "reportsMenu": {
+      "dashboard": "Dashboard",
+      "sales": "Sales",
+      "leads": "Leads",
+      "accounts": "Accounts",
+      "activity": "Activity",
+      "campaigns": "Campaigns",
+      "users": "Users"
+    },
     "documents": "Documents",
     "invoices": "Invoices",
     "storage": "Storage",
-    "settings": "Administration"
+    "settings": "Administration",
+    "campaigns": {
+      "title": "Campaigns",
+      "all": "All Campaigns",
+      "templates": "Templates",
+      "targets": "Targets",
+      "targetLists": "Target Lists"
+    }
   },
   "DashboardPage": {
     "containerTitle": "Dashboard",
@@ -52,7 +72,7 @@
     "cardTitle": "Create new account",
     "cardDescription": "Create account by login with",
     "label": "Language",
-    "locale": "{locale, select, de {German} en {English} cz {Czech} uk {Ukrainian} other {Unknown}}"
+    "locale": "{locale, select, de {German} en {English} cz {Czech} uk {Ukrainian} nb {Norwegian} other {Unknown}}"
   },
   "CrmModuleMenuComponent": {
     "menuTitle": "Sales"
@@ -81,6 +101,7 @@
     "czech": "Czech",
     "german": "German",
     "ukrainian": "Ukrainian",
+    "norwegian": "Norwegian",
     "selectPlaceholder": "Select language...",
     "searchPlaceholder": "Search language...",
     "noResult": "No language found.",

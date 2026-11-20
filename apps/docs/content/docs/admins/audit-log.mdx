@@ -7,6 +7,8 @@ NextCRM records changes to accounts, contacts, leads, opportunities and contract
 
 Changes made by a plugin show the user as System and start with the change `plugin`, set to the plugin id.
 
+Inviting a user from the Users page (`/admin/users`) writes a Created entry for the new user, with the inviting admin as the user and the change `invitedBy`, set to that admin's id. It is written when the account is created, so it stays even if the invite email fails.
+
 ## Filters
 
 - **Entity:** Account, Contact, Lead, Opportunity, Contract, or all.
