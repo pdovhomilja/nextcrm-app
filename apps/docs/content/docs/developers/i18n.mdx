@@ -3,7 +3,7 @@ title: Internationalization
 description: How translations work with next-intl, how to add strings, and what a new locale touches.
 ---
 
-NextCRM uses [next-intl](https://next-intl.dev/). The UI ships in four locales:
+NextCRM uses [next-intl](https://next-intl.dev/). The UI ships in five locales:
 
 | Code | Language | File |
 | --- | --- | --- |
@@ -11,6 +11,7 @@ NextCRM uses [next-intl](https://next-intl.dev/). The UI ships in four locales:
 | `cz` | Czech | `locales/cz.json` |
 | `de` | German | `locales/de.json` |
 | `uk` | Ukrainian | `locales/uk.json` |
+| `nb` | Norwegian Bokmål | `locales/nb.json` |
 
 Note that Czech uses `cz`, not the ISO code `cs`.
 
@@ -52,18 +53,18 @@ export function CancelButton() {
 
 1. Pick the namespace of the page or component, or add a new top-level namespace.
 2. Add the key to `locales/en.json`.
-3. Add the same key, translated, to `cz.json`, `de.json` and `uk.json`.
+3. Add the same key, translated, to `cz.json`, `de.json`, `uk.json` and `nb.json`.
 4. Use it with `t("key")`. For values, use ICU placeholders: `"greeting": "Hello {name}"` and `t("greeting", { name })`.
 
 Run `pnpm i18n:check` before you open the PR. It compares every locale file (and every plugin `messages/` folder) with `en.json` and fails on missing keys; CI runs it too. A key that is still missing at runtime falls back to the English text, so users never see the raw key path. If you cannot translate a key, copy the English text and say so in the PR.
 
 ## Plugin messages
 
-Plugins keep their own messages in `plugins/<id>/messages/{en,cz,de,uk}.json`. They are merged under `plugins.<id>` and, unlike core messages, fall back to `en` when a locale file is missing. The plugin contract test fails if a locale file is missing or lacks a key from `en.json`. See [Plugins](/docs/developers/plugins#translations).
+Plugins keep their own messages in `plugins/<id>/messages/{en,cz,de,uk,nb}.json`. They are merged under `plugins.<id>` and, unlike core messages, fall back to `en` when a locale file is missing. The plugin contract test fails if a locale file is missing or lacks a key from `en.json`. See [Plugins](/docs/developers/plugins#translations).
 
 ## Add a locale
 
-Adding a fifth locale touches more than the message file. At minimum:
+Adding a new locale touches more than the message file. At minimum:
 
 - `i18n/routing.ts`: add the code to `locales`.
 - `locales/<code>.json`: a full copy of `en.json`, translated.

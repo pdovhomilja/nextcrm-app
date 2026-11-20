@@ -7,7 +7,7 @@ import type { KPIData } from "@/actions/reports/types";
 import { useTranslations } from "next-intl";
 
 const currencyLocaleMap: Record<string, string> = {
-  EUR: "fr-FR", USD: "en-US", CZK: "cs-CZ", GBP: "en-GB",
+  EUR: "fr-FR", USD: "en-US", CZK: "cs-CZ", GBP: "en-GB", NOK: "nb-NO",
 };
 
 function formatValue(value: number, label: string, currency: string = "USD"): string {

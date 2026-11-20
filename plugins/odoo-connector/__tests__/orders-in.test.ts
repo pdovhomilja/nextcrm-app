@@ -244,9 +244,9 @@ describe("final review fixes", () => {
 });
 
 it("review: the 'customer changed' email asks for nothing users cannot do on an imported order", () => {
-  for (const lang of ["en", "cz", "de", "uk"]) {
+  for (const lang of ["en", "cz", "de", "uk", "nb"]) {
     const text = require(`../messages/${lang}.json`).mail.movedText as string;
-    expect(text).not.toMatch(/cancel|zrušte|stornieren|скасуйте/i);
+    expect(text).not.toMatch(/cancel|zrušte|stornieren|скасуйте|kanseller|avbryt|annuller/i);
   }
 });
 

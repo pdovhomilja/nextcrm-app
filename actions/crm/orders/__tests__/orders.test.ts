@@ -35,8 +35,8 @@ it("maps domain errors to keys and pricing errors to their message", async () =>
   await expect(decideOrderApproval("o1", "APPROVED")).resolves.toEqual({ data: { status: "READY" } });
 });
 
-it("has a translation for every error key in all four locales", () => {
-  for (const loc of ["en", "cz", "de", "uk"]) {
+it("has a translation for every error key in every locale", () => {
+  for (const loc of ["en", "cz", "de", "uk", "nb"]) {
     const errors = JSON.parse(readFileSync(`locales/${loc}.json`, "utf8")).OrdersPage.error;
     for (const code of [...ORDER_ERROR_CODES, "Unauthorized"]) expect([loc, code, typeof errors[code]]).toEqual([loc, code, "string"]);
   }

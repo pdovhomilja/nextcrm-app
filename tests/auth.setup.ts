@@ -46,7 +46,7 @@ setup("authenticate", async ({ page, context }) => {
     await page.goto("/en");
     await page.waitForURL(
       (url) =>
-        /^\/(en|cs|de|uk)(\/|$)/.test(url.pathname) &&
+        /^\/(en|cz|de|uk|nb)(\/|$)/.test(url.pathname) &&
         !url.pathname.includes("sign-in"),
       { timeout: 15000 }
     );

@@ -7,6 +7,7 @@ const currencyLocaleMap: Record<string, string> = {
   USD: "en-US",
   CZK: "cs-CZ",
   GBP: "en-GB",
+  NOK: "nb-NO",
 };
 
 export type { Rate };

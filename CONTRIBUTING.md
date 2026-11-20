@@ -206,7 +206,7 @@ Do not use `prisma db push`; every environment applies the committed migrations.
 
 ### Internationalization
 
-NextCRM supports multiple languages (English, Czech, German, Ukrainian):
+NextCRM supports multiple languages (English, Czech, German, Ukrainian, Norwegian Bokmål):
 
 - Use `next-intl` for translations
 - Add new translation keys to `/locales/{lang}.json`

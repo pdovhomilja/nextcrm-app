@@ -1,0 +1,48 @@
+{
+  "name": "Kundebeskyttelse",
+  "rules": {
+    "protected": "Denne bedriften er beskyttet til {until}.",
+    "alreadyInCrm": "Denne bedriften finnes allerede i CRM. En leder er bedt om å tildele den til deg.",
+    "exists": "Denne bedriften finnes allerede i CRM.",
+    "ownAccount": "Du har allerede denne bedriften i CRM.",
+    "numberRequired": "Skriv inn organisasjonsnummeret.",
+    "ownerManagersOnly": "Bare en leder kan endre eieren av kunden."
+  },
+  "tab": {
+    "title": "Beskyttelse",
+    "status": "Status",
+    "protected": "Beskyttet til {date}",
+    "contactNeeded": "Kontakt må tas innen {date}",
+    "free": "Ikke beskyttet: ingen eier",
+    "noNumber": "Ikke beskyttet: mangler organisasjonsnummer",
+    "contact": "Kvalifiserende kontakt",
+    "contactYes": "Ja, {date}",
+    "contactNo": "Ikke ennå",
+    "order": "Ordrer", "lastOrder": "Siste bekreftede ordre {date}", "noOrder": "Ingen bekreftet ordre ennå",
+    "history": "Eierhistorikk",
+    "historyEmpty": "Ingen eierendringer er registrert ennå.",
+    "nobody": "ingen",
+    "system": "system",
+    "reason": { "created": "opprettet", "assigned": "tildelt", "released": "frigitt", "expired": "beskyttelsen utløp", "expired-no-contact": "ingen kontakt i tide", "install": "programtillegg installert" }
+  },
+  "expiring": {
+    "title": "Beskyttelse som utløper",
+    "nav": "Beskyttelse som utløper",
+    "due": "Utløper innen {days} dager",
+    "freed": "Frigitt de siste 7 dagene",
+    "empty": "Ingenting her."
+  },
+  "admin": {
+    "conflicts": "Kunder med samme organisasjonsnummer",
+    "conflictsEmpty": "Ingen konflikter.",
+    "key": "Nummer",
+    "account": "Kunde",
+    "other": "Beholdt av"
+  },
+  "mail": {
+    "expiredSubject": "{count} kunder har mistet beskyttelsen",
+    "expiredText": "Disse kundene har ikke lenger en eier:",
+    "blocked-protected": { "subject": "Blokkert: {account} er beskyttet", "text": "{user} prøvde å opprette {account}, som er beskyttet av en annen eier." },
+    "blocked-free": { "subject": "Tildel {account}", "text": "{user} prøvde å opprette {account}. Den finnes allerede i CRM uten eier. Tildel den på kunden hvis det passer." }
+  }
+}
