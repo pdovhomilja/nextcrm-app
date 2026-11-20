@@ -2,12 +2,20 @@
 // (GHSA-qwhm-9fcm-p878). Each test must fail against the pre-guard code:
 // a non-owner must be denied AND the mutation must not run.
 
+// update and delete check scope in lib/crm/accounts/service.ts, which imports the
+// leaf modules; watch, unwatch and createTask import the barrel. Both get the same
+// mock, and the real error classes so the service recognises a denial.
+const mockAssertAccount = jest.fn();
 jest.mock("@/lib/authz", () => ({
   PARTNER_EDIT: { partnerEdit: true },
   requireAuthenticated: jest.fn(),
-  assertCanWriteAccount: jest.fn(),
-  AuthenticationError: class AuthenticationError extends Error {},
-  AuthorizationError: class AuthorizationError extends Error {},
+  assertCanWriteAccount: (...a: unknown[]) => mockAssertAccount(...a),
+  AuthenticationError: jest.requireActual("@/lib/authz/errors").AuthenticationError,
+  AuthorizationError: jest.requireActual("@/lib/authz/errors").AuthorizationError,
+}));
+jest.mock("@/lib/authz/scopes/crm", () => ({
+  PARTNER_EDIT: { partnerEdit: true },
+  assertCanWriteAccount: (...a: unknown[]) => mockAssertAccount(...a),
 }));
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
@@ -35,11 +43,7 @@ jest.mock("@/lib/resend", () => ({
 jest.mock("@/emails/NewTaskFromCRM", () => ({ __esModule: true, default: () => null }));
 jest.mock("@/emails/NewTaskFromCRMToWatchers", () => ({ __esModule: true, default: () => null }));
 
-import {
-  requireAuthenticated,
-  assertCanWriteAccount,
-  AuthorizationError,
-} from "@/lib/authz";
+import { requireAuthenticated, AuthorizationError } from "@/lib/authz";
 import { getSession } from "@/lib/auth-server";
 import { prismadb } from "@/lib/prisma";
 import { updateAccount } from "@/actions/crm/accounts/update-account";
@@ -49,7 +53,7 @@ import { unwatchAccount } from "@/actions/crm/accounts/unwatch-account";
 import { createTask } from "@/actions/crm/accounts/create-task";
 
 const authed = requireAuthenticated as jest.Mock;
-const assertAccount = assertCanWriteAccount as jest.Mock;
+const assertAccount = mockAssertAccount;
 const getSess = getSession as jest.Mock;
 const accUpdate = prismadb.crm_Accounts.update as jest.Mock;
 const taskCreate = prismadb.crm_Accounts_Tasks.create as jest.Mock;
