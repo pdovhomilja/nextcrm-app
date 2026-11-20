@@ -5,6 +5,22 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.41.0...v0.42.0) (2026-11-20)
+
+
+### Added
+
+* **admin:** record user invites in the audit log ([#514](https://github.com/pdovhomilja/nextcrm-app/issues/514)) ([e098cd6](https://github.com/pdovhomilja/nextcrm-app/commit/e098cd6e477970d8a2bda502199f486db1552967))
+* **i18n:** add Norwegian Bokmål (nb) locale ([#506](https://github.com/pdovhomilja/nextcrm-app/issues/506)) ([0ad076a](https://github.com/pdovhomilja/nextcrm-app/commit/0ad076a226aac6321f97c52b99c49f7469418d1b))
+
+
+### Fixed
+
+* **crm:** skip soft-deleted deals in qualified and care cadences ([#510](https://github.com/pdovhomilja/nextcrm-app/issues/510)) ([1fdb2a1](https://github.com/pdovhomilja/nextcrm-app/commit/1fdb2a1d7b9eaf567aaff7d10d34bf4c3a2469b8))
+* **i18n:** translate campaigns sidebar menu ([#509](https://github.com/pdovhomilja/nextcrm-app/issues/509)) ([d0a6842](https://github.com/pdovhomilja/nextcrm-app/commit/d0a684296fee80c30034a6c19100fafe79c04bb9))
+* **i18n:** translate crm sidebar menu ([#508](https://github.com/pdovhomilja/nextcrm-app/issues/508)) ([846c91c](https://github.com/pdovhomilja/nextcrm-app/commit/846c91c198906bced0fdfaeb1fbecd3a9bef574d))
+* **i18n:** translate reports sidebar menu ([#507](https://github.com/pdovhomilja/nextcrm-app/issues/507)) ([86e7caf](https://github.com/pdovhomilja/nextcrm-app/commit/86e7caf5e0af519d40b9b31e9d17fea3696ffd95))
+
 ## [0.41.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.40.0...v0.41.0) (2026-11-14)
 
 
