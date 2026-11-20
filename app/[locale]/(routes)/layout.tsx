@@ -12,6 +12,7 @@ import { getTranslations } from "next-intl/server";
 import { AvatarProvider } from "@/context/avatar-context";
 import { CurrencyProvider } from "@/context/currency-context";
 import { getEnabledCurrencies, getDefaultCurrency } from "@/lib/currency";
+import type { Locale } from "@nextcrm/plugin-sdk";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -83,10 +84,30 @@ export default async function AppLayout({
       orders: dict("crm.orders"),
       targets: dict("crm.targets"),
       targetLists: dict("crm.targetLists"),
+      dashboard: dict("crm.dashboard"),
+      myDashboard: dict("crm.myDashboard"),
+      overview: dict("crm.overview"),
+      approvals: dict("crm.approvals"),
+    },
+    campaigns: {
+      title: dict("campaigns.title"),
+      all: dict("campaigns.all"),
+      templates: dict("campaigns.templates"),
+      targets: dict("campaigns.targets"),
+      targetLists: dict("campaigns.targetLists"),
     },
     projects: dict("projects"),
     emails: dict("emails"),
     reports: dict("reports"),
+    reportsMenu: {
+      dashboard: dict("reportsMenu.dashboard"),
+      sales: dict("reportsMenu.sales"),
+      leads: dict("reportsMenu.leads"),
+      accounts: dict("reportsMenu.accounts"),
+      activity: dict("reportsMenu.activity"),
+      campaigns: dict("reportsMenu.campaigns"),
+      users: dict("reportsMenu.users"),
+    },
     documents: dict("documents"),
     invoices: dict("invoices"),
     settings: dict("settings"),
@@ -107,7 +128,7 @@ export default async function AppLayout({
   const { getPluginNavItems } = await import("@/lib/plugins/nav");
   const { mapLegacyRole } = await import("@/lib/authz/roles");
   const { getLocale } = await import("next-intl/server");
-  const pluginNav = await getPluginNavItems(mapLegacyRole(user?.role), (await getLocale()) as "en" | "cz" | "de" | "uk");
+  const pluginNav = await getPluginNavItems(mapLegacyRole(user?.role), (await getLocale()) as Locale);
 
   //console.log(typeof build, "build");
   return (

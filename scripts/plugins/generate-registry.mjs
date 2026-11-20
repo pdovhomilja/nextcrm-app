@@ -6,7 +6,7 @@ import { join } from "node:path";
 
 const ROOT = process.cwd();
 const OUT = join(ROOT, "lib/plugins/plugins.generated.ts");
-const LOCALES = ["en", "cz", "de", "uk"];
+const LOCALES = ["en", "cz", "de", "uk", "nb"];
 const check = process.argv.includes("--check");
 const publicOnly = check || process.argv.includes("--public-only");
 const sources = [["public", "plugins"], ...(publicOnly ? [] : [["private", "plugins-private"]])];

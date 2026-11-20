@@ -17,16 +17,36 @@
       "priceLists": "Прайс-листи",
       "orders": "Замовлення",
       "targets": "Цільові особи",
-      "targetLists": "Списки цілей"
+      "targetLists": "Списки цілей",
+      "dashboard": "Панель приладів",
+      "myDashboard": "Моя панель приладів",
+      "overview": "Огляд",
+      "approvals": "Схвалення"
     },
     "projects": "Проекти",
     "emails": "електронні листи",
     "tasks": "завдання",
     "reports": "Звіти",
+    "reportsMenu": {
+      "dashboard": "Панель приладів",
+      "sales": "Продажі",
+      "leads": "Ліди",
+      "accounts": "Компанії",
+      "activity": "Активність",
+      "campaigns": "Кампанії",
+      "users": "Користувачі"
+    },
     "documents": "Документи",
     "invoices": "Рахунки",
     "storage": "Зберігання",
-    "settings": "Адміністрація"
+    "settings": "Адміністрація",
+    "campaigns": {
+      "title": "Кампанії",
+      "all": "Усі кампанії",
+      "templates": "Шаблони",
+      "targets": "Цільові особи",
+      "targetLists": "Списки цілей"
+    }
   },
   "DashboardPage": {
     "containerTitle": "Панель приладів",
@@ -52,7 +72,7 @@
     "cardTitle": "Створити новий обліковий запис",
     "cardDescription": "Створіть обліковий запис, увійшовши за допомогою",
     "label": "Мова",
-    "locale": "{locale, select, de {German} en {Engish} cz {Czech} uk {Ukrainian} other {Unknown}}"
+    "locale": "{locale, select, de {German} en {Engish} cz {Czech} uk {Ukrainian} nb {Norwegian} other {Unknown}}"
   },
   "CrmModuleMenuComponent": {
     "menuTitle": "Продажі"
@@ -81,6 +101,7 @@
     "czech": "Чеська",
     "german": "Німецька",
     "ukrainian": "Українська",
+    "norwegian": "Норвезька",
     "selectPlaceholder": "Виберіть мову...",
     "searchPlaceholder": "Пошук мови...",
     "noResult": "Мову не знайдено.",
