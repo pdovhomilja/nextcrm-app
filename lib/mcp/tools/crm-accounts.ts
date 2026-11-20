@@ -1,10 +1,9 @@
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz";
-import {
-  accountReadScopeWhere,
-  assertCanWriteAccount,
-} from "@/lib/authz/scopes/crm";
+import { accountReadScopeWhere } from "@/lib/authz/scopes/crm";
+import { createAccount, deleteAccount, updateAccount } from "@/lib/crm/accounts/service";
+import { AccountError } from "@/lib/crm/accounts/types";
 import {
   paginationSchema,
   paginationArgs,
@@ -13,20 +12,18 @@ import {
   ilike,
   notFound,
   validationError,
-  softDeleteData,
-  assertScopeOrNotFound,
 } from "../helpers";
-import { assertAssignableUser } from "@/lib/authz/assignable-user";
 
-// assertCanWriteAccount intentionally ignores deletedAt (the server actions
-// guard it separately), so the MCP write path keeps its own soft-delete check.
-async function assertWritableAccount(user: AuthzUser, accountId: string) {
-  const row = await prismadb.crm_Accounts.findFirst({
-    where: { id: accountId, deletedAt: null },
-    select: { id: true },
-  });
-  if (!row) notFound("Account");
-  await assertScopeOrNotFound(() => assertCanWriteAccount(user, accountId), "Account");
+// The writes run in lib/crm/accounts/service.ts, as the server actions do. A
+// denied, missing or soft-deleted account, assignee or price list is NOT_FOUND
+// (no existence oracle).
+async function mapErrors<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (e instanceof AccountError) notFound("Account");
+    throw e;
+  }
 }
 
 // Company identifiers, addresses and a reference to the account's record in
@@ -154,20 +151,11 @@ export const crmAccountTools = [
         office_phone?: string;
         website?: string;
       } & AccountDetails,
-      userId: string
+      _userId: string,
+      user: AuthzUser
     ) {
-      const { name, ...rest } = args;
-      const account = await prismadb.crm_Accounts.create({
-        data: {
-          v: 0,
-          name,
-          ...rest,
-          assigned_to: userId,
-          createdBy: userId,
-          updatedBy: userId,
-          status: "Active",
-        },
-      });
+      // Assigned to the caller.
+      const account = await mapErrors(() => createAccount(user, args));
       return itemResponse(account);
     },
   },
@@ -196,21 +184,11 @@ export const crmAccountTools = [
         website?: string;
         assigned_to?: string | null;
       } & AccountDetails,
-      userId: string,
+      _userId: string,
       user: AuthzUser
     ) {
-      await assertWritableAccount(user, args.id);
-      const assignee = args.assigned_to;
-      if (assignee) await assertScopeOrNotFound(() => assertAssignableUser(user, assignee), "User");
-      const { id, assigned_to, ...updateData } = args;
-      const account = await prismadb.crm_Accounts.update({
-        where: { id },
-        data: {
-          ...updateData,
-          ...(assigned_to !== undefined && { assigned_to }),
-          updatedBy: userId,
-        },
-      });
+      const { id, ...input } = args;
+      const account = await mapErrors(() => updateAccount(user, id, input));
       return itemResponse(account);
     },
   },
@@ -218,12 +196,8 @@ export const crmAccountTools = [
     name: "crm_delete_account",
     description: "Soft-delete a CRM account by ID (sets deletedAt timestamp)",
     schema: z.object({ id: z.string().uuid() }),
-    async handler(args: { id: string }, userId: string, user: AuthzUser) {
-      await assertWritableAccount(user, args.id);
-      const account = await prismadb.crm_Accounts.update({
-        where: { id: args.id },
-        data: softDeleteData(userId),
-      });
+    async handler(args: { id: string }, _userId: string, user: AuthzUser) {
+      const account = await mapErrors(() => deleteAccount(user, args.id));
       return itemResponse({ id: account.id, deletedAt: account.deletedAt });
     },
   },

@@ -1,9 +1,9 @@
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn().mockResolvedValue({ id: "u1", role: "user" }),
-  assertCanWriteAccount: jest.fn(),
   AuthenticationError: class AuthenticationError extends Error {},
-  AuthorizationError: class AuthorizationError extends Error {},
 }));
+// The checks run in lib/crm/accounts/service.ts, which imports the leaf modules.
+jest.mock("@/lib/authz/scopes/crm", () => ({ PARTNER_EDIT: { partnerEdit: true }, assertCanWriteAccount: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: { crm_Accounts: { update: jest.fn().mockResolvedValue({ id: "acc-1" }), findUnique: jest.fn().mockResolvedValue({ id: "acc-1" }), create: jest.fn().mockResolvedValue({ id: "acc-1" }) }, crm_PriceLists: { findUnique: jest.fn().mockResolvedValue({ id: "L" }) } },
 }));

@@ -9,7 +9,7 @@ jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findMany: jest.fn(), count: jest.fn(), findFirst: jest.fn() },
     crm_Opportunities: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
-    crm_Accounts: { findFirst: jest.fn(), update: jest.fn() },
+    crm_Accounts: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     crm_Contacts: { findFirst: jest.fn(), update: jest.fn() },
     crm_Leads: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
   },
@@ -62,6 +62,7 @@ beforeEach(() => {
     (model as any).update.mockResolvedValue({ id: "x1" });
   }
   (prismadb.crm_Leads.findUnique as jest.Mock).mockResolvedValue({ id: "x1" });
+  (prismadb.crm_Accounts.findUnique as jest.Mock).mockResolvedValue({ id: "x1" });
 });
 
 // The registry can't be imported here: lib/mcp/tools/index.ts pulls in
