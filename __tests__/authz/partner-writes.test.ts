@@ -170,7 +170,7 @@ describe("partner A creates", () => {
 
 describe("partner A edits", () => {
   it("his account's ordinary fields; assigned_to and partnerUserId stay", async () => {
-    const r = await updateAccount({ id: ACC.A, name: `A2-${tag}`, assigned_to: U.A, partnerUserId: U.B } as never);
+    const r = await updateAccount({ id: ACC.A, name: `A2-${tag}`, assigned_to: U.A });
     expect(err(r)).toBeUndefined();
     const row = await prismadb.crm_Accounts.findUniqueOrThrow({ where: { id: ACC.A } });
     expect({ name: row.name, assigned_to: row.assigned_to, partnerUserId: row.partnerUserId })

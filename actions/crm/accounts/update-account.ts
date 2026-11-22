@@ -12,6 +12,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { accountFieldsSchema } from "./account-input";
 
 export const updateAccount = async (data: {
   id: string;
@@ -40,8 +41,11 @@ export const updateAccount = async (data: {
   industry?: string;
   pricelist_id?: string | null;
 }) => {
-  const { id, ...rest } = data;
+  const { id, ...fields } = data ?? {};
   if (!id) return { error: "id is required" };
+  const parsed = accountFieldsSchema.partial().safeParse(fields);
+  if (!parsed.success) return { error: "Invalid input" };
+  const rest = parsed.data;
 
   let user;
   try {
@@ -78,9 +82,9 @@ export const updateAccount = async (data: {
     const account = await prismadb.crm_Accounts.update({
       where: { id },
       data: {
+        ...rest,
         v: 0,
         updatedBy: user.id,
-        ...rest,
         ...(rest.pricelist_id === "" ? { pricelist_id: null } : {}),
         // The partner is set only through setAccountPartner (admin/manager).
         partnerUserId: undefined,

@@ -12,6 +12,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { contactFieldsSchema } from "./contact-input";
 
 export const updateContact = async (data: {
   id: string;
@@ -38,8 +39,11 @@ export const updateContact = async (data: {
   social_tiktok?: string | null;
   contact_type_id?: string;
 }) => {
+  const { id, ...fields } = data ?? {};
+  if (!id) return { error: "id is required" };
+  const parsed = contactFieldsSchema.partial().safeParse(fields);
+  if (!parsed.success) return { error: "Invalid input" };
   const {
-    id,
     assigned_to,
     assigned_account,
     birthday_day,
@@ -47,9 +51,7 @@ export const updateContact = async (data: {
     birthday_year,
     contact_type_id,
     ...rest
-  } = data;
-
-  if (!id) return { error: "id is required" };
+  } = parsed.data;
 
   let user;
   try {
@@ -73,6 +75,7 @@ export const updateContact = async (data: {
     const contact = await prismadb.crm_Contacts.update({
       where: { id },
       data: {
+        ...rest,
         v: 0,
         updatedBy: userId,
         accountsIDs: assigned_account || undefined,
@@ -83,7 +86,6 @@ export const updateContact = async (data: {
           birthday_day && birthday_month && birthday_year
             ? birthday_day + "/" + birthday_month + "/" + birthday_year
             : null,
-        ...rest,
       } as any,
     });
     const changes = before ? diffObjects(before as Record<string, unknown>, contact as Record<string, unknown>) : null;

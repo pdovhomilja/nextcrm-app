@@ -12,6 +12,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { contactFieldsSchema } from "./contact-input";
 
 export const createContact = async (data: {
   assigned_to?: string;
@@ -37,6 +38,8 @@ export const createContact = async (data: {
   social_tiktok?: string;
   contact_type_id?: string;
 }) => {
+  const parsed = contactFieldsSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input" };
   const {
     assigned_to,
     assigned_account,
@@ -45,7 +48,7 @@ export const createContact = async (data: {
     birthday_year,
     contact_type_id,
     ...rest
-  } = data;
+  } = parsed.data;
 
   let user;
   try {
@@ -68,6 +71,7 @@ export const createContact = async (data: {
   try {
     const contact = await prismadb.crm_Contacts.create({
       data: {
+        ...rest,
         v: 0,
         createdBy: userId,
         updatedBy: userId,
@@ -79,7 +83,6 @@ export const createContact = async (data: {
           birthday_day && birthday_month && birthday_year
             ? birthday_day + "/" + birthday_month + "/" + birthday_year
             : null,
-        ...rest,
       } as any,
     });
 

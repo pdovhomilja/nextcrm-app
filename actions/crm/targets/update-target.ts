@@ -7,6 +7,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { targetFieldsSchema } from "./target-input";
 
 export const updateTarget = async (data: {
   id: string;
@@ -33,8 +34,10 @@ export const updateTarget = async (data: {
   description?: string;
   status?: boolean;
 }) => {
-  const { id, ...rest } = data;
+  const { id, ...fields } = data ?? {};
   if (!id) return { error: "id is required" };
+  const parsed = targetFieldsSchema.safeParse(fields);
+  if (!parsed.success) return { error: "Invalid input" };
 
   let user;
   try {
@@ -53,7 +56,7 @@ export const updateTarget = async (data: {
   try {
     const target = await prismadb.crm_Targets.update({
       where: { id },
-      data: { ...rest, updatedBy: user.id },
+      data: { ...parsed.data, updatedBy: user.id },
     });
     revalidatePath("/[locale]/(routes)/campaigns/targets", "page");
     return { data: target };

@@ -41,14 +41,14 @@ beforeEach(() => {
 });
 
 describe("create/update account cannot set the partner", () => {
-  it("createAccount drops a partnerUserId sent by the client", async () => {
-    await createAccount({ name: "A", partnerUserId: "p1" } as never);
-    expect(db.crm_Accounts.create.mock.calls[0][0].data.partnerUserId).toBeUndefined();
+  it("createAccount refuses a partnerUserId sent by the client", async () => {
+    expect(await createAccount({ name: "A", partnerUserId: "p1" } as never)).toEqual({ error: "Invalid input" });
+    expect(db.crm_Accounts.create).not.toHaveBeenCalled();
   });
 
-  it("updateAccount drops a partnerUserId sent by the client", async () => {
-    await updateAccount({ id: "acc-1", name: "A", partnerUserId: "p1" } as never);
-    expect(db.crm_Accounts.update.mock.calls[0][0].data.partnerUserId).toBeUndefined();
+  it("updateAccount refuses a partnerUserId sent by the client", async () => {
+    expect(await updateAccount({ id: "acc-1", name: "A", partnerUserId: "p1" } as never)).toEqual({ error: "Invalid input" });
+    expect(db.crm_Accounts.update).not.toHaveBeenCalled();
   });
 });
 

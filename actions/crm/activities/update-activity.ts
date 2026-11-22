@@ -2,9 +2,16 @@
 import {
   requireAuthenticated,
   assertCanWriteActivity,
+  assertCanWriteAccount,
+  assertCanWriteContact,
+  assertCanWriteContract,
+  assertCanWriteLead,
+  assertCanWriteOpportunity,
+  assertPartnerCanLinkActivity,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
+  type AuthzUser,
 } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -16,6 +23,15 @@ const ENTITY_SLUGS: Record<string, string> = {
   lead: "leads",
   opportunity: "opportunities",
   contract: "contracts",
+};
+
+// Linking an activity to a record is a write on that record (as in createActivity).
+const ASSERT_CAN_WRITE: Record<string, (user: AuthzUser, id: string) => Promise<void>> = {
+  account: assertCanWriteAccount,
+  contact: assertCanWriteContact,
+  lead: assertCanWriteLead,
+  opportunity: assertCanWriteOpportunity,
+  contract: assertCanWriteContract,
 };
 
 export const updateActivity = async (data: {
@@ -42,6 +58,25 @@ export const updateActivity = async (data: {
     // A meeting update is pushed to the owner's Google Calendar with
     // sendUpdates:"all" — an unauthorized edit mails a real customer.
     await assertCanWriteActivity(user, data.id, PARTNER_EDIT);
+    // Only links that are not on the activity yet: the edit form resends the
+    // current link, which may sit on a record the author cannot write.
+    if (data.links !== undefined) {
+      const current = await prismadb.crm_ActivityLinks.findMany({
+        where: { activityId: data.id },
+        select: { entityType: true, entityId: true },
+      });
+      const added = data.links.filter(
+        (l) => !current.some((c) => c.entityType === l.entityType && c.entityId === l.entityId)
+      );
+      if (added.length > 0 && user.role === "partner") {
+        await assertPartnerCanLinkActivity(user, added);
+      } else {
+        for (const link of added) {
+          if (!Object.hasOwn(ASSERT_CAN_WRITE, link.entityType)) throw new AuthorizationError();
+          await ASSERT_CAN_WRITE[link.entityType](user, link.entityId);
+        }
+      }
+    }
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
