@@ -58,7 +58,7 @@ export function conflict(msg: string): never {
 }
 
 // Runs a lib/campaigns/approval-lock check; a locked campaign becomes CONFLICT.
-export async function assertUnlocked(check: () => Promise<void>): Promise<void> {
+export async function assertCampaignUnlocked(check: () => Promise<void>): Promise<void> {
   try {
     await check();
   } catch (e) {

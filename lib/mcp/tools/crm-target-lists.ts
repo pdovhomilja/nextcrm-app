@@ -9,7 +9,7 @@ import {
   listResponse,
   itemResponse,
   notFound,
-  assertUnlocked,
+  assertCampaignUnlocked,
   softDeleteData,
 } from "../helpers";
 
@@ -132,7 +132,7 @@ export const crmTargetListTools = [
       user: AuthzUser
     ) {
       await assertTargetListInScope(user, args.target_list_id);
-      await assertUnlocked(() => assertTargetListEditable(user, args.target_list_id));
+      await assertCampaignUnlocked(() => assertTargetListEditable(user, args.target_list_id));
       // Only attach targets the caller can access (same as the addTargetsToList action).
       const authorizedIds = await filterAuthorizedTargetIds(user, args.target_ids);
       await prismadb.targetsToTargetLists.createMany({
@@ -161,7 +161,7 @@ export const crmTargetListTools = [
       user: AuthzUser
     ) {
       await assertTargetListInScope(user, args.target_list_id);
-      await assertUnlocked(() => assertTargetListEditable(user, args.target_list_id));
+      await assertCampaignUnlocked(() => assertTargetListEditable(user, args.target_list_id));
       await prismadb.targetsToTargetLists.deleteMany({
         where: {
           target_list_id: args.target_list_id,
