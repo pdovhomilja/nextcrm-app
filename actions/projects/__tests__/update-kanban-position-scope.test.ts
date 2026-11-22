@@ -26,7 +26,11 @@ const args = {
 };
 
 describe("updateKanbanPosition scope", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // both sections sit on the tasks' board b1
+    (prismadb.sections.findUnique as jest.Mock).mockResolvedValue({ board: "b1" });
+  });
 
   it("unauthenticated returns Unauthorized", async () => {
     (getSession as jest.Mock).mockResolvedValue(null);
@@ -39,7 +43,7 @@ describe("updateKanbanPosition scope", () => {
     mockUser("user", "u1");
     (prismadb.tasks.findUnique as jest.Mock).mockResolvedValue({
       user: "u1",
-      assigned_section: { board_relation: { id: "b1" } },
+      assigned_section: { board: "b1", board_relation: { id: "b1" } },
     });
     (prismadb.tasks.update as jest.Mock).mockResolvedValue({});
     const res = await updateKanbanPosition(args);
@@ -52,7 +56,7 @@ describe("updateKanbanPosition scope", () => {
     mockUser("user", "u2");
     (prismadb.tasks.findUnique as jest.Mock).mockResolvedValue({
       user: "u1",
-      assigned_section: { board_relation: { id: "b1" } },
+      assigned_section: { board: "b1", board_relation: { id: "b1" } },
     });
     (prismadb.boards.findFirst as jest.Mock).mockResolvedValue(null);
     const res = await updateKanbanPosition(args);
@@ -64,7 +68,7 @@ describe("updateKanbanPosition scope", () => {
     mockUser("user", "u2");
     (prismadb.tasks.findUnique as jest.Mock).mockResolvedValue({
       user: "u1",
-      assigned_section: { board_relation: { id: "b1" } },
+      assigned_section: { board: "b1", board_relation: { id: "b1" } },
     });
     (prismadb.boards.findFirst as jest.Mock).mockResolvedValue({ id: "b1" });
     (prismadb.tasks.update as jest.Mock).mockResolvedValue({});
@@ -76,7 +80,7 @@ describe("updateKanbanPosition scope", () => {
     mockUser("manager", "m1");
     (prismadb.tasks.findUnique as jest.Mock).mockResolvedValue({
       user: "u1",
-      assigned_section: { board_relation: { id: "b1" } },
+      assigned_section: { board: "b1", board_relation: { id: "b1" } },
     });
     (prismadb.boards.findFirst as jest.Mock).mockResolvedValue({ id: "b1" });
     (prismadb.tasks.update as jest.Mock).mockResolvedValue({});

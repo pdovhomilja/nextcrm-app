@@ -7,6 +7,7 @@ import resendHelper from "@/lib/resend";
 import {
   requireAuthenticated,
   assertCanWriteBoard,
+  assertAssignableUser,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -32,8 +33,7 @@ export const updateTask = async (data: {
   const session = await getSession();
   if (!session) return { error: "Unauthorized" };
 
-  const { taskId, title, user, boardId, priority, content, dueDateAt } = data;
-  const resolvedBoardId = boardId || data.board;
+  const { taskId, title, user, priority, content, dueDateAt } = data;
 
   if (!taskId) return { error: "Missing task ID" };
   if (!title || !user || !priority || !content) {
@@ -43,6 +43,7 @@ export const updateTask = async (data: {
   const existing = await prismadb.tasks.findUnique({
     where: { id: taskId },
     select: {
+      user: true,
       assigned_section: { select: { board_relation: { select: { id: true } } } },
     },
   });
@@ -51,6 +52,8 @@ export const updateTask = async (data: {
 
   try {
     await assertCanWriteBoard(authzUser, parentBoardId);
+    // The edit form resends the stored assignee: check only a new one.
+    if (user !== existing?.user && user !== authzUser.id) await assertAssignableUser(authzUser, user);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
@@ -63,21 +66,19 @@ export const updateTask = async (data: {
         priority,
         title,
         content,
-        updatedBy: user,
+        updatedBy: authzUser.id,
         dueDateAt,
         user,
       },
     });
 
-    if (resolvedBoardId) {
-      await prismadb.boards.update({
-        where: { id: resolvedBoardId },
-        data: { updatedAt: new Date() },
-      });
-    }
+    await prismadb.boards.update({
+      where: { id: parentBoardId },
+      data: { updatedAt: new Date() },
+    });
 
     // Send email notification if assigning to a different user
-    if (user !== session.user.id && resolvedBoardId) {
+    if (user !== session.user.id) {
       try {
         let resend;
         try {
@@ -92,7 +93,7 @@ export const updateTask = async (data: {
           });
 
           const boardData = await prismadb.boards.findUnique({
-            where: { id: resolvedBoardId },
+            where: { id: parentBoardId },
           });
 
           if (notifyRecipient?.email) {

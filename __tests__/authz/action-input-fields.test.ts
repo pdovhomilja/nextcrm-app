@@ -29,6 +29,7 @@ import { updateContact } from "@/actions/crm/contacts/update-contact";
 import { createCampaign } from "@/actions/campaigns/create-campaign";
 import { updateActivity } from "@/actions/crm/activities/update-activity";
 import NewCampaignPage from "@/app/[locale]/(routes)/campaigns/new/page";
+import { createSchedule, updateSchedule } from "@/actions/reports/schedule";
 
 const tag = randomUUID().slice(0, 8);
 const U = { rep: randomUUID(), other: randomUUID(), boss: randomUUID(), partner: randomUUID(), gone: randomUUID() };
@@ -81,6 +82,7 @@ afterAll(async () => {
   await prismadb.crm_campaign_steps.deleteMany({ where: { campaign_id: { in: campaigns.map((c) => c.id) } } });
   await prismadb.crm_campaigns.deleteMany({ where: { id: { in: campaigns.map((c) => c.id) } } });
   await prismadb.crm_campaign_templates.deleteMany({ where: { name: { contains: tag } } });
+  await prismadb.crm_Report_Config.deleteMany({ where: { name: { contains: tag } } });
   await prismadb.users.deleteMany({ where: { id: { in: Object.values(U) } } });
   await prismadb.$disconnect();
 });
@@ -587,5 +589,72 @@ describe("updateActivity partner links", () => {
     as("partner");
     expect(await updateActivity({ id: PACT, title: `pact-${tag}-edited`, links: own })).toHaveProperty("data");
     expect(await links()).toEqual(own);
+  });
+});
+
+describe("report schedule fields", () => {
+  let configId: string;
+  let scheduleId: string;
+  const valid = { cronExpression: "0 9 * * 1", recipients: ["a@example.com"], format: "pdf" as const };
+
+  beforeAll(async () => {
+    const cfg = await prismadb.crm_Report_Config.create({
+      data: { name: `cfg-${tag}`, category: "sales", filters: {}, createdBy: U.rep },
+    });
+    configId = cfg.id;
+    const sched = await prismadb.crm_Report_Schedule.create({
+      data: { reportConfigId: configId, ...valid, createdBy: U.rep },
+    });
+    scheduleId = sched.id;
+  });
+
+  it.each<[string, unknown]>([
+    ["a relation field", { user: { connect: { id: U.other } } }],
+    ["an unknown key", { unknownKey: 1 }],
+    ["createdBy", { createdBy: U.other }],
+    ["recipients that are not emails", { recipients: [{ x: 1 }] }],
+    ["unknown format", { format: "xml" }],
+    ["data that is not an object", null],
+  ])("updateSchedule refuses %s and changes nothing", async (_label, payload) => {
+    as("rep");
+    await expect(updateSchedule(scheduleId, loose(payload))).rejects.toThrow("Invalid input");
+    expect(await prismadb.users.findUnique({ where: { id: U.rep } })).toMatchObject({ role: "user" });
+    expect(await prismadb.crm_Report_Schedule.findUnique({ where: { id: scheduleId } })).toMatchObject({
+      ...valid,
+      createdBy: U.rep,
+    });
+  });
+
+  it("updateSchedule refuses an id that is not a string", async () => {
+    as("rep");
+    await expect(updateSchedule(loose({ in: [scheduleId] }), { isActive: false })).rejects.toThrow();
+    expect(await prismadb.crm_Report_Schedule.findUnique({ where: { id: scheduleId } })).toMatchObject({ isActive: true });
+  });
+
+  it("updateSchedule writes the declared fields", async () => {
+    as("rep");
+    await updateSchedule(scheduleId, { isActive: false, recipients: ["b@example.com"], format: "csv", cronExpression: "0 8 * * *" });
+    expect(await prismadb.crm_Report_Schedule.findUnique({ where: { id: scheduleId } })).toMatchObject({
+      isActive: false, recipients: ["b@example.com"], format: "csv", cronExpression: "0 8 * * *",
+    });
+  });
+
+  it.each<[string, (configId: string) => unknown]>([
+    ["a relation field", (c) => ({ reportConfigId: c, ...valid, user: { connect: { id: U.other } } })],
+    ["recipients that are not emails", (c) => ({ reportConfigId: c, ...valid, recipients: [{ x: 1 }] })],
+    ["unknown format", (c) => ({ reportConfigId: c, ...valid, format: "xml" })],
+    ["config id that is not a string", (c) => ({ reportConfigId: { in: [c] }, ...valid })],
+  ])("createSchedule refuses %s and creates nothing", async (_label, payload) => {
+    as("rep");
+    const before = await prismadb.crm_Report_Schedule.count({ where: { reportConfigId: configId } });
+    await expect(createSchedule(loose(payload(configId)))).rejects.toThrow();
+    expect(await prismadb.crm_Report_Schedule.count({ where: { reportConfigId: configId } })).toBe(before);
+    expect(await prismadb.users.findUnique({ where: { id: U.rep } })).toMatchObject({ role: "user" });
+  });
+
+  it("createSchedule creates a schedule from the dialog fields, owned by the caller", async () => {
+    as("rep");
+    const s = await createSchedule({ reportConfigId: configId, ...valid });
+    expect(s).toMatchObject({ reportConfigId: configId, ...valid, createdBy: U.rep });
   });
 });
