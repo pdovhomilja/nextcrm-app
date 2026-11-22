@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.1...v0.42.2) (2026-11-22)
+
+
+### Fixed
+
+* **actions:** validate create/update input ([#522](https://github.com/pdovhomilja/nextcrm-app/issues/522)) ([985b6eb](https://github.com/pdovhomilja/nextcrm-app/commit/985b6eba6262e08e13675deea0d75d0ba1d8d019))
+
 ## [0.42.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.0...v0.42.1) (2026-11-22)
 
 
