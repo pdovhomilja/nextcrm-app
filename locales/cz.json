@@ -657,7 +657,8 @@
       "format": "Format",
       "both": "Both (CSV + PDF)",
       "cancel": "Cancel",
-      "create": "Create Schedule"
+      "create": "Create Schedule",
+      "createFailed": "Plán se nepodařilo vytvořit. Zkontrolujte výraz cron a e-mailové adresy příjemců."
     },
     "savedReports": {
       "placeholder": "Saved reports...",

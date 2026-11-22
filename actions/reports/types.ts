@@ -28,7 +28,8 @@ export type KPIData = {
   href: string;
 };
 
-export type ExportFormat = "csv" | "pdf" | "both";
+export const EXPORT_FORMATS = ["csv", "pdf", "both"] as const;
+export type ExportFormat = (typeof EXPORT_FORMATS)[number];
 export type ScheduleFrequency = "daily" | "weekly" | "monthly" | "custom";
 
 export type DatePreset = {

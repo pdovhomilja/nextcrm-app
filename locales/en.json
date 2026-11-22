@@ -654,7 +654,8 @@
       "format": "Format",
       "both": "Both (CSV + PDF)",
       "cancel": "Cancel",
-      "create": "Create Schedule"
+      "create": "Create Schedule",
+      "createFailed": "Could not create the schedule. Check the cron expression and the recipient email addresses."
     },
     "savedReports": {
       "placeholder": "Saved reports...",
