@@ -34,7 +34,7 @@ const REVIEWED: Record<string, string> = {
 const ROOT = path.join(__dirname, "../..");
 const ID_NAME = /^(id|\w+Id|\w+_id)s?$/;
 const WRITE = /\bprismadb\.\w+\.(create|createMany|update|updateMany|upsert|delete|deleteMany)\b|\$executeRaw|\$transaction/;
-const NOT_SCOPE = new Set(["requireAuthenticated", "AuthenticationError", "AuthorizationError"]);
+const NOT_SCOPE = new Set(["requireAuthenticated", "AuthenticationError", "AuthorizationError", "assertIdString"]);
 
 function files(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {

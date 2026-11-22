@@ -42,7 +42,7 @@ export function ScheduleDialog({ open, onOpenChange }: ScheduleDialogProps) {
     if (!selectedConfigId || !recipients.trim()) return;
     setLoading(true);
     const cronExpression = frequency === "custom" ? customCron : FREQUENCY_CRON[frequency];
-    await createSchedule({ reportConfigId: selectedConfigId, cronExpression, recipients: recipients.split(",").map((e) => e.trim()), format });
+    await createSchedule({ reportConfigId: selectedConfigId, cronExpression, recipients: recipients.split(",").map((e) => e.trim()).filter(Boolean), format });
     setLoading(false);
     onOpenChange(false);
   }
