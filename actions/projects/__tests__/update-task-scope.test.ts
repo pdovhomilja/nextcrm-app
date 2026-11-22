@@ -63,6 +63,7 @@ describe("updateTask scope", () => {
   it("manager bare scope updates task", async () => {
     mockUser("manager", "m1");
     (prismadb.tasks.findUnique as jest.Mock).mockResolvedValue({
+      user: "u1",
       assigned_section: { board_relation: { id: "b1" } },
     });
     (prismadb.boards.findFirst as jest.Mock).mockResolvedValue({ id: "b1" });

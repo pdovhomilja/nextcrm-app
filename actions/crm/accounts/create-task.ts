@@ -8,6 +8,7 @@ import NewTaskFromCRMToWatchersEmail from "@/emails/NewTaskFromCRMToWatchers";
 import {
   requireAuthenticated,
   assertCanWriteAccount,
+  assertAssignableUser,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
@@ -50,6 +51,12 @@ export const createTask = async (data: {
 
   // A partner assigns only to himself.
   if (authUser.role === "partner") user = authUser.id;
+  try {
+    if (user !== authUser.id) await assertAssignableUser(authUser, user);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    throw e;
+  }
 
   let resend;
   try {
