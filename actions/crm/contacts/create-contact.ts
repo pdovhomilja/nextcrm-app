@@ -8,10 +8,12 @@ import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   assertCanWriteAccount,
+  assertAssignableUser,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { contactFieldsSchema } from "./contact-input";
 
 export const createContact = async (data: {
   assigned_to?: string;
@@ -37,6 +39,8 @@ export const createContact = async (data: {
   social_tiktok?: string;
   contact_type_id?: string;
 }) => {
+  const parsed = contactFieldsSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input" };
   const {
     assigned_to,
     assigned_account,
@@ -45,7 +49,7 @@ export const createContact = async (data: {
     birthday_year,
     contact_type_id,
     ...rest
-  } = data;
+  } = parsed.data;
 
   let user;
   try {
@@ -59,6 +63,8 @@ export const createContact = async (data: {
     // A partner creates contacts on his accounts only.
     if (user.role === "partner" && !assigned_account) throw new AuthorizationError();
     if (assigned_account) await assertCanWriteAccount(user, assigned_account, PARTNER_EDIT);
+    // As in createAccount; a partner's assignee is set to himself below.
+    if (assigned_to && user.role !== "partner") await assertAssignableUser(user, assigned_to);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
@@ -68,6 +74,7 @@ export const createContact = async (data: {
   try {
     const contact = await prismadb.crm_Contacts.create({
       data: {
+        ...rest,
         v: 0,
         createdBy: userId,
         updatedBy: userId,
@@ -79,7 +86,6 @@ export const createContact = async (data: {
           birthday_day && birthday_month && birthday_year
             ? birthday_day + "/" + birthday_month + "/" + birthday_year
             : null,
-        ...rest,
       } as any,
     });
 

@@ -10,6 +10,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { accountFieldsSchema } from "./account-input";
 
 export const createAccount = async (data: {
   name: string;
@@ -47,34 +48,37 @@ export const createAccount = async (data: {
     throw e;
   }
 
-  const { name } = data;
+  const parsed = accountFieldsSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input" };
+  const input = parsed.data;
+  const { name } = input;
   if (!name) return { error: "name is required" };
 
   // Ids from the input: the assignee must be assignable (a partner's is
   // ignored below), the price list real. member_of is a free-text label.
   try {
-    if (data.assigned_to && user.role !== "partner") await assertAssignableUser(user, data.assigned_to);
+    if (input.assigned_to && user.role !== "partner") await assertAssignableUser(user, input.assigned_to);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
   }
-  if (data.pricelist_id) {
-    const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: data.pricelist_id }, select: { id: true } });
+  if (input.pricelist_id) {
+    const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: input.pricelist_id }, select: { id: true } });
     if (!pricelist) return { error: "Price list not found" };
   }
 
   try {
     const account = await prismadb.crm_Accounts.create({
       data: {
+        ...input,
         v: 0,
         createdBy: user.id,
         updatedBy: user.id,
-        ...data,
         // A partner's new account has him as partner and no internal owner
         // yet (spec § Writes): admins/managers find it among unowned accounts.
-        assigned_to: user.role === "partner" ? null : data.assigned_to || user.id,
-        industry: data.industry || undefined,
-        pricelist_id: data.pricelist_id || undefined,
+        assigned_to: user.role === "partner" ? null : input.assigned_to || user.id,
+        industry: input.industry || undefined,
+        pricelist_id: input.pricelist_id || undefined,
         // The partner is set only through setAccountPartner (admin/manager),
         // except that a partner's own new account names him.
         partnerUserId: user.role === "partner" ? user.id : undefined,

@@ -1,15 +1,9 @@
 "use server";
 import { getSession } from "@/lib/auth-server";
 import {
-  assertCanWriteAccount,
-  assertCanWriteContact,
-  assertCanWriteContract,
-  assertCanWriteLead,
-  assertCanWriteOpportunity,
-  assertPartnerCanLinkActivity,
+  assertCanLinkActivity,
   requireAuthenticated,
   AuthorizationError,
-  type AuthzUser,
 } from "@/lib/authz";
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -21,15 +15,6 @@ const ENTITY_SLUGS: Record<string, string> = {
   lead: "leads",
   opportunity: "opportunities",
   contract: "contracts",
-};
-
-// Linking an activity to a record is a write on that record.
-const ASSERT_CAN_WRITE: Record<string, (user: AuthzUser, id: string) => Promise<void>> = {
-  account: assertCanWriteAccount,
-  contact: assertCanWriteContact,
-  lead: assertCanWriteLead,
-  opportunity: assertCanWriteOpportunity,
-  contract: assertCanWriteContract,
 };
 
 export const createActivity = async (data: {
@@ -49,14 +34,7 @@ export const createActivity = async (data: {
     // A partner's activity must hang off his partner records only.
     const authUser = await requireAuthenticated({ partner: true });
     try {
-      if (authUser.role === "partner") {
-        await assertPartnerCanLinkActivity(authUser, data.links);
-      } else {
-        for (const link of data.links) {
-          if (!Object.hasOwn(ASSERT_CAN_WRITE, link.entityType)) throw new AuthorizationError();
-          await ASSERT_CAN_WRITE[link.entityType](authUser, link.entityId);
-        }
-      }
+      await assertCanLinkActivity(authUser, data.links);
     } catch (e) {
       if (e instanceof AuthorizationError) return { error: "Forbidden" };
       throw e;

@@ -2,6 +2,7 @@
 import { prismadb } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
+import { targetFieldsSchema } from "./target-input";
 
 export const createTarget = async (data: {
   last_name?: string;
@@ -27,8 +28,10 @@ export const createTarget = async (data: {
     throw e;
   }
 
-  const { last_name, email, mobile_phone, ...rest } = data;
-  if (!last_name && !data.company) return { error: "last_name or company is required" };
+  const parsed = targetFieldsSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input" };
+  const { last_name, email, mobile_phone, ...rest } = parsed.data;
+  if (!last_name && !rest.company) return { error: "last_name or company is required" };
 
   try {
     const target = await prismadb.crm_Targets.create({

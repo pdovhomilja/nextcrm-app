@@ -1038,3 +1038,28 @@ export async function assertPartnerCanLinkActivity(
     }
   }
 }
+
+// Linking an activity to a record is a write on that record. A partner's links
+// go through assertPartnerCanLinkActivity (the full set he ends up with); anyone
+// else needs write on each record he adds. Links in `current` are already on
+// the activity and are not checked again: edit forms resend them.
+const ASSERT_CAN_WRITE_LINKED: Record<string, (user: AuthzUser, id: string) => Promise<void>> = {
+  account: assertCanWriteAccount,
+  contact: assertCanWriteContact,
+  lead: assertCanWriteLead,
+  opportunity: assertCanWriteOpportunity,
+  contract: assertCanWriteContract,
+};
+
+export async function assertCanLinkActivity(
+  user: AuthzUser,
+  links: { entityType: string; entityId: string }[],
+  current: { entityType: string; entityId: string }[] = [],
+): Promise<void> {
+  if (user.role === "partner") return assertPartnerCanLinkActivity(user, links);
+  for (const link of links) {
+    if (current.some((c) => c.entityType === link.entityType && c.entityId === link.entityId)) continue;
+    if (!Object.hasOwn(ASSERT_CAN_WRITE_LINKED, link.entityType)) throw new AuthorizationError();
+    await ASSERT_CAN_WRITE_LINKED[link.entityType](user, link.entityId);
+  }
+}

@@ -8,10 +8,12 @@ import {
   requireAuthenticated,
   assertCanWriteContact,
   assertCanWriteAccount,
+  assertAssignableUser,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { contactFieldsSchema } from "./contact-input";
 
 export const updateContact = async (data: {
   id: string;
@@ -38,8 +40,11 @@ export const updateContact = async (data: {
   social_tiktok?: string | null;
   contact_type_id?: string;
 }) => {
+  const { id, ...fields } = data ?? {};
+  if (!id) return { error: "id is required" };
+  const parsed = contactFieldsSchema.partial().safeParse(fields);
+  if (!parsed.success) return { error: "Invalid input" };
   const {
-    id,
     assigned_to,
     assigned_account,
     birthday_day,
@@ -47,9 +52,7 @@ export const updateContact = async (data: {
     birthday_year,
     contact_type_id,
     ...rest
-  } = data;
-
-  if (!id) return { error: "id is required" };
+  } = parsed.data;
 
   let user;
   try {
@@ -62,6 +65,12 @@ export const updateContact = async (data: {
     await assertCanWriteContact(user, id, PARTNER_EDIT);
     // Parent-write: relinking the contact to an account requires write on it.
     if (assigned_account) await assertCanWriteAccount(user, assigned_account, PARTNER_EDIT);
+    // As in updateAccount: the form resends the stored assignee, so it is
+    // checked only when it changes; a partner's assigned_to is ignored below.
+    if (assigned_to && user.role !== "partner") {
+      const current = await prismadb.crm_Contacts.findUnique({ where: { id }, select: { assigned_to: true } });
+      if (assigned_to !== current?.assigned_to) await assertAssignableUser(user, assigned_to);
+    }
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
@@ -73,6 +82,7 @@ export const updateContact = async (data: {
     const contact = await prismadb.crm_Contacts.update({
       where: { id },
       data: {
+        ...rest,
         v: 0,
         updatedBy: userId,
         accountsIDs: assigned_account || undefined,
@@ -83,7 +93,6 @@ export const updateContact = async (data: {
           birthday_day && birthday_month && birthday_year
             ? birthday_day + "/" + birthday_month + "/" + birthday_year
             : null,
-        ...rest,
       } as any,
     });
     const changes = before ? diffObjects(before as Record<string, unknown>, contact as Record<string, unknown>) : null;
