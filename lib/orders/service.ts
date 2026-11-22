@@ -2,6 +2,7 @@ import { Decimal } from "decimal.js";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz/session";
 import { AuthorizationError } from "@/lib/authz/errors";
+import { isIdString } from "@/lib/authz/ids";
 import { assertCanReadAccount, assertCanWriteAccount } from "@/lib/authz/scopes/crm";
 import { orderReadScopeWhere } from "@/lib/authz/scopes/orders";
 import { writeAuditLog } from "@/lib/audit-log";
@@ -108,7 +109,7 @@ function shippingFrom(account: Record<string, unknown>, input: HeaderInput) {
 
 export async function loadOrder(user: AuthzUser, id: string) {
   // A server action passes the client's value through; anything but a string id is an unknown order.
-  if (typeof id !== "string" || id.length === 0) throw new OrderError("notFound");
+  if (!isIdString(id)) throw new OrderError("notFound");
   const order = await prismadb.crm_Orders.findFirst({ where: { id, ...orderReadScopeWhere(user) }, include: DETAIL_INCLUDE });
   if (!order) throw new OrderError("notFound");
   return order;

@@ -1,7 +1,7 @@
 import { prismadb } from "@/lib/prisma";
 import { AuthzUser } from "../session";
 import { AuthorizationError } from "../errors";
-import { assertIdString, assertIdStrings } from "../ids";
+import { assertIdString, assertIdStrings, isIdString } from "../ids";
 import { isManagerOrAdmin } from "../roles";
 import { NO_ROWS, assertHandledRole, isUnhandledRole } from "./unhandled-role";
 import { partnerAccountWhere, partnerVisibleAccountWhere } from "./partner";
@@ -61,7 +61,7 @@ export async function tryScopedUpdateContact(
   contactId: string,
   data: Record<string, string>,
 ): Promise<boolean> {
-  if (isUnhandledRole(user)) return false;
+  if (isUnhandledRole(user) || !isIdString(contactId)) return false;
   const result = await prismadb.crm_Contacts.updateMany({
     where: contactScopedWhere(user, contactId),
     data: { ...data, updatedBy: user.id },
@@ -74,7 +74,7 @@ export async function tryScopedUpdateTarget(
   targetId: string,
   data: Record<string, string>,
 ): Promise<boolean> {
-  if (isUnhandledRole(user)) return false;
+  if (isUnhandledRole(user) || !isIdString(targetId)) return false;
   const result = await prismadb.crm_Targets.updateMany({
     where: targetScopedWhere(user, targetId),
     data: { ...data, updatedBy: user.id },

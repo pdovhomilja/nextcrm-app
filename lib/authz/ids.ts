@@ -5,8 +5,12 @@ import { AuthorizationError } from "./errors";
 // check the id with findFirst and the caller then reuses it in findMany or
 // deleteMany, so a filter would pass on one row and act on many. Every scope
 // helper therefore accepts only plain string ids.
+export function isIdString(id: unknown): id is string {
+  return typeof id === "string" && id.length > 0;
+}
+
 export function assertIdString(id: unknown): asserts id is string {
-  if (typeof id !== "string" || id.length === 0) throw new AuthorizationError();
+  if (!isIdString(id)) throw new AuthorizationError();
 }
 
 export function assertIdStrings(ids: unknown): asserts ids is string[] {
