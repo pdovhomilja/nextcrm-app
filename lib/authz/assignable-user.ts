@@ -1,4 +1,5 @@
 import { AuthorizationError } from "./errors";
+import { assertIdString } from "./ids";
 import type { AuthzUser } from "./session";
 import { prismadb } from "@/lib/prisma";
 
@@ -9,6 +10,7 @@ export async function assertAssignableUser(
   user: AuthzUser,
   assigneeId: string,
 ): Promise<void> {
+  assertIdString(assigneeId);
   if (user.role === "partner" && assigneeId !== user.id) throw new AuthorizationError();
   const row = await prismadb.users.findFirst({
     where: { id: assigneeId, userStatus: "ACTIVE" },
