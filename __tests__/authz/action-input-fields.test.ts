@@ -31,7 +31,7 @@ import { updateActivity } from "@/actions/crm/activities/update-activity";
 import NewCampaignPage from "@/app/[locale]/(routes)/campaigns/new/page";
 
 const tag = randomUUID().slice(0, 8);
-const U = { rep: randomUUID(), other: randomUUID(), boss: randomUUID() };
+const U = { rep: randomUUID(), other: randomUUID(), boss: randomUUID(), partner: randomUUID(), gone: randomUUID() };
 const ACC = { rep: randomUUID(), other: randomUUID() };
 const CONTACT = { rep: randomUUID(), other: randomUUID() };
 const TARGET = randomUUID();
@@ -42,9 +42,10 @@ const as = (who: keyof typeof U) => (getSession as jest.Mock).mockResolvedValue(
 
 beforeAll(async () => {
   await prismadb.users.createMany({
-    data: (["rep", "other", "boss"] as const).map((k) => ({
+    data: (["rep", "other", "boss", "partner", "gone"] as const).map((k) => ({
       id: U[k], email: `${k}-${tag}@input-fields.test`, name: `${k}-${tag}`,
-      role: k === "boss" ? "manager" : "user", userStatus: "ACTIVE",
+      role: k === "boss" ? "manager" : k === "partner" ? "partner" : "user",
+      userStatus: k === "gone" ? "INACTIVE" : "ACTIVE",
     })),
   });
   for (const k of ["rep", "other"] as const) {
@@ -480,3 +481,48 @@ describe("campaigns/new target lists", () => {
     expect((await offered()).sort()).toEqual([LIST.rep, LIST.other].sort());
   });
 });
+
+// The assignee must be a real, active user, as on accounts.
+describe("contact assigned_to", () => {
+  const assigneeOf = async (id: string) =>
+    (await prismadb.crm_Contacts.findUnique({ where: { id }, select: { assigned_to: true } }))!.assigned_to;
+  const count = (last_name: string) => prismadb.crm_Contacts.count({ where: { last_name } });
+
+  beforeEach(async () => {
+    await prismadb.crm_Contacts.update({ where: { id: CONTACT.rep }, data: { assigned_to: U.rep } });
+  });
+
+  it.each<[string, string]>([
+    ["an inactive assignee", U.gone],
+    ["an assignee id that is no user", randomUUID()],
+  ])("createContact refuses %s and creates nothing", async (label, assignee) => {
+    as("rep");
+    const n = `contact-${tag}-assignee-${label}`;
+    expect(await createContact({ ...contactFormFields(n), assigned_to: assignee })).toEqual({ error: "Forbidden" });
+    expect(await count(n)).toBe(0);
+  });
+
+  it("createContact assigns to another active user", async () => {
+    as("rep");
+    const n = `contact-${tag}-assignee-active`;
+    await createContact({ ...contactFormFields(n), assigned_to: U.other });
+    expect((await prismadb.crm_Contacts.findFirst({ where: { last_name: n } }))!.assigned_to).toBe(U.other);
+  });
+
+  it.each<[string, string]>([
+    ["an inactive assignee", U.gone],
+    ["an assignee id that is no user", randomUUID()],
+  ])("updateContact refuses %s and leaves the assignee", async (_label, assignee) => {
+    as("rep");
+    expect(await updateContact({ id: CONTACT.rep, assigned_to: assignee })).toEqual({ error: "Forbidden" });
+    expect(await assigneeOf(CONTACT.rep)).toBe(U.rep);
+  });
+
+  it("updateContact still saves when the form resends the current (inactive) assignee", async () => {
+    await prismadb.crm_Contacts.update({ where: { id: CONTACT.rep }, data: { assigned_to: U.gone } });
+    as("rep");
+    expect(await updateContact({ id: CONTACT.rep, assigned_to: U.gone, first_name: "kept" })).toHaveProperty("data");
+    expect(await assigneeOf(CONTACT.rep)).toBe(U.gone);
+  });
+});
+

@@ -8,6 +8,7 @@ import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   assertCanWriteAccount,
+  assertAssignableUser,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
@@ -62,6 +63,8 @@ export const createContact = async (data: {
     // A partner creates contacts on his accounts only.
     if (user.role === "partner" && !assigned_account) throw new AuthorizationError();
     if (assigned_account) await assertCanWriteAccount(user, assigned_account, PARTNER_EDIT);
+    // As in createAccount; a partner's assignee is set to himself below.
+    if (assigned_to && user.role !== "partner") await assertAssignableUser(user, assigned_to);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;

@@ -36,7 +36,7 @@ export const updateTarget = async (data: {
 }) => {
   const { id, ...fields } = data ?? {};
   if (!id) return { error: "id is required" };
-  const parsed = targetFieldsSchema.safeParse(fields);
+  const parsed = targetFieldsSchema.partial().safeParse(fields);
   if (!parsed.success) return { error: "Invalid input" };
 
   let user;

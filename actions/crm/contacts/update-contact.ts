@@ -8,6 +8,7 @@ import {
   requireAuthenticated,
   assertCanWriteContact,
   assertCanWriteAccount,
+  assertAssignableUser,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
@@ -64,6 +65,12 @@ export const updateContact = async (data: {
     await assertCanWriteContact(user, id, PARTNER_EDIT);
     // Parent-write: relinking the contact to an account requires write on it.
     if (assigned_account) await assertCanWriteAccount(user, assigned_account, PARTNER_EDIT);
+    // As in updateAccount: the form resends the stored assignee, so it is
+    // checked only when it changes; a partner's assigned_to is ignored below.
+    if (assigned_to && user.role !== "partner") {
+      const current = await prismadb.crm_Contacts.findUnique({ where: { id }, select: { assigned_to: true } });
+      if (assigned_to !== current?.assigned_to) await assertAssignableUser(user, assigned_to);
+    }
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
