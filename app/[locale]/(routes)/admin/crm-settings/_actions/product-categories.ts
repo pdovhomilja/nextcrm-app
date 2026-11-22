@@ -24,8 +24,10 @@ export async function listProductCategories() {
 export async function saveProductCategory(input: { id?: string; name: string; parentId: string | null; isActive: boolean }): Promise<{ data: { id: string } } | { error: string }> {
   const user = await admin();
   if (!user) return { error: "Forbidden" };
-  const { id, ...data } = input;
-  if (!schema.safeParse(data).success) return { error: "invalid:name" };
+  const { id, ...fields } = input;
+  const parsed = schema.safeParse(fields);
+  if (!parsed.success) return { error: "invalid:name" };
+  const data = parsed.data;
   if (id && (await prismadb.crm_ProductCategories.findUnique({ where: { id } }))?.source === "EXTERNAL") return { error: "external" };
   if (data.parentId && (await prismadb.crm_ProductCategories.findUnique({ where: { id: data.parentId } }))?.source === "EXTERNAL") return { error: "externalParent" };
   if (id && data.parentId) {
