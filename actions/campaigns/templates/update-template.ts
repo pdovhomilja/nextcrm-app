@@ -11,7 +11,7 @@ import {
 // Strict: a server action takes whatever the client posts, the TypeScript type
 // below does not exist at runtime.
 const updateTemplateSchema = z.strictObject({
-  name: z.string().optional(),
+  name: z.string().min(1).optional(),
   description: z.string().optional(),
   subject_default: z.string().optional(),
   content_html: z.string().optional(),

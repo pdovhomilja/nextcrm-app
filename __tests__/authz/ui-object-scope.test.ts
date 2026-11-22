@@ -178,6 +178,8 @@ describe("updateTemplate fields", () => {
     ["deletedAt", () => ({ deletedAt: new Date("2026-01-01") })],
     ["an allowed field next to a forbidden one", () => ({ name: `x-${tag}`, created_by: U.other })],
     ["content_json that is not an object", () => ({ content_json: "x" })],
+    ["empty name", () => ({ name: "" })],
+    ["data that is not an object", () => null as unknown as object],
   ])("rejects fields outside the template schema: %s", async (_label, payload) => {
     as("rep");
     const [tplBefore, ownerBefore] = [await template(TPL.rep), await owner()];
