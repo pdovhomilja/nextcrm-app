@@ -6,8 +6,10 @@ import { getProductsFull } from "@/actions/crm/products/get-products";
 import { getProductCategories } from "@/actions/crm/products/get-product-categories";
 import ProductsView from "../components/ProductsView";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
+import { requireAuthenticated } from "@/lib/authz";
 
 const ProductsPage = async () => {
+  await requireAuthenticated();
   const [products, categories, crmData] = await Promise.all([
     getProductsFull(),
     getProductCategories(),
