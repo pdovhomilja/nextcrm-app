@@ -41,6 +41,9 @@ export function createHttp(log: PluginLogger): PluginHttp {
       try {
         for (let hop = 0; ; hop++) {
           await assertPublicHost(current.hostname, allowPrivate);
+          // undici's RequestInit/Response are the WHATWG types the global fetch
+          // uses too (Node's fetch is undici); the casts only bridge the two
+          // packages' type declarations.
           const res = (await undiciFetch(current.toString(), {
             ...(rest as Parameters<typeof undiciFetch>[1]),
             redirect: "manual",
