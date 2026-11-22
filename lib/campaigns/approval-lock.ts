@@ -4,20 +4,21 @@ import { isManagerOrAdmin } from "@/lib/authz/roles";
 import type { AuthzUser } from "@/lib/authz/session";
 
 // Scheduling and sending need a manager or admin, so scheduling is the
-// approval step. While a campaign is scheduled or sending, only a manager or
+// approval step. While a campaign is scheduled, sending or paused, only a manager or
 // admin may change what it sends: the campaign, its steps, the templates it
 // uses, its target lists and the target fields a send reads. One entry per
 // locked status.
 export const LOCKED_CAMPAIGN_STATUSES = [
   "scheduled",
   "sending",
+  "paused",
 ] as const satisfies readonly string[];
 
 // What a send reads from a target: the address and the merge tags
 // (lib/campaigns/merge-tags.ts).
 const SENT_TARGET_FIELDS = ["email", "first_name", "last_name", "company", "position"] as const;
 export const CAMPAIGN_LOCKED_MESSAGE =
-  "Used by a scheduled or sending campaign: only a manager or admin can change it";
+  "Used by a scheduled, sending or paused campaign: only a manager or admin can change it";
 
 export class CampaignLockedError extends Error {
   constructor() {

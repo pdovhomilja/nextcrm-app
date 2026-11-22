@@ -20,6 +20,7 @@ import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import type { AuthzUser } from "@/lib/authz";
 import { updateCampaign } from "@/actions/campaigns/update-campaign";
+import { pauseCampaign } from "@/actions/campaigns/pause-campaign";
 import { updateTemplate } from "@/actions/campaigns/templates/update-template";
 import { addTargetsToList } from "@/actions/crm/target-lists/add-targets-to-list";
 import { removeTargetFromList } from "@/actions/crm/target-lists/remove-target-from-list";
@@ -170,13 +171,28 @@ describe("which statuses lock", () => {
 
   it.each([
     ["sending", true],
-    ["paused", false],
+    ["paused", true],
     ["sent", false],
   ])("%s: locked = %s", async (status, locked) => {
     await prismadb.crm_campaigns.update({ where: { id: C.draft }, data: { status } });
     ui("rep");
     const r = uiRefused(await updateCampaign(C.draft, { name: `c-${next()}` }));
     expect(r.refused).toBe(locked);
+  });
+});
+
+describe("paused campaigns", () => {
+  afterAll(() => prismadb.crm_campaigns.update({ where: { id: C.draft }, data: { status: "draft" } }));
+
+  it("the owner can still pause; then only a manager may edit", async () => {
+    await prismadb.crm_campaigns.update({ where: { id: C.draft }, data: { status: "scheduled" } });
+    ui("rep");
+    expect(await pauseCampaign(C.draft)).toMatchObject({ status: "paused" });
+    expect(uiRefused(await updateCampaign(C.draft, { name: `c-${next()}` })).refused).toBe(true);
+    ui("boss");
+    const name = `c-${next()}`;
+    expect(uiRefused(await updateCampaign(C.draft, { name })).refused).toBe(false);
+    expect(await prismadb.crm_campaigns.findUnique({ where: { id: C.draft } })).toMatchObject({ name, status: "paused" });
   });
 });
 
