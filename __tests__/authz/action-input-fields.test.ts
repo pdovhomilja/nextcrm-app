@@ -37,6 +37,7 @@ const CONTACT = { rep: randomUUID(), other: randomUUID() };
 const TARGET = randomUUID();
 const CAMP_OTHER = randomUUID();
 const TPL_REP = randomUUID();
+const INDUSTRY = randomUUID();
 
 const as = (who: keyof typeof U) => (getSession as jest.Mock).mockResolvedValue({ user: { id: U[who] } });
 
@@ -48,6 +49,7 @@ beforeAll(async () => {
       userStatus: k === "gone" ? "INACTIVE" : "ACTIVE",
     })),
   });
+  await prismadb.crm_Industry_Type.create({ data: { id: INDUSTRY, name: `industry-${tag}` } });
   for (const k of ["rep", "other"] as const) {
     await prismadb.crm_Accounts.create({
       data: { id: ACC[k], v: 0, name: `${k}-${tag}`, assigned_to: U[k], createdBy: U[k] },
@@ -73,6 +75,7 @@ afterAll(async () => {
   await prismadb.crm_Activities.deleteMany({ where: { id: { in: activities.map((a) => a.id) } } });
   await prismadb.crm_Contacts.deleteMany({ where: { last_name: { contains: tag } } });
   await prismadb.crm_Accounts.deleteMany({ where: { name: { contains: tag } } });
+  await prismadb.crm_Industry_Type.deleteMany({ where: { id: INDUSTRY } });
   await prismadb.crm_Targets.deleteMany({ where: { last_name: { contains: tag } } });
   const campaigns = await prismadb.crm_campaigns.findMany({ where: { name: { contains: tag } }, select: { id: true } });
   await prismadb.crm_campaign_steps.deleteMany({ where: { campaign_id: { in: campaigns.map((c) => c.id) } } });
@@ -258,6 +261,19 @@ describe("updateAccount fields", () => {
     const fields = accountFormFields(`rep-${tag}`);
     expect(await updateAccount({ id: ACC.rep, ...fields, status: "Active" })).toHaveProperty("data");
     expect(await row()).toMatchObject({ ...fields, status: "Active", v: 0, createdBy: U.rep, updatedBy: U.rep });
+  });
+
+  it("treats an empty industry as none", async () => {
+    as("rep");
+    await prismadb.crm_Accounts.update({ where: { id: ACC.rep }, data: { industry: INDUSTRY } });
+    expect(await updateAccount({ id: ACC.rep, industry: "" })).toHaveProperty("data");
+    expect(await row()).toMatchObject({ industry: null });
+  });
+
+  it("keeps the owner when assigned_to is empty", async () => {
+    as("rep");
+    expect(await updateAccount({ id: ACC.rep, assigned_to: "" })).toHaveProperty("data");
+    expect(await row()).toMatchObject({ assigned_to: U.rep });
   });
 });
 
