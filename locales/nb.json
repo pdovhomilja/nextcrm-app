@@ -654,7 +654,8 @@
       "format": "Format",
       "both": "Begge (CSV + PDF)",
       "cancel": "Avbryt",
-      "create": "Opprett plan"
+      "create": "Opprett plan",
+      "createFailed": "Kunne ikke opprette planen. Sjekk cron-uttrykket og mottakernes e-postadresser."
     },
     "savedReports": {
       "placeholder": "Lagrede rapporter...",

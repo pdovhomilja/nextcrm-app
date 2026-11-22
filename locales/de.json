@@ -654,7 +654,8 @@
       "format": "Format",
       "both": "Both (CSV + PDF)",
       "cancel": "Cancel",
-      "create": "Create Schedule"
+      "create": "Create Schedule",
+      "createFailed": "Der Zeitplan konnte nicht erstellt werden. Prüfen Sie den Cron-Ausdruck und die E-Mail-Adressen der Empfänger."
     },
     "savedReports": {
       "placeholder": "Saved reports...",
