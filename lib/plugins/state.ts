@@ -46,6 +46,9 @@ export async function getEnabledPlugins(): Promise<RegisteredPlugin[]> {
 }
 
 export async function listPluginsForAdmin(): Promise<AdminPluginRow[]> {
+  // Lazy: lib/prisma reaches this module, so a static lib/authz import would form a cycle.
+  const { requireRole } = await import("@/lib/authz");
+  await requireRole(["admin"]);
   const states = new Map((await getPluginStates()).map((r) => [r.id, r]));
   const rows: AdminPluginRow[] = getRegistry().map((p) => {
     const s = states.get(p.definition.id);

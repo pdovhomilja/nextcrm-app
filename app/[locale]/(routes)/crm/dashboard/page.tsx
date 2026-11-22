@@ -5,8 +5,10 @@ import CRMKanban from "./_components/CRMKanban";
 import { getOpportunities } from "@/actions/crm/get-opportunities";
 import { getAllCrmData } from "@/actions/crm/get-crm-data";
 import { serializeDecimalsList } from "@/lib/serialize-decimals";
+import { requireAuthenticated } from "@/lib/authz";
 
 const CrmDashboardPage = async () => {
+  await requireAuthenticated();
   const salesStages = await getSaleStages();
   const opportunities = serializeDecimalsList(await getOpportunities());
   const crmData = await getAllCrmData();

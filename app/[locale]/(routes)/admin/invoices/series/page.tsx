@@ -1,8 +1,10 @@
 import { prismadb } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SeriesTable } from "./_components/SeriesTable";
+import { requireRole } from "@/lib/authz";
 
 export default async function InvoiceSeriesPage() {
+  await requireRole(["admin"]);
   const series = await prismadb.invoice_Series.findMany({
     orderBy: { createdAt: "desc" },
   });

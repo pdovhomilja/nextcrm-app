@@ -1,8 +1,10 @@
 import { prismadb } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InvoiceSettingsForm } from "./_components/InvoiceSettingsForm";
+import { requireRole } from "@/lib/authz";
 
 export default async function InvoiceSettingsPage() {
+  await requireRole(["admin"]);
   const [settings, currencies, series, taxRates] = await Promise.all([
     prismadb.invoice_Settings.findFirst(),
     prismadb.currency.findMany({
