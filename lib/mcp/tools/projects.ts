@@ -323,6 +323,17 @@ export const projectTools = [
       const sec = await prismadb.sections.findUnique({ where: { id: args.section } });
       if (!sec) notFound("Section");
       await assertScopeOrNotFound(() => assertCanWriteBoard(user, sec.board), "Board");
+      // The assignee bypass in assertCanWriteTask covers moves within the
+      // task's board only: moving it to another board needs write on both.
+      const current = await prismadb.tasks.findUnique({
+        where: { id: args.id },
+        select: { assigned_section: { select: { board: true } } },
+      });
+      const from = current?.assigned_section?.board;
+      if (from !== sec.board) {
+        if (!from) notFound("Task");
+        await assertScopeOrNotFound(() => assertCanWriteBoard(user, from), "Board");
+      }
       const task = await prismadb.tasks.update({
         where: { id: args.id },
         data: {

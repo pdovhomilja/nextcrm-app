@@ -24,6 +24,8 @@ import { createTask as createProjectTask } from "@/actions/projects/create-task"
 import { updateTask } from "@/actions/projects/update-task";
 import { createTask as createAccountTask } from "@/actions/crm/accounts/create-task";
 import { assignDocumentToCrmTask, disconnectDocumentFromCrmTask } from "@/actions/crm/tasks/assign-document";
+import { projectTools } from "@/lib/mcp/tools/projects";
+import { runMcpToolCall } from "@/lib/mcp/run-tool";
 
 const tag = randomUUID().slice(0, 8);
 const U = { rep: randomUUID(), other: randomUUID(), gone: randomUUID() };
@@ -211,5 +213,25 @@ describe("CRM task documents", () => {
     as("rep");
     expect(await disconnectDocumentFromCrmTask({ documentId: DOC.other, taskId: CT })).toEqual({ error: "Forbidden" });
     expect(await links(DOC.other)).toBe(1);
+  });
+});
+
+describe("MCP projects_move_task", () => {
+  const move = async (id: string, section: string) => {
+    const tool = projectTools.find((t) => t.name === "projects_move_task")!;
+    const user = { id: U.rep, role: "user" } as const;
+    return runMcpToolCall(async () => user as never, (u) => (tool.handler as any)({ id, section }, u.id, u));
+  };
+
+  it("refuses an assignee moving a task off its board into his own board", async () => {
+    const res = await move(T.assigned, S.R);
+    expect(res.isError).toBe(true);
+    expect(await sectionOf(T.assigned)).toBe(S.O);
+  });
+
+  it("moves the caller's task to a section of another board he writes", async () => {
+    const res = await move(T.rep, S.R);
+    expect(res.isError).toBeFalsy();
+    expect(await sectionOf(T.rep)).toBe(S.R);
   });
 });
