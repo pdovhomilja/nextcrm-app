@@ -1,6 +1,7 @@
 import { prismadb } from "@/lib/prisma";
 import { AuthzUser } from "../session";
 import { AuthorizationError } from "../errors";
+import { assertIdString, assertIdStrings } from "../ids";
 import { isManagerOrAdmin } from "../roles";
 import { NO_ROWS, assertHandledRole, isUnhandledRole } from "./unhandled-role";
 import { partnerAccountWhere, partnerVisibleAccountWhere } from "./partner";
@@ -121,6 +122,7 @@ export async function assertCanReadContact(
   user: AuthzUser,
   contactId: string,
 ): Promise<void> {
+  assertIdString(contactId);
   const row = await prismadb.crm_Contacts.findFirst({
     where: { id: contactId, ...contactReadScopeWhere(user) },
     select: { id: true },
@@ -133,6 +135,7 @@ export async function assertCanWriteContact(
   contactId: string,
   opts?: WriteOptions,
 ): Promise<void> {
+  assertIdString(contactId);
   if (user.role === "partner") {
     return partnerCanWrite(user, opts, (account) =>
       prismadb.crm_Contacts.findFirst({
@@ -149,6 +152,7 @@ export async function assertCanReadTarget(
   user: AuthzUser,
   targetId: string,
 ): Promise<void> {
+  assertIdString(targetId);
   const row = await findTargetInScope(user, targetId);
   if (!row) throw new AuthorizationError();
 }
@@ -157,6 +161,7 @@ export async function assertCanWriteTarget(
   user: AuthzUser,
   targetId: string,
 ): Promise<void> {
+  assertIdString(targetId);
   const row = await findTargetInScope(user, targetId);
   if (!row) throw new AuthorizationError();
 }
@@ -165,6 +170,7 @@ export async function filterAuthorizedContactIds(
   user: AuthzUser,
   contactIds: string[],
 ): Promise<string[]> {
+  assertIdStrings(contactIds);
   if (contactIds.length === 0) return [];
   const rows = await prismadb.crm_Contacts.findMany({
     where: { id: { in: contactIds }, ...contactReadScopeWhere(user) },
@@ -179,6 +185,7 @@ export async function filterWritableContactIds(
   user: AuthzUser,
   contactIds: string[],
 ): Promise<string[]> {
+  assertIdStrings(contactIds);
   if (isUnhandledRole(user)) return [];
   return filterAuthorizedContactIds(user, contactIds);
 }
@@ -187,6 +194,7 @@ export async function filterAuthorizedAccountIds(
   user: AuthzUser,
   accountIds: string[],
 ): Promise<string[]> {
+  assertIdStrings(accountIds);
   if (accountIds.length === 0) return [];
   const rows = await prismadb.crm_Accounts.findMany({
     where: { id: { in: accountIds }, ...accountReadScopeWhere(user) },
@@ -199,6 +207,7 @@ export async function filterAuthorizedLeadIds(
   user: AuthzUser,
   leadIds: string[],
 ): Promise<string[]> {
+  assertIdStrings(leadIds);
   if (leadIds.length === 0) return [];
   const rows = await prismadb.crm_Leads.findMany({
     where: { id: { in: leadIds }, ...leadReadScopeWhere(user) },
@@ -211,6 +220,7 @@ export async function filterAuthorizedOpportunityIds(
   user: AuthzUser,
   opportunityIds: string[],
 ): Promise<string[]> {
+  assertIdStrings(opportunityIds);
   if (opportunityIds.length === 0) return [];
   const rows = await prismadb.crm_Opportunities.findMany({
     where: { id: { in: opportunityIds }, ...opportunityReadScopeWhere(user) },
@@ -223,6 +233,7 @@ export async function assertCanCancelContactEnrichment(
   user: AuthzUser,
   enrichmentId: string,
 ): Promise<void> {
+  assertIdString(enrichmentId);
   assertHandledRole(user);
   const row = (await prismadb.crm_Contact_Enrichment.findUnique({
     where: { id: enrichmentId },
@@ -237,6 +248,7 @@ export async function assertCanCancelTargetEnrichment(
   user: AuthzUser,
   enrichmentId: string,
 ): Promise<void> {
+  assertIdString(enrichmentId);
   assertHandledRole(user);
   const row = (await prismadb.crm_Target_Enrichment.findUnique({
     where: { id: enrichmentId },
@@ -251,6 +263,7 @@ export async function filterAuthorizedTargetIds(
   user: AuthzUser,
   targetIds: string[],
 ): Promise<string[]> {
+  assertIdStrings(targetIds);
   if (targetIds.length === 0 || isUnhandledRole(user)) return [];
   const baseWhere =
     isManagerOrAdmin(user)
@@ -295,6 +308,7 @@ export async function assertCanReadAccount(
   user: AuthzUser,
   accountId: string,
 ): Promise<void> {
+  assertIdString(accountId);
   const row = await prismadb.crm_Accounts.findFirst({
     where: { id: accountId, ...accountReadScopeWhere(user) },
     select: { id: true },
@@ -307,6 +321,7 @@ export async function assertCanWriteAccount(
   accountId: string,
   opts?: WriteOptions,
 ): Promise<void> {
+  assertIdString(accountId);
   if (user.role === "partner") {
     return partnerCanWrite(user, opts, (account) =>
       prismadb.crm_Accounts.findFirst({ where: { id: accountId, ...account }, select: { id: true } }),
@@ -412,6 +427,7 @@ export async function assertCanReadLead(
   user: AuthzUser,
   leadId: string,
 ): Promise<void> {
+  assertIdString(leadId);
   const row = await prismadb.crm_Leads.findFirst({
     where: { id: leadId, ...leadReadScopeWhere(user) },
     select: { id: true },
@@ -423,6 +439,7 @@ export async function assertCanReadOpportunity(
   user: AuthzUser,
   opportunityId: string,
 ): Promise<void> {
+  assertIdString(opportunityId);
   const row = await prismadb.crm_Opportunities.findFirst({
     where: { id: opportunityId, ...opportunityReadScopeWhere(user) },
     select: { id: true },
@@ -434,6 +451,7 @@ export async function assertCanReadContract(
   user: AuthzUser,
   contractId: string,
 ): Promise<void> {
+  assertIdString(contractId);
   const row = await prismadb.crm_Contracts.findFirst({
     where: { id: contractId, ...contractReadScopeWhere(user) },
     select: { id: true },
@@ -463,6 +481,7 @@ export async function assertCanReadTargetList(
   user: AuthzUser,
   listId: string,
 ): Promise<void> {
+  assertIdString(listId);
   const row = await prismadb.crm_TargetLists.findFirst({
     where: { id: listId, ...targetListReadScopeWhere(user) },
     select: { id: true },
@@ -479,6 +498,7 @@ export async function assertCanWriteLead(
   leadId: string,
   opts?: WriteOptions,
 ): Promise<void> {
+  assertIdString(leadId);
   if (user.role === "partner") {
     return partnerCanWrite(user, opts, (account) =>
       prismadb.crm_Leads.findFirst({
@@ -501,6 +521,7 @@ export async function assertCanWriteOpportunity(
   opportunityId: string,
   opts?: WriteOptions,
 ): Promise<void> {
+  assertIdString(opportunityId);
   if (user.role === "partner") {
     return partnerCanWrite(user, opts, (account) =>
       prismadb.crm_Opportunities.findFirst({
@@ -522,6 +543,7 @@ export async function assertCanWriteContract(
   user: AuthzUser,
   contractId: string,
 ): Promise<void> {
+  assertIdString(contractId);
   assertHandledRole(user);
   const where =
     isManagerOrAdmin(user)
@@ -536,6 +558,7 @@ export async function assertCanWriteTargetList(
   user: AuthzUser,
   listId: string,
 ): Promise<void> {
+  assertIdString(listId);
   assertHandledRole(user);
   const where =
     isManagerOrAdmin(user)
@@ -553,6 +576,7 @@ export async function assertCanWriteCrmTask(
   taskId: string,
   opts?: WriteOptions,
 ): Promise<void> {
+  assertIdString(taskId);
   if (user.role === "partner") {
     return partnerCanWrite(user, opts, (account) =>
       prismadb.crm_Accounts_Tasks.findFirst({
@@ -604,6 +628,7 @@ export async function assertCanWriteOpportunityLineItem(
   user: AuthzUser,
   lineItemId: string,
 ): Promise<void> {
+  assertIdString(lineItemId);
   const row = await prismadb.crm_OpportunityLineItems.findUnique({
     where: { id: lineItemId },
     select: { opportunityId: true },
@@ -616,6 +641,7 @@ export async function assertCanWriteContractLineItem(
   user: AuthzUser,
   lineItemId: string,
 ): Promise<void> {
+  assertIdString(lineItemId);
   const row = await prismadb.crm_ContractLineItems.findUnique({
     where: { id: lineItemId },
     select: { contractId: true },
@@ -698,6 +724,7 @@ export async function assertCanReadDocument(
   user: AuthzUser,
   documentId: string,
 ): Promise<void> {
+  assertIdString(documentId);
   const row = await prismadb.documents.findFirst({
     where: { id: documentId, ...documentReadScopeWhere(user) },
     select: { id: true },
@@ -709,6 +736,7 @@ export async function assertCanWriteDocument(
   user: AuthzUser,
   documentId: string,
 ): Promise<void> {
+  assertIdString(documentId);
   assertHandledRole(user);
   return assertCanReadDocument(user, documentId);
 }
@@ -717,6 +745,7 @@ export async function filterAuthorizedDocumentIds(
   user: AuthzUser,
   documentIds: string[],
 ): Promise<string[]> {
+  assertIdStrings(documentIds);
   if (documentIds.length === 0) return [];
   const rows = await prismadb.documents.findMany({
     where: { id: { in: documentIds }, ...documentReadScopeWhere(user) },
@@ -732,6 +761,7 @@ export async function filterWritableDocumentIds(
   user: AuthzUser,
   documentIds: string[],
 ): Promise<string[]> {
+  assertIdStrings(documentIds);
   if (isUnhandledRole(user)) return [];
   return filterAuthorizedDocumentIds(user, documentIds);
 }
@@ -747,6 +777,7 @@ export async function assertCanReadActivityForEntity(
   entityType: string,
   entityId: string,
 ): Promise<void> {
+  assertIdString(entityId);
   const type = entityType.toLowerCase();
   if (user.role === "partner" && (type === "account" || type === "contact")) {
     // No activities on his own company account or its contacts.
@@ -812,6 +843,7 @@ export async function assertCanReadCampaign(
   user: AuthzUser,
   id: string,
 ): Promise<void> {
+  assertIdString(id);
   const row = await prismadb.crm_campaigns.findFirst({
     where: { id, ...campaignReadScopeWhere(user) },
     select: { id: true },
@@ -823,6 +855,7 @@ export async function assertCanWriteCampaign(
   user: AuthzUser,
   id: string,
 ): Promise<void> {
+  assertIdString(id);
   return assertCanReadCampaign(user, id);
 }
 
@@ -830,6 +863,7 @@ export async function assertCanReadTemplate(
   user: AuthzUser,
   id: string,
 ): Promise<void> {
+  assertIdString(id);
   const row = await prismadb.crm_campaign_templates.findFirst({
     where: { id, ...campaignTemplateReadScopeWhere(user) },
     select: { id: true },
@@ -841,6 +875,7 @@ export async function assertCanWriteTemplate(
   user: AuthzUser,
   id: string,
 ): Promise<void> {
+  assertIdString(id);
   return assertCanReadTemplate(user, id);
 }
 
@@ -880,6 +915,7 @@ export async function assertCanReadBoard(
   user: AuthzUser,
   boardId: string,
 ): Promise<void> {
+  assertIdString(boardId);
   const row = await prismadb.boards.findFirst({
     where: { id: boardId, ...boardReadScopeWhere(user) },
     select: { id: true },
@@ -891,6 +927,7 @@ export async function assertCanWriteBoard(
   user: AuthzUser,
   boardId: string,
 ): Promise<void> {
+  assertIdString(boardId);
   const row = await prismadb.boards.findFirst({
     where: { id: boardId, ...boardWriteScopeWhere(user) },
     select: { id: true },
@@ -902,6 +939,7 @@ export async function assertCanReadTask(
   user: AuthzUser,
   taskId: string,
 ): Promise<void> {
+  assertIdString(taskId);
   const task = await prismadb.tasks.findUnique({
     where: { id: taskId },
     select: {
@@ -919,6 +957,7 @@ export async function assertCanWriteTask(
   user: AuthzUser,
   taskId: string,
 ): Promise<void> {
+  assertIdString(taskId);
   const task = await prismadb.tasks.findUnique({
     where: { id: taskId },
     select: {
@@ -953,6 +992,7 @@ export async function assertCanWriteActivity(
   activityId: string,
   opts?: WriteOptions,
 ): Promise<void> {
+  assertIdString(activityId);
   if (user.role === "partner") {
     if (!opts?.partnerEdit) throw new AuthorizationError();
     const links = await prismadb.crm_ActivityLinks.findMany({
