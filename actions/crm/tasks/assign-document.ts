@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import {
   requireAuthenticated,
   assertCanWriteCrmTask,
+  assertCanReadDocument,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -25,6 +26,7 @@ export const assignDocumentToCrmTask = async (data: {
   }
   try {
     await assertCanWriteCrmTask(user, taskId);
+    await assertCanReadDocument(user, documentId);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
@@ -69,6 +71,7 @@ export const disconnectDocumentFromCrmTask = async (data: {
   }
   try {
     await assertCanWriteCrmTask(user, taskId);
+    await assertCanReadDocument(user, documentId);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
