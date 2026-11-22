@@ -42,3 +42,10 @@ it("rejects a category moved under its own child (Review Focus 5)", async () => 
   await expect(saveProductCategory({ name: "N", parentId: "parent", isActive: true })).resolves.toEqual({ data: { id: "new" } });
   expect(db.crm_ProductCategories.create).toHaveBeenCalledWith({ data: { name: "N", parentId: "parent", isActive: true, createdBy: "a1", updatedBy: "a1" } });
 });
+
+it("writes only the category fields, not other keys in the input", async () => {
+  db.crm_ProductCategories.create.mockResolvedValue({ id: "new" });
+  const input = { name: "N", parentId: null, isActive: true, source: "EXTERNAL", createdBy: "x" };
+  await expect(saveProductCategory(input as never)).resolves.toEqual({ data: { id: "new" } });
+  expect(db.crm_ProductCategories.create).toHaveBeenCalledWith({ data: { name: "N", parentId: null, isActive: true, createdBy: "a1", updatedBy: "a1" } });
+});
