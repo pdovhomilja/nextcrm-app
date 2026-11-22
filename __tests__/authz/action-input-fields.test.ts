@@ -609,7 +609,8 @@ describe("report schedule fields", () => {
   });
 
   it.each<[string, unknown]>([
-    ["relation write on user", { user: { update: { role: "admin" } } }],
+    ["a relation field", { user: { connect: { id: U.other } } }],
+    ["an unknown key", { unknownKey: 1 }],
     ["createdBy", { createdBy: U.other }],
     ["recipients that are not emails", { recipients: [{ x: 1 }] }],
     ["unknown format", { format: "xml" }],
@@ -639,7 +640,7 @@ describe("report schedule fields", () => {
   });
 
   it.each<[string, (configId: string) => unknown]>([
-    ["extra key", (c) => ({ reportConfigId: c, ...valid, user: { update: { role: "admin" } } })],
+    ["a relation field", (c) => ({ reportConfigId: c, ...valid, user: { connect: { id: U.other } } })],
     ["recipients that are not emails", (c) => ({ reportConfigId: c, ...valid, recipients: [{ x: 1 }] })],
     ["unknown format", (c) => ({ reportConfigId: c, ...valid, format: "xml" })],
     ["config id that is not a string", (c) => ({ reportConfigId: { in: [c] }, ...valid })],

@@ -8,10 +8,17 @@
 // or pick the fields. A hit that is safe for another reason must be listed in
 // REVIEWED with that reason.
 //
-// Not covered: values nested inside picked fields (`data: { name: input.name }`
-// where name arrives as an object); Prisma rejects objects on scalar columns,
-// relation fields need an explicit pick. createSafeAction handlers are skipped:
-// createSafeAction parses the input with the action's schema first.
+// This is a tripwire for the common shapes, not a proof. Known limits:
+// - only top-level function declarations and arrow/function expressions
+//   assigned to a const are scanned; a function wrapped in any call
+//   (createSafeAction or another wrapper) is skipped, and so are nested helpers;
+// - only writes whose first argument is an object literal are checked
+//   (`prismadb.x.update(args)` is not);
+// - taint follows parameters, `const a = <tainted>` aliases and rest
+//   destructuring only, not reassignment, function calls or other modules;
+// - values nested inside picked fields (`data: { name: input.name }` where
+//   name arrives as an object) are not checked; Prisma rejects objects on
+//   scalar columns, relation fields need an explicit pick.
 import fs from "fs";
 import path from "path";
 import ts from "typescript";
@@ -19,7 +26,9 @@ import ts from "typescript";
 const REVIEWED: Record<string, string> = {};
 
 const ROOT = path.join(__dirname, "../..");
-const WRITE_METHODS = new Set(["create", "createMany", "update", "updateMany", "upsert"]);
+const WRITE_METHODS = new Set([
+  "create", "createMany", "createManyAndReturn", "update", "updateMany", "updateManyAndReturn", "upsert",
+]);
 const DATA_KEYS = new Set(["data", "create", "update"]);
 
 function files(dir: string): string[] {
@@ -37,8 +46,8 @@ function bindingNames(name: ts.BindingName, out: string[]) {
 
 type Fn = { name: string; node: ts.FunctionLikeDeclaration };
 
-// Top-level functions, as in action-scope-inventory.test.ts, without the
-// createSafeAction handlers.
+// Top-level functions, as in action-scope-inventory.test.ts, without
+// functions passed to a wrapper call.
 function topLevelFunctions(sf: ts.SourceFile): Fn[] {
   const out: Fn[] = [];
   for (const stmt of sf.statements) {
@@ -154,6 +163,7 @@ describe("the scan", () => {
     ["a property of the parameter", `export async function f(args: { patch: object }) { await prismadb.t.update({ where: { id: "1" }, data: args.patch }); }`],
     ["a rest spread from the parameter", `export async function f(input: { id: string }) { const { id, ...rest } = input; await prismadb.t.update({ where: { id }, data: rest }); }`],
     ["an alias of the parameter", `export async function f(input: object) { const payload = input as never; await tx.t.createMany({ data: payload }); }`],
+    ["createManyAndReturn", `export async function f(rows: object[]) { await prismadb.t.createManyAndReturn({ data: rows }); }`],
     ["the upsert create and update", `export async function f(input: object) { await prismadb.t.upsert({ where: { id: "1" }, create: { ...input }, update: {} }); }`],
   ])("flags %s", (_label, body) => {
     expect(hit(body)).toEqual(["x.ts#f"]);

@@ -3,14 +3,14 @@ import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import { requireAuthenticated, isManagerOrAdmin, AuthorizationError } from "@/lib/authz";
 import { assertIdString } from "@/lib/authz/ids";
-import type { ExportFormat } from "./types";
+import { EXPORT_FORMATS, type ExportFormat } from "./types";
 
 // Strict: a server action takes whatever the client posts, the TypeScript
 // parameter types below do not exist at runtime.
 const scheduleFields = z.strictObject({
   cronExpression: z.string().min(1),
   recipients: z.array(z.string().email()),
-  format: z.enum(["csv", "pdf", "both"]),
+  format: z.enum(EXPORT_FORMATS),
 });
 const createScheduleSchema = scheduleFields.extend({ reportConfigId: z.string().min(1) });
 const updateScheduleSchema = scheduleFields.extend({ isActive: z.boolean() }).partial();
