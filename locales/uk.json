@@ -654,7 +654,8 @@
       "format": "Format",
       "both": "Both (CSV + PDF)",
       "cancel": "Cancel",
-      "create": "Create Schedule"
+      "create": "Create Schedule",
+      "createFailed": "Не вдалося створити розклад. Перевірте cron-вираз та електронні адреси одержувачів."
     },
     "savedReports": {
       "placeholder": "Saved reports...",
