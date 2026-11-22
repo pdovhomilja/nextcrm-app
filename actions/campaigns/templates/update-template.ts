@@ -1,6 +1,7 @@
 "use server";
 import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import { assertTemplateEditable, CampaignLockedError } from "@/lib/campaigns/approval-lock";
 import {
   requireAuthenticated,
   assertCanWriteTemplate,
@@ -41,8 +42,10 @@ export const updateTemplate = async (
 
   try {
     await assertCanWriteTemplate(user, id);
+    await assertTemplateEditable(user, id);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Not found" };
+    if (e instanceof CampaignLockedError) return { error: e.message };
     throw e;
   }
 
