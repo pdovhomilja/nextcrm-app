@@ -5,6 +5,15 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.0...v0.42.1) (2026-11-22)
+
+
+### Fixed
+
+* **authz:** validate id arguments in scope helpers ([#519](https://github.com/pdovhomilja/nextcrm-app/issues/519)) ([5c8b7ad](https://github.com/pdovhomilja/nextcrm-app/commit/5c8b7ad37a7d0ab63b93b858cbf8c141c83584fd))
+* **campaigns:** validate template update input ([#518](https://github.com/pdovhomilja/nextcrm-app/issues/518)) ([3a9a5e6](https://github.com/pdovhomilja/nextcrm-app/commit/3a9a5e62b0e2b4bfe8171c4da9feb1bffb5d020f))
+* **pages:** add page-level auth checks ([#520](https://github.com/pdovhomilja/nextcrm-app/issues/520)) ([5d0aa1b](https://github.com/pdovhomilja/nextcrm-app/commit/5d0aa1ba19ae3773de1c85a34e85b7175d6180a5))
+
 ## [0.42.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.41.0...v0.42.0) (2026-11-20)
 
 
