@@ -16,6 +16,7 @@ import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import { updateCampaign } from "@/actions/campaigns/update-campaign";
 import { createCampaign } from "@/actions/campaigns/create-campaign";
+import { updateTemplate } from "@/actions/campaigns/templates/update-template";
 import { updateContract } from "@/actions/crm/contracts/update-contract";
 import { createOpportunity } from "@/actions/crm/opportunities/create-opportunity";
 import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
@@ -152,6 +153,59 @@ describe("updateCampaign fields", () => {
       reply_to: "r@example.com",
       template_id: TPL.rep,
       scheduled_at: new Date("2027-01-01T00:00:00Z"),
+    });
+  });
+});
+
+// Same rule for templates: only the five editor fields reach Prisma.
+describe("updateTemplate fields", () => {
+  const template = (id: string) => prismadb.crm_campaign_templates.findUnique({ where: { id } });
+  const owner = () => prismadb.users.findUnique({ where: { id: U.rep } });
+
+  beforeEach(async () => {
+    await prismadb.crm_campaign_templates.update({ where: { id: TPL.rep }, data: { created_by: U.rep, deletedAt: null } });
+  });
+
+  it.each<[string, () => object]>([
+    ["relation write on owner", () => ({ created_by_user: { update: { name: `x-${tag}` } } })],
+    ["relation connect on owner", () => ({ created_by_user: { connect: { id: U.other } } })],
+    ["created_by", () => ({ created_by: U.other })],
+    ["deletedAt", () => ({ deletedAt: new Date("2026-01-01") })],
+    ["an allowed field next to a forbidden one", () => ({ name: `x-${tag}`, created_by: U.other })],
+    ["content_json that is not an object", () => ({ content_json: "x" })],
+  ])("rejects fields outside the template schema: %s", async (_label, payload) => {
+    as("rep");
+    const [tplBefore, ownerBefore] = [await template(TPL.rep), await owner()];
+    expect(await updateTemplate(TPL.rep, payload() as never)).toEqual({ error: "Invalid input" });
+    expect(await template(TPL.rep)).toEqual(tplBefore);
+    expect(await owner()).toEqual(ownerBefore);
+  });
+
+  it("rejects an id that is not a string", async () => {
+    as("rep");
+    const before = await template(TPL.rep);
+    expect(await updateTemplate({ not: TPL.other } as never, { name: `x-${tag}` })).toEqual({ error: "Invalid input" });
+    expect(await template(TPL.rep)).toEqual(before);
+  });
+
+  it("writes the five editor fields", async () => {
+    as("rep");
+    // The shape TipTap's editor.getJSON() hands the editor form.
+    const doc = { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Hi" }] }] };
+    await updateTemplate(TPL.rep, {
+      name: `five-${tag}`,
+      description: "d",
+      subject_default: "s",
+      content_html: "<p>Hi</p>",
+      content_json: doc,
+    });
+    expect(await template(TPL.rep)).toMatchObject({
+      name: `five-${tag}`,
+      description: "d",
+      subject_default: "s",
+      content_html: "<p>Hi</p>",
+      content_json: doc,
+      created_by: U.rep,
     });
   });
 });
