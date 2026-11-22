@@ -186,8 +186,8 @@ describe.each(REASSIGNABLE)("$tool reassignment", ({ tool, model }) => {
   });
 
   it("persists assigned_to", async () => {
-    await run(tool, { id: "x1", assigned_to: "u2" }, ADMIN);
-    expect(m.update.mock.calls[0][0].data.assigned_to).toBe("u2");
+    await run(tool, { id: "x1", assigned_to: ASSIGNEE }, ADMIN);
+    expect(m.update.mock.calls[0][0].data.assigned_to).toBe(ASSIGNEE);
   });
 
   it("rejects an unknown assignee instead of writing a dangling FK", async () => {
@@ -200,7 +200,7 @@ describe.each(REASSIGNABLE)("$tool reassignment", ({ tool, model }) => {
 
   it("refuses to park work on a non-active account", async () => {
     users.findFirst.mockResolvedValue(null);
-    await expect(run(tool, { id: "x1", assigned_to: "u2" }, ADMIN)).rejects.toThrow(
+    await expect(run(tool, { id: "x1", assigned_to: ASSIGNEE }, ADMIN)).rejects.toThrow(
       "NOT_FOUND"
     );
     expect(users.findFirst.mock.calls[0][0].where.userStatus).toBe("ACTIVE");

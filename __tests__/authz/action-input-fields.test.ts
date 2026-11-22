@@ -217,6 +217,13 @@ describe("createAccount fields", () => {
     expect(await otherContactAccount()).toBe(ACC.other);
   });
 
+  it("refuses an assignee id that is not a uuid and creates nothing", async () => {
+    as("rep");
+    const n = `acc-${tag}-bad-assignee`;
+    expect(await createAccount({ ...accountFormFields(n), assigned_to: "not-a-uuid" })).toEqual({ error: "Forbidden" });
+    expect(await count(n)).toBe(0);
+  });
+
   it("creates an account from the fields the form sends, owned by the caller", async () => {
     as("rep");
     const n = `acc-${tag}-ok`;
