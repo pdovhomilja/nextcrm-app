@@ -139,6 +139,7 @@ Admin pages, admin actions and `/api/admin/*` routes call `requireRole(["admin"]
 ### Rules for contributors
 
 - Never trust an ID from the client. Check it with an `assertCan…` helper or a scoped `where`.
+- A page that reads data calls `requireAuthenticated()` or `requireRole([...])` on its first line, even when its layout already checks. Layouts and pages render in parallel, so a redirect in the layout does not stop the page's own queries. `__tests__/authz/page-auth.test.ts` covers the pages that read data directly.
 - Use the same helper for reads and writes in MCP tools, actions and routes, so all entry points behave the same.
 - A new scope helper must deny roles outside `SCOPED_ROLES` (return `NO_ROWS` or call `assertHandledRole`); the deny-by-default test picks up new exports automatically and expects them to deny a partner unless listed in `PARTNER_READS`. Use `NO_ROWS`, not a bare `OR: []`: Prisma reads an empty `OR` inside `AND: [...]` as "all rows".
 - Add a test for the `user` role when you add or change a scope. The suites under `__tests__/` and `lib/authz/__tests__/` show the pattern.
