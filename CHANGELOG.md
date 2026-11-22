@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.2...v0.42.3) (2026-11-22)
+
+
+### Fixed
+
+* **accounts:** treat an empty industry as none ([#524](https://github.com/pdovhomilja/nextcrm-app/issues/524)) ([cdff876](https://github.com/pdovhomilja/nextcrm-app/commit/cdff876532fadae2901fc655eca520c7d99adf82))
+
 ## [0.42.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.1...v0.42.2) (2026-11-22)
 
 
