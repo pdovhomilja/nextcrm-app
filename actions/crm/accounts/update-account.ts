@@ -86,6 +86,9 @@ export const updateAccount = async (data: {
         v: 0,
         updatedBy: user.id,
         ...(rest.pricelist_id === "" ? { pricelist_id: null } : {}),
+        ...(rest.industry === "" ? { industry: null } : {}),
+        // An empty assignee keeps the current one, as in updateContact.
+        ...(rest.assigned_to === "" ? { assigned_to: undefined } : {}),
         // The partner is set only through setAccountPartner (admin/manager).
         partnerUserId: undefined,
         // A partner edits ordinary fields only, never the internal owner.
