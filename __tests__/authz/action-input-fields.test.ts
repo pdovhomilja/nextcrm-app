@@ -13,6 +13,7 @@ jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn(async () => undefined) } }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 jest.mock("@/lib/sendmail", () => jest.fn(async () => undefined));
+jest.mock("@/app/[locale]/(routes)/campaigns/new/components/WizardShell", () => ({ WizardShell: () => null }));
 jest.mock("@/lib/crm/calendar/outbound-emit", () => ({ emitCalendarOutbound: jest.fn(async () => undefined) }));
 
 import { randomUUID } from "crypto";
@@ -27,6 +28,7 @@ import { createContact } from "@/actions/crm/contacts/create-contact";
 import { updateContact } from "@/actions/crm/contacts/update-contact";
 import { createCampaign } from "@/actions/campaigns/create-campaign";
 import { updateActivity } from "@/actions/crm/activities/update-activity";
+import NewCampaignPage from "@/app/[locale]/(routes)/campaigns/new/page";
 
 const tag = randomUUID().slice(0, 8);
 const U = { rep: randomUUID(), other: randomUUID(), boss: randomUUID() };
@@ -436,5 +438,45 @@ describe("updateActivity links", () => {
     const next = [{ entityType: "account", entityId: ACC.other }];
     expect(await updateActivity({ id: ACT.rep, links: next })).toHaveProperty("data");
     expect(await links(ACT.rep)).toEqual(next);
+  });
+});
+
+// The campaign wizard offers the target lists the caller can read elsewhere.
+describe("campaigns/new target lists", () => {
+  const LIST = { rep: randomUUID(), repDeleted: randomUUID(), other: randomUUID() };
+
+  beforeAll(async () => {
+    (global as unknown as { React: unknown }).React = jest.requireActual("react");
+    for (const [k, owner, deletedAt] of [
+      ["rep", U.rep, null], ["repDeleted", U.rep, new Date("2026-01-01")], ["other", U.other, null],
+    ] as const) {
+      await prismadb.crm_TargetLists.create({ data: { id: LIST[k], name: `${k}-${tag}`, status: true, created_by: owner, deletedAt } });
+    }
+  });
+
+  afterAll(async () => {
+    await prismadb.crm_TargetLists.deleteMany({ where: { id: { in: Object.values(LIST) } } });
+  });
+
+  // The page renders <WizardShell targetLists={...} />; read the prop.
+  const offered = async () => {
+    const findProps = (node: unknown): { targetLists: { id: string }[] } | undefined => {
+      if (!node || typeof node !== "object") return undefined;
+      const props = (node as { props?: Record<string, unknown> }).props;
+      if (props?.targetLists) return props as { targetLists: { id: string }[] };
+      return ([] as unknown[]).concat(props?.children ?? []).map(findProps).find(Boolean);
+    };
+    const ids = findProps(await NewCampaignPage())!.targetLists.map((l) => l.id);
+    return Object.values(LIST).filter((id) => ids.includes(id));
+  };
+
+  it("user sees only his own lists that are not deleted", async () => {
+    as("rep");
+    expect(await offered()).toEqual([LIST.rep]);
+  });
+
+  it("manager sees every list that is not deleted", async () => {
+    as("boss");
+    expect((await offered()).sort()).toEqual([LIST.rep, LIST.other].sort());
   });
 });
