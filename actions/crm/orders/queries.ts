@@ -27,15 +27,15 @@ export async function getOrderFormData(accountId: string) {
   const account = await prismadb.crm_Accounts.findFirst({ where: { id: accountId, ...accountReadScopeWhere(user) } });
   if (!account) return null;
   const [contacts, ctx] = await Promise.all([
-    prismadb.crm_Contacts.findMany({ where: { accountsIDs: accountId }, select: { id: true, first_name: true, last_name: true }, orderBy: { last_name: "asc" } }),
-    pricingContextForAccount(accountId),
+    prismadb.crm_Contacts.findMany({ where: { accountsIDs: account.id }, select: { id: true, first_name: true, last_name: true }, orderBy: { last_name: "asc" } }),
+    pricingContextForAccount(account.id),
   ]);
   const list = ctx.priceListId ? await prismadb.crm_PriceLists.findUnique({ where: { id: ctx.priceListId }, select: { name: true } }) : null;
   const useShipping = !!(account.shipping_street || account.shipping_city);
   const a = account as unknown as Record<string, string | null>;
   const pick = (k: string) => a[useShipping ? `shipping_${k}` : `billing_${k}`] ?? null;
   return {
-    accountId, accountName: account.name, priceListName: list?.name ?? null, currency: ctx.currency,
+    accountId: account.id, accountName: account.name, priceListName: list?.name ?? null, currency: ctx.currency,
     contacts: contacts.map((c) => ({ id: c.id, name: [c.first_name, c.last_name].filter(Boolean).join(" ") })),
     shipping: { shipping_street: pick("street"), shipping_city: pick("city"), shipping_state: pick("state"), shipping_postal_code: pick("postal_code"), shipping_country: pick("country") },
   };
@@ -69,7 +69,7 @@ export async function getOrderHistory(id: string) {
   const user = await requireAuthenticated({ partner: true });
   const visible = await prismadb.crm_Orders.findFirst({ where: { id, ...orderReadScopeWhere(user) }, select: { id: true } });
   if (!visible) return [];
-  const rows = await prismadb.crm_AuditLog.findMany({ where: { entityType: "order", entityId: id }, orderBy: { createdAt: "desc" }, take: 100, include: { user: { select: { name: true } } } });
+  const rows = await prismadb.crm_AuditLog.findMany({ where: { entityType: "order", entityId: visible.id }, orderBy: { createdAt: "desc" }, take: 100, include: { user: { select: { name: true } } } });
   return rows.map((r) => ({ id: r.id, action: r.action, changes: r.changes as unknown, userName: r.user?.name ?? null, createdAt: r.createdAt.toISOString() }));
 }
 export type OrderHistoryEntry = Awaited<ReturnType<typeof getOrderHistory>>[number];

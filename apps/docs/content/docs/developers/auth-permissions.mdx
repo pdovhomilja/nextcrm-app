@@ -139,6 +139,7 @@ Admin pages, admin actions and `/api/admin/*` routes call `requireRole(["admin"]
 ### Rules for contributors
 
 - Never trust an ID from the client. Check it with an `assertCan…` helper or a scoped `where`.
+- An ID typed `string` can still arrive as an object, which Prisma reads as a filter. Every `assertCan…` and `filter…Ids` helper that takes an ID starts with `assertIdString(id)` / `assertIdStrings(ids)` (`lib/authz/ids.ts`) and refuses anything but a non-empty string; `tryScopedUpdateContact` / `tryScopedUpdateTarget` return `false` for one (`isIdString`). A new helper that takes an ID does the same. After a check, act on the ID of the row you found (`order.id`), not on the argument, and never pass an unchecked argument to `findMany`, `updateMany` or `deleteMany`. `__tests__/authz/ui-object-scope.test.ts` ("non-string id arguments") shows the test.
 - Use the same helper for reads and writes in MCP tools, actions and routes, so all entry points behave the same.
 - A new scope helper must deny roles outside `SCOPED_ROLES` (return `NO_ROWS` or call `assertHandledRole`); the deny-by-default test picks up new exports automatically and expects them to deny a partner unless listed in `PARTNER_READS`. Use `NO_ROWS`, not a bare `OR: []`: Prisma reads an empty `OR` inside `AND: [...]` as "all rows".
 - Add a test for the `user` role when you add or change a scope. The suites under `__tests__/` and `lib/authz/__tests__/` show the pattern.

@@ -2,6 +2,7 @@ import { Decimal } from "decimal.js";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz/session";
 import { AuthorizationError } from "@/lib/authz/errors";
+import { isIdString } from "@/lib/authz/ids";
 import { assertCanReadAccount, assertCanWriteAccount } from "@/lib/authz/scopes/crm";
 import { orderReadScopeWhere } from "@/lib/authz/scopes/orders";
 import { writeAuditLog } from "@/lib/audit-log";
@@ -107,6 +108,8 @@ function shippingFrom(account: Record<string, unknown>, input: HeaderInput) {
 }
 
 export async function loadOrder(user: AuthzUser, id: string) {
+  // A server action passes the client's value through; anything but a string id is an unknown order.
+  if (!isIdString(id)) throw new OrderError("notFound");
   const order = await prismadb.crm_Orders.findFirst({ where: { id, ...orderReadScopeWhere(user) }, include: DETAIL_INCLUDE });
   if (!order) throw new OrderError("notFound");
   return order;
@@ -175,10 +178,10 @@ export async function updateDraft(user: AuthzUser, id: string, input: HeaderInpu
 export async function deleteDraft(user: AuthzUser, id: string) {
   const order = await loadOrder(user, id);
   if (!can(order, "delete", toActor(user))) throw new OrderError("forbidden");
-  const res = await prismadb.crm_Orders.deleteMany({ where: { id, status: "DRAFT" } });
+  const res = await prismadb.crm_Orders.deleteMany({ where: { id: order.id, status: "DRAFT" } });
   if (res.count === 0) throw new OrderError("changed");
-  await writeAuditLog({ entityType: "order", entityId: id, action: "deleted", changes: null, userId: user.id });
-  return { id };
+  await writeAuditLog({ entityType: "order", entityId: order.id, action: "deleted", changes: null, userId: user.id });
+  return { id: order.id };
 }
 
 export async function listOrders(user: AuthzUser, args: { status?: string; accountId?: string; ownerId?: string; limit: number; offset: number }) {
