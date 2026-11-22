@@ -11,9 +11,18 @@
 // reason. Behaviour is tested in __tests__/authz/task-board-writes.test.ts and
 // action-input-fields.test.ts.
 //
-// Not covered: assignee fields that arrive inside a spread of parsed input
-// (`data: { ...parsed.data }`); those actions check them by name before the
-// write (see action-input-fields.test.ts).
+// This is a tripwire for the common shapes, not a proof. Known limits:
+// - only explicit keys of an object-literal `data` are checked; fields inside
+//   a spread (`data: { ...input }` or `{ ...parsed.data }`) are not. Spreads of
+//   raw input are caught by no-raw-prisma-data.test.ts; parsed input is
+//   checked by name in the actions (see action-input-fields.test.ts);
+// - only top-level function declarations and arrow/function expressions
+//   assigned to a const are scanned; functions passed to a wrapper call and
+//   nested helpers are skipped;
+// - taint follows parameters, their properties and `const` destructuring or
+//   aliases; reassignment and values from other functions are not followed;
+// - "checked" means assertAssignableUser is called somewhere in the function
+//   with the same expression text, not that the call guards the write.
 import fs from "fs";
 import path from "path";
 import ts from "typescript";
@@ -21,7 +30,9 @@ import ts from "typescript";
 const REVIEWED: Record<string, string> = {};
 
 const ROOT = path.join(__dirname, "../..");
-const WRITE_METHODS = new Set(["create", "createMany", "update", "updateMany", "upsert"]);
+const WRITE_METHODS = new Set([
+  "create", "createMany", "createManyAndReturn", "update", "updateMany", "updateManyAndReturn", "upsert",
+]);
 const DATA_KEYS = new Set(["data", "create", "update"]);
 const ASSIGNEE = new Set(["assigned_to", "user", "assigned_user", "ownerId"]);
 const AUDIT = new Set(["createdBy", "updatedBy", "created_by", "updated_by"]);
