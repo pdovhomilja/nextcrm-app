@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createWebLead } from "@/lib/crm/leads/service";
+import { safeEqual } from "@/lib/safe-equal";
 
 export async function POST(req: Request) {
   if (req.headers.get("content-type") !== "application/json") {
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
     );
   }
 
-  if (token.trim() !== process.env.NEXTCRM_TOKEN.trim()) {
+  if (!safeEqual(token.trim(), process.env.NEXTCRM_TOKEN.trim())) {
     console.log("Unauthorized");
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   } else {
