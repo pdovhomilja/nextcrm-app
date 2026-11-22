@@ -526,3 +526,43 @@ describe("contact assigned_to", () => {
   });
 });
 
+// A partner's activity must keep at least one link on a record he may edit.
+describe("updateActivity partner links", () => {
+  const PACC = randomUUID();
+  const PACT = randomUUID();
+  const links = () =>
+    prismadb.crm_ActivityLinks.findMany({ where: { activityId: PACT }, select: { entityType: true, entityId: true } });
+  const own = [{ entityType: "account", entityId: PACC }];
+
+  beforeAll(async () => {
+    await prismadb.crm_Accounts.create({
+      data: { id: PACC, v: 0, name: `pacc-${tag}`, assigned_to: U.rep, createdBy: U.rep, partnerUserId: U.partner },
+    });
+    await prismadb.crm_Activities.create({
+      data: { id: PACT, type: "note", title: `pact-${tag}`, date: new Date("2026-01-01"), status: "completed", createdBy: U.partner },
+    });
+  });
+
+  beforeEach(async () => {
+    await prismadb.crm_ActivityLinks.deleteMany({ where: { activityId: PACT } });
+    await prismadb.crm_ActivityLinks.create({ data: { activityId: PACT, ...own[0] } });
+  });
+
+  it("partner cannot remove every link", async () => {
+    as("partner");
+    expect(await updateActivity({ id: PACT, links: [] })).toEqual({ error: "Forbidden" });
+    expect(await links()).toEqual(own);
+  });
+
+  it("partner cannot link to a record he may not edit", async () => {
+    as("partner");
+    expect(await updateActivity({ id: PACT, links: [...own, { entityType: "account", entityId: ACC.rep }] })).toEqual({ error: "Forbidden" });
+    expect(await links()).toEqual(own);
+  });
+
+  it("partner can save with his link resent", async () => {
+    as("partner");
+    expect(await updateActivity({ id: PACT, title: `pact-${tag}-edited`, links: own })).toHaveProperty("data");
+    expect(await links()).toEqual(own);
+  });
+});

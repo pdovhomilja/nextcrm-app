@@ -71,6 +71,7 @@ export {
   assertCanReadActivityForEntity,
   assertCanWriteActivity,
   assertPartnerCanLinkActivity,
+  assertCanLinkActivity,
   PARTNER_EDIT,
 } from "./scopes/crm";
 export {
