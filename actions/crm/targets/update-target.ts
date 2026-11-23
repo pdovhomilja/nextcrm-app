@@ -8,6 +8,7 @@ import {
   AuthorizationError,
 } from "@/lib/authz";
 import { targetFieldsSchema } from "./target-input";
+import { assertTargetEditable, CampaignLockedError } from "@/lib/campaigns/approval-lock";
 
 export const updateTarget = async (data: {
   id: string;
@@ -48,8 +49,10 @@ export const updateTarget = async (data: {
   }
   try {
     await assertCanWriteTarget(user, id);
+    await assertTargetEditable(user, id, parsed.data);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    if (e instanceof CampaignLockedError) return { error: e.message };
     throw e;
   }
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CampaignLockedError } from "@/lib/campaigns/approval-lock";
 // Import from the leaf errors module, not the @/lib/authz barrel: the barrel
 // re-exports session helpers that pull in better-auth (ESM-only), which breaks
 // any jest suite transitively importing this file. errors.ts has no imports.
@@ -54,6 +55,16 @@ export function forbidden(): never {
 
 export function conflict(msg: string): never {
   throw new Error(`CONFLICT: ${msg}`);
+}
+
+// Runs a lib/campaigns/approval-lock check; a locked campaign becomes CONFLICT.
+export async function assertCampaignUnlocked(check: () => Promise<void>): Promise<void> {
+  try {
+    await check();
+  } catch (e) {
+    if (e instanceof CampaignLockedError) conflict(e.message);
+    throw e;
+  }
 }
 
 export function validationError(msg: string): never {

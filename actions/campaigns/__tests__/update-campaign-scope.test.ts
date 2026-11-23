@@ -1,3 +1,10 @@
+// The approval lock is tested on Postgres in __tests__/campaigns/approval-lock.test.ts.
+jest.mock("@/lib/campaigns/approval-lock", () => ({
+  assertCampaignEditable: jest.fn(),
+  assertTemplateEditable: jest.fn(),
+  assertTargetListEditable: jest.fn(),
+  CampaignLockedError: class CampaignLockedError extends Error {},
+}));
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {

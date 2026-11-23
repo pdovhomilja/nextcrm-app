@@ -1,6 +1,13 @@
 // Object-level authorization regression tests for target-list write actions
 // (GHSA-qwhm-9fcm-p878). Denial tests must fail against the pre-guard code.
 
+// The approval lock is tested on Postgres in __tests__/campaigns/approval-lock.test.ts.
+jest.mock("@/lib/campaigns/approval-lock", () => ({
+  assertCampaignEditable: jest.fn(),
+  assertTemplateEditable: jest.fn(),
+  assertTargetListEditable: jest.fn(),
+  CampaignLockedError: class CampaignLockedError extends Error {},
+}));
 jest.mock("@/lib/authz", () => ({
   requireAuthenticated: jest.fn(),
   assertCanWriteTargetList: jest.fn(),

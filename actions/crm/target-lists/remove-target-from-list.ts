@@ -1,5 +1,6 @@
 "use server";
 import { prismadb } from "@/lib/prisma";
+import { assertTargetListEditable, CampaignLockedError } from "@/lib/campaigns/approval-lock";
 import { revalidatePath } from "next/cache";
 import {
   requireAuthenticated,
@@ -20,8 +21,10 @@ export const removeTargetFromList = async (targetListId: string, targetId: strin
   }
   try {
     await assertCanWriteTargetList(user, targetListId);
+    await assertTargetListEditable(user, targetListId);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
+    if (e instanceof CampaignLockedError) return { error: e.message };
     throw e;
   }
 

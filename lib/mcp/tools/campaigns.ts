@@ -15,12 +15,14 @@ import {
   listResponse,
   itemResponse,
   notFound,
+  assertCampaignUnlocked,
   forbidden,
   conflict,
   softDeleteData,
   assertScopeOrNotFound,
 } from "../helpers";
 import { campaignHasFirstStep, NO_FIRST_STEP_MESSAGE } from "@/lib/campaigns/first-step";
+import { assertCampaignEditable, assertTemplateEditable } from "@/lib/campaigns/approval-lock";
 
 // Sending emails real people, so it is manager/admin-only, matching the server
 // actions' requireRole(["manager", "admin"]). Checked before the scope lookup,
@@ -146,6 +148,7 @@ export const campaignTools = [
       });
       if (!existing) notFound("Campaign");
       if (existing.status === "sending") conflict("Cannot update a campaign that is currently sending");
+      await assertCampaignUnlocked(() => assertCampaignEditable(user, args.id));
       await assertTemplateInScope(user, args.template_id);
       const { id, ...updateData } = args;
       const campaign = await prismadb.crm_campaigns.update({ where: { id }, data: updateData });
@@ -310,6 +313,7 @@ export const campaignTools = [
         where: { id: args.id, ...campaignTemplateReadScopeWhere(user) },
       });
       if (!existing) notFound("Template");
+      await assertCampaignUnlocked(() => assertTemplateEditable(user, args.id));
       const { id, ...updateData } = args;
       const template = await prismadb.crm_campaign_templates.update({ where: { id }, data: updateData });
       return itemResponse(template);
@@ -353,6 +357,7 @@ export const campaignTools = [
         where: { id: args.campaign_id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
+      await assertCampaignUnlocked(() => assertCampaignEditable(user, args.campaign_id));
       await assertTemplateInScope(user, args.template_id);
       const step = await prismadb.crm_campaign_steps.create({ data: args });
       return itemResponse(step);
@@ -373,6 +378,7 @@ export const campaignTools = [
       const existing = await prismadb.crm_campaign_steps.findUnique({ where: { id: args.id } });
       if (!existing) notFound("CampaignStep");
       await assertCampaignInScope(user, existing.campaign_id);
+      await assertCampaignUnlocked(() => assertCampaignEditable(user, existing.campaign_id));
       if (existing.order === 0 && args.order !== undefined) await assertStep0Removable(existing.campaign_id);
       await assertTemplateInScope(user, args.template_id);
       const { id, ...updateData } = args;
@@ -388,6 +394,7 @@ export const campaignTools = [
       const existing = await prismadb.crm_campaign_steps.findUnique({ where: { id: args.id } });
       if (!existing) notFound("CampaignStep");
       await assertCampaignInScope(user, existing.campaign_id);
+      await assertCampaignUnlocked(() => assertCampaignEditable(user, existing.campaign_id));
       if (existing.order === 0) await assertStep0Removable(existing.campaign_id);
       await prismadb.crm_campaign_steps.delete({ where: { id: args.id } });
       return itemResponse({ id: args.id, deleted: true });
@@ -407,6 +414,7 @@ export const campaignTools = [
         where: { id: args.campaign_id, deletedAt: null, ...campaignReadScopeWhere(user) },
       });
       if (!campaign) notFound("Campaign");
+      await assertCampaignUnlocked(() => assertCampaignEditable(user, args.campaign_id));
       // Same rule as the createCampaign action: only target lists the caller can read.
       await assertScopeOrNotFound(() => assertCanReadTargetList(user, args.target_list_id), "TargetList");
       await prismadb.campaignToTargetLists.create({
@@ -424,6 +432,7 @@ export const campaignTools = [
     }),
     async handler(args: { campaign_id: string; target_list_id: string }, _userId: string, user: AuthzUser) {
       await assertCampaignInScope(user, args.campaign_id);
+      await assertCampaignUnlocked(() => assertCampaignEditable(user, args.campaign_id));
       await prismadb.campaignToTargetLists.delete({
         where: {
           campaign_id_target_list_id: {
