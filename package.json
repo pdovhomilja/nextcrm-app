@@ -144,6 +144,7 @@
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.1",
     "tailwindcss-animate": "^1.0.7",
+    "undici": "^7.30.2",
     "vaul": "^1.1.2",
     "xmlbuilder2": "^4.0.3",
     "zod": "^4.6.7"
