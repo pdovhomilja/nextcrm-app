@@ -5,6 +5,16 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.3...v0.42.4) (2026-11-23)
+
+
+### Fixed
+
+* **campaigns:** only managers change a scheduled, sending or paused campaign ([#529](https://github.com/pdovhomilja/nextcrm-app/issues/529)) ([4cb4042](https://github.com/pdovhomilja/nextcrm-app/commit/4cb40425fe37250746fe2e0bd65c9232aaece292))
+* **plugins:** pin checked DNS answers; compare API token in constant time ([#528](https://github.com/pdovhomilja/nextcrm-app/issues/528)) ([5264f36](https://github.com/pdovhomilja/nextcrm-app/commit/5264f3641b667cf8663e22ecec15af70e18ca337))
+* **reports:** validate schedule input; guard against raw input in Prisma writes ([#526](https://github.com/pdovhomilja/nextcrm-app/issues/526)) ([c170c3f](https://github.com/pdovhomilja/nextcrm-app/commit/c170c3fb06e63c40d97096f6ec81f45c8b25228f))
+* **tasks:** check sections, assignees and documents on task writes ([#527](https://github.com/pdovhomilja/nextcrm-app/issues/527)) ([3a64475](https://github.com/pdovhomilja/nextcrm-app/commit/3a64475a3ca932687700f44c54a1bb4d38f96038))
+
 ## [0.42.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.2...v0.42.3) (2026-11-22)
 
 
