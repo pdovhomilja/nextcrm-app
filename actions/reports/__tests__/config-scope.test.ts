@@ -144,6 +144,13 @@ describe("report config scope", () => {
       (prismadb.crm_Report_Config.findUnique as jest.Mock).mockResolvedValue({ id: "c1", createdBy: "u2" });
       await expect(toggleShare("c1", true)).rejects.toThrow(/Forbidden/i);
     });
+
+    it("refuses isShared that is not a boolean and updates nothing", async () => {
+      mockUser("user", "u1");
+      (prismadb.crm_Report_Config.findUnique as jest.Mock).mockResolvedValue({ id: "c1", createdBy: "u1" });
+      await expect(toggleShare("c1", "yes" as unknown as boolean)).rejects.toThrow("Invalid input");
+      expect(prismadb.crm_Report_Config.update).not.toHaveBeenCalled();
+    });
   });
 
   describe("duplicateConfig", () => {
@@ -161,6 +168,17 @@ describe("report config scope", () => {
       mockUser("user", "u1");
       (prismadb.crm_Report_Config.findUnique as jest.Mock).mockResolvedValue({ id: "c1", createdBy: "u2", isShared: false, category: "sales", filters: {} });
       await expect(duplicateConfig("c1", "copy")).rejects.toThrow(/Forbidden/i);
+    });
+
+    it.each<[string, unknown]>([
+      ["an empty name", ""],
+      ["a name over 120 characters", "n".repeat(121)],
+      ["a name that is not a string", { a: 1 }],
+    ])("refuses %s and stores nothing", async (_label, newName) => {
+      mockUser("user", "u1");
+      (prismadb.crm_Report_Config.findUnique as jest.Mock).mockResolvedValue({ id: "c1", createdBy: "u1", isShared: false, category: "sales", filters: {} });
+      await expect(duplicateConfig("c1", newName as string)).rejects.toThrow("Invalid input");
+      expect(prismadb.crm_Report_Config.create).not.toHaveBeenCalled();
     });
   });
 });
