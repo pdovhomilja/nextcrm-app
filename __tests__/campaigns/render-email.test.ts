@@ -62,6 +62,35 @@ describe("renderCampaignEmail", () => {
       expect(html).toContain(aiHtml);
     });
 
+    it("keeps the wider inline CSS the AI template generator emits", async () => {
+      const generatorHtml =
+        '<table width="100%" style="table-layout:fixed;border-spacing:0;min-width:320px">' +
+        '<tr><td style="background:#1a1a1a;max-height:120px;border-bottom-color:#333333;border-bottom-style:solid;border-bottom-width:2px">' +
+        '<h1 style="font:bold 22px/28px Arial, sans-serif;letter-spacing:1px;text-transform:uppercase;color:#ffffff">News</h1>' +
+        "</td></tr><tr><td>" +
+        '<p style="text-indent:0;word-break:break-word;white-space:normal">Body</p>' +
+        '<ul style="list-style-type:disc"><li>Item</li></ul>' +
+        '<a href="https://example.com" style="background:#0066cc;color:#ffffff;white-space:nowrap;border-top-width:1px;border-right-color:#004c99;border-left-style:solid;padding:12px 24px">Shop now</a>' +
+        "</td></tr></table>";
+      const html = await renderCampaignEmail({ contentHtml: generatorHtml, unsubscribeUrl });
+      expect(html).toContain(generatorHtml);
+    });
+
+    it("checks the whole value, across newlines and CSS comments", async () => {
+      const html = await renderCampaignEmail({
+        contentHtml:
+          '<p style="color:#111111;background-color:#ffffff\nurl(https://example.com/h.png);padding:2px">g</p>' +
+          '<p style="background:/* x */url(https://example.com/i.png);margin:1px">h</p>' +
+          '<p style="background:#0066cc url(https://example.com/j.png);font-size:12px">i</p>',
+        unsubscribeUrl,
+      });
+
+      expect(html).not.toMatch(/url\(/);
+      expect(html).toContain('<p style="color:#111111;padding:2px">g</p>');
+      expect(html).toContain('<p style="margin:1px">h</p>');
+      expect(html).toContain('<p style="font-size:12px">i</p>');
+    });
+
     it("drops declarations that load resources or run expressions, keeps the rest", async () => {
       const html = await renderCampaignEmail({
         contentHtml:

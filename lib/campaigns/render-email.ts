@@ -9,17 +9,22 @@ const DOCTYPE =
 // Inline CSS: only layout and typography properties, and no value that loads
 // a resource, evaluates an expression, reads a custom property or uses a CSS
 // escape (which could spell any of those).
-const SAFE_CSS_VALUE = [/^(?!.*(?:url\(|expression\(|var\(|javascript:|\\))/i];
+const SAFE_CSS_VALUE_PATTERNS = [/^(?![\s\S]*(?:url\(|expression\(|var\(|javascript:|\\))/i];
 
 const ALLOWED_CSS_PROPERTIES = [
-  "color", "background-color",
-  "text-align", "text-decoration", "vertical-align",
-  "font-size", "font-weight", "font-style", "font-family", "line-height",
+  "color", "background", "background-color",
+  "text-align", "text-decoration", "text-transform", "text-indent", "vertical-align",
+  "font", "font-size", "font-weight", "font-style", "font-family", "line-height",
+  "letter-spacing", "white-space", "word-break", "list-style-type",
   "padding", "padding-top", "padding-right", "padding-bottom", "padding-left",
   "margin", "margin-top", "margin-right", "margin-bottom", "margin-left",
   "border", "border-top", "border-right", "border-bottom", "border-left",
-  "border-color", "border-style", "border-width", "border-radius", "border-collapse",
-  "width", "height", "max-width", "display",
+  ...["top", "right", "bottom", "left"].flatMap((side) =>
+    ["color", "style", "width"].map((part) => `border-${side}-${part}`)
+  ),
+  "border-color", "border-style", "border-width", "border-radius",
+  "border-collapse", "border-spacing", "table-layout",
+  "width", "min-width", "max-width", "height", "max-height", "display",
 ];
 
 // content_html is client-supplied — allow only what the TipTap editor and
@@ -37,7 +42,7 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     img: ["src", "alt", "width", "height", "style"],
   },
   allowedStyles: {
-    "*": Object.fromEntries(ALLOWED_CSS_PROPERTIES.map((p) => [p, SAFE_CSS_VALUE])),
+    "*": Object.fromEntries(ALLOWED_CSS_PROPERTIES.map((p) => [p, SAFE_CSS_VALUE_PATTERNS])),
   },
   allowedSchemes: ["http", "https", "mailto"],
 };
