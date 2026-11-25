@@ -17,21 +17,17 @@ const handler = createMcpHandler(
   },
   {
     basePath: "/api/mcp",
+    disableSse: true,
   }
 );
 
-// The legacy SSE transport (/api/mcp/sse + /api/mcp/message) keeps session
-// state in Redis; mcp-handler throws without REDIS_URL/KV_URL. Answer with a
-// clear error instead and point clients at Streamable HTTP (/api/mcp/mcp).
+// The legacy SSE transport (/api/mcp/sse + /api/mcp/message) is not served:
+// clients use Streamable HTTP (/api/mcp/mcp).
 function route(req: Request) {
   const transport = new URL(req.url).pathname.split("/").pop();
-  const isSse = transport === "sse" || transport === "message";
-  if (isSse && !process.env.REDIS_URL && !process.env.KV_URL) {
+  if (transport === "sse" || transport === "message") {
     return Response.json(
-      {
-        error:
-          "SSE transport is not available: set REDIS_URL (or KV_URL) to enable it, or use the Streamable HTTP endpoint /api/mcp/mcp.",
-      },
+      { error: "SSE transport is not supported. Use the Streamable HTTP endpoint /api/mcp/mcp." },
       { status: 501 }
     );
   }

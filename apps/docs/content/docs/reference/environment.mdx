@@ -7,7 +7,7 @@ description: "Every environment variable the app reads, from .env.example and th
 
 Every variable listed in `.env.example` or read as `process.env.NAME` in the app code (tests, scripts and the docs app excluded). **Required** is "yes" when the `.env.example` comment says so and empty when it says nothing; **Purpose** is that comment. Variables read under a computed name are not listed. What each variable does and when you need it: [Configuration reference](/docs/admins/configuration).
 
-57 variables.
+55 variables.
 
 | Variable | Required | In `.env.example` | Purpose | Read in |
 | --- | --- | --- | --- | --- |
@@ -35,7 +35,6 @@ Every variable listed in `.env.example` or read as `process.env.NAME` in the app
 | `INNGEST_ID` |  | no |  | `inngest/client.ts` |
 | `INNGEST_SIGNING_KEY` |  | no |  | `inngest/client.ts` |
 | `KNOWN_DOMAIN` |  | no |  | `lib/enrichment/e2b/agent-script.ts` |
-| `KV_URL` |  | no |  | `app/api/mcp/[transport]/route.ts` |
 | `MAILTRAP_API_KEY` |  | no |  | `lib/mailtrap.ts` |
 | `MAIL_ALLOW_PRIVATE_HOSTS` |  | no |  | `lib/net/host-guard.ts` |
 | `MINIO_ACCESS_KEY` |  | yes | MinIO / S3 object storage MINIO_ENDPOINT is what the server uses; MINIO_PUBLIC_ENDPOINT is what browsers use (presigned uploads and file links). Leave it empty when both are the same URL. | `lib/minio.ts` |
@@ -57,7 +56,6 @@ Every variable listed in `.env.example` or read as `process.env.NAME` in the app
 | `NODE_ENV` |  | no |  | `app/api/auth/test-otp/route.ts`, `app/api/profile/calendar-connections/google/authorize/route.ts`, `app/api/profile/calendar-connections/google/callback/route.ts` +4 more |
 | `OPENAI_API_KEY` |  | yes | AI. Leave empty to use keys saved in the admin panel. | `inngest/functions/documents/enrich-document.ts`, `inngest/lib/embedding-utils.ts` |
 | `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS` |  | no |  | `lib/plugins/http.ts` |
-| `REDIS_URL` |  | no |  | `app/api/mcp/[transport]/route.ts` |
 | `RESEND_API_KEY` |  | yes | Email Service (Resend). Leave the key empty to use the one saved in Admin &gt; Resend; an env value always wins over the admin panel. | `inngest/functions/crm/kill-rule.ts`, `inngest/functions/crm/recycle-targets.ts`, `lib/crm/auto-task.ts` |
 | `RESEND_FROM_EMAIL` |  | yes | e.g. noreply@yourdomain.com | `inngest/functions/campaigns/send-step.ts`, `inngest/functions/crm/kill-rule.ts`, `inngest/functions/crm/recycle-targets.ts` +2 more |
 | `RESEND_WEBHOOK_SECRET` |  | yes | Resend webhook signing secret (whsec_…, Svix-signed) | `lib/campaigns/resend-signature.ts` |
