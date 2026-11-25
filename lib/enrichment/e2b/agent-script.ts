@@ -10,6 +10,7 @@ export function getAgentScript(): string {
   return `
 import Anthropic from '@anthropic-ai/sdk';
 import { execFileSync } from 'child_process';
+import dns from 'dns';
 
 const companyName    = process.env.COMPANY_NAME    || '';
 const companyWebsite = process.env.COMPANY_WEBSITE || '';
@@ -70,17 +71,32 @@ function runBrowser(args) {
   }
 }
 
-function isPrivateIPv4(host) {
+// Private, loopback, link-local, CGNAT, benchmarking (198.18.0.0/15),
+// multicast, reserved and broadcast (224.0.0.0 and up).
+function isBlockedIPv4(host) {
   const parts = host.split('.');
   if (parts.length !== 4 || parts.some((p) => p === '' || isNaN(Number(p)))) return false;
   const [a, b] = parts.map(Number);
   return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31)
-    || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+    || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || (a === 198 && (b === 18 || b === 19))
+    || a >= 224;
 }
 
-// Only public http(s) pages: no other schemes, no localhost, private, loopback
-// or link-local addresses, no IPv6 literals (company sites never need them).
-function isAllowedUrl(raw) {
+// Unspecified, loopback, unique-local, link-local, multicast, and IPv4-mapped
+// addresses whose IPv4 part is blocked.
+function isBlockedIPv6(address) {
+  const a = address.toLowerCase();
+  if (a.startsWith('::ffff:')) {
+    const v4 = a.slice(7);
+    return v4.split('.').length !== 4 || isBlockedIPv4(v4);
+  }
+  return a === '::' || a === '::1' || /^f[cd]/.test(a) || /^fe[89ab]/.test(a) || a.startsWith('ff');
+}
+
+// Only public http(s) pages: no other schemes, no localhost, no IPv6 literals
+// (company sites never need them), and every address the hostname resolves to
+// must be public.
+async function isAllowedUrl(raw) {
   let url;
   try { url = new URL(raw); } catch { return false; }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
@@ -88,12 +104,15 @@ function isAllowedUrl(raw) {
   if (host.endsWith('.')) host = host.slice(0, -1);
   if (host === 'localhost' || host.endsWith('.localhost')) return false;
   if (host.startsWith('[')) return false;
-  return !isPrivateIPv4(host);
+  if (isBlockedIPv4(host)) return false;
+  let addresses;
+  try { addresses = await dns.promises.lookup(host, { all: true }); } catch { return false; }
+  return addresses.every(({ address, family }) => (family === 6 ? !isBlockedIPv6(address) : !isBlockedIPv4(address)));
 }
 
-function executeTool(name, input) {
+async function executeTool(name, input) {
   if (name === 'browser_open') {
-    if (!isAllowedUrl(input.url)) return 'refused: only public http(s) URLs can be opened';
+    if (!(await isAllowedUrl(input.url))) return 'refused: only public http(s) URLs can be opened';
     return runBrowser(['open', input.url]);
   }
   if (name === 'browser_snapshot') return runBrowser(['snapshot', '-c']);
@@ -195,13 +214,13 @@ async function main() {
     if (response.stop_reason === 'tool_use') {
       const toolResults = {
         role: 'user',
-        content: response.content
+        content: await Promise.all(response.content
           .filter(b => b.type === 'tool_use')
-          .map(b => ({
+          .map(async b => ({
             type: 'tool_result',
             tool_use_id: b.id,
-            content: executeTool(b.name, b.input),
-          })),
+            content: await executeTool(b.name, b.input),
+          }))),
       };
       messages.push(toolResults);
     }
