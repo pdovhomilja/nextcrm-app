@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { isTestOtpEnabled } from "@/lib/test-otp";
 
 // Test-only endpoint to retrieve captured OTPs for E2E testing
-// Only available in non-production environments
+// Only available outside production with NEXTCRM_E2E_TEST_OTP=1
 export async function GET(request: NextRequest) {
-  if (process.env.NODE_ENV === "production") {
+  if (!isTestOtpEnabled()) {
     return NextResponse.json({ error: "Not available" }, { status: 404 });
   }
 
