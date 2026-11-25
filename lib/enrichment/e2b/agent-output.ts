@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { AgentOutput } from "./apply-result";
 
-export const MAX_AGENT_CONTACTS = 10;
+const MAX_AGENT_CONTACTS = 10;
 
 const text = z.string().max(500);
 const httpsUrl = text.refine((v) => {

@@ -41,9 +41,11 @@ const person = (i: number, over: Record<string, unknown> = {}) =>
   ({ name: `Person ${i}`, email: null, title: null, linkedinUrl: `https://www.linkedin.com/in/p${i}`, phone: null, source: "enriched", ...over });
 
 const db = prismadb as unknown as Record<string, Record<string, jest.Mock>>;
+let s: ReturnType<typeof fakeStep>;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  s = fakeStep();
   (getApiKey as jest.Mock).mockResolvedValue(KEY);
   db.crm_Target_Enrichment.findFirst.mockResolvedValue(null);
   db.crm_Targets.findUnique.mockResolvedValue({ id: "t1", company: "Acme", email: "a@acme.example", company_website: null });
@@ -60,19 +62,16 @@ describe("enrichment jobs keep the model key out of step state", () => {
     ["target", () => (enrichTarget as unknown as Handler)({ event: { data: { targetId: "t1", enrichmentId: "e1", triggeredBy: "u1" } }, step: s })],
     ["contact", () => (enrichTargetContact as unknown as Handler)({ event: { data: { contactId: "c1", triggeredBy: "u1" } }, step: s })],
   ])("%s job", async (_label, start) => {
-    s = fakeStep();
     await start();
     expect(run).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ envs: expect.objectContaining({ ANTHROPIC_API_KEY: KEY }) }));
     expect(s.results.join("\n")).not.toContain(KEY);
   });
 });
-let s = fakeStep();
 
 describe("enrich-target applies agent output within limits", () => {
   const runTarget = () => (enrichTarget as unknown as Handler)({ event: { data: { targetId: "t1", enrichmentId: "e1", triggeredBy: "u1" } }, step: s });
 
   it("enriches at most 10 contacts per run", async () => {
-    s = fakeStep();
     agentSays({ target: {}, contacts: Array.from({ length: 30 }, (_, i) => person(i)), confidence: {} });
     await runTarget();
     expect(db.crm_Target_Contact.upsert).toHaveBeenCalledTimes(10);
@@ -80,7 +79,6 @@ describe("enrich-target applies agent output within limits", () => {
   });
 
   it("fills only empty fields of a contact that already exists", async () => {
-    s = fakeStep();
     db.crm_Target_Contact.upsert.mockResolvedValue({ id: "c9", name: "Jana Novak", title: "Head of Sales", linkedinUrl: "https://www.linkedin.com/in/p1", enrichStatus: "PENDING" });
     agentSays({ target: {}, contacts: [person(1, { name: "Someone Else", title: "CEO" })], confidence: {} });
     await runTarget();
@@ -91,7 +89,6 @@ describe("enrich-target applies agent output within limits", () => {
   });
 
   it("does not store a link that is not https", async () => {
-    s = fakeStep();
     agentSays({ target: { social_linkedin: "javascript:alert(1)" }, contacts: [], confidence: {} });
     await runTarget();
     expect(db.crm_Targets.update).not.toHaveBeenCalled();
