@@ -65,6 +65,15 @@ describe("sending", () => {
     expect(await ctx.store.get(K.failed("o1"))).toEqual({ reason: "orders.otherLines", at: now.toISOString() });
   });
 
+  it("fails the order when the matching Odoo customer belongs to another account", async () => {
+    const { ctx, client, data, writes } = mkOrders({ sales: { partners: [{ ...customer, company_registry: "12345678", country_id: [56, "CZ"] }] } });
+    await ctx.store.set(K.partner(50), { accountId: "a0" });
+    await sendOrder(ctx, client, "o1", now);
+    expect(writes()).toEqual([]);
+    expect(data.orders[0].status).toBe("SYNC_FAILED");
+    expect(await ctx.store.get(K.partner(50))).toEqual({ accountId: "a0" });
+  });
+
   it("ignores cancelled Odoo orders with the same origin", async () => {
     const { ctx, client, sales } = mkOrders({ sales: { partners: [customer], orders: [{ id: 900, name: "S00900", origin: "ORD-2026-0001", state: "cancel" }] } });
     await linked(ctx);
