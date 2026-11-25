@@ -72,6 +72,8 @@ To create a template, open **Templates** and click **+ New Template**. Enter a *
 
 To draft the body with AI, describe the email under **Generate with AI** and click **Generate**. This uses an OpenAI key; if none is available, add one under [Profile → LLMs](/docs/users/profile).
 
+When an email is sent, inline styles in the body are limited to text, font, color and background color, alignment, spacing, border, list, table and size properties. Background images and any style value that loads a resource (`url(...)`) or uses CSS variables are removed; effects such as shadows and opacity are dropped too.
+
 You can personalise subject and body with merge tags. NextCRM replaces them with each recipient's data:
 
 | Tag | Replaced with |

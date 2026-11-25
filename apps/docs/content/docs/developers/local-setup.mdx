@@ -117,9 +117,11 @@ Open `http://localhost:3000`. The Inngest dashboard at `http://localhost:8288` s
 
 ## Sign in locally
 
-NextCRM uses passwordless email OTP (Better Auth). You do not need a working email provider in development. Outside production, the Better Auth `testUtils` plugin captures every OTP, and a dev-only route returns it:
+NextCRM uses passwordless email OTP (Better Auth). You do not need a working email provider in development. Outside production, with the dev-only opt-in `NEXTCRM_E2E_TEST_OTP=1`, the Better Auth `testUtils` plugin captures every OTP, and a dev-only route returns it:
 
 ```bash
+NEXTCRM_E2E_TEST_OTP=1 pnpm dev
+
 curl -X POST localhost:3000/api/auth/email-otp/send-verification-otp \
   -H 'Content-Type: application/json' \
   -d '{"email":"test@nextcrm.app","type":"sign-in"}'
@@ -128,7 +130,7 @@ curl "localhost:3000/api/auth/test-otp?email=test@nextcrm.app"
 # {"otp":"123456"}
 ```
 
-You can also request the code from the sign-in page and then call the second command. `/api/auth/test-otp` returns 404 when `NODE_ENV` is `production`.
+You can also request the code from the sign-in page and then call the second command. `/api/auth/test-otp` returns 404 when `NODE_ENV` is `production` or the flag is not `1`. `next dev` listens on all network interfaces, so set the flag only on a machine you trust the network of, and never in `.env` of a shared or deployed instance.
 
 If `RESEND_API_KEY` is set, OTP emails are really sent through Resend.
 

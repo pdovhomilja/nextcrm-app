@@ -2,6 +2,7 @@ import type { RecordData } from "@nextcrm/plugin-sdk";
 import type { M2O } from "./map";
 import { normalizeNumber, normalizeVat } from "./match";
 import { OdooError, type OdooClient } from "./odoo";
+import { FinalError } from "./orders-errors";
 import type { Ctx } from "./settings";
 import { K, type AccountLink, type PriceListLink } from "./store";
 
@@ -63,7 +64,11 @@ export async function findOrCreateCustomer(ctx: Ctx, client: OdooClient, account
     for (const t of tries) {
       const rows = await client.call<Found[]>("res.partner", "search_read", { domain: t.domain, fields: ["id", "property_product_pricelist", "company_registry", "vat"], order: "id asc" });
       const p = rows.find(t.keep);
-      if (p) { await link(ctx, accountId, p.id, p.property_product_pricelist, now); return { partnerId: p.id, created: false }; }
+      if (p) {
+        const owner = await ctx.store.get<{ accountId: string }>(K.partner(p.id));
+        if (owner && owner.accountId !== accountId) throw new FinalError(ctx.t("orders.partnerLinked", { partner: String(p.id) }));
+        await link(ctx, accountId, p.id, p.property_product_pricelist, now); return { partnerId: p.id, created: false };
+      }
     }
     // Live check: without this Odoo gives the new customer its default list, not the account's.
     const list = account.pricelist_id ? (await ctx.store.list("pricelist:")).find((e) => (e.value as PriceListLink).priceListId === account.pricelist_id) : undefined;

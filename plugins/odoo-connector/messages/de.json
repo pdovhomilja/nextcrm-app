@@ -107,6 +107,7 @@
     "noPriceList": "Der Kunde hat in Odoo keine Preisliste",
     "currency": "Auftragswährung {order} weicht von der Währung der Odoo-Preisliste {list} ab",
     "otherLines": "Bereits in Odoo als {name} mit anderen Positionen; lassen Sie ihn in Odoo stornieren und klicken Sie auf Erneut versuchen",
+    "partnerLinked": "Der Odoo-Kunde {partner} ist bereits mit einem anderen Konto verknüpft; prüfen Sie Registernummer und USt-IdNr. des Kontos",
     "linesMissing": "{count} Positionen nicht angezeigt: Produkte nicht im CRM"
   },
   "tab": {
