@@ -14,6 +14,17 @@ it("builds the same key for the same company typed differently (Review Focus 1)"
   expect(numberKey({ company_id: "123", billing_country: "CZ" }, "CZ")).toBe("CZ:00000123");
 });
 
+it("ignores punctuation in the number", () => {
+  expect(numberKey({ company_id: "27.082.440", billing_country: "CZ" }, "CZ")).toBe("CZ:27082440");
+  expect(numberKey({ company_id: "27-082-440", billing_country: "CZ" }, "CZ")).toBe("CZ:27082440");
+  expect(numberKey({ company_id: "HRB-1234", billing_country: "Germany" }, "CZ")).toBe("DE:HRB1234");
+});
+
+it("takes the country from a VAT-style prefix over the billing country", () => {
+  expect(numberKey({ company_id: "CZ27082440", billing_country: "Slovakia" }, "CZ")).toBe("CZ:27082440");
+  expect(numberKey({ company_id: "cz 270 82 440", billing_country: "Germany" }, "CZ")).toBe("CZ:27082440");
+});
+
 it("keeps foreign numbers as typed, upper-cased and without spaces", () => {
   expect(numberKey({ company_id: "hrb 1234", billing_country: "Germany" }, "CZ")).toBe("DE:HRB1234");
 });

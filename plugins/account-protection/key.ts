@@ -31,9 +31,12 @@ export function countryCode(raw: unknown, fallback: string): string {
 }
 
 export function numberKey(account: { company_id?: unknown; billing_country?: unknown }, defaultCountry: string): string | null {
-  const raw = typeof account.company_id === "string" ? account.company_id.replace(/\s+/g, "").toUpperCase() : "";
+  let raw = typeof account.company_id === "string" ? account.company_id.replace(/[^A-Za-z0-9]/g, "").toUpperCase() : "";
   if (!raw) return null;
-  const cc = countryCode(account.billing_country, defaultCountry);
+  let cc = countryCode(account.billing_country, defaultCountry);
+  // A VAT-style number ("CZ27082440") names its country; it wins over the billing country.
+  const vat = /^([A-Z]{2})(\d+)$/.exec(raw);
+  if (vat && regions().codes.has(vat[1])) [, cc, raw] = vat;
   const number = cc === "CZ" && /^\d{1,8}$/.test(raw) ? raw.padStart(8, "0") : raw;
   return `${cc}:${number}`;
 }
