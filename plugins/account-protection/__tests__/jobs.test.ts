@@ -298,3 +298,49 @@ it("finishes the upgrade when one registration fails, so the plugin is not disab
   expect((await ctx.store.get<Registration>(K.reg("acc-2")))?.lastOrderAt).toBe("2026-09-15");
   expect(ctx.logs.some((l) => l.level === "error" && l.message.includes("acc-1"))).toBe(true);
 });
+
+describe("upgrade re-keys claims stored under the old number key (0.3.0)", () => {
+  const claim = async (ctx: Ctx, id: string, key: string) => {
+    await ctx.store.set(K.num(key), { accountId: id });
+    await ctx.store.set(K.acct(id), { key });
+  };
+
+  it("moves a claim to the new key, keeps the registration in step, and is idempotent", async () => {
+    const ctx = mk([{ id: "acc-1", company_id: "27.082.440", billing_country: "CZ", assigned_to: "rep1", createdAt: "2026-01-01T00:00:00Z" }]);
+    await claim(ctx, "acc-1", "CZ:27.082.440");
+    await startRegistration(ctx.store, "acc-1", newRegistration("CZ:27.082.440", "rep1", reg1, S));
+    await upgrade(ctx, new Date("2026-11-26T06:00:00Z"));
+    await upgrade(ctx, new Date("2026-11-27T06:00:00Z"));
+    expect(await ctx.store.get(K.num("CZ:27.082.440"))).toBeNull();
+    expect(await ctx.store.get(K.num("CZ:27082440"))).toEqual({ accountId: "acc-1" });
+    expect(await ctx.store.get(K.acct("acc-1"))).toEqual({ key: "CZ:27082440" });
+    expect((await ctx.store.get<Registration>(K.reg("acc-1")))?.key).toBe("CZ:27082440");
+    expect(await ctx.store.list("conflict:")).toEqual([]);
+  });
+
+  it("keeps the older account's claim when two old keys meet, and logs it", async () => {
+    const ctx = mk([
+      { id: "new", company_id: "27082440", billing_country: "CZ", createdAt: "2026-05-01T00:00:00Z" },
+      { id: "old", company_id: "CZ 27082440", billing_country: "CZ", createdAt: "2026-01-01T00:00:00Z" },
+      { id: "dot", company_id: "27.082.440", billing_country: "CZ", createdAt: "2026-03-01T00:00:00Z" },
+    ]);
+    await claim(ctx, "new", "CZ:27082440");
+    await claim(ctx, "old", "CZ:CZ27082440");
+    await claim(ctx, "dot", "CZ:27.082.440");
+    await upgrade(ctx, new Date("2026-11-26T06:00:00Z"));
+    expect(await ctx.store.get(K.num("CZ:27082440"))).toEqual({ accountId: "old" });
+    expect(await ctx.store.get(K.num("CZ:CZ27082440"))).toBeNull();
+    expect(await ctx.store.get(K.num("CZ:27.082.440"))).toBeNull();
+    expect((await ctx.store.list("conflict:")).map((e) => [e.key, (e.value as { otherAccountId: string }).otherAccountId]).sort())
+      .toEqual([["conflict:dot", "old"], ["conflict:new", "old"]]);
+    expect(ctx.logs.filter((l) => l.level === "warn" && l.message.includes("CZ:27082440"))).toHaveLength(2);
+  });
+
+  it("drops a claim whose number is no longer matched (Slovak VAT number)", async () => {
+    const ctx = mk([{ id: "acc-1", company_id: "SK2020317068", billing_country: "Slovakia", createdAt: "2026-01-01T00:00:00Z" }]);
+    await claim(ctx, "acc-1", "SK:2020317068");
+    await upgrade(ctx, new Date("2026-11-26T06:00:00Z"));
+    expect(await ctx.store.get(K.num("SK:2020317068"))).toBeNull();
+    expect(await ctx.store.get(K.acct("acc-1"))).toBeNull();
+  });
+});

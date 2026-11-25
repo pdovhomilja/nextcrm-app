@@ -131,9 +131,7 @@ Every tool with its input fields, generated from the code: [MCP tools reference]
 }
 ```
 
-The server supports both MCP transports defined by `mcp-handler`:
-- **Streamable HTTP** at `/api/mcp/mcp` — single POST endpoint, current MCP spec default
-- **SSE (legacy)** at `/api/mcp/sse` — GET stream paired with POSTs to `/api/mcp/message` (client auto-discovers the message endpoint)
+The server uses the Streamable HTTP transport at `/api/mcp/mcp` (single POST endpoint, current MCP spec default). The legacy SSE transport is not supported.
 
 **Claude Code Skill:** Download the [SKILL.md](/en/profile?tab=developer) from your Developer profile tab for a ready-to-use Claude Code skill with full tool documentation.
 
@@ -187,7 +185,7 @@ Global search across all CRM entities from a single search bar — grouped resul
 - [Vercel AI SDK 6.x](https://sdk.vercel.ai/) – Unified AI interface
 - [pgvector](https://github.com/pgvector/pgvector) – PostgreSQL vector extension for similarity search (HNSW indexes)
 - [E2B](https://e2b.dev/) – Cloud sandboxes with real Chrome browser for AI-driven web research and target enrichment
-- [MCP Server](https://modelcontextprotocol.io/) – tools for every CRM module ([reference](https://docs.nextcrm.app/docs/reference/mcp-tools)) via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP (`/api/mcp/mcp`) + legacy SSE (`/api/mcp/sse`, needs `REDIS_URL`) transports
+- [MCP Server](https://modelcontextprotocol.io/) – tools for every CRM module ([reference](https://docs.nextcrm.app/docs/reference/mcp-tools)) via `mcp-handler` (Vercel MCP adapter), Bearer token auth, streamable HTTP transport (`/api/mcp/mcp`)
 
 ### Data fetching
 

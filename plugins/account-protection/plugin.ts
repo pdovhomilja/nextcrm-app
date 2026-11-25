@@ -12,7 +12,7 @@ import { ConflictsSection } from "./ui/ConflictsSection";
 export default definePlugin({
   id: "account-protection",
   name: "Account protection",
-  version: "0.2.0",
+  version: "0.3.0",
   sdk: "^0.2.0",
   description: "One owner per company registration number, with protection windows, owner history and a daily expiry job.",
   permissions: ["accounts:read", "accounts:write", "activities:read", "orders:read", "users:read", "notify"],

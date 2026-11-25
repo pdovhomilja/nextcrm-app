@@ -260,7 +260,7 @@ export const calendarOutboundSync = inngest.createFunction(
       throw error;
     }
 
-    await step.run("create-mapping", async () => {
+    const mapped = await step.run("create-mapping", async () => {
       try {
         await prismadb.crm_CalendarEvents.create({
           data: {
@@ -297,12 +297,21 @@ export const calendarOutboundSync = inngest.createFunction(
           where: {
             source_externalId: { source: "google", externalId: inserted.id },
           },
-          select: { id: true, activityId: true },
+          select: { id: true, activityId: true, connectionId: true },
         });
         // Raced away between the failed create and this read: rethrow so the
         // step retries rather than silently leaving the activity unmapped.
         if (!conflicting) throw error;
         if (conflicting.activityId === activityId) return;
+        // Another user's connection already maps this event (it is in their
+        // calendar too): never move their row or touch their activity.
+        if (conflicting.connectionId !== connection!.id) {
+          console.warn(
+            `[calendar-outbound-sync] google event ${inserted.id} is already mapped through another ` +
+              `connection; left it and activity ${conflicting.activityId} unchanged, activity ${activityId} has no mapping.`
+          );
+          return "other-connection" as const;
+        }
 
         console.error(
           `[calendar-outbound-sync] mapping conflict on google event ${inserted.id}: ` +
@@ -349,6 +358,7 @@ export const calendarOutboundSync = inngest.createFunction(
         ]);
       }
     });
+    if (mapped === "other-connection") return { pushed: true, did: "insert", reason: mapped };
     return { pushed: true, did: "insert" };
   }
 );

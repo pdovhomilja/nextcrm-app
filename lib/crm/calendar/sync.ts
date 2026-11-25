@@ -1,5 +1,7 @@
 // lib/crm/calendar/sync.ts
 import { prismadb } from "@/lib/prisma";
+import { mapLegacyRole } from "@/lib/authz/roles";
+import type { AuthzUser } from "@/lib/authz/session";
 import { matchCounterparty } from "./match";
 import type { CalendarEventInput, EntityLink, UpsertResult } from "./types";
 
@@ -22,12 +24,26 @@ async function resolveHostUserId(hostEmail: string | null | undefined): Promise<
   return user?.id ?? null;
 }
 
+async function connectionOwner(connectionId: string | null | undefined): Promise<AuthzUser | null> {
+  if (!connectionId) return null;
+  const connection = await prismadb.calendarConnection.findUnique({
+    where: { id: connectionId },
+    select: { user: { select: { id: true, role: true } } },
+  });
+  return connection ? { id: connection.user.id, role: mapLegacyRole(connection.user.role) } : null;
+}
+
 export async function upsertCalendarEvent(input: CalendarEventInput): Promise<UpsertResult> {
   const existing = await prismadb.crm_CalendarEvents.findUnique({
     where: { source_externalId: { source: input.source, externalId: input.externalId } },
   });
 
   if (existing) {
+    // A Google event id seen through another user's connection never changes
+    // the activity that connection created.
+    if (input.source === "google" && existing.connectionId !== (input.connectionId ?? null)) {
+      return { action: "skipped", reason: "other-connection" };
+    }
     if (input.status === "cancelled" && existing.status !== "cancelled") {
       await prismadb.$transaction(async (tx) => {
         await tx.crm_CalendarEvents.update({
@@ -85,7 +101,14 @@ export async function upsertCalendarEvent(input: CalendarEventInput): Promise<Up
   }
 
   const hostUserId = await resolveHostUserId(input.hostEmail);
-  const matched: EntityLink[] = await matchCounterparty(input.counterpartyEmails);
+  let matched: EntityLink[] = [];
+  if (input.source === "google") {
+    // Google sync is per user: link only records the connection owner can read.
+    const owner = await connectionOwner(input.connectionId);
+    if (owner) matched = await matchCounterparty(input.counterpartyEmails, owner);
+  } else {
+    matched = await matchCounterparty(input.counterpartyEmails);
+  }
 
   if (matched.length === 0 && input.source === "google") {
     return { action: "skipped", reason: "no-match" };
