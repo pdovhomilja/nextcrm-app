@@ -1,17 +1,29 @@
 "use server";
+import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { requireAuthenticated, isManagerOrAdmin, AuthorizationError } from "@/lib/authz";
-import type { ReportCategory } from "./types";
+import { REPORT_CATEGORIES, type ReportCategory } from "./types";
+
+// Strict: a server action takes whatever the client posts.
+const saveConfigSchema = z.strictObject({
+  name: z.string().min(1).max(120),
+  category: z.enum(REPORT_CATEGORIES as [ReportCategory, ...ReportCategory[]]),
+  filters: z.record(z.string(), z.string()),
+  isShared: z.boolean(),
+});
 
 export async function saveConfig(input: { name: string; category: ReportCategory; filters: Record<string, unknown>; isShared: boolean }) {
   const user = await requireAuthenticated();
+  const parsed = saveConfigSchema.safeParse(input);
+  if (!parsed.success) throw new Error("Invalid input");
+  const { name, category, filters, isShared } = parsed.data;
   return prismadb.crm_Report_Config.create({
     data: {
-      name: input.name,
-      category: input.category,
-      filters: input.filters as Prisma.InputJsonValue,
-      isShared: input.isShared,
+      name,
+      category,
+      filters,
+      isShared,
       createdBy: user.id,
     },
   });

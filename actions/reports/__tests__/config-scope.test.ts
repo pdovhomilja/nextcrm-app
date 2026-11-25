@@ -75,6 +75,28 @@ describe("report config scope", () => {
         data: expect.objectContaining({ createdBy: "u1" }),
       });
     });
+
+    it("stores the dialog's fields", async () => {
+      mockUser("user", "u1");
+      (prismadb.crm_Report_Config.create as jest.Mock).mockResolvedValue({});
+      await saveConfig({ name: "Q1 Sales", category: "leads", filters: { from: "2026-01-01", to: "2026-03-31" }, isShared: true });
+      expect(prismadb.crm_Report_Config.create).toHaveBeenCalledWith({
+        data: { name: "Q1 Sales", category: "leads", filters: { from: "2026-01-01", to: "2026-03-31" }, isShared: true, createdBy: "u1" },
+      });
+    });
+
+    it.each<[string, unknown]>([
+      ["an empty name", { name: "", category: "sales", filters: {}, isShared: false }],
+      ["a name over 120 characters", { name: "n".repeat(121), category: "sales", filters: {}, isShared: false }],
+      ["an unknown category", { name: "x", category: "secrets", filters: {}, isShared: false }],
+      ["a filter that is not a string", { name: "x", category: "sales", filters: { from: { a: 1 } }, isShared: false }],
+      ["isShared that is not a boolean", { name: "x", category: "sales", filters: {}, isShared: "yes" }],
+      ["an unknown key", { name: "x", category: "sales", filters: {}, isShared: false, createdBy: "u2" }],
+    ])("refuses %s and stores nothing", async (_label, input) => {
+      mockUser("user", "u1");
+      await expect(saveConfig(input as Parameters<typeof saveConfig>[0])).rejects.toThrow("Invalid input");
+      expect(prismadb.crm_Report_Config.create).not.toHaveBeenCalled();
+    });
   });
 
   describe("deleteConfig", () => {
