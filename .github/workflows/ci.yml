@@ -229,7 +229,9 @@ jobs:
         # Playwright's webServer starts `pnpm dev` — deliberately dev mode:
         # the OTP-capture auth flow (tests/auth.setup.ts -> /api/auth/test-otp
         # + better-auth testUtils plugin) is disabled under
-        # NODE_ENV=production.
+        # NODE_ENV=production and needs the explicit opt-in below.
+        env:
+          NEXTCRM_E2E_TEST_OTP: "1"
         run: pnpm exec playwright test --project=chromium
       - name: Upload Playwright report
         if: failure()
