@@ -57,19 +57,45 @@ const tools = [
   },
 ];
 
+// The browser gets only what it needs from the environment (never the model key).
 function runBrowser(args) {
   try {
     return execFileSync('agent-browser', ['--ignore-https-errors', ...args], {
       encoding: 'utf8',
       timeout: 30000,
+      env: { PATH: process.env.PATH, HOME: process.env.HOME },
     });
   } catch (e) {
     return e.stdout || e.stderr || 'error: ' + e.message;
   }
 }
 
+function isPrivateIPv4(host) {
+  const parts = host.split('.');
+  if (parts.length !== 4 || parts.some((p) => p === '' || isNaN(Number(p)))) return false;
+  const [a, b] = parts.map(Number);
+  return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31)
+    || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+}
+
+// Only public http(s) pages: no other schemes, no localhost, private, loopback
+// or link-local addresses, no IPv6 literals (company sites never need them).
+function isAllowedUrl(raw) {
+  let url;
+  try { url = new URL(raw); } catch { return false; }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+  let host = url.hostname.toLowerCase();
+  if (host.endsWith('.')) host = host.slice(0, -1);
+  if (host === 'localhost' || host.endsWith('.localhost')) return false;
+  if (host.startsWith('[')) return false;
+  return !isPrivateIPv4(host);
+}
+
 function executeTool(name, input) {
-  if (name === 'browser_open')     return runBrowser(['open', input.url]);
+  if (name === 'browser_open') {
+    if (!isAllowedUrl(input.url)) return 'refused: only public http(s) URLs can be opened';
+    return runBrowser(['open', input.url]);
+  }
   if (name === 'browser_snapshot') return runBrowser(['snapshot', '-c']);
   if (name === 'browser_get_text') return runBrowser(['get', 'text', 'body']);
   if (name === 'browser_click')    return runBrowser(['click', input.ref]);
