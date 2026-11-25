@@ -45,6 +45,19 @@ describe("scheduled report sending", () => {
     expect(send).not.toHaveBeenCalled();
   });
 
+  it("warns once per run with the ids of unsupported stored schedules", async () => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    (prismadb.crm_Report_Schedule.findMany as jest.Mock).mockResolvedValue([
+      schedule({ id: "bad1", cronExpression: "x" }),
+      schedule({ id: "ok1", lastSentAt: new Date() }),
+      schedule({ id: "bad2", cronExpression: "*/5 * * * *" }),
+    ]);
+    await run({ step });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toEqual(expect.stringContaining("bad1, bad2"));
+    warn.mockRestore();
+  });
+
   it("does not resend a weekly schedule after an hour", async () => {
     (prismadb.crm_Report_Schedule.findMany as jest.Mock).mockResolvedValue([
       schedule({ cronExpression: "0 9 * * 1", lastSentAt: new Date(Date.now() - 60 * 60 * 1000) }),

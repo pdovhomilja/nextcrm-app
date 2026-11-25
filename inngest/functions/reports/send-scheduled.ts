@@ -55,6 +55,13 @@ export const reportSendScheduled = inngest.createFunction(
       });
     });
 
+    const unsupported = schedules.filter((s: any) => scheduleIntervalMs(s.cronExpression) === null);
+    if (unsupported.length > 0) {
+      console.warn(
+        `[reportSendScheduled] not sending schedules with an unsupported cron: ${unsupported.map((s: any) => s.id).join(", ")}`
+      );
+    }
+
     const dueSchedules = schedules.filter((s: any) => isScheduleDue(s.cronExpression, s.lastSentAt));
     if (dueSchedules.length === 0) return { processed: 0 };
 
