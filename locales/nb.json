@@ -655,7 +655,7 @@
       "both": "Begge (CSV + PDF)",
       "cancel": "Avbryt",
       "create": "Opprett plan",
-      "createFailed": "Kunne ikke opprette planen. Sjekk cron-uttrykket og mottakernes e-postadresser."
+      "createFailed": "Kunne ikke opprette planen. Sjekk frekvensen, oppgi 1 til 10 e-postadresser og (med mindre du er leder) bare adresser til aktive brukere."
     },
     "savedReports": {
       "placeholder": "Lagrede rapporter...",

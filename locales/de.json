@@ -655,7 +655,7 @@
       "both": "Both (CSV + PDF)",
       "cancel": "Cancel",
       "create": "Create Schedule",
-      "createFailed": "Der Zeitplan konnte nicht erstellt werden. Prüfen Sie den Cron-Ausdruck und die E-Mail-Adressen der Empfänger."
+      "createFailed": "Der Zeitplan konnte nicht erstellt werden. Prüfen Sie die Häufigkeit, geben Sie 1 bis 10 E-Mail-Adressen an und (außer als Manager) nur Adressen aktiver Benutzer."
     },
     "savedReports": {
       "placeholder": "Saved reports...",

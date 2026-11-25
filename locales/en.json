@@ -655,7 +655,7 @@
       "both": "Both (CSV + PDF)",
       "cancel": "Cancel",
       "create": "Create Schedule",
-      "createFailed": "Could not create the schedule. Check the cron expression and the recipient email addresses."
+      "createFailed": "Could not create the schedule. Check the frequency, use 1 to 10 email addresses, and (unless you are a manager) only addresses of active users."
     },
     "savedReports": {
       "placeholder": "Saved reports...",

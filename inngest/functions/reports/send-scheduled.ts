@@ -12,6 +12,7 @@ import * as usersActions from "@/actions/reports/users";
 import { getReportScope } from "@/lib/authz/scopes/report-scope";
 import type { ReportScope } from "@/lib/authz/scopes/report-scope";
 import { mapLegacyRole } from "@/lib/authz/roles";
+import { MAX_REPORT_RECIPIENTS, disallowedRecipients, scheduleIntervalMs } from "@/lib/reports/schedule-rules";
 
 export async function getReportData(category: string, filters: any, scope: ReportScope) {
   switch (category) {
@@ -34,12 +35,10 @@ export async function getReportData(category: string, filters: any, scope: Repor
 }
 
 function isScheduleDue(cron: string, lastSentAt: Date | null): boolean {
+  const interval = scheduleIntervalMs(cron);
+  if (interval === null) return false;
   if (!lastSentAt) return true;
-  const elapsed = Date.now() - lastSentAt.getTime();
-  if (cron.startsWith("0 9 * * *")) return elapsed >= 24 * 60 * 60 * 1000;
-  if (cron.match(/^0 9 \* \* [0-6]$/)) return elapsed >= 7 * 24 * 60 * 60 * 1000;
-  if (cron.match(/^0 9 [0-9]+ \* \*$/)) return elapsed >= 28 * 24 * 60 * 60 * 1000;
-  return elapsed >= 15 * 60 * 1000;
+  return Date.now() - lastSentAt.getTime() >= interval;
 }
 
 export const reportSendScheduled = inngest.createFunction(
@@ -71,7 +70,15 @@ export const reportSendScheduled = inngest.createFunction(
           );
           return;
         }
-        const scope = getReportScope({ id: owner.id, role: mapLegacyRole(owner.role) });
+        const role = mapLegacyRole(owner.role);
+        const stored = (schedule.recipients as string[]).slice(0, MAX_REPORT_RECIPIENTS);
+        const refused = await disallowedRecipients(role, stored);
+        const recipients = stored.filter((r) => !refused.includes(r));
+        if (recipients.length === 0) {
+          console.warn(`[reportSendScheduled] skipping schedule ${schedule.id}: no allowed recipients`);
+          return;
+        }
+        const scope = getReportScope({ id: owner.id, role });
 
         const filtersRaw = schedule.reportConfig.filters as Record<string, string>;
         const params = new URLSearchParams(filtersRaw);
@@ -95,7 +102,7 @@ export const reportSendScheduled = inngest.createFunction(
         const resend = await resendHelper();
         await resend.emails.send({
           from: process.env.RESEND_FROM_EMAIL!,
-          to: schedule.recipients as string[],
+          to: recipients,
           subject: `Report: ${schedule.reportConfig.name}`,
           text: `Your scheduled report "${schedule.reportConfig.name}" is attached.`,
           attachments,

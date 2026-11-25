@@ -65,10 +65,10 @@ Save the report first (see above).
 Click **Schedule** and pick the **Saved Report**.
 </Step>
 <Step>
-Choose a **Frequency**: **Daily (9am)**, **Weekly (Monday)**, **Weekly (Friday)**, or **Monthly (1st)**.
+Choose a **Frequency**: **Daily (9am)**, **Weekly (Monday)**, **Weekly (Friday)**, or **Monthly (1st)**. **Custom (cron)** accepts only the same three shapes at 9:00: `0 9 * * *` (daily), `0 9 * * <weekday 0-6>` (weekly) and `0 9 <day 1-31> * *` (monthly).
 </Step>
 <Step>
-Enter **Recipients** as a comma-separated list of email addresses. Each entry must be a valid email address, or the schedule is not created.
+Enter **Recipients** as a comma-separated list of 1 to 10 email addresses. Each entry must be a valid email address, or the schedule is not created. Users can only send to the email addresses of active users of your NextCRM; managers and admins can send to any address.
 </Step>
 <Step>
 Pick a **Format**: CSV, PDF, or **Both (CSV + PDF)**. Click **Create Schedule**.

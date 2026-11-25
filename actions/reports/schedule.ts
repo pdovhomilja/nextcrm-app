@@ -4,12 +4,13 @@ import { prismadb } from "@/lib/prisma";
 import { requireAuthenticated, isManagerOrAdmin, AuthorizationError } from "@/lib/authz";
 import { assertIdString } from "@/lib/authz/ids";
 import { EXPORT_FORMATS, type ExportFormat } from "./types";
+import { MAX_REPORT_RECIPIENTS, disallowedRecipients, scheduleIntervalMs } from "@/lib/reports/schedule-rules";
 
 // Strict: a server action takes whatever the client posts, the TypeScript
 // parameter types below do not exist at runtime.
 const scheduleFields = z.strictObject({
-  cronExpression: z.string().min(1),
-  recipients: z.array(z.string().email()),
+  cronExpression: z.string().refine((c) => scheduleIntervalMs(c) !== null),
+  recipients: z.array(z.string().email()).min(1).max(MAX_REPORT_RECIPIENTS),
   format: z.enum(EXPORT_FORMATS),
 });
 const createScheduleSchema = scheduleFields.extend({ reportConfigId: z.string().min(1) });
@@ -20,6 +21,7 @@ export async function createSchedule(input: { reportConfigId: string; cronExpres
   const parsed = createScheduleSchema.safeParse(input);
   if (!parsed.success) throw new Error("Invalid input");
   input = parsed.data;
+  if ((await disallowedRecipients(user.role, input.recipients)).length > 0) throw new AuthorizationError();
   // Verify the user can read the referenced config (own OR shared OR manager/admin)
   const cfg = await prismadb.crm_Report_Config.findUnique({ where: { id: input.reportConfigId } });
   if (!cfg) throw new Error("Not found");
@@ -62,6 +64,9 @@ export async function updateSchedule(scheduleId: string, data: { cronExpression?
   const parsed = updateScheduleSchema.safeParse(data);
   if (!parsed.success) throw new Error("Invalid input");
   await loadAndAuthorizeSchedule(scheduleId, user);
+  if (parsed.data.recipients && (await disallowedRecipients(user.role, parsed.data.recipients)).length > 0) {
+    throw new AuthorizationError();
+  }
   return prismadb.crm_Report_Schedule.update({ where: { id: scheduleId }, data: parsed.data });
 }
 

@@ -595,7 +595,7 @@ describe("updateActivity partner links", () => {
 describe("report schedule fields", () => {
   let configId: string;
   let scheduleId: string;
-  const valid = { cronExpression: "0 9 * * 1", recipients: ["a@example.com"], format: "pdf" as const };
+  const valid = { cronExpression: "0 9 * * 1", recipients: [`boss-${tag}@input-fields.test`], format: "pdf" as const };
 
   beforeAll(async () => {
     const cfg = await prismadb.crm_Report_Config.create({
@@ -633,9 +633,9 @@ describe("report schedule fields", () => {
 
   it("updateSchedule writes the declared fields", async () => {
     as("rep");
-    await updateSchedule(scheduleId, { isActive: false, recipients: ["b@example.com"], format: "csv", cronExpression: "0 8 * * *" });
+    await updateSchedule(scheduleId, { isActive: false, recipients: [`other-${tag}@input-fields.test`], format: "csv", cronExpression: "0 9 * * *" });
     expect(await prismadb.crm_Report_Schedule.findUnique({ where: { id: scheduleId } })).toMatchObject({
-      isActive: false, recipients: ["b@example.com"], format: "csv", cronExpression: "0 8 * * *",
+      isActive: false, recipients: [`other-${tag}@input-fields.test`], format: "csv", cronExpression: "0 9 * * *",
     });
   });
 
@@ -644,6 +644,9 @@ describe("report schedule fields", () => {
     ["recipients that are not emails", (c) => ({ reportConfigId: c, ...valid, recipients: [{ x: 1 }] })],
     ["unknown format", (c) => ({ reportConfigId: c, ...valid, format: "xml" })],
     ["config id that is not a string", (c) => ({ reportConfigId: { in: [c] }, ...valid })],
+    ["an inactive user's address", (c) => ({ reportConfigId: c, ...valid, recipients: [`gone-${tag}@input-fields.test`] })],
+    ["an address outside the instance", (c) => ({ reportConfigId: c, ...valid, recipients: ["someone@outside.example"] })],
+    ["an unsupported schedule", (c) => ({ reportConfigId: c, ...valid, cronExpression: "*/15 * * * *" })],
   ])("createSchedule refuses %s and creates nothing", async (_label, payload) => {
     as("rep");
     const before = await prismadb.crm_Report_Schedule.count({ where: { reportConfigId: configId } });
