@@ -21,6 +21,15 @@ describe("customer", () => {
     expect(writes()).toEqual([]);
   });
 
+  it("refuses an Odoo customer that is already linked to another account and keeps that link", async () => {
+    const { ctx, client, writes } = mkOrders({ sales: { partners: [odooCustomer({ company_registry: "12345678" })] } });
+    await ctx.store.set(K.partner(50), { accountId: "a0" });
+    await expect(findOrCreateCustomer(ctx, client, account(), 9, now)).rejects.toThrow("orders.partnerLinked");
+    expect(await ctx.store.get(K.partner(50))).toEqual({ accountId: "a0" });
+    expect(await ctx.store.get(K.account("a1"))).toBeNull();
+    expect(writes()).toEqual([]);
+  });
+
   it("finds by VAT when the registration number does not match", async () => {
     const { ctx, client } = mkOrders({ sales: { partners: [odooCustomer({ vat: "CZ12345678" })] } });
     expect((await findOrCreateCustomer(ctx, client, account(), 9, now)).partnerId).toBe(50);

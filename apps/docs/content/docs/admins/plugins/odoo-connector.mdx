@@ -96,7 +96,7 @@ Rules the CRM cannot use are listed on the admin page under **Rules the CRM cann
 With `sendOrders` on (and dry run off), an order that becomes **READY** goes to Odoo within seconds; a check every 5 minutes picks up anything missed.
 
 What the connector does in Odoo, and nothing else:
-- finds the customer (by the account's link, registration number, then VAT; by exact name when the account has neither) or **creates** it and links the account;
+- finds the customer (by the account's link, registration number, then VAT; by exact name when the account has neither) or **creates** it and links the account; a customer already linked to another account is never moved (the order fails, see below);
 - uses the customer or one of its delivery addresses when the order's delivery address matches, or **creates** a delivery address;
 - **creates** a draft sale order: the CRM order number in *Source document* (`origin`), the CRM unit prices, the account's Odoo price list (or the customer's), the salesperson by email, the rep's name and the order note in the note.
 
@@ -123,7 +123,7 @@ When the connector can no longer find the Odoo order, the order keeps its status
 
 - **Odoo unreachable:** the order stays READY and goes out when Odoo is back; the panel shows since when it waits. An order reopened or cancelled while it waits starts afresh when it is submitted again.
 - **Odoo refuses access** (wrong key or missing rights): sending pauses for every order and admins get one notification. Fix the rights, then click **Test connection**.
-- **Odoo refuses the order:** after 5 refusals, or at once for a product that does not come from Odoo, a currency that differs from the Odoo price list, or an order already in Odoo with other lines, the order becomes **SYNC_FAILED** and admins are notified. Fix the cause and click **Retry** on the order.
+- **Odoo refuses the order:** after 5 refusals, or at once for a product that does not come from Odoo, a currency that differs from the Odoo price list, an order already in Odoo with other lines, or an Odoo customer already linked to another account, the order becomes **SYNC_FAILED** and admins are notified. Fix the cause and click **Retry** on the order.
 
 Sending is safe to repeat: whatever fails in between, each order exists once in Odoo.
 
