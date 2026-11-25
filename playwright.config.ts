@@ -79,5 +79,7 @@ export default defineConfig({
     command: "pnpm dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
+    // Dev-only opt-in for OTP capture (tests/auth.setup.ts reads /api/auth/test-otp)
+    env: { NEXTCRM_E2E_TEST_OTP: "1" },
   },
 });

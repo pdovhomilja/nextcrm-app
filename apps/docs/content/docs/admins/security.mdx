@@ -45,7 +45,7 @@ BetterAuth's built-in admin endpoints (`/api/auth/admin/*`) are disabled for eve
 
 ## Test helpers
 
-Outside `NODE_ENV=production`, NextCRM enables a BetterAuth test plugin and the endpoint `/api/auth/test-otp`, which returns login codes for any email. Never run an internet-facing instance in development mode.
+Outside `NODE_ENV=production` and only with `NEXTCRM_E2E_TEST_OTP=1`, NextCRM enables a BetterAuth test plugin and the endpoint `/api/auth/test-otp`, which returns login codes for any email. The flag is for local development and e2e tests only: never set it on a shared or internet-facing instance, and never run one in development mode.
 
 ## Cross-site writes and uploads
 

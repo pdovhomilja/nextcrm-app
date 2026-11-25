@@ -105,7 +105,7 @@ Route handlers in `app/api` are used where a server action does not fit:
 | Path | Purpose |
 | --- | --- |
 | `/api/auth/[...all]` | Better Auth handler |
-| `/api/auth/test-otp` | Returns captured OTPs outside production |
+| `/api/auth/test-otp` | Returns captured OTPs outside production with `NEXTCRM_E2E_TEST_OTP=1` |
 | `/api/inngest` | Inngest serve endpoint (`GET`, `POST`, `PUT`) |
 | `/api/mcp/[transport]` | MCP server. See [MCP server](/docs/developers/mcp) |
 | `/api/invoices/[invoiceId]/pdf` | Invoice PDF |
