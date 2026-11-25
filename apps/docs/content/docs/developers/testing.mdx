@@ -48,7 +48,7 @@ Keep new database-backed suites under `__tests__/invoices/` or update the CI job
 Configuration is in `playwright.config.ts`:
 
 - Tests live in `tests/e2e/*.spec.ts`. Fixtures are in `tests/fixtures/`.
-- `baseURL` is `http://localhost:3000`. Playwright starts `pnpm dev` itself, or reuses a running server outside CI.
+- `baseURL` is `http://localhost:3000`. Playwright starts `pnpm dev` itself with `NEXTCRM_E2E_TEST_OTP=1` (dev-only opt-in for OTP capture), or reuses a running server outside CI. A server you start yourself needs `NEXTCRM_E2E_TEST_OTP=1 pnpm dev`, or the setup project cannot sign in.
 - The `setup` project runs `tests/auth.setup.ts` first. It requests an OTP for `TEST_USER_EMAIL` (default `test@nextcrm.app`), reads it from `/api/auth/test-otp`, signs in, and saves the session to `playwright/.auth/user.json`. The browser projects depend on it.
 - Projects: `chromium`, `firefox`, `webkit`, `Mobile Chrome`, `Mobile Safari`.
 - On CI: 2 retries, 1 worker, `test.only` fails the run. Traces are kept on first retry, screenshots and videos on failure.

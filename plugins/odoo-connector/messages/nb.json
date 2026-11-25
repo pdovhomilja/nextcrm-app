@@ -107,6 +107,7 @@
     "noPriceList": "Kunden har ingen prisliste i Odoo",
     "currency": "Ordrevalutaen {order} avviker fra valutaen {list} på prislisten i Odoo",
     "otherLines": "Finnes allerede i Odoo som {name} med andre linjer; be om at den kanselleres i Odoo, og klikk deretter Prøv igjen",
+    "partnerLinked": "Odoo-kunden {partner} er allerede koblet til en annen konto; sjekk kontoens organisasjonsnummer og MVA-nummer",
     "linesMissing": "{count} linjer vises ikke: produktene finnes ikke i CRM"
   },
   "tab": {
