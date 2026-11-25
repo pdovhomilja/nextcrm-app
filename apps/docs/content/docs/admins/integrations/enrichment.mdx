@@ -45,5 +45,7 @@ If you give the template a different name, set `E2B_ENRICHMENT_TEMPLATE` to it. 
 - Background target enrichment runs as Inngest jobs, so Inngest must be running.
 - Each sandbox run has a 5-minute limit.
 - A target enriched successfully in the last 7 days is skipped unless the run is forced.
-- Contacts the agent discovers for a company are created as target contacts and enriched in separate jobs.
+- Contacts the agent discovers for a company are created as target contacts and enriched in separate jobs, at most 10 per run. When a contact already exists, the agent only fills its empty name, title and LinkedIn fields.
+- The agent's output is checked before it is saved: only known fields are kept, each value is at most 500 characters, and links must be `https` URLs.
+- The agent's browser opens only public `http`/`https` addresses; it refuses `localhost`, private, loopback and link-local IP addresses. Hostnames that resolve to private addresses, and redirects or links followed inside a page, are not checked.
 - Results are recorded per run with status (running, completed, failed, skipped) and an error message when a key is missing.

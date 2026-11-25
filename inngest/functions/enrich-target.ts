@@ -4,6 +4,7 @@ import { isFieldEmpty } from "@/lib/enrichment/utils/field-utils";
 import { getApiKey } from "@/lib/api-keys";
 import { getAgentScript } from "@/lib/enrichment/e2b/agent-script";
 import { resolveCompanyDomain, filterByConfidence, buildContactUpsertKey, type AgentOutput } from "@/lib/enrichment/e2b/apply-result";
+import { parseAgentOutput } from "@/lib/enrichment/e2b/agent-output";
 import { Sandbox } from "e2b";
 import type { EnrichmentField } from "@/lib/enrichment/types";
 
@@ -53,11 +54,13 @@ export const enrichTarget = inngest.createFunction(
       return row.id;
     });
 
-    const anthropicKey = await step.run("resolve-api-key", () =>
-      getApiKey("ANTHROPIC", triggeredBy)
+    // Only whether a key exists goes into step state; the key itself is read
+    // again inside the agent step.
+    const hasApiKey = await step.run("resolve-api-key", async () =>
+      Boolean(await getApiKey("ANTHROPIC", triggeredBy))
     );
 
-    if (!anthropicKey) {
+    if (!hasApiKey) {
       await prismadb.crm_Target_Enrichment.update({
         where: { id: enrichmentId },
         data: { status: "FAILED", error: "NO_API_KEY: configure ANTHROPIC key in admin or profile settings" },
@@ -110,6 +113,9 @@ export const enrichTarget = inngest.createFunction(
         companyName: target.company ?? "",
       });
 
+      const anthropicKey = await getApiKey("ANTHROPIC", triggeredBy);
+      if (!anthropicKey) throw new Error("NO_API_KEY");
+
       const script = getAgentScript();
 
       const sandbox = await Sandbox.create(
@@ -144,7 +150,7 @@ export const enrichTarget = inngest.createFunction(
           throw new Error(`Agent exited ${result.exitCode}: ${result.stderr || result.stdout}`);
         }
 
-        return JSON.parse(result.stdout) as AgentOutput;
+        return parseAgentOutput(result.stdout);
       } finally {
         await sandbox.kill().catch(() => {});
       }
@@ -172,7 +178,9 @@ export const enrichTarget = inngest.createFunction(
       for (const contact of agentOutput.contacts ?? []) {
         if (!contact.email && !contact.linkedinUrl) continue;
         const whereKey = buildContactUpsertKey(targetId, contact);
-        const upserted = await prismadb.crm_Target_Contact.upsert({
+        const complete = Boolean(contact.title && contact.linkedinUrl);
+        // An existing contact keeps its values; the agent only fills empty fields.
+        const row = await prismadb.crm_Target_Contact.upsert({
           where: whereKey as Parameters<typeof prismadb.crm_Target_Contact.upsert>[0]["where"],
           create: {
             targetId,
@@ -182,19 +190,27 @@ export const enrichTarget = inngest.createFunction(
             linkedinUrl: contact.linkedinUrl,
             phone: contact.phone,
             source: "enriched",
-            enrichStatus: contact.title && contact.linkedinUrl ? "COMPLETED" : "PENDING",
-            enrichedAt: contact.title && contact.linkedinUrl ? new Date() : null,
+            enrichStatus: complete ? "COMPLETED" : "PENDING",
+            enrichedAt: complete ? new Date() : null,
           },
-          update: {
-            title: contact.title ?? undefined,
-            linkedinUrl: contact.linkedinUrl ?? undefined,
-            name: contact.name ?? undefined,
-            enrichStatus: contact.title && contact.linkedinUrl ? "COMPLETED" : "PENDING",
-            enrichedAt: contact.title && contact.linkedinUrl ? new Date() : null,
-          },
-          select: { id: true, enrichStatus: true },
+          update: {},
+          select: { id: true, name: true, title: true, linkedinUrl: true, enrichStatus: true },
         });
-        if (upserted.enrichStatus === "PENDING") ids.push(upserted.id);
+
+        const fills: Record<string, string> = {};
+        for (const key of ["name", "title", "linkedinUrl"] as const) {
+          const v = contact[key];
+          if (v && isFieldEmpty(row[key])) fills[key] = v;
+        }
+        const merged = { ...row, ...fills };
+        const status = merged.title && merged.linkedinUrl ? "COMPLETED" : "PENDING";
+        if (Object.keys(fills).length > 0 || status !== row.enrichStatus) {
+          await prismadb.crm_Target_Contact.update({
+            where: { id: row.id },
+            data: { ...fills, enrichStatus: status, enrichedAt: status === "COMPLETED" ? new Date() : null },
+          });
+        }
+        if (status === "PENDING") ids.push(row.id);
       }
       return ids;
     });
