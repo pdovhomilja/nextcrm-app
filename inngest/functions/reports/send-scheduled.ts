@@ -79,7 +79,7 @@ export const reportSendScheduled = inngest.createFunction(
         }
         const role = mapLegacyRole(owner.role);
         const stored = (schedule.recipients as string[]).slice(0, MAX_REPORT_RECIPIENTS);
-        const refused = await disallowedRecipients(role, stored);
+        const refused = await disallowedRecipients({ id: owner.id, role }, stored);
         const recipients = stored.filter((r) => !refused.includes(r));
         if (recipients.length === 0) {
           console.warn(`[reportSendScheduled] skipping schedule ${schedule.id}: no allowed recipients`);

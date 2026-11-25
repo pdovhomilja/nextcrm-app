@@ -1,4 +1,6 @@
 import { prismadb } from "@/lib/prisma";
+import { isManagerOrAdmin } from "@/lib/authz/roles";
+import type { AuthzUser } from "@/lib/authz/session";
 
 export const MAX_REPORT_RECIPIENTS = 10;
 
@@ -21,8 +23,8 @@ export function scheduleIntervalMs(cron: string): number | null {
  * address; everyone else only the e-mail addresses of active users of this
  * instance.
  */
-export async function disallowedRecipients(role: string, recipients: string[]): Promise<string[]> {
-  if (role === "manager" || role === "admin") return [];
+export async function disallowedRecipients(sender: AuthzUser, recipients: string[]): Promise<string[]> {
+  if (isManagerOrAdmin(sender)) return [];
   const users = await prismadb.users.findMany({
     where: { email: { in: recipients, mode: "insensitive" }, userStatus: "ACTIVE" },
     select: { email: true },

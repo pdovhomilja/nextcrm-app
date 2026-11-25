@@ -21,7 +21,7 @@ export async function createSchedule(input: { reportConfigId: string; cronExpres
   const parsed = createScheduleSchema.safeParse(input);
   if (!parsed.success) throw new Error("Invalid input");
   input = parsed.data;
-  if ((await disallowedRecipients(user.role, input.recipients)).length > 0) throw new AuthorizationError();
+  if ((await disallowedRecipients(user, input.recipients)).length > 0) throw new AuthorizationError();
   // Verify the user can read the referenced config (own OR shared OR manager/admin)
   const cfg = await prismadb.crm_Report_Config.findUnique({ where: { id: input.reportConfigId } });
   if (!cfg) throw new Error("Not found");
@@ -64,7 +64,7 @@ export async function updateSchedule(scheduleId: string, data: { cronExpression?
   const parsed = updateScheduleSchema.safeParse(data);
   if (!parsed.success) throw new Error("Invalid input");
   await loadAndAuthorizeSchedule(scheduleId, user);
-  if (parsed.data.recipients && (await disallowedRecipients(user.role, parsed.data.recipients)).length > 0) {
+  if (parsed.data.recipients && (await disallowedRecipients(user, parsed.data.recipients)).length > 0) {
     throw new AuthorizationError();
   }
   return prismadb.crm_Report_Schedule.update({ where: { id: scheduleId }, data: parsed.data });
