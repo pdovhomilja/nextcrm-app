@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { saveConfig } from "@/actions/reports/config";
 import type { ReportCategory } from "@/actions/reports/types";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 type SaveConfigDialogProps = { open: boolean; onOpenChange: (open: boolean) => void; category: ReportCategory; currentFilters: string };
 
@@ -22,11 +23,16 @@ export function SaveConfigDialog({ open, onOpenChange, category, currentFilters 
     if (!name.trim()) return;
     setLoading(true);
     const params = Object.fromEntries(new URLSearchParams(currentFilters));
-    await saveConfig({ name: name.trim(), category, filters: params, isShared });
-    setLoading(false);
-    setName("");
-    setIsShared(false);
-    onOpenChange(false);
+    try {
+      await saveConfig({ name: name.trim(), category, filters: params, isShared });
+      setName("");
+      setIsShared(false);
+      onOpenChange(false);
+    } catch {
+      toast.error(t("saveFailed"));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -36,7 +42,7 @@ export function SaveConfigDialog({ open, onOpenChange, category, currentFilters 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="config-name">{t("nameLabel")}</Label>
-            <Input id="config-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("namePlaceholder")} />
+            <Input id="config-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} placeholder={t("namePlaceholder")} />
           </div>
           <div className="flex items-center justify-between">
             <Label htmlFor="share-toggle">{t("shareLabel")}</Label>
