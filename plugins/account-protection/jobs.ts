@@ -1,3 +1,4 @@
+import type { RecordData } from "@nextcrm/plugin-sdk";
 import { claimNumber, indexNumber, recordOwner, type Conflict } from "./hooks";
 import { numberKey } from "./key";
 import { ownerOf } from "./rules";
@@ -153,11 +154,51 @@ export async function install(ctx: Ctx, at: Date): Promise<void> {
 }
 
 /**
+ * 0.3.0: number keys ignore punctuation and read a CZ VAT number as the IČO, so claims stored under an older key
+ * move to the new one. Accounts go oldest first; when two claims meet on one key, the older account keeps it and
+ * the other becomes a conflict. Claims already under their new key are left alone, so a second run changes nothing.
+ */
+async function rekeyClaims(ctx: Ctx, at: Date): Promise<void> {
+  const time = (v: unknown) => new Date(v as string).getTime();
+  for (let skip = 0; ; skip += 100) {
+    const page = await ctx.data.accounts.find({ where: { deletedAt: null }, orderBy: { createdAt: "asc" }, take: 100, skip });
+    for (const acc of page) {
+      const id = acc.id as string;
+      const old = await ctx.store.get<{ key: string }>(K.acct(id));
+      const key = numberKey(acc, ctx.settings.defaultCountry);
+      if (!old || old.key === key) continue;
+      const holder = key ? await ctx.store.get<{ accountId: string }>(K.num(key)) : null;
+      let evicted: RecordData | null = null;
+      if (key && holder && holder.accountId !== id) {
+        const other = await ctx.data.accounts.get(holder.accountId);
+        const keeper = other && other.deletedAt == null && time(other.createdAt) <= time(acc.createdAt) ? holder.accountId : id;
+        ctx.log.warn(`Accounts ${id} and ${holder.accountId} share the number key ${key}; ${keeper} keeps the claim`);
+        if (keeper === id) {
+          await ctx.store.delete(K.num(key));
+          await ctx.store.delete(K.acct(holder.accountId));
+          evicted = other;
+        }
+      }
+      const claimed = await indexNumber(acc, ctx, at);
+      // Set after the claim: indexNumber hands a released number over to the accounts in conflict with this one.
+      if (evicted && claimed) {
+        await ctx.store.set(K.conflict(evicted.id as string), { key: claimed, otherAccountId: id, foundAt: at.toISOString() } satisfies Conflict);
+      }
+      const reg = await ctx.store.get<Registration>(K.reg(id));
+      if (claimed && reg) await ctx.store.set(K.reg(id), { ...reg, key: claimed });
+    }
+    if (page.length < 100) break;
+  }
+}
+
+/**
  * 0.1.1: installs from 0.1.0 have no run marker, so a later re-enable could not be detected; also prune stale conflicts.
  * 0.2.0: registrations gain baseUntil and order-based protection (rule 3).
+ * 0.3.0: claims move to the new number key (rekeyClaims), before conflicts are pruned against it.
  */
 export async function upgrade(ctx: Ctx, at: Date): Promise<void> {
   if (!(await ctx.store.get(K.lastRun))) await ctx.store.set(K.lastRun, { at: at.toISOString() });
+  await rekeyClaims(ctx, at);
   await pruneConflicts(ctx, at);
   for (const entry of await ctx.store.list("reg:")) {
     try {
