@@ -636,7 +636,8 @@
       "namePlaceholder": "f.eks. Salgspipeline 1. kvartal",
       "shareLabel": "Del med teamet",
       "cancel": "Avbryt",
-      "save": "Lagre"
+      "save": "Lagre",
+      "saveFailed": "Kunne ikke lagre rapporten. Navnet må være 1 til 120 tegn."
     },
     "scheduleDialog": {
       "title": "Planlegg rapport",

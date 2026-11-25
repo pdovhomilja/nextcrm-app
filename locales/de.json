@@ -636,7 +636,8 @@
       "namePlaceholder": "e.g. Q1 Sales Pipeline",
       "shareLabel": "Share with team",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "saveFailed": "Der Bericht konnte nicht gespeichert werden. Der Name muss 1 bis 120 Zeichen lang sein."
     },
     "scheduleDialog": {
       "title": "Schedule Report",

@@ -636,7 +636,8 @@
       "namePlaceholder": "e.g. Q1 Sales Pipeline",
       "shareLabel": "Share with team",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "saveFailed": "Не вдалося зберегти звіт. Назва має містити від 1 до 120 символів."
     },
     "scheduleDialog": {
       "title": "Schedule Report",
