@@ -2,6 +2,8 @@ import { inngest } from "@/inngest/client";
 import { prismadb } from "@/lib/prisma";
 import { decrypt } from "@/lib/email-crypto";
 import { fetchBodyByUid } from "@/inngest/lib/imap-utils";
+import { accountReadScopeWhere, contactReadScopeWhere } from "@/lib/authz/scopes/crm";
+import { mapLegacyRole } from "@/lib/authz/roles";
 
 export const emailLinkCrm = inngest.createFunction(
   {
@@ -37,13 +39,21 @@ export const emailLinkCrm = inngest.createFunction(
     if (addresses.length === 0) return { linked: 0 };
 
     const linked = await step.run("match-and-link", async () => {
+      // Link only records the mailbox owner can read.
+      const mailbox = await prismadb.emailAccount.findUnique({
+        where: { id: email.emailAccountId },
+        select: { user: { select: { id: true, role: true } } },
+      });
+      if (!mailbox) return 0;
+      const owner = { id: mailbox.user.id, role: mapLegacyRole(mailbox.user.role) };
+
       const [contacts, accounts] = await Promise.all([
         prismadb.crm_Contacts.findMany({
-          where: { email: { in: addresses } },
+          where: { AND: [{ email: { in: addresses } }, contactReadScopeWhere(owner)] },
           select: { id: true },
         }),
         prismadb.crm_Accounts.findMany({
-          where: { email: { in: addresses } },
+          where: { AND: [{ email: { in: addresses } }, accountReadScopeWhere(owner)] },
           select: { id: true },
         }),
       ]);
