@@ -3,6 +3,7 @@ import { prismadb } from "@/lib/prisma";
 import { getApiKey } from "@/lib/api-keys";
 import { getAgentScript } from "@/lib/enrichment/e2b/agent-script";
 import { resolveCompanyDomain, type AgentOutput } from "@/lib/enrichment/e2b/apply-result";
+import { parseAgentOutput } from "@/lib/enrichment/e2b/agent-output";
 import { isFieldEmpty } from "@/lib/enrichment/utils/field-utils";
 import { Sandbox } from "e2b";
 
@@ -45,11 +46,13 @@ export const enrichTargetContact = inngest.createFunction(
     });
     if (skipReason) return { skipped: skipReason };
 
-    const anthropicKey = await step.run("resolve-api-key", () =>
-      getApiKey("ANTHROPIC", triggeredBy)
+    // Only whether a key exists goes into step state; the key itself is read
+    // again inside the agent step.
+    const hasApiKey = await step.run("resolve-api-key", async () =>
+      Boolean(await getApiKey("ANTHROPIC", triggeredBy))
     );
 
-    if (!anthropicKey) {
+    if (!hasApiKey) {
       await prismadb.crm_Target_Contact.update({
         where: { id: contactId },
         data: { enrichStatus: "FAILED" },
@@ -70,6 +73,9 @@ export const enrichTargetContact = inngest.createFunction(
         email: contact.email ?? contact.target.email ?? null,
         companyName: contact.target.company ?? "",
       });
+
+      const anthropicKey = await getApiKey("ANTHROPIC", triggeredBy);
+      if (!anthropicKey) throw new Error("NO_API_KEY");
 
       const script = getAgentScript();
 
@@ -98,7 +104,7 @@ export const enrichTargetContact = inngest.createFunction(
           throw new Error(`Agent exited ${result.exitCode}: ${result.stderr}`);
         }
 
-        return JSON.parse(result.stdout) as AgentOutput;
+        return parseAgentOutput(result.stdout);
       } finally {
         await sandbox.kill().catch(() => {});
       }
