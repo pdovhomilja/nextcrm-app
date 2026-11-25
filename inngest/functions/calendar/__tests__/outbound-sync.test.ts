@@ -124,7 +124,7 @@ beforeEach(() => {
   // step replay / genuine concurrent duplicate of this same push), which is
   // the benign case. Tests that exercise the dangerous case — the inbound
   // poller claiming the event for a different activity — override this.
-  findMappingByExternalId.mockResolvedValue({ id: "map1", activityId: "act1" });
+  findMappingByExternalId.mockResolvedValue({ id: "map1", activityId: "act1", connectionId: "conn1" });
   updateMapping.mockResolvedValue({});
   updateActivity.mockResolvedValue({});
   updateConnection.mockResolvedValue({});
@@ -555,6 +555,22 @@ describe("calendarOutboundSync", () => {
   describe("create-mapping P2002 reconciliation", () => {
     const p2002 = () => Object.assign(new Error("dup"), { code: "P2002" });
 
+    it("leaves the row and its activity alone when another connection already maps the Google event", async () => {
+      // Another CRM user's connection (an attendee of the same event) polled
+      // it first: that row and that user's activity are not ours to move.
+      decide.mockReturnValue({ do: "insert" });
+      createMapping.mockRejectedValue(p2002());
+      findMappingByExternalId.mockResolvedValue({ id: "map-other", activityId: "act-other", connectionId: "conn-other" });
+      const warnLog = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+      const { result } = run("act1");
+      expect(await result).toEqual({ pushed: true, did: "insert", reason: "other-connection" });
+
+      expect(updateMapping).not.toHaveBeenCalled();
+      expect(updateActivity).not.toHaveBeenCalled();
+      warnLog.mockRestore();
+    });
+
     it("repoints the mapping and logs loudly when the conflicting row belongs to a DIFFERENT activity", async () => {
       // The inbound poller landed in the gap between the Google insert
       // committing and create-mapping committing: it created its own
@@ -566,6 +582,7 @@ describe("calendarOutboundSync", () => {
       findMappingByExternalId.mockResolvedValue({
         id: "map-inbound",
         activityId: "act-duplicate",
+        connectionId: "conn1",
       });
       const errorLog = jest.spyOn(console, "error").mockImplementation(() => {});
 
@@ -606,6 +623,7 @@ describe("calendarOutboundSync", () => {
       findMappingByExternalId.mockResolvedValue({
         id: "map-inbound",
         activityId: "act-duplicate",
+        connectionId: "conn1",
       });
       const errorLog = jest.spyOn(console, "error").mockImplementation(() => {});
 
@@ -633,6 +651,7 @@ describe("calendarOutboundSync", () => {
       findMappingByExternalId.mockResolvedValue({
         id: "map-inbound",
         activityId: "act-duplicate",
+        connectionId: "conn1",
       });
       const errorLog = jest.spyOn(console, "error").mockImplementation(() => {});
 
@@ -647,7 +666,7 @@ describe("calendarOutboundSync", () => {
     it("does not soft-delete anything when the conflicting row is already ours", async () => {
       decide.mockReturnValue({ do: "insert" });
       createMapping.mockRejectedValue(p2002());
-      findMappingByExternalId.mockResolvedValue({ id: "map1", activityId: "act1" });
+      findMappingByExternalId.mockResolvedValue({ id: "map1", activityId: "act1", connectionId: "conn1" });
       const { result } = run("act1");
       await result;
       expect(updateActivity).not.toHaveBeenCalled();
@@ -656,7 +675,7 @@ describe("calendarOutboundSync", () => {
     it("leaves the mapping alone when the conflicting row is already ours", async () => {
       decide.mockReturnValue({ do: "insert" });
       createMapping.mockRejectedValue(p2002());
-      findMappingByExternalId.mockResolvedValue({ id: "map1", activityId: "act1" });
+      findMappingByExternalId.mockResolvedValue({ id: "map1", activityId: "act1", connectionId: "conn1" });
       const { result } = run("act1");
       expect(await result).toEqual({ pushed: true, did: "insert" });
       expect(updateMapping).not.toHaveBeenCalled();
