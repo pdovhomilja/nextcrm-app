@@ -5,6 +5,18 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.5](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.4...v0.42.5) (2026-11-25)
+
+
+### Fixed
+
+* **auth:** explicit opt-in for test helpers ([#532](https://github.com/pdovhomilja/nextcrm-app/issues/532)) ([1a9656b](https://github.com/pdovhomilja/nextcrm-app/commit/1a9656b18afcfda7edb254de3e028abb4f3f3519))
+* **campaigns:** allowlist CSS properties in email templates ([#533](https://github.com/pdovhomilja/nextcrm-app/issues/533)) ([934a518](https://github.com/pdovhomilja/nextcrm-app/commit/934a518e61945985933c107f8909671a52a9e252))
+* **enrichment:** harden E2B enrichment agent and jobs ([#536](https://github.com/pdovhomilja/nextcrm-app/issues/536)) ([a70dde2](https://github.com/pdovhomilja/nextcrm-app/commit/a70dde2aa1a90db876a0ebebab6f3e464c7e9632))
+* **odoo-connector:** never re-link an Odoo customer that belongs to another account (0.4.3) ([#534](https://github.com/pdovhomilja/nextcrm-app/issues/534)) ([3aa677d](https://github.com/pdovhomilja/nextcrm-app/commit/3aa677d6f1f6efb6b01fd99ac850db3e240d33da))
+* **reports:** limit scheduled report recipients and cadence, validate saved reports ([#535](https://github.com/pdovhomilja/nextcrm-app/issues/535)) ([0bdb411](https://github.com/pdovhomilja/nextcrm-app/commit/0bdb411d1c2f1fa8018a529e9893592c7d76f3b4))
+* scope mail and calendar matching, normalise protection key, drop MCP SSE ([#537](https://github.com/pdovhomilja/nextcrm-app/issues/537)) ([90f3562](https://github.com/pdovhomilja/nextcrm-app/commit/90f3562860be847e48041080e5f8540b0895bbe4))
+
 ## [0.42.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.3...v0.42.4) (2026-11-23)
 
 
