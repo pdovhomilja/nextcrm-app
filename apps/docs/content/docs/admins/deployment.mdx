@@ -79,7 +79,7 @@ In this mode nothing is bundled. You provide PostgreSQL with pgvector, S3-compat
 The app listens on plain HTTP, port 3000. Terminate TLS in front of it (Coolify's proxy, Traefik, Caddy, nginx) and forward to the app.
 
 - Set `BETTER_AUTH_URL` and `NEXT_PUBLIC_APP_URL` to the public `https://` URL. Email links, the Google sign-in and Calendar redirect URIs, and the Calendly webhook URL are built from them.
-- Some responses are streamed: the interactive enrichment endpoints use server-sent events, and the MCP server offers an SSE transport at `/api/mcp/sse`. Turn off response buffering for the app if your proxy buffers by default.
+- Some responses are streamed: the interactive enrichment endpoints use server-sent events. Turn off response buffering for the app if your proxy buffers by default.
 - Keep Postgres, MinIO's console and the Inngest dashboard off the public internet.
 
 ## File storage behind a proxy

@@ -4,6 +4,7 @@ jest.mock("@/lib/prisma", () => ({
     crm_Targets: { findFirst: jest.fn() },
     crm_Leads: { findFirst: jest.fn() },
     crm_Opportunities: { findMany: jest.fn() },
+    crm_Accounts: { findFirst: jest.fn() },
   },
 }));
 
@@ -14,6 +15,7 @@ const contacts = prismadb.crm_Contacts.findFirst as jest.Mock;
 const targets = prismadb.crm_Targets.findFirst as jest.Mock;
 const leads = prismadb.crm_Leads.findFirst as jest.Mock;
 const opps = prismadb.crm_Opportunities.findMany as jest.Mock;
+const accounts = prismadb.crm_Accounts.findFirst as jest.Mock;
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -73,5 +75,49 @@ describe("matchCounterparty", () => {
     targets.mockResolvedValue(null);
     leads.mockResolvedValue(null);
     expect(await matchCounterparty(["x@y.com"])).toEqual([]);
+  });
+
+  describe("with a scope user", () => {
+    const rep = { id: "u1", role: "user" as const };
+    // A plain user's read scope includes records assigned to them.
+    const scoped = expect.objectContaining({
+      where: expect.objectContaining({
+        AND: expect.arrayContaining([
+          expect.objectContaining({ OR: expect.arrayContaining([{ assigned_to: "u1" }]) }),
+        ]),
+      }),
+    });
+
+    it("looks up contacts, targets and leads inside the user's scope", async () => {
+      contacts.mockResolvedValue(null);
+      targets.mockResolvedValue(null);
+      leads.mockResolvedValue(null);
+      expect(await matchCounterparty(["jane@client.com"], rep)).toEqual([]);
+      expect(contacts).toHaveBeenCalledWith(scoped);
+      expect(leads).toHaveBeenCalledWith(scoped);
+      expect(targets).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ AND: expect.any(Array) }) })
+      );
+    });
+
+    it("does not link the contact's account or deal when the user cannot read the account", async () => {
+      contacts.mockResolvedValue({ id: "c1", accountsIDs: "a1" });
+      accounts.mockResolvedValue(null);
+      opps.mockResolvedValue([{ id: "o1" }]);
+      expect(await matchCounterparty(["jane@client.com"], rep)).toEqual([{ entityType: "contact", entityId: "c1" }]);
+    });
+
+    it("links a readable account and only a readable open deal", async () => {
+      contacts.mockResolvedValue({ id: "c1", accountsIDs: "a1" });
+      accounts.mockResolvedValue({ id: "a1" });
+      opps.mockResolvedValue([{ id: "o1" }]);
+      const links = await matchCounterparty(["jane@client.com"], rep);
+      expect(links).toEqual([
+        { entityType: "contact", entityId: "c1" },
+        { entityType: "account", entityId: "a1" },
+        { entityType: "opportunity", entityId: "o1" },
+      ]);
+      expect(opps).toHaveBeenCalledWith(scoped);
+    });
   });
 });

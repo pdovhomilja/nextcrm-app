@@ -2,6 +2,7 @@
 import {
   requireAuthenticated,
   assertCanWriteActivity,
+  assertCanLinkActivity,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
@@ -42,6 +43,15 @@ export const updateActivity = async (data: {
     // A meeting update is pushed to the owner's Google Calendar with
     // sendUpdates:"all" — an unauthorized edit mails a real customer.
     await assertCanWriteActivity(user, data.id, PARTNER_EDIT);
+    // As in createActivity. The edit form resends the current link, which may
+    // sit on a record the author cannot write, so only added links are checked.
+    if (data.links !== undefined) {
+      const current = await prismadb.crm_ActivityLinks.findMany({
+        where: { activityId: data.id },
+        select: { entityType: true, entityId: true },
+      });
+      await assertCanLinkActivity(user, data.links, current);
+    }
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;

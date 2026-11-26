@@ -636,7 +636,8 @@
       "namePlaceholder": "f.eks. Salgspipeline 1. kvartal",
       "shareLabel": "Del med teamet",
       "cancel": "Avbryt",
-      "save": "Lagre"
+      "save": "Lagre",
+      "saveFailed": "Kunne ikke lagre rapporten. Navnet må være 1 til 120 tegn."
     },
     "scheduleDialog": {
       "title": "Planlegg rapport",
@@ -654,7 +655,8 @@
       "format": "Format",
       "both": "Begge (CSV + PDF)",
       "cancel": "Avbryt",
-      "create": "Opprett plan"
+      "create": "Opprett plan",
+      "createFailed": "Kunne ikke opprette planen. Sjekk frekvensen, oppgi 1 til 10 e-postadresser og (med mindre du er leder) bare adresser til aktive brukere."
     },
     "savedReports": {
       "placeholder": "Lagrede rapporter...",

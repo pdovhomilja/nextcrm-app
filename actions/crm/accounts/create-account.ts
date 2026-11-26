@@ -1,5 +1,6 @@
 "use server";
 import * as svc from "@/lib/crm/accounts/service";
+import { accountFieldsSchema } from "./account-input";
 import { runAccountAction } from "./run";
 
 export const createAccount = async (data: {
@@ -28,15 +29,19 @@ export const createAccount = async (data: {
   industry?: string;
   pricelist_id?: string | null;
 }) => {
-  if (!data.name) return { error: "name is required" };
+  // The fields the form sends, nothing else: the parameter type does not hold at runtime.
+  const parsed = accountFieldsSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input" };
+  const input = parsed.data;
+  if (!input.name) return { error: "name is required" };
 
   return runAccountAction({ verb: "create", auth: { partner: true } }, async (user) => {
     // The form sends "" for an empty select; that means "not set".
     const account = await svc.createAccount(user, {
-      ...data,
-      assigned_to: data.assigned_to || undefined,
-      industry: data.industry || undefined,
-      pricelist_id: data.pricelist_id || undefined,
+      ...input,
+      assigned_to: input.assigned_to || undefined,
+      industry: input.industry || undefined,
+      pricelist_id: input.pricelist_id || undefined,
     });
     return { data: account };
   });

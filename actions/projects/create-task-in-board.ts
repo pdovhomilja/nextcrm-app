@@ -7,9 +7,11 @@ import resendHelper from "@/lib/resend";
 import {
   requireAuthenticated,
   assertCanWriteBoard,
+  assertAssignableUser,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+import { assertIdString } from "@/lib/authz/ids";
 
 export const createTaskInBoard = async (data: {
   boardId: string;
@@ -37,6 +39,10 @@ export const createTaskInBoard = async (data: {
 
   try {
     await assertCanWriteBoard(authzUser, boardId);
+    assertIdString(section);
+    const sec = await prismadb.sections.findUnique({ where: { id: section }, select: { board: true } });
+    if (sec?.board !== boardId) throw new AuthorizationError();
+    if (user && user !== authzUser.id) await assertAssignableUser(authzUser, user);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
@@ -91,8 +97,8 @@ export const createTaskInBoard = async (data: {
         content,
         dueDateAt,
         section,
-        createdBy: user,
-        updatedBy: user,
+        createdBy: authzUser.id,
+        updatedBy: authzUser.id,
         position: tasksCount > 0 ? tasksCount : 0,
         user,
         taskStatus: "ACTIVE",

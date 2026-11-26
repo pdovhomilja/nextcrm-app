@@ -10,6 +10,7 @@ jest.mock("@/lib/authz", () => ({
   PARTNER_EDIT: { partnerEdit: true },
   requireAuthenticated: jest.fn(),
   assertCanWriteAccount: (...a: unknown[]) => mockAssertAccount(...a),
+  assertAssignableUser: jest.fn(),
   AuthenticationError: jest.requireActual("@/lib/authz/errors").AuthenticationError,
   AuthorizationError: jest.requireActual("@/lib/authz/errors").AuthorizationError,
 }));

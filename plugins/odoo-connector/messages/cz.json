@@ -107,6 +107,7 @@
     "noPriceList": "Zákazník nemá v Odoo ceník",
     "currency": "Měna objednávky {order} se liší od měny ceníku v Odoo {list}",
     "otherLines": "V Odoo už je jako {name} s jinými řádky; požádejte o její zrušení v Odoo a klikněte na Zkusit znovu",
+    "partnerLinked": "Zákazník Odoo {partner} je už propojený s jiným účtem; zkontrolujte IČO a DIČ účtu",
     "linesMissing": "Nezobrazené řádky: {count} (produkty nejsou v CRM)"
   },
   "tab": {

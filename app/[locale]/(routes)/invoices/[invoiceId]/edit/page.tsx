@@ -4,12 +4,14 @@ import { prismadb } from "@/lib/prisma";
 import Container from "@/app/[locale]/(routes)/components/ui/Container";
 import { InvoiceForm } from "../../components/invoice-form";
 import { getInvoiceById } from "../../data/get-invoices";
+import { requireAuthenticated } from "@/lib/authz";
 
 interface Props {
   params: Promise<{ invoiceId: string }>;
 }
 
 export default async function EditInvoicePage({ params }: Props) {
+  await requireAuthenticated();
   const { invoiceId } = await params;
   const t = await getTranslations("InvoicesPage");
   const invoice = await getInvoiceById(invoiceId);

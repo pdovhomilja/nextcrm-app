@@ -92,7 +92,7 @@ const PARTNER_WITH_OWN_ACCOUNT = new Set([
 ]);
 // Partner writes: allowed only with PARTNER_EDIT, always through partnerUserId
 // (never his own company account). assertPartnerCanLinkActivity is the
-// activity-link check those writes share.
+// activity-link check those writes share (assertCanLinkActivity hands partners to it).
 const PARTNER_EDITS = new Set([
   "crm.assertCanWriteAccount", "crm.assertCanWriteContact", "crm.assertCanWriteLead",
   "crm.assertCanWriteOpportunity", "crm.assertCanWriteCrmTask",
@@ -138,7 +138,7 @@ function argsFor(name: string, user: AuthzUser): unknown[][] {
   if (name === "assertCanReadActivityForEntity") {
     return ACTIVITY_ENTITY_TYPES.map((t) => [user, t, "row-1"]);
   }
-  if (name === "assertPartnerCanLinkActivity") return [[user, [{ entityType: "account", entityId: "row-1" }]]];
+  if (name === "assertPartnerCanLinkActivity" || name === "assertCanLinkActivity") return [[user, [{ entityType: "account", entityId: "row-1" }]]];
   if (name === "assertCanWritePriceList") return [[user, { source: "CRM" }]];
   return [[user, "row-1"]];
 }
@@ -229,7 +229,7 @@ describe("partner: his own read scope, everything else denied", () => {
           ? PARTNER_ACTIVITY_TYPES.has(String(args[1]))
           : PARTNER_READS.has(label);
       if (reads) await expectPartnerRead(call_, fn, args, PARTNER_WITH_OWN_ACCOUNT.has(label));
-      else if (name === "assertPartnerCanLinkActivity") await expectPartnerRead(call_, fn, args, false);
+      else if (name === "assertPartnerCanLinkActivity" || name === "assertCanLinkActivity") await expectPartnerRead(call_, fn, args, false);
       else await expectDenied(call_, call(fn, args));
     }
   });

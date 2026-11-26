@@ -94,3 +94,14 @@ describe("tryScopedUpdateTarget", () => {
     expect(ok).toBe(false);
   });
 });
+
+describe("tryScoped updates with a non-string id", () => {
+  it.each([
+    ["contact", () => tryScopedUpdateContact({ id: "u1", role: "admin" }, { in: ["c1", "c2"] } as never, { website: "x" }), updateManyContact],
+    ["target", () => tryScopedUpdateTarget({ id: "u1", role: "admin" }, { in: ["t1", "t2"] } as never, { website: "x" }), updateManyTarget],
+  ] as const)("%s: returns false and updates nothing", async (_label, call, updateMany) => {
+    (updateMany as jest.Mock).mockResolvedValue({ count: 2 });
+    expect(await call()).toBe(false);
+    expect(updateMany).not.toHaveBeenCalled();
+  });
+});

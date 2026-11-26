@@ -10,6 +10,7 @@ jest.mock("@/lib/prisma", () => {
     crm_Activities: { create: jest.fn(), update: jest.fn() },
     crm_Targets: { create: jest.fn() },
     users: { findFirst: jest.fn() },
+    calendarConnection: { findUnique: jest.fn() },
   };
   mock.$transaction = jest.fn(async (fn: (tx: unknown) => unknown) => fn(mock));
   return { prismadb: mock };
@@ -30,6 +31,7 @@ const createActivity = prismadb.crm_Activities.create as jest.Mock;
 const updateActivity = prismadb.crm_Activities.update as jest.Mock;
 const createTarget = prismadb.crm_Targets.create as jest.Mock;
 const findUser = prismadb.users.findFirst as jest.Mock;
+const findConnection = prismadb.calendarConnection.findUnique as jest.Mock;
 const match = matchCounterparty as jest.Mock;
 const transaction = prismadb.$transaction as jest.Mock;
 
@@ -52,6 +54,7 @@ beforeEach(() => {
   findUnique.mockResolvedValue(null);
   findMany.mockResolvedValue([]);
   findUser.mockResolvedValue(null);
+  findConnection.mockResolvedValue({ user: { id: "u1", role: "user" } });
   createActivity.mockResolvedValue({ id: "act1" });
   createMapping.mockResolvedValue({ id: "map1" });
 });
@@ -182,5 +185,39 @@ describe("upsertCalendarEvent", () => {
     transaction.mockRejectedValueOnce(Object.assign(new Error("dup"), { code: "P2002" }));
     const res = await upsertCalendarEvent(input());
     expect(res).toEqual({ action: "skipped", reason: "concurrent-duplicate" });
+  });
+
+  it("matches a google event within the connection owner's scope", async () => {
+    match.mockResolvedValue([{ entityType: "contact", entityId: "c1" }]);
+    await upsertCalendarEvent(input({ source: "google", externalId: "gev1", connectionId: "conn1" }));
+    expect(findConnection).toHaveBeenCalledWith(expect.objectContaining({ where: { id: "conn1" } }));
+    expect(match).toHaveBeenCalledWith(["jane@client.com"], { id: "u1", role: "user" });
+  });
+
+  it("matches calendly bookings org-wide", async () => {
+    match.mockResolvedValue([{ entityType: "contact", entityId: "c1" }]);
+    await upsertCalendarEvent(input());
+    expect(match).toHaveBeenCalledWith(["jane@client.com"]);
+  });
+
+  it("skips a google event without a known connection owner", async () => {
+    findConnection.mockResolvedValue(null);
+    const res = await upsertCalendarEvent(input({ source: "google", externalId: "gev1", connectionId: "conn1" }));
+    expect(res).toEqual({ action: "skipped", reason: "no-match" });
+    expect(createActivity).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["cancel", { status: "cancelled" as const }],
+    ["reschedule", { startAt: new Date("2026-07-22T10:00:00Z") }],
+  ])("leaves a google event synced through another connection alone (%s)", async (_l, over) => {
+    findUnique.mockResolvedValue({
+      id: "map1", activityId: "act1", status: "scheduled", connectionId: "conn-other",
+      startAt: new Date("2026-07-21T10:00:00Z"),
+    });
+    const res = await upsertCalendarEvent(input({ source: "google", externalId: "gev1", connectionId: "conn1", ...over }));
+    expect(res).toEqual({ action: "skipped", reason: "other-connection" });
+    expect(updateMapping).not.toHaveBeenCalled();
+    expect(updateActivity).not.toHaveBeenCalled();
   });
 });

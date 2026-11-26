@@ -72,6 +72,8 @@ To create a template, open **Templates** and click **+ New Template**. Enter a *
 
 To draft the body with AI, describe the email under **Generate with AI** and click **Generate**. This uses an OpenAI key; if none is available, add one under [Profile → LLMs](/docs/users/profile).
 
+When an email is sent, inline styles in the body are limited to text, font, color and background color, alignment, spacing, border, list, table and size properties. Background images and any style value that loads a resource (`url(...)`) or uses CSS variables are removed; effects such as shadows and opacity are dropped too.
+
 You can personalise subject and body with merge tags. NextCRM replaces them with each recipient's data:
 
 | Tag | Replaced with |
@@ -104,6 +106,8 @@ Open **All Campaigns** and click **+ New Campaign**. The wizard has four steps.
 <Callout type="warn">
 Only managers and admins can send or schedule a campaign. If you have the user role, ask a manager to send it for you. The same rule applies to the MCP tools `campaigns_send` and `campaigns_resume`.
 </Callout>
+
+Once a campaign is scheduled, sending or paused, only managers and admins can change what it sends: the campaign itself, its steps, the templates it uses, the target lists it sends to (adding or removing targets, linking or unlinking lists), and the fields a send uses on those targets (email, first and last name, company, position). With the user role you get the message "Used by a scheduled, sending or paused campaign: only a manager or admin can change it". Anyone who can edit a campaign can still pause it. Resuming or rescheduling a paused campaign needs a manager. Draft campaigns stay editable.
 
 If the wizard cannot send or schedule a campaign for any reason, it still saves the campaign, shows the reason and opens the campaign.
 

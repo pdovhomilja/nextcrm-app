@@ -1,5 +1,6 @@
 "use server";
 import * as svc from "@/lib/crm/accounts/service";
+import { accountFieldsSchema } from "./account-input";
 import { runAccountAction } from "./run";
 
 export const updateAccount = async (data: {
@@ -29,14 +30,20 @@ export const updateAccount = async (data: {
   industry?: string;
   pricelist_id?: string | null;
 }) => {
-  const { id, ...rest } = data;
+  const { id, ...fields } = data ?? {};
   if (!id) return { error: "id is required" };
+  // The fields the form sends, nothing else: the parameter type does not hold at runtime.
+  const parsed = accountFieldsSchema.partial().safeParse(fields);
+  if (!parsed.success) return { error: "Invalid input" };
+  const rest = parsed.data;
 
   return runAccountAction({ verb: "update", auth: { partner: true } }, async (user) => {
     const account = await svc.updateAccount(user, id, {
       ...rest,
-      // An empty price list select clears it.
+      // An empty price list or industry select clears it; an empty assignee keeps the current one.
       ...(rest.pricelist_id === "" && { pricelist_id: null }),
+      ...(rest.industry === "" && { industry: null }),
+      ...(rest.assigned_to === "" && { assigned_to: undefined }),
     });
     return { data: account };
   });

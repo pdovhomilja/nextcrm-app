@@ -62,7 +62,7 @@ Resend also offers SMTP (`smtp.resend.com`), so one Resend account can serve bot
 
 ## User mailboxes
 
-Users connect IMAP/SMTP accounts in their profile under **Emails**. NextCRM stores the credentials encrypted with `EMAIL_ENCRYPTION_KEY` and syncs every active account every 15 minutes through Inngest. Synced emails are linked to matching CRM records and embedded for search (embedding needs `OPENAI_API_KEY`).
+Users connect IMAP/SMTP accounts in their profile under **Emails**. NextCRM stores the credentials encrypted with `EMAIL_ENCRYPTION_KEY` and syncs every active account every 15 minutes through Inngest. Synced emails are linked to matching CRM records the mailbox owner can see and embedded for search (embedding needs `OPENAI_API_KEY`).
 
 By default the server refuses to connect to mail hosts that resolve to private or internal addresses. If your mail server is on an internal network, set `MAIL_ALLOW_PRIVATE_HOSTS=true`.
 

@@ -3,10 +3,12 @@ import { getTranslations } from "next-intl/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { listPluginsForAdmin } from "@/lib/plugins/state";
+import { requireRole } from "@/lib/authz";
 
 const STATUS_KEY = { NOT_INSTALLED: "notInstalled", ENABLED: "enabled", DISABLED: "disabled", MISSING: "missing" } as const;
 
 export default async function PluginsPage() {
+  await requireRole(["admin"]);
   const t = await getTranslations("Plugins.admin");
   const plugins = await listPluginsForAdmin();
   return (

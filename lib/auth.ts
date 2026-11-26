@@ -6,6 +6,7 @@ import { prismadb } from "@/lib/prisma";
 import { ac, admin, manager, user, partner } from "@/lib/auth-permissions";
 import { newUserNotify } from "@/lib/new-user-notify";
 import resendHelper from "@/lib/resend";
+import { isTestOtpEnabled } from "@/lib/test-otp";
 
 const isDemo = process.env.NEXT_PUBLIC_APP_URL === "https://demo.nextcrm.io";
 
@@ -87,10 +88,8 @@ export const auth = betterAuth({
         }
       },
     }),
-    // testUtils captures OTPs for E2E testing — only enabled in non-production
-    ...(process.env.NODE_ENV !== "production"
-      ? [testUtils({ captureOTP: true })]
-      : []),
+    // testUtils captures OTPs for E2E testing — non-production + NEXTCRM_E2E_TEST_OTP=1 only
+    ...(isTestOtpEnabled() ? [testUtils({ captureOTP: true })] : []),
     adminPlugin({
       ac,
       roles: { admin, manager, user, partner },

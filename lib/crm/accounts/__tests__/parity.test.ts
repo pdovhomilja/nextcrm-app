@@ -180,12 +180,16 @@ it("a soft-deleted account is neither edited nor deleted again, on either path",
 
 it("columns outside the account form are not written through either path", async () => {
   const crafted = { partnerUserId: REP, case_study_approved: true, createdBy: REP, deletedAt: null, watchers: {} };
-  await updateAccount({ id: ACC, name: "Acme", ...crafted } as never);
+  // The server action refuses them (its input is the form's fields, strict) ...
+  await expect(updateAccount({ id: ACC, name: "Acme", ...crafted } as never)).resolves.toEqual({ error: "Invalid input" });
+  await expect(createAccount({ name: "Acme", ...crafted } as never)).resolves.toEqual({ error: "Invalid input" });
+  expect(db.crm_Accounts.update).not.toHaveBeenCalled();
+  expect(db.crm_Accounts.create).not.toHaveBeenCalled();
+  // ... the MCP tool's schema drops them, and the service copies only AccountInput keys.
   await mcp("crm_update_account", { id: ACC, name: "Acme", ...crafted });
-  await createAccount({ name: "Acme", ...crafted } as never);
   await mcp("crm_create_account", { name: "Acme", ...crafted });
   const writes = [...db.crm_Accounts.update.mock.calls, ...db.crm_Accounts.create.mock.calls].map(([q]) => q.data);
-  expect(writes).toHaveLength(4);
+  expect(writes).toHaveLength(2);
   for (const data of writes) {
     expect(data.partnerUserId).toBeUndefined();
     expect(data).not.toHaveProperty("case_study_approved");

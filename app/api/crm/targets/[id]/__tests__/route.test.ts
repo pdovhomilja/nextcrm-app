@@ -1,3 +1,10 @@
+// The approval lock is tested on Postgres in __tests__/campaigns/approval-lock.test.ts.
+jest.mock("@/lib/campaigns/approval-lock", () => ({
+  assertTargetEditable: jest.fn(),
+  CampaignLockedError: class CampaignLockedError extends Error {},
+}));
+// Scope is decided by the scoped updateMany below; the pre-check is tested on Postgres.
+jest.mock("@/lib/authz", () => ({ ...jest.requireActual("@/lib/authz"), assertCanWriteTarget: jest.fn() }));
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {

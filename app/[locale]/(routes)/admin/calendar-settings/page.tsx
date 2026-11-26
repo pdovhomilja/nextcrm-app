@@ -1,7 +1,9 @@
 import { getCalendlySettings } from "@/lib/crm/calendar/calendly-settings";
 import { CalendlyForm } from "./_components/CalendlyForm";
+import { requireRole } from "@/lib/authz";
 
 export default async function CalendarSettingsPage() {
+  await requireRole(["admin"]);
   const settings = await getCalendlySettings();
 
   return (

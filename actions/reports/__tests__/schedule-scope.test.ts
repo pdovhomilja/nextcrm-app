@@ -1,7 +1,7 @@
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
-    users: { findUnique: jest.fn() },
+    users: { findUnique: jest.fn(), findMany: jest.fn() },
     crm_Report_Config: { findUnique: jest.fn() },
     crm_Report_Schedule: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
   },
@@ -14,6 +14,7 @@ import { createSchedule, listSchedules, updateSchedule, deleteSchedule } from "@
 const mockUser = (role: "user" | "manager" | "admin", id = "u1") => {
   (getSession as jest.Mock).mockResolvedValue({ user: { id } });
   (prismadb.users.findUnique as jest.Mock).mockResolvedValue({ id, role });
+  (prismadb.users.findMany as jest.Mock).mockResolvedValue([{ email: "colleague@crm.example" }]);
 };
 
 describe("report schedule scope", () => {
@@ -24,7 +25,7 @@ describe("report schedule scope", () => {
       (getSession as jest.Mock).mockResolvedValue(null);
     });
     it.each([
-      ["createSchedule", () => createSchedule({ reportConfigId: "c1", cronExpression: "0 9 * * 1", recipients: [], format: "pdf" as const })],
+      ["createSchedule", () => createSchedule({ reportConfigId: "c1", cronExpression: "0 9 * * 1", recipients: ["colleague@crm.example"], format: "pdf" as const })],
       ["listSchedules", () => listSchedules()],
       ["updateSchedule", () => updateSchedule("s1", {})],
       ["deleteSchedule", () => deleteSchedule("s1")],
@@ -38,7 +39,7 @@ describe("report schedule scope", () => {
       mockUser("user", "u1");
       (prismadb.crm_Report_Config.findUnique as jest.Mock).mockResolvedValue({ id: "c1", createdBy: "u1", isShared: false });
       (prismadb.crm_Report_Schedule.create as jest.Mock).mockResolvedValue({});
-      await createSchedule({ reportConfigId: "c1", cronExpression: "0 9 * * 1", recipients: [], format: "pdf" });
+      await createSchedule({ reportConfigId: "c1", cronExpression: "0 9 * * 1", recipients: ["colleague@crm.example"], format: "pdf" });
       expect(prismadb.crm_Report_Schedule.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ reportConfigId: "c1", createdBy: "u1" }),
       });
@@ -48,7 +49,7 @@ describe("report schedule scope", () => {
       mockUser("user", "u1");
       (prismadb.crm_Report_Config.findUnique as jest.Mock).mockResolvedValue({ id: "c1", createdBy: "u2", isShared: true });
       (prismadb.crm_Report_Schedule.create as jest.Mock).mockResolvedValue({});
-      await createSchedule({ reportConfigId: "c1", cronExpression: "0 9 * * 1", recipients: [], format: "pdf" });
+      await createSchedule({ reportConfigId: "c1", cronExpression: "0 9 * * 1", recipients: ["colleague@crm.example"], format: "pdf" });
       expect(prismadb.crm_Report_Schedule.create).toHaveBeenCalled();
     });
 
@@ -56,7 +57,7 @@ describe("report schedule scope", () => {
       mockUser("user", "u1");
       (prismadb.crm_Report_Config.findUnique as jest.Mock).mockResolvedValue({ id: "c1", createdBy: "u2", isShared: false });
       await expect(
-        createSchedule({ reportConfigId: "c1", cronExpression: "0 9 * * 1", recipients: [], format: "pdf" })
+        createSchedule({ reportConfigId: "c1", cronExpression: "0 9 * * 1", recipients: ["colleague@crm.example"], format: "pdf" })
       ).rejects.toThrow(/Forbidden/i);
       expect(prismadb.crm_Report_Schedule.create).not.toHaveBeenCalled();
     });
@@ -65,7 +66,7 @@ describe("report schedule scope", () => {
       mockUser("user", "u1");
       (prismadb.crm_Report_Config.findUnique as jest.Mock).mockResolvedValue(null);
       await expect(
-        createSchedule({ reportConfigId: "c1", cronExpression: "0 9 * * 1", recipients: [], format: "pdf" })
+        createSchedule({ reportConfigId: "c1", cronExpression: "0 9 * * 1", recipients: ["colleague@crm.example"], format: "pdf" })
       ).rejects.toThrow(/Not found/i);
     });
   });

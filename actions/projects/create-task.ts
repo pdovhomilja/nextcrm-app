@@ -7,6 +7,7 @@ import resendHelper from "@/lib/resend";
 import {
   requireAuthenticated,
   assertCanWriteBoard,
+  assertAssignableUser,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
@@ -39,6 +40,7 @@ export const createTask = async (data: {
 
   try {
     await assertCanWriteBoard(authzUser, board);
+    if (user !== authzUser.id) await assertAssignableUser(authzUser, user);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;

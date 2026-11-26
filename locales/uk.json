@@ -636,7 +636,8 @@
       "namePlaceholder": "e.g. Q1 Sales Pipeline",
       "shareLabel": "Share with team",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "saveFailed": "Не вдалося зберегти звіт. Назва має містити від 1 до 120 символів."
     },
     "scheduleDialog": {
       "title": "Schedule Report",
@@ -654,7 +655,8 @@
       "format": "Format",
       "both": "Both (CSV + PDF)",
       "cancel": "Cancel",
-      "create": "Create Schedule"
+      "create": "Create Schedule",
+      "createFailed": "Не вдалося створити розклад. Перевірте частоту, вкажіть від 1 до 10 електронних адрес і (якщо ви не менеджер) лише адреси активних користувачів."
     },
     "savedReports": {
       "placeholder": "Saved reports...",

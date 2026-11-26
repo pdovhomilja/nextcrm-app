@@ -639,7 +639,8 @@
       "namePlaceholder": "e.g. Q1 Sales Pipeline",
       "shareLabel": "Share with team",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "saveFailed": "Report se nepodařilo uložit. Název musí mít 1 až 120 znaků."
     },
     "scheduleDialog": {
       "title": "Schedule Report",
@@ -657,7 +658,8 @@
       "format": "Format",
       "both": "Both (CSV + PDF)",
       "cancel": "Cancel",
-      "create": "Create Schedule"
+      "create": "Create Schedule",
+      "createFailed": "Plán se nepodařilo vytvořit. Zkontrolujte frekvenci, zadejte 1 až 10 e-mailových adres a (pokud nejste manažer) jen adresy aktivních uživatelů."
     },
     "savedReports": {
       "placeholder": "Saved reports...",

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FIELD_MAP } from "@/lib/enrichment/presets/target-fields";
+import { assertTargetEditable, CampaignLockedError } from "@/lib/campaigns/approval-lock";
 import {
   requireAuthenticated,
   unauthorizedResponse,
   notFoundOrForbiddenResponse,
   AuthenticationError,
+  AuthorizationError,
+  assertCanWriteTarget,
   tryScopedUpdateTarget,
 } from "@/lib/authz";
 
@@ -35,6 +38,16 @@ export async function PATCH(
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+  }
+
+  // Scope first, so the lock message never reveals a target the caller can't write.
+  try {
+    await assertCanWriteTarget(user, id);
+    await assertTargetEditable(user, id, updates);
+  } catch (e) {
+    if (e instanceof AuthorizationError) return notFoundOrForbiddenResponse();
+    if (e instanceof CampaignLockedError) return NextResponse.json({ error: e.message }, { status: 409 });
+    throw e;
   }
 
   const ok = await tryScopedUpdateTarget(user, id, updates);

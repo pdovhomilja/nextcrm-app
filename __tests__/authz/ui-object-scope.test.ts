@@ -16,9 +16,15 @@ import { prismadb } from "@/lib/prisma";
 import { getSession } from "@/lib/auth-server";
 import { updateCampaign } from "@/actions/campaigns/update-campaign";
 import { createCampaign } from "@/actions/campaigns/create-campaign";
+import { updateTemplate } from "@/actions/campaigns/templates/update-template";
 import { updateContract } from "@/actions/crm/contracts/update-contract";
 import { createOpportunity } from "@/actions/crm/opportunities/create-opportunity";
 import { updateOpportunity } from "@/actions/crm/opportunities/update-opportunity";
+import { deleteOrder } from "@/actions/crm/orders/orders";
+import { getOrderFormData, getOrderHistory } from "@/actions/crm/orders/queries";
+import { getAuditLogByEntity } from "@/actions/crm/audit-log/get-audit-log-by-entity";
+import { getActivitiesByEntity } from "@/actions/crm/activities/get-activities-by-entity";
+import { getDocumentVersions } from "@/actions/documents/get-document-versions";
 
 const tag = randomUUID().slice(0, 8);
 const U = { rep: randomUUID(), other: randomUUID(), boss: randomUUID(), partner: randomUUID() };
@@ -156,6 +162,61 @@ describe("updateCampaign fields", () => {
   });
 });
 
+// Same rule for templates: only the five editor fields reach Prisma.
+describe("updateTemplate fields", () => {
+  const template = (id: string) => prismadb.crm_campaign_templates.findUnique({ where: { id } });
+  const owner = () => prismadb.users.findUnique({ where: { id: U.rep } });
+
+  beforeEach(async () => {
+    await prismadb.crm_campaign_templates.update({ where: { id: TPL.rep }, data: { created_by: U.rep, deletedAt: null } });
+  });
+
+  it.each<[string, () => object]>([
+    ["relation write on owner", () => ({ created_by_user: { update: { name: `x-${tag}` } } })],
+    ["relation connect on owner", () => ({ created_by_user: { connect: { id: U.other } } })],
+    ["created_by", () => ({ created_by: U.other })],
+    ["deletedAt", () => ({ deletedAt: new Date("2026-01-01") })],
+    ["an allowed field next to a forbidden one", () => ({ name: `x-${tag}`, created_by: U.other })],
+    ["content_json that is not an object", () => ({ content_json: "x" })],
+    ["empty name", () => ({ name: "" })],
+    ["data that is not an object", () => null as unknown as object],
+  ])("rejects fields outside the template schema: %s", async (_label, payload) => {
+    as("rep");
+    const [tplBefore, ownerBefore] = [await template(TPL.rep), await owner()];
+    expect(await updateTemplate(TPL.rep, payload() as never)).toEqual({ error: "Invalid input" });
+    expect(await template(TPL.rep)).toEqual(tplBefore);
+    expect(await owner()).toEqual(ownerBefore);
+  });
+
+  it("rejects an id that is not a string", async () => {
+    as("rep");
+    const before = await template(TPL.rep);
+    expect(await updateTemplate({ not: TPL.other } as never, { name: `x-${tag}` })).toEqual({ error: "Invalid input" });
+    expect(await template(TPL.rep)).toEqual(before);
+  });
+
+  it("writes the five editor fields", async () => {
+    as("rep");
+    // The shape TipTap's editor.getJSON() hands the editor form.
+    const doc = { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Hi" }] }] };
+    await updateTemplate(TPL.rep, {
+      name: `five-${tag}`,
+      description: "d",
+      subject_default: "s",
+      content_html: "<p>Hi</p>",
+      content_json: doc,
+    });
+    expect(await template(TPL.rep)).toMatchObject({
+      name: `five-${tag}`,
+      description: "d",
+      subject_default: "s",
+      content_html: "<p>Hi</p>",
+      content_json: doc,
+      created_by: U.rep,
+    });
+  });
+});
+
 describe("updateCampaign template_id", () => {
   const templateOf = async (id: string) =>
     (await prismadb.crm_campaigns.findUnique({ where: { id }, select: { template_id: true } }))!.template_id;
@@ -283,5 +344,88 @@ describe("opportunity campaign", () => {
     expect(await row(OPP.repOnOther)).toEqual({ campaign: null, name: `clear-${tag}` });
     expect(await updateOpportunity({ id: OPP.rep, name: `null-${tag}`, campaign: null })).not.toHaveProperty("error");
     expect(await row(OPP.rep)).toEqual({ campaign: null, name: `null-${tag}` });
+  });
+});
+
+// Record ids reach the actions as whatever the client posts. A value that is
+// not a plain string id is refused like an unknown id, and no other row is
+// read or changed. Each call names one row rep may use and one he may not.
+describe("non-string id arguments", () => {
+  const ORD = { rep: randomUUID(), other: randomUUID() };
+  const ACT = { rep: randomUUID(), other: randomUUID() };
+  const DOC = { rep: randomUUID(), other: randomUUID() };
+  const both = (ids: { rep: string; other: string }) => ({ in: [ids.rep, ids.other] }) as never;
+
+  beforeAll(async () => {
+    const series = await prismadb.numberSeries.create({
+      data: { scope: "order", name: `s-${tag}`, template: `T${tag}-{n}` },
+    });
+    const currency = (await prismadb.currency.findFirst({ select: { code: true } }))!.code;
+    for (const k of ["rep", "other"] as const) {
+      await prismadb.crm_Orders.create({
+        data: { id: ORD[k], number: `${k}-${tag}`, seriesId: series.id, accountId: ACC[k], currency, ownerId: U[k], createdBy: U[k] },
+      });
+      await prismadb.crm_AuditLog.create({ data: { entityType: "account", entityId: ACC[k], action: "updated", userId: U[k] } });
+      await prismadb.crm_AuditLog.create({ data: { entityType: "order", entityId: ORD[k], action: "created", userId: U[k] } });
+      await prismadb.crm_Contacts.create({
+        data: { last_name: `${k}-${tag}`, accountsIDs: ACC[k], assigned_to: U[k], createdBy: U[k] },
+      });
+      await prismadb.crm_Activities.create({
+        data: { id: ACT[k], type: "note", title: `${k}-${tag}`, date: new Date(), createdBy: U[k], links: { create: { entityType: "account", entityId: ACC[k] } } },
+      });
+      await prismadb.documents.create({
+        data: { id: DOC[k], document_name: `${k}-${tag}`, document_file_url: "x", document_file_mimeType: "text/plain", created_by_user: U[k] },
+      });
+    }
+  });
+
+  afterAll(async () => {
+    await prismadb.crm_Orders.deleteMany({ where: { id: { in: Object.values(ORD) } } });
+    await prismadb.crm_AuditLog.deleteMany({ where: { entityId: { in: [...Object.values(ACC), ...Object.values(ORD)] } } });
+    await prismadb.crm_Contacts.deleteMany({ where: { accountsIDs: { in: Object.values(ACC) }, last_name: { contains: tag } } });
+    await prismadb.crm_ActivityLinks.deleteMany({ where: { activityId: { in: Object.values(ACT) } } });
+    await prismadb.crm_Activities.deleteMany({ where: { id: { in: Object.values(ACT) } } });
+    await prismadb.documents.deleteMany({ where: { id: { in: Object.values(DOC) } } });
+    await prismadb.numberSeries.deleteMany({ where: { name: `s-${tag}` } });
+  });
+
+  it("deleteOrder refuses it and deletes no draft", async () => {
+    as("rep");
+    expect(await deleteOrder(both(ORD))).toEqual({ error: "notFound" });
+    expect(await prismadb.crm_Orders.count({ where: { id: { in: Object.values(ORD) } } })).toBe(2);
+  });
+
+  it("getAuditLogByEntity refuses it and returns no entries", async () => {
+    as("rep");
+    expect(await getAuditLogByEntity("account", both(ACC))).toEqual({ data: [], nextCursor: null });
+  });
+
+  it("getActivitiesByEntity refuses it and returns no activities", async () => {
+    as("rep");
+    expect(await getActivitiesByEntity("account", both(ACC))).toEqual({ data: [], nextCursor: null });
+  });
+
+  it("getDocumentVersions refuses it and returns no documents", async () => {
+    as("rep");
+    expect(await getDocumentVersions(both(DOC))).toEqual([]);
+  });
+
+  it("getOrderFormData lists only contacts of the account it found", async () => {
+    as("rep");
+    const form = await getOrderFormData(both(ACC));
+    expect(form?.contacts.map((c) => c.name)).toEqual([`rep-${tag}`]);
+  });
+
+  it("getOrderHistory lists only entries of the order it found", async () => {
+    as("rep");
+    const history = await getOrderHistory(both(ORD));
+    expect(history.map((h) => h.action)).toEqual(["created"]);
+  });
+
+  it("the same calls with rep's own string id still return his rows", async () => {
+    as("rep");
+    expect((await getAuditLogByEntity("account", ACC.rep)).data).toHaveLength(1);
+    expect((await getActivitiesByEntity("account", ACC.rep)).data.map((a) => a.id)).toEqual([ACT.rep]);
+    expect((await getDocumentVersions(DOC.rep)).map((d) => d.id)).toEqual([DOC.rep]);
   });
 });

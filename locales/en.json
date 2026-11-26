@@ -636,7 +636,8 @@
       "namePlaceholder": "e.g. Q1 Sales Pipeline",
       "shareLabel": "Share with team",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "saveFailed": "Could not save the report. Use a name of 1 to 120 characters."
     },
     "scheduleDialog": {
       "title": "Schedule Report",
@@ -654,7 +655,8 @@
       "format": "Format",
       "both": "Both (CSV + PDF)",
       "cancel": "Cancel",
-      "create": "Create Schedule"
+      "create": "Create Schedule",
+      "createFailed": "Could not create the schedule. Check the frequency, use 1 to 10 email addresses, and (unless you are a manager) only addresses of active users."
     },
     "savedReports": {
       "placeholder": "Saved reports...",

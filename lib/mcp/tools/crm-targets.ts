@@ -8,7 +8,10 @@ import {
   ilike,
   notFound,
   softDeleteData,
+  assertCampaignUnlocked,
 } from "../helpers";
+import type { AuthzUser } from "@/lib/authz";
+import { assertTargetEditable } from "@/lib/campaigns/approval-lock";
 
 export const crmTargetTools = [
   {
@@ -124,13 +127,15 @@ export const crmTargetTools = [
         company?: string;
         position?: string;
       },
-      userId: string
+      userId: string,
+      user: AuthzUser
     ) {
       const existing = await prismadb.crm_Targets.findFirst({
         where: { id: args.id, created_by: userId, deletedAt: null },
       });
       if (!existing) notFound("Target");
       const { id, ...updateData } = args;
+      await assertCampaignUnlocked(() => assertTargetEditable(user, id, updateData));
       const target = await prismadb.crm_Targets.update({
         where: { id },
         data: { ...updateData, updatedBy: userId },

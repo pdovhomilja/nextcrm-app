@@ -31,9 +31,15 @@ export function countryCode(raw: unknown, fallback: string): string {
 }
 
 export function numberKey(account: { company_id?: unknown; billing_country?: unknown }, defaultCountry: string): string | null {
-  const raw = typeof account.company_id === "string" ? account.company_id.replace(/\s+/g, "").toUpperCase() : "";
+  const raw = typeof account.company_id === "string" ? account.company_id.replace(/[^A-Za-z0-9]/g, "").toUpperCase() : "";
   if (!raw) return null;
-  const cc = countryCode(account.billing_country, defaultCountry);
-  const number = cc === "CZ" && /^\d{1,8}$/.test(raw) ? raw.padStart(8, "0") : raw;
-  return `${cc}:${number}`;
+  // A Slovak VAT number is not the IČO: leave it unmatched rather than match it wrongly.
+  if (/^SK\d+$/.test(raw)) return null;
+  // A Czech VAT number of a company is "CZ" + its IČO; it wins over the billing country.
+  const czVat = /^CZ(\d+)$/.exec(raw);
+  const cc = czVat ? "CZ" : countryCode(account.billing_country, defaultCountry);
+  if (cc !== "CZ") return `${cc}:${raw}`;
+  const number = czVat ? czVat[1] : raw;
+  // An IČO has 8 digits; anything else cannot match a Czech company.
+  return /^\d{1,8}$/.test(number) ? `CZ:${number.padStart(8, "0")}` : null;
 }

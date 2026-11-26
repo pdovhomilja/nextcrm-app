@@ -1,11 +1,23 @@
 "use server";
+import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
+import { assertTemplateEditable, CampaignLockedError } from "@/lib/campaigns/approval-lock";
 import {
   requireAuthenticated,
   assertCanWriteTemplate,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
+
+// Strict: a server action takes whatever the client posts, the TypeScript type
+// below does not exist at runtime.
+const updateTemplateSchema = z.strictObject({
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+  subject_default: z.string().optional(),
+  content_html: z.string().optional(),
+  content_json: z.record(z.string(), z.unknown()).optional(),
+});
 
 export const updateTemplate = async (
   id: string,
@@ -25,12 +37,17 @@ export const updateTemplate = async (
     throw e;
   }
 
+  const parsed = updateTemplateSchema.safeParse(data);
+  if (typeof id !== "string" || !parsed.success) return { error: "Invalid input" };
+
   try {
     await assertCanWriteTemplate(user, id);
+    await assertTemplateEditable(user, id);
   } catch (e) {
     if (e instanceof AuthorizationError) return { error: "Not found" };
+    if (e instanceof CampaignLockedError) return { error: e.message };
     throw e;
   }
 
-  return prismadb.crm_campaign_templates.update({ where: { id }, data });
+  return prismadb.crm_campaign_templates.update({ where: { id }, data: parsed.data });
 };

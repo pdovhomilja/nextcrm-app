@@ -1,12 +1,14 @@
 import { WizardShell } from "./components/WizardShell";
 import { getTemplates } from "@/actions/campaigns/templates/get-templates";
 import { prismadb } from "@/lib/prisma";
+import { requireAuthenticated, targetListReadScopeWhere } from "@/lib/authz";
 
 export default async function NewCampaignPage() {
+  const user = await requireAuthenticated();
   const [templates, targetLists] = await Promise.all([
     getTemplates(),
     prismadb.crm_TargetLists.findMany({
-      where: { status: true },
+      where: { status: true, ...targetListReadScopeWhere(user) },
       orderBy: { name: "asc" },
       include: { _count: { select: { targets: true } } },
     }),

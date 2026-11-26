@@ -10,6 +10,7 @@ import { createSchedule } from "@/actions/reports/schedule";
 import { loadConfigs } from "@/actions/reports/config";
 import type { ExportFormat, ReportCategory } from "@/actions/reports/types";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 const FREQUENCY_CRON: Record<string, string> = {
   daily: "0 9 * * *",
@@ -42,9 +43,14 @@ export function ScheduleDialog({ open, onOpenChange }: ScheduleDialogProps) {
     if (!selectedConfigId || !recipients.trim()) return;
     setLoading(true);
     const cronExpression = frequency === "custom" ? customCron : FREQUENCY_CRON[frequency];
-    await createSchedule({ reportConfigId: selectedConfigId, cronExpression, recipients: recipients.split(",").map((e) => e.trim()), format });
-    setLoading(false);
-    onOpenChange(false);
+    try {
+      await createSchedule({ reportConfigId: selectedConfigId, cronExpression, recipients: recipients.split(",").map((e) => e.trim()).filter(Boolean), format });
+      onOpenChange(false);
+    } catch {
+      toast.error(t("createFailed"));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

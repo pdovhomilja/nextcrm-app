@@ -4,6 +4,7 @@ jest.mock("@/lib/prisma", () => ({
     users: { findUnique: jest.fn() },
     boards: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     tasks: { count: jest.fn(), create: jest.fn() },
+    sections: { findUnique: jest.fn().mockResolvedValue({ board: "b1" }) },
   },
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));

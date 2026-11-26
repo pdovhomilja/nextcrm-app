@@ -2,8 +2,10 @@ import Container from "@/app/[locale]/(routes)/components/ui/Container";
 import { getTranslations } from "next-intl/server";
 import { prismadb } from "@/lib/prisma";
 import { InvoiceForm } from "../components/invoice-form";
+import { requireAuthenticated } from "@/lib/authz";
 
 export default async function NewInvoicePage() {
+  await requireAuthenticated();
   const t = await getTranslations("InvoicesPage");
 
   const [products, taxRates, series, currencies, settings] =

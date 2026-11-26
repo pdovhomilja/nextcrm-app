@@ -2,6 +2,7 @@ import { definePlugin } from "@nextcrm/plugin-sdk";
 
 const findMany = jest.fn();
 let mockEmptyRegistry = false;
+jest.mock("@/lib/authz", () => ({ requireRole: jest.fn(async () => ({ id: "admin-1", role: "admin" })) }));
 jest.mock("@/lib/prisma-base", () => ({ prismaBase: { installedPlugin: { findMany: (...a: unknown[]) => findMany(...a) } } }));
 jest.mock("@/lib/plugins/registry", () => {
   const mk = (id: string) => ({ source: "public", messages: {}, definition: definePlugin({ id, name: id.toUpperCase(), version: "1.0.0", sdk: "^0.2.0", description: "d", permissions: [], extensions: () => {} }) });

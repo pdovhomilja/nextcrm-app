@@ -1,5 +1,7 @@
 const lookup = jest.fn();
 jest.mock("node:dns/promises", () => ({ lookup: (...a: unknown[]) => lookup(...a) }));
+// http.ts fetches through undici (pinned DNS); these tests stub the transport via global.fetch.
+jest.mock("undici", () => ({ ...jest.requireActual("undici"), fetch: (...a: unknown[]) => (global.fetch as (...b: unknown[]) => unknown)(...a) }));
 import { createHttp } from "@/lib/plugins/http";
 import { HostNotAllowedError } from "@/lib/net/host-guard";
 

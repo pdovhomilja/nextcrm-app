@@ -98,13 +98,17 @@ export default function TemplateEditorForm({ initialData, templateId }: Props) {
     setError(null);
     try {
       if (isEditing && templateId) {
-        await updateTemplate(templateId, {
+        const res = await updateTemplate(templateId, {
           name,
           description: description || undefined,
           subject_default: subject,
           content_html: contentHtml,
           content_json: contentJson,
         });
+        if ("error" in res && res.error) {
+          setError(res.error);
+          return;
+        }
       } else {
         await createTemplate({
           name,

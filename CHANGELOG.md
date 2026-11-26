@@ -5,6 +5,51 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.5](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.4...v0.42.5) (2026-11-25)
+
+
+### Fixed
+
+* **auth:** explicit opt-in for test helpers ([#532](https://github.com/pdovhomilja/nextcrm-app/issues/532)) ([1a9656b](https://github.com/pdovhomilja/nextcrm-app/commit/1a9656b18afcfda7edb254de3e028abb4f3f3519))
+* **campaigns:** allowlist CSS properties in email templates ([#533](https://github.com/pdovhomilja/nextcrm-app/issues/533)) ([934a518](https://github.com/pdovhomilja/nextcrm-app/commit/934a518e61945985933c107f8909671a52a9e252))
+* **enrichment:** harden E2B enrichment agent and jobs ([#536](https://github.com/pdovhomilja/nextcrm-app/issues/536)) ([a70dde2](https://github.com/pdovhomilja/nextcrm-app/commit/a70dde2aa1a90db876a0ebebab6f3e464c7e9632))
+* **odoo-connector:** never re-link an Odoo customer that belongs to another account (0.4.3) ([#534](https://github.com/pdovhomilja/nextcrm-app/issues/534)) ([3aa677d](https://github.com/pdovhomilja/nextcrm-app/commit/3aa677d6f1f6efb6b01fd99ac850db3e240d33da))
+* **reports:** limit scheduled report recipients and cadence, validate saved reports ([#535](https://github.com/pdovhomilja/nextcrm-app/issues/535)) ([0bdb411](https://github.com/pdovhomilja/nextcrm-app/commit/0bdb411d1c2f1fa8018a529e9893592c7d76f3b4))
+* scope mail and calendar matching, normalise protection key, drop MCP SSE ([#537](https://github.com/pdovhomilja/nextcrm-app/issues/537)) ([90f3562](https://github.com/pdovhomilja/nextcrm-app/commit/90f3562860be847e48041080e5f8540b0895bbe4))
+
+## [0.42.4](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.3...v0.42.4) (2026-11-23)
+
+
+### Fixed
+
+* **campaigns:** only managers change a scheduled, sending or paused campaign ([#529](https://github.com/pdovhomilja/nextcrm-app/issues/529)) ([4cb4042](https://github.com/pdovhomilja/nextcrm-app/commit/4cb40425fe37250746fe2e0bd65c9232aaece292))
+* **plugins:** pin checked DNS answers; compare API token in constant time ([#528](https://github.com/pdovhomilja/nextcrm-app/issues/528)) ([5264f36](https://github.com/pdovhomilja/nextcrm-app/commit/5264f3641b667cf8663e22ecec15af70e18ca337))
+* **reports:** validate schedule input; guard against raw input in Prisma writes ([#526](https://github.com/pdovhomilja/nextcrm-app/issues/526)) ([c170c3f](https://github.com/pdovhomilja/nextcrm-app/commit/c170c3fb06e63c40d97096f6ec81f45c8b25228f))
+* **tasks:** check sections, assignees and documents on task writes ([#527](https://github.com/pdovhomilja/nextcrm-app/issues/527)) ([3a64475](https://github.com/pdovhomilja/nextcrm-app/commit/3a64475a3ca932687700f44c54a1bb4d38f96038))
+
+## [0.42.3](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.2...v0.42.3) (2026-11-22)
+
+
+### Fixed
+
+* **accounts:** treat an empty industry as none ([#524](https://github.com/pdovhomilja/nextcrm-app/issues/524)) ([cdff876](https://github.com/pdovhomilja/nextcrm-app/commit/cdff876532fadae2901fc655eca520c7d99adf82))
+
+## [0.42.2](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.1...v0.42.2) (2026-11-22)
+
+
+### Fixed
+
+* **actions:** validate create/update input ([#522](https://github.com/pdovhomilja/nextcrm-app/issues/522)) ([985b6eb](https://github.com/pdovhomilja/nextcrm-app/commit/985b6eba6262e08e13675deea0d75d0ba1d8d019))
+
+## [0.42.1](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.0...v0.42.1) (2026-11-22)
+
+
+### Fixed
+
+* **authz:** validate id arguments in scope helpers ([#519](https://github.com/pdovhomilja/nextcrm-app/issues/519)) ([5c8b7ad](https://github.com/pdovhomilja/nextcrm-app/commit/5c8b7ad37a7d0ab63b93b858cbf8c141c83584fd))
+* **campaigns:** validate template update input ([#518](https://github.com/pdovhomilja/nextcrm-app/issues/518)) ([3a9a5e6](https://github.com/pdovhomilja/nextcrm-app/commit/3a9a5e62b0e2b4bfe8171c4da9feb1bffb5d020f))
+* **pages:** add page-level auth checks ([#520](https://github.com/pdovhomilja/nextcrm-app/issues/520)) ([5d0aa1b](https://github.com/pdovhomilja/nextcrm-app/commit/5d0aa1ba19ae3773de1c85a34e85b7175d6180a5))
+
 ## [0.42.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.41.0...v0.42.0) (2026-11-20)
 
 

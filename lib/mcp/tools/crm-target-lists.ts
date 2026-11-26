@@ -2,12 +2,14 @@ import { z } from "zod";
 import { prismadb } from "@/lib/prisma";
 import type { AuthzUser } from "@/lib/authz";
 import { filterAuthorizedTargetIds, targetListReadScopeWhere } from "@/lib/authz/scopes/crm";
+import { assertTargetListEditable } from "@/lib/campaigns/approval-lock";
 import {
   paginationSchema,
   paginationArgs,
   listResponse,
   itemResponse,
   notFound,
+  assertCampaignUnlocked,
   softDeleteData,
 } from "../helpers";
 
@@ -130,6 +132,7 @@ export const crmTargetListTools = [
       user: AuthzUser
     ) {
       await assertTargetListInScope(user, args.target_list_id);
+      await assertCampaignUnlocked(() => assertTargetListEditable(user, args.target_list_id));
       // Only attach targets the caller can access (same as the addTargetsToList action).
       const authorizedIds = await filterAuthorizedTargetIds(user, args.target_ids);
       await prismadb.targetsToTargetLists.createMany({
@@ -158,6 +161,7 @@ export const crmTargetListTools = [
       user: AuthzUser
     ) {
       await assertTargetListInScope(user, args.target_list_id);
+      await assertCampaignUnlocked(() => assertTargetListEditable(user, args.target_list_id));
       await prismadb.targetsToTargetLists.deleteMany({
         where: {
           target_list_id: args.target_list_id,
