@@ -5,6 +5,13 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.43.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.5...v0.43.0) (2026-11-26)
+
+
+### Added
+
+* **plugins:** PLUGIN_HTTP_HOST_MAP pins listed plugin HTTP hosts to an IP ([#540](https://github.com/pdovhomilja/nextcrm-app/issues/540)) ([cdd2cd4](https://github.com/pdovhomilja/nextcrm-app/commit/cdd2cd476d357ad6757515c27bc88d418812292a))
+
 ## [0.42.5](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.4...v0.42.5) (2026-11-25)
 
 
