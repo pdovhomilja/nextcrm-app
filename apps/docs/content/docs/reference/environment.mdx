@@ -7,7 +7,7 @@ description: "Every environment variable the app reads, from .env.example and th
 
 Every variable listed in `.env.example` or read as `process.env.NAME` in the app code (tests, scripts and the docs app excluded). **Required** is "yes" when the `.env.example` comment says so and empty when it says nothing; **Purpose** is that comment. Variables read under a computed name are not listed. What each variable does and when you need it: [Configuration reference](/docs/admins/configuration).
 
-58 variables.
+59 variables.
 
 | Variable | Required | In `.env.example` | Purpose | Read in |
 | --- | --- | --- | --- | --- |
@@ -59,6 +59,7 @@ Every variable listed in `.env.example` or read as `process.env.NAME` in the app
 | `OPENAI_API_KEY` |  | yes | AI. Leave empty to use keys saved in the admin panel. | `inngest/functions/documents/enrich-document.ts`, `inngest/lib/embedding-utils.ts` |
 | `PATH` |  | no |  | `lib/enrichment/e2b/agent-script.ts` |
 | `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS` |  | no |  | `lib/plugins/http.ts` |
+| `PLUGIN_HTTP_HOST_MAP` |  | yes | Plugin HTTP: dial these hosts at a fixed IP ("host=ip[,host=ip]"), private or not, e.g. the Docker gateway when the server cannot reach its own public IP. TLS and the Host header keep the hostname. Only listed hosts skip the private-address check. | `lib/plugins/http.ts` |
 | `RESEND_API_KEY` |  | yes | Email Service (Resend). Leave the key empty to use the one saved in Admin &gt; Resend; an env value always wins over the admin panel. | `inngest/functions/crm/kill-rule.ts`, `inngest/functions/crm/recycle-targets.ts`, `lib/crm/auto-task.ts` |
 | `RESEND_FROM_EMAIL` |  | yes | e.g. noreply@yourdomain.com | `inngest/functions/campaigns/send-step.ts`, `inngest/functions/crm/kill-rule.ts`, `inngest/functions/crm/recycle-targets.ts` +2 more |
 | `RESEND_WEBHOOK_SECRET` |  | yes | Resend webhook signing secret (whsec_…, Svix-signed) | `lib/campaigns/resend-signature.ts` |

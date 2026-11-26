@@ -169,6 +169,8 @@ services:
       # Allow mail servers / plugin HTTP calls to private IPs ("true")
       MAIL_ALLOW_PRIVATE_HOSTS: ${MAIL_ALLOW_PRIVATE_HOSTS:-}
       PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS: ${PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS:-}
+      # Pin plugin HTTP hosts to an IP: "host=ip[,host=ip]"
+      PLUGIN_HTTP_HOST_MAP: ${PLUGIN_HTTP_HOST_MAP:-}
     volumes:
       - app_data:/app/data
     depends_on:

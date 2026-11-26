@@ -54,7 +54,7 @@ Outside `NODE_ENV=production` and only with `NEXTCRM_E2E_TEST_OTP=1`, NextCRM en
 
 ## Server-side requests
 
-User mailboxes (IMAP/SMTP) and plugin HTTP calls go through guards that refuse private and internal IP addresses, which blocks requests into your internal network. The two opt-outs are `MAIL_ALLOW_PRIVATE_HOSTS=true` and `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS=true`.
+User mailboxes (IMAP/SMTP) and plugin HTTP calls go through guards that refuse private and internal IP addresses, which blocks requests into your internal network. The two opt-outs are `MAIL_ALLOW_PRIVATE_HOSTS=true` and `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS=true`. `PLUGIN_HTTP_HOST_MAP` opens only the plugin hosts it lists, each at a fixed IP.
 
 ## Audit
 

@@ -2,11 +2,40 @@ import { lookup as dnsLookup, type LookupAddress, type LookupOptions } from "nod
 import net from "node:net";
 import { Agent, fetch as undiciFetch } from "undici";
 import type { PluginHttp, PluginLogger } from "@nextcrm/plugin-sdk";
-import { assertPublicHost } from "@/lib/net/host-guard";
+import { assertPublicHost, HostNotAllowedError } from "@/lib/net/host-guard";
 
 const MAX_REDIRECTS = 5;
 
 const allowPrivateHosts = () => process.env.PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS === "true";
+
+// PLUGIN_HTTP_HOST_MAP="host=ip[,host=ip]": dial these hostnames at the given
+// IP, private or not (e.g. the Docker gateway when the instance cannot reach
+// its own public IP). Only listed hostnames, on the scheme's default port,
+// skip the host guard; any other port on them is refused.
+let parsedMap: { raw: string; map: Map<string, string> } | undefined;
+function hostMap(): Map<string, string> {
+  const raw = process.env.PLUGIN_HTTP_HOST_MAP ?? "";
+  if (parsedMap?.raw === raw) return parsedMap.map;
+  const map = new Map<string, string>();
+  for (const entry of raw.split(",").map((e) => e.trim()).filter(Boolean)) {
+    const i = entry.indexOf("=");
+    const host = entry.slice(0, i).trim().toLowerCase();
+    const ip = entry.slice(i + 1).trim();
+    if (i > 0 && net.isIP(ip) !== 0) map.set(host, ip);
+    else console.warn(`PLUGIN_HTTP_HOST_MAP: ignoring invalid entry "${entry}"`);
+  }
+  parsedMap = { raw, map };
+  return map;
+}
+
+async function guardHost(hostname: string, port: string, allowPrivate: boolean): Promise<{ address: string }> {
+  const mapped = hostMap().get(hostname.toLowerCase());
+  if (mapped) {
+    if (port !== "") throw new HostNotAllowedError();
+    return { address: mapped };
+  }
+  return assertPublicHost(hostname, allowPrivate);
+}
 
 // Resolve the name once more at connect time and dial only an address the
 // host guard accepts: the check before the request resolves separately, and a
@@ -17,8 +46,12 @@ function guardedLookup(
   options: LookupOptions,
   callback: (err: Error | null, address: string | LookupAddress[], family?: number) => void,
 ) {
-  if (allowPrivateHosts()) return dnsLookup(hostname, options, callback as never);
-  assertPublicHost(hostname, false).then(
+  if (allowPrivateHosts() && !hostMap().has(hostname.toLowerCase())) {
+    return dnsLookup(hostname, options, callback as never);
+  }
+  // Only reached through fetch below, which has already refused a mapped
+  // host on a non-default port.
+  guardHost(hostname, "", false).then(
     ({ address }) => {
       const family = net.isIP(address);
       if (options.all) callback(null, [{ address, family }]);
@@ -40,7 +73,7 @@ export function createHttp(log: PluginLogger): PluginHttp {
       let current = new URL(url);
       try {
         for (let hop = 0; ; hop++) {
-          await assertPublicHost(current.hostname, allowPrivate);
+          await guardHost(current.hostname, current.port, allowPrivate);
           // undici's RequestInit/Response are the WHATWG types the global fetch
           // uses too (Node's fetch is undici); the casts only bridge the two
           // packages' type declarations.

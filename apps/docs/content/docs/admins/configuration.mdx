@@ -128,6 +128,7 @@ Details: [Calendar](/docs/admins/integrations/calendar).
 |---|---|---|
 | `NEXTCRM_TOKEN` | No | Shared secret for the web-to-lead endpoints `/api/crm/leads/create-lead-from-web` (sent in the `Authorization` header) and `/api/crm/contacts/create-from-remote` (sent in a `NEXTCRM_TOKEN` header). Generate with `openssl rand -base64 32`. |
 | `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS` | No | `true` lets plugins make HTTP requests to private hosts. Off by default. |
+| `PLUGIN_HTTP_HOST_MAP` | No | `host=ip[,host=ip]`. Plugin HTTP calls to a listed host connect to that IP, private or not; TLS and the `Host` header keep the hostname. Entries whose target is not an IP are ignored with a warning in the log. Only listed hosts skip the private-address check. |
 
 ## Seeding
 
