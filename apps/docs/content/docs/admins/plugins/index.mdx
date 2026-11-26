@@ -76,3 +76,11 @@ Installing, uninstalling, enabling, disabling and changing settings each write a
 ## Network access
 
 Plugins make outgoing HTTP requests through a guarded client. It blocks private and internal addresses unless you set `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS=true`. The mailbox setting `MAIL_ALLOW_PRIVATE_HOSTS` does not affect plugins.
+
+If a plugin calls a service that the server can only reach on an internal address (for example a service on the same Docker host, behind the same public IP), pin that one host instead of opening all private addresses:
+
+```bash
+PLUGIN_HTTP_HOST_MAP=erp.example.com=10.0.1.1
+```
+
+Requests to `erp.example.com` then connect to `10.0.1.1`, while TLS and the `Host` header still use `erp.example.com`. Separate several hosts with commas. Other hosts, including redirect targets, are checked as before.

@@ -240,7 +240,7 @@ Tabs, panels, pages and admin sections are React Server Components. They render 
 `ctx.http.fetch()` wraps `fetch` with safety checks:
 
 - 15-second timeout by default, per hop. Override with `timeoutMs`.
-- Requests to private and loopback hosts are blocked unless the instance sets `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS=true`. The address is checked again when the connection opens, so a host name that resolves to a private address after the first check is not reached.
+- Requests to private and loopback hosts are blocked unless the instance sets `PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS=true`. The address is checked again when the connection opens, so a host name that resolves to a private address after the first check is not reached. Hosts the instance lists in `PLUGIN_HTTP_HOST_MAP` connect to the IP given there instead.
 - Up to 5 redirects, with the host check repeated on each hop. `Authorization`, `Cookie` and `Proxy-Authorization` are dropped on cross-origin redirects. A caller-supplied `redirect` option is ignored.
 
 ## Translations
