@@ -7,7 +7,7 @@ import { HostNotAllowedError } from "@/lib/net/host-guard";
 
 const log = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
 const realFetch = global.fetch;
-afterEach(() => { global.fetch = realFetch; delete process.env.MAIL_ALLOW_PRIVATE_HOSTS; delete process.env.PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS; jest.clearAllMocks(); });
+afterEach(() => { global.fetch = realFetch; delete process.env.MAIL_ALLOW_PRIVATE_HOSTS; delete process.env.PLUGIN_HTTP_ALLOW_PRIVATE_HOSTS; delete process.env.PLUGIN_HTTP_HOST_MAP; jest.clearAllMocks(); });
 
 it("MAIL_ALLOW_PRIVATE_HOSTS does not open the plugin guard (M7)", async () => {
   process.env.MAIL_ALLOW_PRIVATE_HOSTS = "true";
@@ -70,4 +70,20 @@ it("replays PUT with its body on a same-origin 301 (only POST becomes GET)", asy
   const second = fetchMock.mock.calls[1][1];
   expect(second.method).toBe("PUT");
   expect(second.body).toBe("x");
+});
+
+it("refuses a redirect from a public host to a mapped host on another port", async () => {
+  process.env.PLUGIN_HTTP_HOST_MAP = "erp.example.com=10.0.1.1";
+  lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
+  global.fetch = jest.fn(async () => new Response(null, { status: 302, headers: { location: "http://erp.example.com:5432/" } })) as never;
+  await expect(createHttp(log).fetch("https://example.com/a")).rejects.toBeInstanceOf(HostNotAllowedError);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+});
+
+it("refuses a redirect from a mapped host to a private host that is not in the map", async () => {
+  process.env.PLUGIN_HTTP_HOST_MAP = "erp.example.com=10.0.1.1";
+  lookup.mockResolvedValue([{ address: "10.0.0.5", family: 4 }]);
+  global.fetch = jest.fn(async () => new Response(null, { status: 302, headers: { location: "https://intranet.example.com/" } })) as never;
+  await expect(createHttp(log).fetch("https://erp.example.com/a")).rejects.toBeInstanceOf(HostNotAllowedError);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
 });

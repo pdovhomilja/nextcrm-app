@@ -83,4 +83,4 @@ If a plugin calls a service that the server can only reach on an internal addres
 PLUGIN_HTTP_HOST_MAP=erp.example.com=10.0.1.1
 ```
 
-Requests to `erp.example.com` then connect to `10.0.1.1`, while TLS and the `Host` header still use `erp.example.com`. Separate several hosts with commas. Other hosts, including redirect targets, are checked as before.
+Requests to `erp.example.com` then connect to `10.0.1.1`, while TLS and the `Host` header still use `erp.example.com`. Separate several hosts with commas. Each entry is a bare hostname (no port, no trailing dot) and covers only the default port: 443 for `https`, 80 for `http`. A request or redirect to a listed host on any other port is refused. Other hosts, including redirect targets, are checked as before.
