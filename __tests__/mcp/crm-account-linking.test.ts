@@ -9,7 +9,7 @@ jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_Opportunities: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
     crm_Accounts: { findFirst: jest.fn(), update: jest.fn() },
-    crm_Contacts: { findFirst: jest.fn(), update: jest.fn() },
+    crm_Contacts: { findFirst: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
   },
 }));
 
@@ -38,6 +38,7 @@ beforeEach(() => {
   opps.update.mockResolvedValue({ id: "o1" });
   accounts.findFirst.mockResolvedValue({ id: "acc1" });
   contacts.findFirst.mockResolvedValue({ id: "c1" });
+  contacts.findUnique.mockResolvedValue({ id: "c1" });
   contacts.update.mockResolvedValue({ id: "c1" });
 });
 

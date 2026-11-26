@@ -6,17 +6,17 @@
 // action fails here until someone has looked at it. Behaviour is tested in
 // __tests__/authz/action-write-scope.test.ts and the other *-scope tests.
 //
-// Known gap: it scans actions/ only. Orders, leads and opportunities write through a
-// service (lib/orders/service.ts, lib/crm/leads/service.ts,
-// lib/crm/opportunities/service.ts) that checks scope itself, so those writes are
-// outside this scan; the __tests__ folder next to each service tests its checks.
+// Known gap: it scans actions/ only. Orders, leads, opportunities and contacts write
+// through a service (lib/orders/service.ts, lib/crm/leads/service.ts,
+// lib/crm/opportunities/service.ts, lib/crm/contacts/service.ts) that checks scope
+// itself, so those writes are outside this scan; the __tests__ folder next to each
+// service tests its checks.
 import fs from "fs";
 import path from "path";
 import ts from "typescript";
 
 const REVIEWED: Record<string, string> = {
   "actions/crm/accounts/restore-account.ts#restoreAccount": "admin only (session.user.role check)",
-  "actions/crm/contacts/restore-contact.ts#restoreContact": "admin only (session.user.role check)",
   "actions/crm/contracts/restore-contract/index.ts#restoreContract": "admin only (session.user.role check)",
   "actions/emails/accounts.ts#deleteEmailAccount": "findFirst where { id, userId } before the write",
   "actions/emails/accounts.ts#setEmailAccountActive": "findFirst where { id, userId } before the write",

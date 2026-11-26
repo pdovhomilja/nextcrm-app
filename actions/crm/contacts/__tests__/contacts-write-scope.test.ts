@@ -1,14 +1,25 @@
 // Object-level authorization regression tests for contact write actions
 // (GHSA-qwhm-9fcm-p878). Each denial test must fail against the pre-guard code.
 
+// create, update and delete check scope in lib/crm/contacts/service.ts, which
+// imports the leaf modules; unlinkOpportunity imports the barrel. Both get the
+// same mocks, and the real error classes so the service recognises a denial.
+const mockAssertContact = jest.fn();
+const mockAssertAccount = jest.fn();
 jest.mock("@/lib/authz", () => ({
   PARTNER_EDIT: { partnerEdit: true },
   requireAuthenticated: jest.fn(),
-  assertCanWriteContact: jest.fn(),
-  assertCanWriteAccount: jest.fn(),
+  assertCanWriteContact: (...a: unknown[]) => mockAssertContact(...a),
+  assertCanWriteAccount: (...a: unknown[]) => mockAssertAccount(...a),
   assertCanWriteOpportunity: jest.fn(),
-  AuthenticationError: class AuthenticationError extends Error {},
-  AuthorizationError: class AuthorizationError extends Error {},
+  AuthenticationError: jest.requireActual("@/lib/authz/errors").AuthenticationError,
+  AuthorizationError: jest.requireActual("@/lib/authz/errors").AuthorizationError,
+}));
+jest.mock("@/lib/authz/scopes/crm", () => ({
+  PARTNER_EDIT: { partnerEdit: true },
+  assertCanWriteContact: (...a: unknown[]) => mockAssertContact(...a),
+  assertCanWriteAccount: (...a: unknown[]) => mockAssertAccount(...a),
+  tryScopedUpdateContact: jest.fn(),
 }));
 // Pre-guard code still imports getSession (ESM); mock so the suite loads during
 // RED. Harmless after implementation, which drops the auth-server import.
@@ -22,6 +33,7 @@ jest.mock("@/lib/prisma", () => ({
       findUnique: jest.fn().mockResolvedValue({ id: "c-1" }),
       create: jest.fn().mockResolvedValue({ id: "c-1" }),
     },
+    crm_Accounts: { findFirst: jest.fn().mockResolvedValue({ id: "acc" }) },
     contactsToOpportunities: { delete: jest.fn().mockResolvedValue({}) },
     users: { findFirst: jest.fn().mockResolvedValue(null) },
   },
@@ -33,8 +45,6 @@ jest.mock("@/lib/sendmail", () => ({ __esModule: true, default: jest.fn() }));
 
 import {
   requireAuthenticated,
-  assertCanWriteContact,
-  assertCanWriteAccount,
   assertCanWriteOpportunity,
   AuthorizationError,
 } from "@/lib/authz";
@@ -45,8 +55,8 @@ import { deleteContact } from "@/actions/crm/contacts/delete-contact";
 import { unlinkOpportunity } from "@/actions/crm/contacts/unlink-opportunity";
 
 const authed = requireAuthenticated as jest.Mock;
-const assertContact = assertCanWriteContact as jest.Mock;
-const assertAccount = assertCanWriteAccount as jest.Mock;
+const assertContact = mockAssertContact;
+const assertAccount = mockAssertAccount;
 const assertOpp = assertCanWriteOpportunity as jest.Mock;
 const cUpdate = prismadb.crm_Contacts.update as jest.Mock;
 const cCreate = prismadb.crm_Contacts.create as jest.Mock;

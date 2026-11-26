@@ -1,11 +1,11 @@
 // The two NEXTCRM_TOKEN routes accept only the configured token.
-jest.mock("@/lib/prisma", () => ({ prismadb: { crm_Contacts: { create: jest.fn(async () => ({})) } } }));
 jest.mock("@/lib/crm/leads/service", () => ({ createWebLead: jest.fn(async () => ({})) }));
+jest.mock("@/lib/crm/contacts/service", () => ({ createRemoteContact: jest.fn(async () => ({})) }));
 
 import { POST as createLead } from "@/app/api/crm/leads/create-lead-from-web/route";
 import { POST as createContact } from "@/app/api/crm/contacts/create-from-remote/route";
 import { createWebLead } from "@/lib/crm/leads/service";
-import { prismadb } from "@/lib/prisma";
+import { createRemoteContact } from "@/lib/crm/contacts/service";
 import { safeEqual } from "@/lib/safe-equal";
 
 const lead = (token: string) =>
@@ -30,7 +30,7 @@ it.each(["wrong-token", "right-toke", "right-token-and-more"])("refuses the toke
   expect((await lead(t)).status).toBe(401);
   expect((await contact(t)).status).toBe(403);
   expect(createWebLead).not.toHaveBeenCalled();
-  expect(prismadb.crm_Contacts.create).not.toHaveBeenCalled();
+  expect(createRemoteContact).not.toHaveBeenCalled();
 });
 
 it("accepts the configured token", async () => {

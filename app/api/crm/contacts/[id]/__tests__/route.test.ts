@@ -1,8 +1,9 @@
 jest.mock("@/lib/auth-server", () => ({ getSession: jest.fn() }));
+jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn() } }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     users: { findUnique: jest.fn() },
-    crm_Contacts: { updateMany: jest.fn() },
+    crm_Contacts: { updateMany: jest.fn(), findUnique: jest.fn().mockResolvedValue({ id: "c1", website: null }) },
   },
 }));
 
