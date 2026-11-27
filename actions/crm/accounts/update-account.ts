@@ -13,7 +13,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
-import { accountFieldsSchema } from "./account-input";
+import { accountFieldsSchema, priceListChoiceError } from "./account-input";
 
 export const updateAccount = async (data: {
   id: string;
@@ -74,13 +74,14 @@ export const updateAccount = async (data: {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
   }
-  // The price list sets the account's prices: only an admin/manager picks it,
-  // and only an active list. The form resends the stored list, so only a change counts.
-  if (rest.pricelist_id !== undefined && (rest.pricelist_id || null) !== (before?.pricelist_id ?? null)) {
+  // The form resends the stored price list, so only a change is checked.
+  const pricelistChanged =
+    rest.pricelist_id !== undefined && (rest.pricelist_id || null) !== (before?.pricelist_id ?? null);
+  if (pricelistChanged) {
     if (!isManagerOrAdmin(user)) return { error: "Forbidden" };
     if (rest.pricelist_id) {
-      const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: rest.pricelist_id }, select: { isActive: true } });
-      if (!pricelist?.isActive) return { error: "Price list not found" };
+      const error = await priceListChoiceError(user, rest.pricelist_id);
+      if (error) return { error };
     }
   }
 

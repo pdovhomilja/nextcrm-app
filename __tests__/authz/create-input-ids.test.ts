@@ -31,6 +31,7 @@ const PRICELIST = randomUUID();
 // rep's contract assigned to other; rep's contract still assigned to the now inactive `gone`
 const CONTRACT = { rep: randomUUID(), repGone: randomUUID() };
 const NOBODY = randomUUID();
+const ROLE = { rep: "user", other: "user", gone: "user", partner: "partner", boss: "manager" } as const;
 
 const accountsNamed = (name: string) => prismadb.crm_Accounts.count({ where: { name } });
 const contractsTitled = (title: string) => prismadb.crm_Contracts.count({ where: { title } });
@@ -38,7 +39,7 @@ const contractsTitled = (title: string) => prismadb.crm_Contracts.count({ where:
 beforeAll(async () => {
   await prismadb.users.createMany({
     data: (["rep", "other", "gone", "partner", "boss"] as const).map((k) => ({
-      id: U[k], email: `${k}-${tag}@input-ids.test`, name: `${k}-${tag}`, role: k === "partner" ? "partner" : k === "boss" ? "manager" : "user",
+      id: U[k], email: `${k}-${tag}@input-ids.test`, name: `${k}-${tag}`, role: ROLE[k],
       userStatus: k === "gone" ? "INACTIVE" : "ACTIVE",
     })),
   });

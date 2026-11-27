@@ -7,11 +7,10 @@ import { writeAuditLog } from "@/lib/audit-log";
 import {
   requireAuthenticated,
   assertAssignableUser,
-  isManagerOrAdmin,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
-import { accountFieldsSchema } from "./account-input";
+import { accountFieldsSchema, priceListChoiceError } from "./account-input";
 
 export const createAccount = async (data: {
   name: string;
@@ -64,10 +63,8 @@ export const createAccount = async (data: {
     throw e;
   }
   if (input.pricelist_id) {
-    // Only an admin/manager picks a price list, and only an active one.
-    if (!isManagerOrAdmin(user)) return { error: "Forbidden" };
-    const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: input.pricelist_id }, select: { isActive: true } });
-    if (!pricelist?.isActive) return { error: "Price list not found" };
+    const error = await priceListChoiceError(user, input.pricelist_id);
+    if (error) return { error };
   }
 
   try {
