@@ -513,6 +513,8 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <Select
                       onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
                       value={field.value || "__none__"}
+                      // Only an admin/manager picks the price list (server enforces it too).
+                      disabled={session?.user?.role !== "admin" && session?.user?.role !== "manager"}
                     >
                       <FormControl>
                         <SelectTrigger>

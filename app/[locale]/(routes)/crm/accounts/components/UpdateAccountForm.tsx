@@ -34,6 +34,7 @@ import { updateAccount } from "@/actions/crm/accounts/update-account";
 import { getIndustries } from "@/actions/crm/get-industries";
 import { getPriceListOptions } from "@/actions/crm/price-lists/queries";
 import { VatCheckButton } from "./VatCheckButton";
+import { useSession } from "@/lib/auth-client";
 
 interface UpdateAccountFormProps {
   //TODO: fix this any
@@ -46,6 +47,7 @@ export function UpdateAccountForm({
   open,
 }: UpdateAccountFormProps) {
   const t = useTranslations("CrmAccountForm");
+  const { data: session } = useSession();
   const c = useTranslations("Common");
 
   const [industries, setIndustries] = useState<any[] | null>(null);
@@ -530,6 +532,8 @@ export function UpdateAccountForm({
                     <Select
                       onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
                       value={field.value || "__none__"}
+                      // Only an admin/manager picks the price list (server enforces it too).
+                      disabled={session?.user?.role !== "admin" && session?.user?.role !== "manager"}
                     >
                       <FormControl>
                         <SelectTrigger>

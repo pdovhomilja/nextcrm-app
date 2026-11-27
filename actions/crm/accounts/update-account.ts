@@ -8,6 +8,7 @@ import {
   requireAuthenticated,
   assertCanWriteAccount,
   assertAssignableUser,
+  isManagerOrAdmin,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
@@ -73,9 +74,14 @@ export const updateAccount = async (data: {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
   }
-  if (rest.pricelist_id) {
-    const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: rest.pricelist_id }, select: { id: true } });
-    if (!pricelist) return { error: "Price list not found" };
+  // The price list sets the account's prices: only an admin/manager picks it,
+  // and only an active list. The form resends the stored list, so only a change counts.
+  if (rest.pricelist_id !== undefined && (rest.pricelist_id || null) !== (before?.pricelist_id ?? null)) {
+    if (!isManagerOrAdmin(user)) return { error: "Forbidden" };
+    if (rest.pricelist_id) {
+      const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: rest.pricelist_id }, select: { isActive: true } });
+      if (!pricelist?.isActive) return { error: "Price list not found" };
+    }
   }
 
   try {
