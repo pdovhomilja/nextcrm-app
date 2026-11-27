@@ -45,6 +45,30 @@ it("sends a rep's below-list order to approval and emails managers", async () =>
   expect(writeAuditLog).toHaveBeenCalledWith(expect.objectContaining({ entityType: "order", changes: [{ field: "status", old: "DRAFT", new: "PENDING_APPROVAL" }] }));
 });
 
+describe("a partner's orders follow the same approval rule as a rep's", () => {
+  const partner = { id: "pt", role: "partner" as const };
+  const below = () => order({ createdBy: "pt", lines: [line({ unitPrice: new Decimal(45), unitPriceOverridden: true })] });
+
+  it("sends a partner's below-list order to approval and emails managers", async () => {
+    db.crm_Orders.findFirst.mockResolvedValue(below());
+    await expect(submitOrder(partner, "o1")).resolves.toEqual({ status: "PENDING_APPROVAL" });
+    expect(statusUpdate()).toMatchObject({ data: { status: "PENDING_APPROVAL", approvalRequestedAt: expect.any(Date) } });
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ to: ["boss@x.test"] }));
+  });
+
+  it("lets a partner's order at list price through", async () => {
+    db.crm_Orders.findFirst.mockResolvedValue(order({ createdBy: "pt" }));
+    await expect(submitOrder(partner, "o1")).resolves.toEqual({ status: "READY" });
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("a manager approves it; the partner cannot", async () => {
+    db.crm_Orders.findFirst.mockResolvedValue({ ...below(), status: "PENDING_APPROVAL", updatedAt: new Date() });
+    await expect(decideApproval(partner, "o1", "APPROVED")).rejects.toMatchObject({ code: "forbidden" });
+    await expect(decideApproval(manager, "o1", "APPROVED")).resolves.toEqual({ status: "READY" });
+  });
+});
+
 it("lets managers' own below-list prices through", async () => {
   db.crm_Orders.findFirst.mockResolvedValue(order({ createdBy: "m", lines: [line({ unitPrice: new Decimal(1), unitPriceOverridden: true })] }));
   await expect(submitOrder(manager, "o1")).resolves.toEqual({ status: "READY" });
