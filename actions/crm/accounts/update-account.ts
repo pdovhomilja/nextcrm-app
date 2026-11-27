@@ -1,18 +1,7 @@
 "use server";
-import { prismadb } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
-import { inngest } from "@/inngest/client";
-import { writeAuditLog, diffObjects } from "@/lib/audit-log";
-import {
-  requireAuthenticated,
-  assertCanWriteAccount,
-  assertAssignableUser,
-  PARTNER_EDIT,
-  AuthenticationError,
-  AuthorizationError,
-} from "@/lib/authz";
+import * as svc from "@/lib/crm/accounts/service";
 import { accountFieldsSchema } from "./account-input";
+import { runAccountAction } from "./run";
 
 export const updateAccount = async (data: {
   id: string;
@@ -43,76 +32,19 @@ export const updateAccount = async (data: {
 }) => {
   const { id, ...fields } = data ?? {};
   if (!id) return { error: "id is required" };
+  // The fields the form sends, nothing else: the parameter type does not hold at runtime.
   const parsed = accountFieldsSchema.partial().safeParse(fields);
   if (!parsed.success) return { error: "Invalid input" };
   const rest = parsed.data;
 
-  let user;
-  try {
-    user = await requireAuthenticated({ partner: true });
-  } catch (e) {
-    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
-    throw e;
-  }
-  try {
-    await assertCanWriteAccount(user, id, PARTNER_EDIT);
-  } catch (e) {
-    if (e instanceof AuthorizationError) return { error: "Forbidden" };
-    throw e;
-  }
-
-  const before = await prismadb.crm_Accounts.findUnique({ where: { id, deletedAt: null } });
-  // Ids from the input, as in createAccount. The form resends the stored
-  // assignee, so it is checked only when it changes; a partner's assigned_to
-  // is ignored below.
-  try {
-    if (rest.assigned_to && user.role !== "partner" && rest.assigned_to !== before?.assigned_to) {
-      await assertAssignableUser(user, rest.assigned_to);
-    }
-  } catch (e) {
-    if (e instanceof AuthorizationError) return { error: "Forbidden" };
-    throw e;
-  }
-  if (rest.pricelist_id) {
-    const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: rest.pricelist_id }, select: { id: true } });
-    if (!pricelist) return { error: "Price list not found" };
-  }
-
-  try {
-    const account = await prismadb.crm_Accounts.update({
-      where: { id },
-      data: {
-        ...rest,
-        v: 0,
-        updatedBy: user.id,
-        ...(rest.pricelist_id === "" ? { pricelist_id: null } : {}),
-        ...(rest.industry === "" ? { industry: null } : {}),
-        // An empty assignee keeps the current one, as in updateContact.
-        ...(rest.assigned_to === "" ? { assigned_to: undefined } : {}),
-        // The partner is set only through setAccountPartner (admin/manager).
-        partnerUserId: undefined,
-        // A partner edits ordinary fields only, never the internal owner.
-        ...(user.role === "partner" ? { assigned_to: undefined } : {}),
-      },
+  return runAccountAction({ verb: "update", auth: { partner: true } }, async (user) => {
+    const account = await svc.updateAccount(user, id, {
+      ...rest,
+      // An empty price list or industry select clears it; an empty assignee keeps the current one.
+      ...(rest.pricelist_id === "" && { pricelist_id: null }),
+      ...(rest.industry === "" && { industry: null }),
+      ...(rest.assigned_to === "" && { assigned_to: undefined }),
     });
-    const changes = before ? diffObjects(
-      before as Record<string, unknown>,
-      account as Record<string, unknown>
-    ) : null;
-    await writeAuditLog({
-      entityType: "account",
-      entityId: account.id,
-      action: "updated",
-      changes,
-      userId: user.id,
-    });
-    void inngest.send({ name: "crm/account.saved", data: { record_id: account.id } });
-    revalidatePath("/[locale]/(routes)/crm/accounts", "page");
     return { data: account };
-  } catch (error) {
-    const ruleMessage = await pluginRuleErrorMessage(error);
-    if (ruleMessage) return { error: ruleMessage };
-    console.log("[UPDATE_ACCOUNT]", error);
-    return { error: "Failed to update account" };
-  }
+  });
 };

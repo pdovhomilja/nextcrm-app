@@ -2,10 +2,13 @@
 // identifiers, addresses and its own record id, and to find an existing account
 // by those exact values instead of creating duplicates.
 
+jest.mock("@/inngest/client", () => ({ inngest: { send: jest.fn() } }));
+jest.mock("@/lib/audit-log", () => ({ writeAuditLog: jest.fn(), diffObjects: jest.fn(() => []) }));
 jest.mock("@/lib/prisma", () => ({
   prismadb: {
     crm_Accounts: {
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
       create: jest.fn(),
@@ -58,6 +61,7 @@ const FIELDS = {
 beforeEach(() => {
   jest.clearAllMocks();
   accounts.findFirst.mockResolvedValue({ id: ID });
+  accounts.findUnique.mockResolvedValue({ id: ID });
   accounts.findMany.mockResolvedValue([]);
   accounts.count.mockResolvedValue(0);
   accounts.create.mockResolvedValue({ id: ID });
