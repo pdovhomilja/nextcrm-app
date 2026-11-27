@@ -1,15 +1,19 @@
 import { emptyRows, syncCustomers, zeroCustomers, type CustomerRun } from "../customers";
-import { K } from "../store";
+import { confirmProposal, rejectProposal } from "../proposals";
+import { K, type Proposal } from "../store";
 import { customer } from "./fake-oxo";
 import { mk, now, type TestCtx } from "./helpers";
 
-// Spec for the manager-confirmed first link (design in the PR). Skipped until
-// the host can run a manager's Confirm / Reject; the store keys are the design's:
-// `proposal:<customerId>` and `rejected:<customerId>:<accountId>`.
-const run = (ctx: TestCtx): CustomerRun => ({ ctx, dry: false, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map() });
+const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map() });
 const acc = (over: Record<string, unknown> = {}) => ({ id: "a1", name: "Acc a1", company_id: null, vat: null, billing_postal_code: null, assigned_to: "u-rep", deletedAt: null, ...over });
+// The customer is unchanged in OXO ERP after the first run: later runs see it only through the stored proposal.
+const setup = () => {
+  const oxo = { customers: [customer(1, { ico: "1234567", name: "One" })] };
+  const env = mk(oxo, { accounts: [acc({ company_id: "01234567" })] });
+  return { ...env, quiet: () => { oxo.customers.length = 0; } };
+};
 
-describe.skip("first link of an OXO ERP customer needs a manager's confirmation", () => {
+describe("first link of an OXO ERP customer needs a manager's confirmation", () => {
   it.each([
     ["number", { company_id: "01234567" }, { ico: "1234567", name: "One" }],
     ["vat", { vat: "cz99" }, { dic: "CZ 99", name: "One" }],
@@ -22,7 +26,15 @@ describe.skip("first link of an OXO ERP customer needs a manager's confirmation"
     expect(await ctx.store.get(K.customer(1))).toBeNull();
     expect(await ctx.store.get(K.account("a1"))).toBeNull();
     expect(data.accounts).toEqual([acc(account)]);
-    expect(await ctx.store.get("proposal:1")).toMatchObject({ customerId: 1, accountId: "a1", reason });
+    expect(await ctx.store.get(K.proposal(1))).toMatchObject({ customerId: 1, accountId: "a1", reason });
+  });
+
+  it("two customers on one account: one proposal, the other a conflict", async () => {
+    const { ctx, client } = mk({ customers: [customer(1, { ico: "22222222" }), customer(2, { ico: "22222222" })] }, { accounts: [acc({ company_id: "22222222" })] });
+    const r = run(ctx);
+    await syncCustomers(r, client);
+    expect([await ctx.store.get(K.proposal(1)), await ctx.store.get(K.proposal(2))]).toEqual([expect.objectContaining({ accountId: "a1" }), null]);
+    expect(r.rows.conflicts).toEqual([expect.objectContaining({ customerId: 2, reason: "linked" })]);
   });
 
   it("an existing link syncs as today and is never proposed", async () => {
@@ -30,16 +42,56 @@ describe.skip("first link of an OXO ERP customer needs a manager's confirmation"
     await ctx.store.set(K.customer(1), { accountId: "a1" });
     await syncCustomers(run(ctx), client);
     expect(data.accounts[0].name).toBe("One");
-    expect(await ctx.store.get("proposal:1")).toBeNull();
+    expect(await ctx.store.get(K.proposal(1))).toBeNull();
   });
 
-  it("a rejected pair is not proposed again: the customer gets its own account, as with no match", async () => {
-    const { ctx, client, data } = mk({ customers: [customer(1, { ico: "1234567", name: "One" })] }, { accounts: [acc({ company_id: "01234567" })] });
-    await ctx.store.set("rejected:1:a1", { at: now.toISOString() });
+  it("confirm: the next run links the pair exactly as the automatic path did, with OXO ERP unchanged", async () => {
+    const { ctx, client, data, quiet } = setup();
     await syncCustomers(run(ctx), client);
-    expect(await ctx.store.get("proposal:1")).toBeNull();
+    quiet();
+    await confirmProposal(ctx, { customerId: "1", accountId: "a1" }, now);
+    expect(await ctx.store.get(K.job)).toBeTruthy();
+    await syncCustomers(run(ctx), client);
+    expect(await ctx.store.get(K.customer(1))).toEqual({ accountId: "a1" });
+    expect(await ctx.store.get(K.account("a1"))).toMatchObject({ customerId: 1 });
+    expect(data.accounts).toHaveLength(1);
+    expect(data.accounts[0]).toMatchObject({ name: "One", assigned_to: "u-rep" });
+    expect(await ctx.store.get(K.proposal(1))).toBeNull();
+  });
+
+  it("reject: never proposed again; the customer gets its own account, as with no match", async () => {
+    const { ctx, client, data, quiet } = setup();
+    await syncCustomers(run(ctx), client);
+    quiet();
+    await rejectProposal(ctx, { customerId: "1", accountId: "a1" }, now);
+    await syncCustomers(run(ctx), client);
+    await syncCustomers(run(ctx), client);
+    expect(await ctx.store.get(K.proposal(1))).toBeNull();
     expect(data.accounts[0]).toEqual(acc({ company_id: "01234567" }));
     expect(data.accounts).toHaveLength(2);
     expect(await ctx.store.get(K.customer(1))).toEqual({ accountId: data.accounts[1].id });
+  });
+
+  it("confirm/reject refuse a pair that is not the open proposal, or one already decided", async () => {
+    const { ctx, client } = setup();
+    await syncCustomers(run(ctx), client);
+    await expect(confirmProposal(ctx, { customerId: "1", accountId: "a2" }, now)).rejects.toThrow();
+    await expect(rejectProposal(ctx, { customerId: "2", accountId: "a1" }, now)).rejects.toThrow();
+    expect(await ctx.store.get(K.confirmed(1, "a2"))).toBeNull();
+    await confirmProposal(ctx, { customerId: "1", accountId: "a1" }, now);
+    await expect(rejectProposal(ctx, { customerId: "1", accountId: "a1" }, now)).rejects.toThrow();
+    expect(await ctx.store.get<Proposal>(K.proposal(1))).toMatchObject({ decided: "confirmed" });
+    expect(await ctx.store.get(K.rejected(1, "a1"))).toBeNull();
+  });
+
+  it("tells managers and admins once when a run adds proposals; a dry run stores none", async () => {
+    const { ctx, client } = setup();
+    await syncCustomers(run(ctx), client);
+    await syncCustomers(run(ctx), client);
+    expect(ctx.notifications).toEqual([expect.objectContaining({ roles: ["manager", "admin"] })]);
+    const dry = setup();
+    await syncCustomers(run(dry.ctx, true), dry.client);
+    expect(await dry.ctx.store.get(K.proposal(1))).toBeNull();
+    expect(dry.ctx.notifications).toEqual([]);
   });
 });

@@ -1,8 +1,8 @@
 import { accountFields, changedFields } from "./map";
 import { matchAccount } from "./match";
 import type { OxoClient, OxoCustomer } from "./oxo";
-import { msg, type Ctx } from "./settings";
-import { K, keepLock, type AccountLink, type Conflict, type CustomerCounts, type ReportRow, type RunSummary } from "./store";
+import { msg, tell, type Ctx } from "./settings";
+import { K, keepLock, type AccountLink, type Conflict, type CustomerCounts, type Proposal, type ReportRow, type RunSummary } from "./store";
 
 const ROWS = 200;
 const OVERLAP_MS = 2 * 60_000;
@@ -16,6 +16,8 @@ export interface CustomerRun {
   rows: RunSummary["rows"];
   /** accountId → customerId linked earlier in this run (a dry run writes no links). */
   claimed: Map<string, number>;
+  /** Link proposals this run added (managers are told once per run). */
+  proposed?: number;
 }
 
 const add = (list: ReportRow[], row: ReportRow) => { if (list.length < ROWS) list.push(row); };
@@ -33,14 +35,32 @@ async function syncCustomer(r: CustomerRun, c: OxoCustomer): Promise<void> {
     return;
   }
   const fields = accountFields(c);
-  const match = await matchAccount(ctx, c.id, fields, r.claimed);
+  let match = await matchAccount(ctx, c.id, fields, r.claimed);
   if (match.kind === "conflict") {
     r.counts.conflicts++;
     add(r.rows.conflicts, { customerId: c.id, name: fields.name, reason: match.reason, candidates: match.candidates });
-    if (!dry) await ctx.store.set(K.conflict(c.id), { customerId: c.id, name: fields.name, reason: match.reason, candidates: match.candidates, foundAt: now.toISOString(), customer: c } satisfies Conflict);
+    if (!dry) {
+      await ctx.store.set(K.conflict(c.id), { customerId: c.id, name: fields.name, reason: match.reason, candidates: match.candidates, foundAt: now.toISOString(), customer: c } satisfies Conflict);
+      await ctx.store.delete(K.proposal(c.id));
+    }
     return;
   }
   if (!dry) await ctx.store.delete(K.conflict(c.id));
+  // A first link by IČO, DIČ or name + zip waits for a manager; a rejected pair is treated as no match.
+  if (match.kind === "number" || match.kind === "vat" || match.kind === "name") {
+    const accountId = match.accountId;
+    if (await ctx.store.get(K.rejected(c.id, accountId))) match = { kind: "new" };
+    else if (!(await ctx.store.get(K.confirmed(c.id, accountId)))) {
+      r.claimed.set(accountId, c.id);   // a second customer on the same account this run is a conflict, as with a link
+      if (dry) return;
+      const prev = await ctx.store.get<Proposal>(K.proposal(c.id));
+      const same = prev?.accountId === accountId;
+      if (!same) r.proposed = (r.proposed ?? 0) + 1;
+      await ctx.store.set(K.proposal(c.id), { customerId: c.id, name: fields.name, accountId, reason: match.kind, foundAt: same ? prev.foundAt : now.toISOString(), customer: c } satisfies Proposal);
+      return;
+    }
+  }
+  if (!dry) await ctx.store.delete(K.proposal(c.id));
   let accountId: string;
   if (match.kind === "new") {
     r.counts.created++;
@@ -92,8 +112,9 @@ export async function syncCustomers(r: CustomerRun, client: OxoClient): Promise<
     await guarded(r, c, done);
     if ((i + 1) % 100 === 0) await keepLock(r.ctx);
   }
-  for (const e of [...(await r.ctx.store.list("conflict:")), ...(await r.ctx.store.list("retry:"))]) {
+  for (const e of [...(await r.ctx.store.list("conflict:")), ...(await r.ctx.store.list("proposal:")), ...(await r.ctx.store.list("retry:"))]) {
     await guarded(r, (e.value as { customer: OxoCustomer }).customer, done);
   }
+  if (r.proposed) await tell(r.ctx, { roles: ["manager", "admin"], subject: r.ctx.t("mail.proposalsSubject", { count: r.proposed }), text: r.ctx.t("mail.proposalsText", { count: r.proposed }) });
   return top;
 }

@@ -90,7 +90,9 @@
     "stuckSubject": "Ordre {number} har ventet på OXO ERP i et døgn",
     "stuckText": "Ordre {number} har ventet på å bli sendt til OXO ERP siden {since}. Siste feil: {error}. Koblingen fortsetter å prøve; sjekk OXO ERP.",
     "missingSubject": "Ordre {number}: finnes ikke i OXO ERP",
-    "missingText": "Koblingen finner ikke lenger CRM-ordre {number} i OXO ERP. CRM-ordren beholder statusen sin; kanseller den manuelt hvis ordren ble fjernet."
+    "missingText": "Koblingen finner ikke lenger CRM-ordre {number} i OXO ERP. CRM-ordren beholder statusen sin; kanseller den manuelt hvis ordren ble fjernet.",
+    "proposalsSubject": "{count} kunde(r) fra OXO ERP venter på kobling",
+    "proposalsText": "Synkroniseringen fant {count} nye kunder fra OXO ERP som passer med en CRM-konto. En leder bekrefter eller avviser hver kobling under Koblingsforslag."
   },
   "tab": {
     "title": "OXO ERP",
@@ -103,5 +105,21 @@
     "total": "Totalt",
     "status": "Status",
     "delivery": "Levering"
+  },
+  "proposals": {
+    "title": "Koblingsforslag",
+    "nav": "Koblingsforslag",
+    "empty": "Ingen kunde venter på kobling.",
+    "help": "En kunde fra OXO ERP passer med én CRM-konto. Bekreft for å koble dem (neste synkronisering oppdaterer kontoen); avvis for å gi kunden en egen konto. Et avvist par foreslås aldri igjen.",
+    "customer": "Kunde i OXO ERP",
+    "account": "CRM-konto",
+    "reason": "Treff",
+    "found": "Funnet",
+    "confirm": "Bekreft",
+    "reject": "Avvis",
+    "confirmedDone": "Bekreftet. Neste synkronisering kobler kontoen.",
+    "rejectedDone": "Avvist. Neste synkronisering oppretter en konto for kunden.",
+    "gone": "Dette forslaget er ikke lenger åpent. Last inn siden på nytt.",
+    "taken": "Denne kontoen er allerede koblet til en annen kunde."
   }
 }

@@ -8,14 +8,15 @@ import nb from "../messages/nb.json";
 const keys = (o: Record<string, unknown>, p = ""): string[] => Object.entries(o).flatMap(([k, v]) => (v && typeof v === "object" ? keys(v as Record<string, unknown>, `${p}${k}.`) : [`${p}${k}`])).sort();
 
 it("declares the OXO ERP connector", () => {
-  expect([plugin.id, plugin.version, plugin.sdk]).toEqual(["oxo-erp-connector", "0.1.0", "^0.2.6"]);
+  expect([plugin.id, plugin.version, plugin.sdk]).toEqual(["oxo-erp-connector", "0.2.0", "^0.2.7"]);
   expect(plugin.permissions).toEqual(["http", "accounts:read", "accounts:write", "users:read", "notify", "products:read", "products:write", "priceLists:read", "priceLists:write", "orders:read", "orders:write"]);
   expect(Object.keys(plugin.settings.shape)).toEqual(["url", "syncMinutes", "defaultCountry", "currency", "dryRun", "priceLists", "sendOrders", "timeZone"]);
   expect(Object.keys(plugin.secrets.shape)).toEqual(["apiKey"]);
   expect(plugin.extensions.crons.map((c) => [c.id, c.schedule])).toEqual([["sync", "*/5 * * * *"]]);
   expect(plugin.extensions.afters.map((a) => [a.entity, a.operation])).toEqual([["order", "updated"]]);
   expect(plugin.extensions.adminActions.map((a) => a.id)).toEqual(["test", "sync", "lists"]);
-  expect(plugin.extensions.pages.map((p) => [p.path, p.roles, p.nav?.label])).toEqual([["needs-owner", ["manager", "admin"], "needsOwner.nav"]]);
+  expect(plugin.extensions.pages.map((p) => [p.path, p.roles, p.nav?.label])).toEqual([["needs-owner", ["manager", "admin"], "needsOwner.nav"], ["link-proposals", ["manager", "admin"], "proposals.nav"]]);
+  expect(plugin.extensions.pageActions.map((a) => [a.id, a.roles])).toEqual([["confirm", ["manager", "admin"]], ["reject", ["manager", "admin"]]]);
   expect([plugin.extensions.accountPanels.length, plugin.extensions.accountTabs.length, plugin.extensions.productPanels.length, plugin.extensions.orderPanels.length, plugin.extensions.adminSections.length]).toEqual([1, 1, 1, 1, 1]);
 });
 

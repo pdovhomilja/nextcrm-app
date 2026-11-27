@@ -6,6 +6,8 @@ import { loadPriceLists, queueJob, runQueued } from "./jobs";
 import { onOrderUpdated, sweepOrders } from "./orders-out";
 import { AdminSection } from "./ui/AdminSection";
 import { NeedsOwnerPage } from "./ui/NeedsOwnerPage";
+import { LinkProposalsPage } from "./ui/LinkProposalsPage";
+import { confirmProposal, rejectProposal } from "./proposals";
 import { AccountPanel } from "./ui/AccountPanel";
 import { AccountTab } from "./ui/AccountTab";
 import { ProductPanel } from "./ui/ProductPanel";
@@ -14,8 +16,8 @@ import { OrderPanel } from "./ui/OrderPanel";
 export default definePlugin({
   id: "oxo-erp-connector",
   name: "OXO ERP connector",
-  version: "0.1.0",
-  sdk: "^0.2.6",
+  version: "0.2.0",
+  sdk: "^0.2.7",
   description: "Imports customers, products and price lists from OXO ERP and takes over the rows odoo-connector made; sends READY orders to OXO ERP, brings delivery back as the order status and imports orders made in OXO ERP.",
   permissions: ["http", "accounts:read", "accounts:write", "users:read", "notify", "products:read", "products:write", "priceLists:read", "priceLists:write", "orders:read", "orders:write"],
   settings: settingsSchema,
@@ -37,6 +39,9 @@ export default definePlugin({
     x.productPanel({ id: "oxo-erp", component: ProductPanel });
     x.orderPanel({ id: "oxo-erp", component: OrderPanel });
     x.page({ path: "needs-owner", title: "needsOwner.title", component: NeedsOwnerPage, roles: ["manager", "admin"], nav: { label: "needsOwner.nav" } });
+    x.page({ path: "link-proposals", title: "proposals.title", component: LinkProposalsPage, roles: ["manager", "admin"], nav: { label: "proposals.nav" } });
+    x.pageAction({ id: "confirm", roles: ["manager", "admin"], handler: (ctx, input) => confirmProposal(ctx, input, new Date()) });
+    x.pageAction({ id: "reject", roles: ["manager", "admin"], handler: (ctx, input) => rejectProposal(ctx, input, new Date()) });
     x.adminSection(AdminSection);
   },
   // An install never fails on OXO ERP; the first dry run happens on install or on "Sync now".

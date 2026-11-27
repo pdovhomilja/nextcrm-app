@@ -90,7 +90,9 @@
     "stuckSubject": "Order {number} has been waiting for OXO ERP for a day",
     "stuckText": "Order {number} has been waiting to be sent to OXO ERP since {since}. Last error: {error}. The connector keeps trying; check OXO ERP.",
     "missingSubject": "Order {number}: not found in OXO ERP",
-    "missingText": "The connector can no longer find CRM order {number} in OXO ERP. The CRM order keeps its status; cancel it by hand if the order was removed."
+    "missingText": "The connector can no longer find CRM order {number} in OXO ERP. The CRM order keeps its status; cancel it by hand if the order was removed.",
+    "proposalsSubject": "{count} customer(s) from OXO ERP wait for a link",
+    "proposalsText": "The sync found {count} new customer(s) from OXO ERP that match a CRM account. A manager confirms or rejects each link under Link proposals."
   },
   "tab": {
     "title": "OXO ERP",
@@ -103,5 +105,21 @@
     "total": "Total",
     "status": "Status",
     "delivery": "Delivery"
+  },
+  "proposals": {
+    "title": "Link proposals",
+    "nav": "Link proposals",
+    "empty": "No customer is waiting for a link.",
+    "help": "A customer from OXO ERP matches one CRM account. Confirm to link them (the next sync updates the account); reject to give the customer its own account. A rejected pair is never proposed again.",
+    "customer": "OXO ERP customer",
+    "account": "CRM account",
+    "reason": "Match",
+    "found": "Found",
+    "confirm": "Confirm",
+    "reject": "Reject",
+    "confirmedDone": "Confirmed. The next sync links the account.",
+    "rejectedDone": "Rejected. The next sync creates an account for the customer.",
+    "gone": "This proposal is no longer open. Reload the page.",
+    "taken": "This account is already linked to another customer."
   }
 }
