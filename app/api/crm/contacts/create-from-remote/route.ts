@@ -1,4 +1,4 @@
-import { prismadb } from "@/lib/prisma";
+import { createRemoteContact } from "@/lib/crm/contacts/service";
 import { NextResponse } from "next/server";
 import { safeEqual } from "@/lib/safe-equal";
 
@@ -28,15 +28,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    await prismadb.crm_Contacts.create({
-      data: {
-        first_name: name,
-        last_name: surname,
-        email,
-        mobile_phone: phone,
-        tags: [tag],
-        notes: ["Account: " + company, "Message: " + message],
-      },
+    await createRemoteContact({
+      first_name: name,
+      last_name: surname,
+      email,
+      mobile_phone: phone,
+      tags: [tag],
+      notes: ["Account: " + company, "Message: " + message],
     });
     return NextResponse.json({ message: "Contact created" });
   } catch (error) {

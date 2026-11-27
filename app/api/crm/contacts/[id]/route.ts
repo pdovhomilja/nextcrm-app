@@ -4,8 +4,9 @@ import {
   unauthorizedResponse,
   notFoundOrForbiddenResponse,
   AuthenticationError,
-  tryScopedUpdateContact,
 } from "@/lib/authz";
+import { updateContactFields } from "@/lib/crm/contacts/service";
+import { ContactError } from "@/lib/crm/contacts/types";
 
 const FIELD_MAP: Record<string, string> = {
   position:         "position",
@@ -48,8 +49,13 @@ export async function PATCH(
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
-  const ok = await tryScopedUpdateContact(user, id, updates);
-  if (!ok) return notFoundOrForbiddenResponse();
+  // The service writes in the caller's scope, with the audit row and crm/contact.saved.
+  try {
+    await updateContactFields(user, id, updates);
+  } catch (e) {
+    if (e instanceof ContactError) return notFoundOrForbiddenResponse();
+    throw e;
+  }
 
   return NextResponse.json({ success: true, id });
 }

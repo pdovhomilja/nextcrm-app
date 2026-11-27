@@ -1,19 +1,7 @@
 "use server";
-import { prismadb } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
-import { inngest } from "@/inngest/client";
-import { writeAuditLog, diffObjects } from "@/lib/audit-log";
-import {
-  requireAuthenticated,
-  assertCanWriteContact,
-  assertCanWriteAccount,
-  assertAssignableUser,
-  PARTNER_EDIT,
-  AuthenticationError,
-  AuthorizationError,
-} from "@/lib/authz";
-import { contactFieldsSchema } from "./contact-input";
+import * as svc from "@/lib/crm/contacts/service";
+import { runContactAction } from "./run";
+import { contactFieldsSchema, toContactInput } from "./contact-input";
 
 export const updateContact = async (data: {
   id: string;
@@ -44,72 +32,9 @@ export const updateContact = async (data: {
   if (!id) return { error: "id is required" };
   const parsed = contactFieldsSchema.partial().safeParse(fields);
   if (!parsed.success) return { error: "Invalid input" };
-  const {
-    assigned_to,
-    assigned_account,
-    birthday_day,
-    birthday_month,
-    birthday_year,
-    contact_type_id,
-    ...rest
-  } = parsed.data;
 
-  let user;
-  try {
-    user = await requireAuthenticated({ partner: true });
-  } catch (e) {
-    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
-    throw e;
-  }
-  try {
-    await assertCanWriteContact(user, id, PARTNER_EDIT);
-    // Parent-write: relinking the contact to an account requires write on it.
-    if (assigned_account) await assertCanWriteAccount(user, assigned_account, PARTNER_EDIT);
-    // As in updateAccount: the form resends the stored assignee, so it is
-    // checked only when it changes; a partner's assigned_to is ignored below.
-    if (assigned_to && user.role !== "partner") {
-      const current = await prismadb.crm_Contacts.findUnique({ where: { id }, select: { assigned_to: true } });
-      if (assigned_to !== current?.assigned_to) await assertAssignableUser(user, assigned_to);
-    }
-  } catch (e) {
-    if (e instanceof AuthorizationError) return { error: "Forbidden" };
-    throw e;
-  }
-  const userId = user.id;
-
-  try {
-    const before = await prismadb.crm_Contacts.findUnique({ where: { id, deletedAt: null } });
-    const contact = await prismadb.crm_Contacts.update({
-      where: { id },
-      data: {
-        ...rest,
-        v: 0,
-        updatedBy: userId,
-        accountsIDs: assigned_account || undefined,
-        // A partner never changes the assignee.
-        assigned_to: user.role === "partner" ? undefined : assigned_to || undefined,
-        contact_type_id: contact_type_id || undefined,
-        birthday:
-          birthday_day && birthday_month && birthday_year
-            ? birthday_day + "/" + birthday_month + "/" + birthday_year
-            : null,
-      } as any,
-    });
-    const changes = before ? diffObjects(before as Record<string, unknown>, contact as Record<string, unknown>) : null;
-    await writeAuditLog({
-      entityType: "contact",
-      entityId: contact.id,
-      action: "updated",
-      changes,
-      userId: user.id,
-    });
-    void inngest.send({ name: "crm/contact.saved", data: { record_id: contact.id } });
-    revalidatePath("/[locale]/(routes)/crm/contacts", "page");
+  return runContactAction({ verb: "update", auth: { partner: true } }, async (user) => {
+    const contact = await svc.updateContact(user, id, toContactInput(parsed.data));
     return { data: contact };
-  } catch (error) {
-    const ruleMessage = await pluginRuleErrorMessage(error);
-    if (ruleMessage) return { error: ruleMessage };
-    console.log("[UPDATE_CONTACT]", error);
-    return { error: "Failed to update contact" };
-  }
+  });
 };

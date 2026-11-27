@@ -1,19 +1,7 @@
 "use server";
-import { prismadb } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { pluginRuleErrorMessage } from "@/lib/plugins/action-errors";
-import sendEmail from "@/lib/sendmail";
-import { inngest } from "@/inngest/client";
-import { writeAuditLog } from "@/lib/audit-log";
-import {
-  requireAuthenticated,
-  assertCanWriteAccount,
-  assertAssignableUser,
-  PARTNER_EDIT,
-  AuthenticationError,
-  AuthorizationError,
-} from "@/lib/authz";
-import { contactFieldsSchema } from "./contact-input";
+import * as svc from "@/lib/crm/contacts/service";
+import { runContactAction } from "./run";
+import { contactFieldsSchema, toContactInput } from "./contact-input";
 
 export const createContact = async (data: {
   assigned_to?: string;
@@ -41,89 +29,9 @@ export const createContact = async (data: {
 }) => {
   const parsed = contactFieldsSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input" };
-  const {
-    assigned_to,
-    assigned_account,
-    birthday_day,
-    birthday_month,
-    birthday_year,
-    contact_type_id,
-    ...rest
-  } = parsed.data;
 
-  let user;
-  try {
-    user = await requireAuthenticated({ partner: true });
-  } catch (e) {
-    if (e instanceof AuthenticationError) return { error: "Unauthorized" };
-    throw e;
-  }
-  try {
-    // Parent-write: linking the new contact to an account requires write on it.
-    // A partner creates contacts on his accounts only.
-    if (user.role === "partner" && !assigned_account) throw new AuthorizationError();
-    if (assigned_account) await assertCanWriteAccount(user, assigned_account, PARTNER_EDIT);
-    // As in createAccount; a partner's assignee is set to himself below.
-    if (assigned_to && user.role !== "partner") await assertAssignableUser(user, assigned_to);
-  } catch (e) {
-    if (e instanceof AuthorizationError) return { error: "Forbidden" };
-    throw e;
-  }
-  const userId = user.id;
-
-  try {
-    const contact = await prismadb.crm_Contacts.create({
-      data: {
-        ...rest,
-        v: 0,
-        createdBy: userId,
-        updatedBy: userId,
-        accountsIDs: assigned_account || undefined,
-        // A partner assigns only to himself.
-        assigned_to: user.role === "partner" ? userId : assigned_to || undefined,
-        contact_type_id: contact_type_id || undefined,
-        birthday:
-          birthday_day && birthday_month && birthday_year
-            ? birthday_day + "/" + birthday_month + "/" + birthday_year
-            : null,
-      } as any,
-    });
-
-    if (assigned_to && assigned_to !== userId) {
-      const notifyRecipient = await prismadb.users.findFirst({
-        where: { id: assigned_to },
-      });
-
-      if (notifyRecipient?.email) {
-        await sendEmail({
-          from: process.env.EMAIL_FROM as string,
-          to: notifyRecipient.email,
-          subject:
-            notifyRecipient.userLanguage === "en"
-              ? `New contact ${data.first_name} ${data.last_name} has been added to the system and assigned to you.`
-              : `Nový kontakt ${data.first_name} ${data.last_name} byla přidána do systému a přidělena vám.`,
-          text:
-            notifyRecipient.userLanguage === "en"
-              ? `New contact ${data.first_name} ${data.last_name} has been added to the system and assigned to you. You can click here for detail: ${process.env.NEXT_PUBLIC_APP_URL}/crm/contacts/${contact.id}`
-              : `Nový kontakt ${data.first_name} ${data.last_name} byla přidán do systému a přidělena vám. Detaily naleznete zde: ${process.env.NEXT_PUBLIC_APP_URL}/crm/contact/${contact.id}`,
-        });
-      }
-    }
-
-    await writeAuditLog({
-      entityType: "contact",
-      entityId: contact.id,
-      action: "created",
-      changes: null,
-      userId: user.id,
-    });
-    void inngest.send({ name: "crm/contact.saved", data: { record_id: contact.id } });
-    revalidatePath("/[locale]/crm/contacts", "page");
+  return runContactAction({ verb: "create", auth: { partner: true } }, async (user) => {
+    const contact = await svc.createContact(user, { ...toContactInput(parsed.data), last_name: parsed.data.last_name });
     return { data: contact };
-  } catch (error) {
-    const ruleMessage = await pluginRuleErrorMessage(error);
-    if (ruleMessage) return { error: ruleMessage };
-    console.log("[CREATE_CONTACT]", error);
-    return { error: "Failed to create contact" };
-  }
+  });
 };
