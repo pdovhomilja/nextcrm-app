@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireAuthenticated, AuthenticationError } from "@/lib/authz";
 import { findPluginPage } from "@/lib/plugins/slots";
 import { PluginSlot } from "@/lib/plugins/ui/PluginSlot";
+import { PluginPageActionButton } from "../../_components/PluginPageActionButton";
 
 export default async function PluginPage(props: {
   params: Promise<{ pluginId: string; path: string[] }>;
@@ -19,7 +20,8 @@ export default async function PluginPage(props: {
   return (
     <div className="p-4">
       <PluginSlot plugin={found.plugin} actor={{ type: "user", userId: user.id, role: user.role }}
-        render={(ctx) => found.page.component({ path, searchParams, ctx })} />
+        render={(ctx) => found.page.component({ path, searchParams, ctx,
+          actionButton: (b) => <PluginPageActionButton key={`${b.action}:${JSON.stringify(b.input)}`} pluginId={pluginId} {...b} /> })} />
     </div>
   );
 }

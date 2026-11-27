@@ -84,7 +84,7 @@ it("refuses to create EXTERNAL orders in statuses plugins may not set (review I5
   expect(db.crm_Orders.create).not.toHaveBeenCalled();
 });
 
-it("is SDK 0.2.6 (additive)", () => expect(SDK_VERSION).toBe("0.2.6"));
+it("is SDK 0.2.7 (additive)", () => expect(SDK_VERSION).toBe("0.2.7"));
 
 it("takes the external order date on create and update, EXTERNAL only", async () => {
   const api = createDataApi("conn", ["orders:write"]);
