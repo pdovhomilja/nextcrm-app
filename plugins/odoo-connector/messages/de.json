@@ -78,7 +78,9 @@
     "missingSubject": "Auftrag {number}: Odoo-Auftrag nicht gefunden",
     "missingText": "Der Connector findet den Odoo-Auftrag {name} zum CRM-Auftrag {number} nicht mehr. Er wurde in Odoo gelöscht, oder der Odoo-API-Benutzer hat keinen Zugriff mehr darauf. Der CRM-Auftrag behält seinen Status; stornieren Sie ihn von Hand, falls der Odoo-Auftrag gelöscht wurde.",
     "movedSubject": "Auftrag {number}: Kunde in Odoo geändert",
-    "movedText": "Der Odoo-Auftrag {name} (CRM-Auftrag {number}) gehört in Odoo jetzt einem anderen Kunden. Der CRM-Auftrag bleibt bei seinem Account und folgt weiter dem Odoo-Auftrag; prüfen Sie in Odoo, ob die Änderung stimmt."
+    "movedText": "Der Odoo-Auftrag {name} (CRM-Auftrag {number}) gehört in Odoo jetzt einem anderen Kunden. Der CRM-Auftrag bleibt bei seinem Account und folgt weiter dem Odoo-Auftrag; prüfen Sie in Odoo, ob die Änderung stimmt.",
+    "proposalsSubject": "{count} Kunde(n) aus Odoo warten auf eine Verknüpfung",
+    "proposalsText": "Der Sync hat {count} neue Kunden aus Odoo gefunden, die zu einem CRM-Konto passen. Ein Manager bestätigt oder lehnt jede Verknüpfung unter Verknüpfungsvorschläge ab."
   },
   "product": {
     "linked": "Odoo-Produkt #{id}"
@@ -131,5 +133,21 @@
     "total": "Gesamt",
     "left": "Offen",
     "status": "Status"
+  },
+  "proposals": {
+    "title": "Verknüpfungsvorschläge",
+    "nav": "Verknüpfungsvorschläge",
+    "empty": "Kein Kunde wartet auf eine Verknüpfung.",
+    "help": "Ein Kunde aus Odoo passt zu einem CRM-Konto. Bestätigen verknüpft beide (der nächste Sync aktualisiert das Konto); Ablehnen gibt dem Kunden ein eigenes Konto. Ein abgelehntes Paar wird nie wieder vorgeschlagen.",
+    "customer": "Kunde in Odoo",
+    "account": "CRM-Konto",
+    "reason": "Übereinstimmung",
+    "found": "Gefunden",
+    "confirm": "Bestätigen",
+    "reject": "Ablehnen",
+    "confirmedDone": "Bestätigt. Der nächste Sync verknüpft das Konto.",
+    "rejectedDone": "Abgelehnt. Der nächste Sync legt ein Konto für den Kunden an.",
+    "gone": "Dieser Vorschlag ist nicht mehr offen. Laden Sie die Seite neu.",
+    "taken": "Dieses Konto ist bereits mit einem anderen Kunden verknüpft."
   }
 }

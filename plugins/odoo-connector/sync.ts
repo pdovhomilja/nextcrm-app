@@ -6,7 +6,7 @@ import { tell, type Ctx } from "./settings";
 import { syncCatalog } from "./catalog";
 import { syncOrderStatuses } from "./orders-status";
 import { syncOrdersIn } from "./orders-in";
-import { K, type AccountLink, type CatalogCounts, type Conflict, type RunSummary } from "./store";
+import { K, type AccountLink, type CatalogCounts, type Conflict, type Proposal, type RunSummary } from "./store";
 
 const PAGE = 100;
 const OVERLAP_MS = 2 * 60_000;
@@ -31,6 +31,8 @@ interface Run {
   owners: Map<number, string | null>;
   started: number;
   done: Set<number>;
+  /** Link proposals this run added (managers are told once per run). */
+  proposed: number;
   catalog?: CatalogCounts;
   orders?: { checked: number; moved: number; imported?: number };
 }
@@ -61,14 +63,31 @@ async function syncCustomer(r: Run, p: OdooPartner): Promise<void> {
     return;
   }
   const fields = accountFields(p, (id) => r.countries.get(id) ?? null, ctx.settings.defaultCountry);
-  const match = await matchAccount(ctx, p.id, fields);
+  let match = await matchAccount(ctx, p.id, fields);
   if (match.kind === "conflict") {
     r.counts.conflicts++;
     if (dry) ctx.log.info("Dry run: would conflict", { partnerId: p.id, reason: match.reason, candidates: match.candidates });
-    else await ctx.store.set(K.conflict(p.id), { partnerId: p.id, name: fields.name, reason: match.reason, candidates: match.candidates, foundAt: r.now.toISOString() } satisfies Conflict);
+    else {
+      await ctx.store.set(K.conflict(p.id), { partnerId: p.id, name: fields.name, reason: match.reason, candidates: match.candidates, foundAt: r.now.toISOString() } satisfies Conflict);
+      await ctx.store.delete(K.proposal(p.id));
+    }
     return;
   }
   if (!dry) await ctx.store.delete(K.conflict(p.id));
+  // A first link by number or VAT waits for a manager; a rejected pair is treated as no match.
+  if (match.kind === "number" || match.kind === "vat") {
+    const accountId = match.accountId;
+    if (await ctx.store.get(K.rejected(p.id, accountId))) match = { kind: "new" };
+    else if (!(await ctx.store.get(K.confirmed(p.id, accountId)))) {
+      if (dry) { ctx.log.info("Dry run: would propose a link", { partnerId: p.id, accountId, reason: match.kind }); return; }
+      const prev = await ctx.store.get<Proposal>(K.proposal(p.id));
+      const same = prev?.accountId === accountId;
+      if (!same) r.proposed++;
+      await ctx.store.set(K.proposal(p.id), { partnerId: p.id, name: fields.name, accountId, reason: match.kind, foundAt: same ? prev.foundAt : r.now.toISOString() } satisfies Proposal);
+      return;
+    }
+  }
+  if (!dry) await ctx.store.delete(K.proposal(p.id));
   let accountId: string;
   let salesperson: string | null;
   if (match.kind === "new") {
@@ -209,7 +228,7 @@ export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<
   }
   await ctx.store.set(K.lock, { until: new Date(now.getTime() + LOCK_MS).toISOString() });
   const started = Date.now();
-  const r: Run = { ctx, client, now, dry, counts: zero(), fields: [], countries: new Map(), owners: new Map(), started, done: new Set() };
+  const r: Run = { ctx, client, now, dry, counts: zero(), fields: [], countries: new Map(), owners: new Map(), started, done: new Set(), proposed: 0 };
   let summary: RunSummary;
   try {
     const available = await client.call<Record<string, unknown>>("res.partner", "fields_get", { attributes: ["type"] });
@@ -232,6 +251,7 @@ export async function runSync(ctx: Ctx, client: OdooClient, now: Date): Promise<
       ctx.log.error(`Orders from Odoo failed: ${e instanceof Error ? e.message : String(e)}`);
     }
     if (!dry && top) await ctx.store.set(K.cursor, { at: top });
+    if (r.proposed) await tell(ctx, { roles: ["manager", "admin"], subject: ctx.t("mail.proposalsSubject", { count: r.proposed }), text: ctx.t("mail.proposalsText", { count: r.proposed }) });
     summary = { at: now.toISOString(), ok: true, dryRun: dry, ...r.counts, catalog: r.catalog, orders: r.orders };
     await ctx.store.set(K.failures, { count: 0 });
     ctx.log.info(`Sync finished${dry ? " (dry run)" : ""}`, { ...r.counts, ms: Date.now() - started });

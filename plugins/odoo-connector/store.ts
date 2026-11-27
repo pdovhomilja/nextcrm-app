@@ -3,6 +3,9 @@ export const K = {
   account: (id: string) => `account:${id}`,           // → AccountLink
   contact: (id: number) => `contact:${id}`,           // → { contactId }
   conflict: (id: number) => `conflict:${id}`,         // → Conflict
+  proposal: (id: number) => `proposal:${id}`,         // → Proposal: a first link waiting for a manager
+  confirmed: (id: number, accountId: string) => `confirmed:${id}:${accountId}`, // → { at } the next sync links this pair
+  rejected: (id: number, accountId: string) => `rejected:${id}:${accountId}`,   // → { at } never proposed again
   retry: (id: number) => `retry:${id}`,               // → {} a partner whose last sync failed
   product: (id: number) => `product:${id}`,           // → ProductLink
   category: (id: number) => `category:${id}`,         // → { categoryId, parentRef }
@@ -48,6 +51,7 @@ export interface CatalogCounts {
 }
 
 export interface Conflict { partnerId: number; name: string; reason: "number" | "vat" | "linked"; candidates: string[]; foundAt: string }
+export interface Proposal { partnerId: number; name: string; accountId: string; reason: "number" | "vat"; foundAt: string }
 
 export interface CompareResult {
   at: string;

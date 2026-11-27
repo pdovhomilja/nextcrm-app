@@ -78,7 +78,9 @@
     "missingSubject": "Objednávka {number}: objednávka v Odoo nenalezena",
     "missingText": "Konektor už nenachází objednávku Odoo {name} pro objednávku CRM {number}. V Odoo byla smazána, nebo k ní uživatel API ztratil přístup. Objednávka v CRM si ponechává svůj stav; pokud byla objednávka v Odoo smazána, zrušte ji ručně.",
     "movedSubject": "Objednávka {number}: v Odoo se změnil zákazník",
-    "movedText": "Objednávka Odoo {name} (objednávka CRM {number}) teď v Odoo patří jinému zákazníkovi. Objednávka v CRM zůstává u svého účtu a dál sleduje objednávku v Odoo; v Odoo ověřte, zda je změna správná."
+    "movedText": "Objednávka Odoo {name} (objednávka CRM {number}) teď v Odoo patří jinému zákazníkovi. Objednávka v CRM zůstává u svého účtu a dál sleduje objednávku v Odoo; v Odoo ověřte, zda je změna správná.",
+    "proposalsSubject": "{count} zákazník(ů) z Odoo čeká na propojení",
+    "proposalsText": "Synchronizace našla {count} nových zákazníků z Odoo, kteří odpovídají účtu v CRM. Manažer každé propojení potvrdí nebo odmítne v Návrzích propojení."
   },
   "product": {
     "linked": "Produkt v Odoo č. {id}"
@@ -131,5 +133,21 @@
     "total": "Celkem",
     "left": "Zbývá uhradit",
     "status": "Stav"
+  },
+  "proposals": {
+    "title": "Návrhy propojení",
+    "nav": "Návrhy propojení",
+    "empty": "Žádný zákazník nečeká na propojení.",
+    "help": "Zákazník z Odoo odpovídá jednomu účtu v CRM. Potvrzením je propojíte (další synchronizace účet aktualizuje), odmítnutím dostane zákazník vlastní účet. Odmítnutá dvojice se už znovu nenavrhne.",
+    "customer": "Zákazník z Odoo",
+    "account": "Účet v CRM",
+    "reason": "Shoda",
+    "found": "Nalezeno",
+    "confirm": "Potvrdit",
+    "reject": "Odmítnout",
+    "confirmedDone": "Potvrzeno. Další synchronizace účet propojí.",
+    "rejectedDone": "Odmítnuto. Další synchronizace zákazníkovi založí účet.",
+    "gone": "Tento návrh už není otevřený. Načtěte stránku znovu.",
+    "taken": "Tento účet je už propojený s jiným zákazníkem."
   }
 }
