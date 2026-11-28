@@ -30,7 +30,7 @@ export async function runSync(ctx: Ctx, client: OxoClient, now: Date): Promise<R
     ctx.log.info("Sync skipped: another run is in progress");
     return { ...base, ok: false, error: ctx.t("admin.running"), customers: zeroCustomers(), rows: emptyRows() };
   }
-  const r: CustomerRun = { ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set() };
+  const r: CustomerRun = { ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set(), proposed: 0 };
   let catalog: CatalogCounts | undefined;
   const orders = zeroOrders();
   let summary: RunSummary;

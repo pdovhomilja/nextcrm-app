@@ -6,7 +6,7 @@ import { summaryText } from "../sync";
 import { customer } from "./fake-oxo";
 import { mk, now, type TestCtx } from "./helpers";
 
-const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set() });
+const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set(), proposed: 0 });
 
 // Other systems (e.g. a customer portal reading the CRM over MCP) find the OXO ERP customer through the account's external_ref:
 // a bare number = Odoo partner id, `oxo:<id>` = OXO ERP customer id.

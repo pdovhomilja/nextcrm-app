@@ -4,7 +4,7 @@ import { K, type Proposal } from "../store";
 import { customer } from "./fake-oxo";
 import { mk, now, type TestCtx } from "./helpers";
 
-const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set() });
+const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set(), proposed: 0 });
 const acc = (over: Record<string, unknown> = {}) => ({ id: "a1", name: "Acc a1", company_id: null, vat: null, billing_postal_code: null, assigned_to: "u-rep", deletedAt: null, ...over });
 // The customer is unchanged in OXO ERP after the first run: later runs see it only through the stored proposal.
 const setup = () => {

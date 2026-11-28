@@ -18,7 +18,7 @@ export interface CustomerRun {
   /** accountId → customerId linked earlier in this run (a dry run writes no links). */
   claimed: Map<string, number>;
   /** Link proposals this run added (managers are told once per run). */
-  proposed?: number;
+  proposed: number;
   /** Accounts whose external_ref this run already wrote or decided against; the backfill leaves them alone. */
   refsDecided: Set<string>;
 }
@@ -78,7 +78,7 @@ async function syncCustomer(r: CustomerRun, c: OxoCustomer): Promise<void> {
       if (dry) return;
       const prev = await ctx.store.get<Proposal>(K.proposal(c.id));
       const same = prev?.accountId === accountId;
-      if (!same) r.proposed = (r.proposed ?? 0) + 1;
+      if (!same) r.proposed++;
       await ctx.store.set(K.proposal(c.id), { customerId: c.id, name: fields.name, accountId, reason: match.kind, foundAt: same ? prev.foundAt : now.toISOString(), customer: c } satisfies Proposal);
       return;
     }

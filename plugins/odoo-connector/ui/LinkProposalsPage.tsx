@@ -4,7 +4,7 @@ import type { Proposal } from "../store";
 
 /** Managers confirm or reject first links the sync found (open proposals only). */
 export async function LinkProposalsPage({ ctx, actionButton }: PageProps<Settings, Secrets>) {
-  const open = (await ctx.store.list("proposal:")).map((e) => e.value as Proposal).filter((p) => !("decided" in p && p.decided));
+  const open = (await ctx.store.list("proposal:")).map((e) => e.value as Proposal);
   const accounts = new Map((await Promise.all(open.map((p) => ctx.data.accounts.get(p.accountId)))).filter((a) => a).map((a) => [a!.id as string, a!.name as string]));
   return (
     <div className="space-y-3 p-4 text-sm">
