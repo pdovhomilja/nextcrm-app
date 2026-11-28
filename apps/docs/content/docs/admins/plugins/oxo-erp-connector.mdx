@@ -1,0 +1,36 @@
+---
+title: "OXO ERP connector"
+description: "Keep customers, the product catalog, price lists and orders in step with an OXO ERP over its /api/v1."
+---
+
+The **OXO ERP connector** plugin (`oxo-erp-connector`) reads customers, products and the chosen price lists from an OXO ERP and keeps them in the CRM. When you turn on sending orders, READY orders go to OXO ERP and their status comes back.
+
+## Install and settings
+
+Install it under **Admin → Plugins → OXO ERP connector** and enter the OXO ERP API key (`oxo_` followed by 40 characters).
+
+| Setting | Default | Effect |
+|---|---|---|
+| `url` | none | The OXO ERP address, starting with `https://`. |
+| `syncMinutes` | `15` | Minutes between syncs, 5 to 1440. |
+| `defaultCountry` | `CZ` | Two-letter country code for customers without a country in OXO ERP. |
+| `currency` | `CZK` | Currency of the imported catalog. |
+| `dryRun` | on | While on, a sync only counts what it would create or change and keeps that as a report. |
+| `priceLists` | empty | The OXO ERP price lists to import, by id, separated by commas. |
+| `sendOrders` | off | Send READY orders to OXO ERP. |
+| `timeZone` | `UTC` | Time zone for times shown in the admin section and emails. |
+
+## Customers
+
+Each sync reads the customers OXO ERP changed since the last run. A customer lands on the account it is already linked to; otherwise on one account with the same country + IČO, then the same DIČ, then the same name + zip; otherwise a new account is created, without an owner. Two or more candidates are a conflict: nothing is linked until the CRM data is fixed.
+
+### Account external_ref
+
+Every account the connector creates or links gets an `external_ref`, so other systems (for example a customer portal that reads the CRM over MCP with `crm_search_accounts`) can find the OXO ERP customer:
+
+- the Odoo partner id as a plain number, for example `812`, when OXO ERP has one for the customer;
+- otherwise `oxo:<id>` with the OXO ERP customer id, for example `oxo:6`.
+
+An `external_ref` that is already set is never changed. When it differs from the value above, the plugin log gets a warning and the account stays as it is.
+
+Accounts linked before version 0.1.1, or linked by a sent order, get their `external_ref` on the next normal sync; no separate step is needed. In a dry run the sync only counts them. The run summary in the admin section shows the number as "external_ref filled".
