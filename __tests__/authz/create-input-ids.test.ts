@@ -1,11 +1,12 @@
 /**
  * Ids a UI action takes from its input must point at something the caller may
- * use: an assignee must be an active user, a price list one that exists.
+ * use: an assignee must be an active user, a price list one that exists and
+ * is active (chosen by a manager only).
  * member_of is a free-text label, not an id, and is stored as given.
  * DB-backed: CI runs it in the integration job.
  *
  * Fixture: plain users `rep` and `other`, an inactive user `gone`, a partner
- * `partner`; one account each for rep and other, and rep's account `repGone`
+ * `partner`, a manager `boss`; one account each for rep and other, and rep's account `repGone`
  * still assigned to `gone`; one price list. Real actions
  * and MCP handlers are called as `rep` unless a test says otherwise (session
  * mocked, role read from the DB).
@@ -24,20 +25,21 @@ import { updateContract } from "@/actions/crm/contracts/update-contract";
 import { crmAccountTools } from "@/lib/mcp/tools/crm-accounts";
 
 const tag = randomUUID().slice(0, 8);
-const U = { rep: randomUUID(), other: randomUUID(), gone: randomUUID(), partner: randomUUID() };
+const U = { rep: randomUUID(), other: randomUUID(), gone: randomUUID(), partner: randomUUID(), boss: randomUUID() };
 const ACC = { rep: randomUUID(), other: randomUUID(), repGone: randomUUID() };
 const PRICELIST = randomUUID();
 // rep's contract assigned to other; rep's contract still assigned to the now inactive `gone`
 const CONTRACT = { rep: randomUUID(), repGone: randomUUID() };
 const NOBODY = randomUUID();
+const ROLE = { rep: "user", other: "user", gone: "user", partner: "partner", boss: "manager" } as const;
 
 const accountsNamed = (name: string) => prismadb.crm_Accounts.count({ where: { name } });
 const contractsTitled = (title: string) => prismadb.crm_Contracts.count({ where: { title } });
 
 beforeAll(async () => {
   await prismadb.users.createMany({
-    data: (["rep", "other", "gone", "partner"] as const).map((k) => ({
-      id: U[k], email: `${k}-${tag}@input-ids.test`, name: `${k}-${tag}`, role: k === "partner" ? "partner" : "user",
+    data: (["rep", "other", "gone", "partner", "boss"] as const).map((k) => ({
+      id: U[k], email: `${k}-${tag}@input-ids.test`, name: `${k}-${tag}`, role: ROLE[k],
       userStatus: k === "gone" ? "INACTIVE" : "ACTIVE",
     })),
   });
@@ -85,11 +87,13 @@ describe("createAccount", () => {
   });
 
   it("refuses a price list that does not exist", async () => {
+    as("boss");
     expect(await createAccount({ name: `pricelist-${tag}`, pricelist_id: NOBODY })).toEqual({ error: "Price list not found" });
     expect(await accountsNamed(`pricelist-${tag}`)).toBe(0);
   });
 
   it("creates the account with an active assignee and an existing price list", async () => {
+    as("boss");
     const r = await createAccount({ name: `ok-${tag}`, assigned_to: U.other, pricelist_id: PRICELIST });
     expect(r).toHaveProperty("data");
     const row = await prismadb.crm_Accounts.findFirstOrThrow({ where: { name: `ok-${tag}` } });
@@ -116,6 +120,7 @@ describe("updateAccount", () => {
   });
 
   it("refuses a price list that does not exist", async () => {
+    as("boss");
     expect(await updateAccount({ id: ACC.rep, pricelist_id: NOBODY })).toEqual({ error: "Price list not found" });
     expect((await account(ACC.rep)).pricelist_id).toBeNull();
   });
@@ -126,12 +131,13 @@ describe("updateAccount", () => {
   });
 
   it("saves an active assignee and an existing price list; an empty price list clears it", async () => {
+    as("boss");
     const r = await updateAccount({ id: ACC.repGone, assigned_to: U.other, pricelist_id: PRICELIST });
     expect(r).toHaveProperty("data");
     const row = await account(ACC.repGone);
     expect({ assigned_to: row.assigned_to, pricelist_id: row.pricelist_id })
       .toEqual({ assigned_to: U.other, pricelist_id: PRICELIST });
-    // other now owns it; rep still created it, so he may write it.
+    // The manager clears it again.
     expect(await updateAccount({ id: ACC.repGone, pricelist_id: "" })).toHaveProperty("data.pricelist_id", null);
   });
 });

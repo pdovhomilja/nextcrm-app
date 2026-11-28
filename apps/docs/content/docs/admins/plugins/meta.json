@@ -1,4 +1,4 @@
 {
   "title": "Plugins",
-  "pages": ["index", "account-protection", "odoo-connector"]
+  "pages": ["index", "account-protection", "odoo-connector", "oxo-erp-connector"]
 }

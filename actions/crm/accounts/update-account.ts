@@ -8,11 +8,12 @@ import {
   requireAuthenticated,
   assertCanWriteAccount,
   assertAssignableUser,
+  isManagerOrAdmin,
   PARTNER_EDIT,
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
-import { accountFieldsSchema } from "./account-input";
+import { accountFieldsSchema, priceListChoiceError } from "./account-input";
 
 export const updateAccount = async (data: {
   id: string;
@@ -73,9 +74,15 @@ export const updateAccount = async (data: {
     if (e instanceof AuthorizationError) return { error: "Forbidden" };
     throw e;
   }
-  if (rest.pricelist_id) {
-    const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: rest.pricelist_id }, select: { id: true } });
-    if (!pricelist) return { error: "Price list not found" };
+  // The form resends the stored price list, so only a change is checked.
+  const pricelistChanged =
+    rest.pricelist_id !== undefined && (rest.pricelist_id || null) !== (before?.pricelist_id ?? null);
+  if (pricelistChanged) {
+    if (!isManagerOrAdmin(user)) return { error: "Forbidden" };
+    if (rest.pricelist_id) {
+      const error = await priceListChoiceError(user, rest.pricelist_id);
+      if (error) return { error };
+    }
   }
 
   try {

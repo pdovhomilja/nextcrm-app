@@ -13,7 +13,7 @@
     "never": "ще ні",
     "nextRun": "Наступний запуск",
     "failed": "Помилка: {error}",
-    "customerCounts": "Клієнти: {linked} вже пов'язано, {number} за IČO, {vat} за DIČ, {name} за назвою та індексом, {created} нових, {updated} оновлено, {conflicts} конфліктів, {skipped} неактивних, {failed} помилок",
+    "customerCounts": "Клієнти: {linked} вже пов'язано, {number} за IČO, {vat} за DIČ, {name} за назвою та індексом, {created} нових, {updated} оновлено, {conflicts} конфліктів, {skipped} неактивних, {failed} помилок, {externalRefsFilled} external_ref заповнено",
     "catalogCounts": "Каталог: категорії {categoriesMatched} зіставлено, {categoriesCreated} нових · товари {productsUpdated} оновлено, {productsCreated} нових, {productsFailed} помилок · прайс-листів замінено {listsReplaced} · прайс-листів облікових записів встановлено {accountLists}",
     "orderCounts": "Замовлення: {checked} перевірено, {moved} просунуто, {imported} імпортовано, {updated} оновлено, {pending} чекають на клієнта",
     "listsMissing": "Прайс-листи, яких немає в OXO ERP: {ids}",

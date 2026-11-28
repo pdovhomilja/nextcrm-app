@@ -4,7 +4,7 @@ import { K } from "../store";
 import { customer } from "./fake-oxo";
 import { mk, now, type TestCtx } from "./helpers";
 
-const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map() });
+const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set() });
 const acc = (id: string, over: Record<string, unknown> = {}) => ({ id, name: `Acc ${id}`, company_id: null, vat: null, billing_postal_code: null, assigned_to: "u-rep", deletedAt: null, ...over });
 
 describe("customers", () => {

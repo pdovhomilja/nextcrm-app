@@ -32,6 +32,7 @@ import { createAccount } from "@/actions/crm/accounts/create-account";
 import { getRegistryCountries, lookupCompany } from "@/actions/crm/accounts/lookup-company";
 import { VatCheckButton } from "./VatCheckButton";
 import { useSession } from "@/lib/auth-client";
+import { isManagerOrAdmin, mapLegacyRole } from "@/lib/authz/roles";
 
 type Props = {
   industries: any[];
@@ -44,6 +45,8 @@ export function NewAccountForm({ industries, onFinish }: Props) {
   const p = useTranslations("Plugins");
   const locale = useLocale();
   const { data: session } = useSession();
+  // The client session holds the stored role; legacy `member` means manager.
+  const canPickPriceList = isManagerOrAdmin({ id: session?.user?.id ?? "", role: mapLegacyRole(session?.user?.role) });
 
   const formSchema = z.object({
     name: z.string().min(1, t("nameRequired")).max(100),
@@ -513,6 +516,8 @@ export function NewAccountForm({ industries, onFinish }: Props) {
                     <Select
                       onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
                       value={field.value || "__none__"}
+                      // Only an admin/manager picks the price list (the server enforces it too).
+                      disabled={!canPickPriceList}
                     >
                       <FormControl>
                         <SelectTrigger>

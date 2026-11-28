@@ -24,6 +24,10 @@ it("has the same message keys in every locale", () => {
   for (const m of [cz, de, uk, nb]) expect(keys(m)).toEqual(keys(en));
 });
 
+it("every locale shows how many external_refs a run filled", () => {
+  for (const m of [en, cz, de, uk, nb]) expect(m.admin.customerCounts).toContain("{externalRefsFilled}");
+});
+
 it("never fails an install", async () => {
   const log: string[] = [];
   const ctx = { settings: { url: "https://x", dryRun: true, syncMinutes: 15, defaultCountry: "CZ", currency: "CZK", priceLists: "", sendOrders: false, timeZone: "UTC" }, secrets: { apiKey: "k" },

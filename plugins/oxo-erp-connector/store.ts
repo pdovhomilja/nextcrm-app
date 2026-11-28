@@ -48,7 +48,7 @@ export interface OrderLink {
 export interface SendState { lastError: string; waitingSince: string; stuckNotified?: boolean }
 export interface FailedState { reason: string; at: string }
 
-export interface CustomerCounts { linked: number; number: number; vat: number; name: number; created: number; updated: number; conflicts: number; skipped: number; failed: number }
+export interface CustomerCounts { linked: number; number: number; vat: number; name: number; created: number; updated: number; conflicts: number; skipped: number; failed: number; externalRefsFilled: number }
 export interface CatalogCounts {
   categoriesMatched: number; categoriesCreated: number; productsUpdated: number; productsCreated: number; productsFailed: number;
   listsReplaced: number; listsMissing: number[]; accountLists: number;

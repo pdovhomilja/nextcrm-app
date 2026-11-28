@@ -10,7 +10,7 @@ import {
   AuthenticationError,
   AuthorizationError,
 } from "@/lib/authz";
-import { accountFieldsSchema } from "./account-input";
+import { accountFieldsSchema, priceListChoiceError } from "./account-input";
 
 export const createAccount = async (data: {
   name: string;
@@ -63,8 +63,8 @@ export const createAccount = async (data: {
     throw e;
   }
   if (input.pricelist_id) {
-    const pricelist = await prismadb.crm_PriceLists.findUnique({ where: { id: input.pricelist_id }, select: { id: true } });
-    if (!pricelist) return { error: "Price list not found" };
+    const error = await priceListChoiceError(user, input.pricelist_id);
+    if (error) return { error };
   }
 
   try {

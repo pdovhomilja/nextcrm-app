@@ -17,6 +17,8 @@ NextCRM has three roles:
 
 "Records they own" means records assigned to them or created by them (for accounts, also accounts they watch; for project boards, also boards shared with them). The same rules apply in the web app, the API and the MCP server; they are enforced in `lib/authz`.
 
+Only an `admin` or a `manager` sets a company's price list.
+
 Older instances may still have the legacy role values `member` and `viewer`. NextCRM treats `member` as `manager` and `viewer` as `user`.
 
 ## User status
