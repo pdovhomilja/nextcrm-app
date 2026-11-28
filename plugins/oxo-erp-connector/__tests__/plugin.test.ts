@@ -8,7 +8,7 @@ import nb from "../messages/nb.json";
 const keys = (o: Record<string, unknown>, p = ""): string[] => Object.entries(o).flatMap(([k, v]) => (v && typeof v === "object" ? keys(v as Record<string, unknown>, `${p}${k}.`) : [`${p}${k}`])).sort();
 
 it("declares the OXO ERP connector", () => {
-  expect([plugin.id, plugin.version, plugin.sdk]).toEqual(["oxo-erp-connector", "0.1.0", "^0.2.6"]);
+  expect([plugin.id, plugin.version, plugin.sdk]).toEqual(["oxo-erp-connector", "0.1.1", "^0.2.6"]);
   expect(plugin.permissions).toEqual(["http", "accounts:read", "accounts:write", "users:read", "notify", "products:read", "products:write", "priceLists:read", "priceLists:write", "orders:read", "orders:write"]);
   expect(Object.keys(plugin.settings.shape)).toEqual(["url", "syncMinutes", "defaultCountry", "currency", "dryRun", "priceLists", "sendOrders", "timeZone"]);
   expect(Object.keys(plugin.secrets.shape)).toEqual(["apiKey"]);
@@ -21,6 +21,10 @@ it("declares the OXO ERP connector", () => {
 
 it("has the same message keys in every locale", () => {
   for (const m of [cz, de, uk, nb]) expect(keys(m)).toEqual(keys(en));
+});
+
+it("every locale shows how many external_refs a run filled", () => {
+  for (const m of [en, cz, de, uk, nb]) expect(m.admin.customerCounts).toContain("{externalRefsFilled}");
 });
 
 it("never fails an install", async () => {

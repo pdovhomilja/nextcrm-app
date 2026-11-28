@@ -12,7 +12,7 @@ export const zeroOrders = (): OrderCounts => ({ checked: 0, moved: 0, imported: 
 
 export function summaryText(ctx: Ctx, s: RunSummary): string {
   if (!s.ok) return ctx.t("admin.failed", { error: s.error ?? "?" });
-  const parts = [ctx.t("admin.customerCounts", { ...s.customers })];
+  const parts = [ctx.t("admin.customerCounts", { ...s.customers, externalRefsFilled: s.customers.externalRefsFilled ?? 0 })];   // summaries stored by 0.1.0 have no such count
   if (s.catalog) parts.push(ctx.t("admin.catalogCounts", { ...s.catalog, listsMissing: s.catalog.listsMissing.join(", ") }));
   if (s.orders) parts.push(ctx.t("admin.orderCounts", { ...s.orders }));
   return parts.join(" · ");
@@ -30,7 +30,7 @@ export async function runSync(ctx: Ctx, client: OxoClient, now: Date): Promise<R
     ctx.log.info("Sync skipped: another run is in progress");
     return { ...base, ok: false, error: ctx.t("admin.running"), customers: zeroCustomers(), rows: emptyRows() };
   }
-  const r: CustomerRun = { ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map() };
+  const r: CustomerRun = { ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set() };
   let catalog: CatalogCounts | undefined;
   const orders = zeroOrders();
   let summary: RunSummary;

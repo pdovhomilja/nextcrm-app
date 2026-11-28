@@ -14,7 +14,7 @@ import { OrderPanel } from "./ui/OrderPanel";
 export default definePlugin({
   id: "oxo-erp-connector",
   name: "OXO ERP connector",
-  version: "0.1.0",
+  version: "0.1.1",
   sdk: "^0.2.6",
   description: "Imports customers, products and price lists from OXO ERP and takes over the rows odoo-connector made; sends READY orders to OXO ERP, brings delivery back as the order status and imports orders made in OXO ERP.",
   permissions: ["http", "accounts:read", "accounts:write", "users:read", "notify", "products:read", "products:write", "priceLists:read", "priceLists:write", "orders:read", "orders:write"],
