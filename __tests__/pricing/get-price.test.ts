@@ -67,11 +67,17 @@ it("looks up rates direct, inverse, or throws", () => {
 });
 
 it("resolves account list, then default list, then null", async () => {
-  db.crm_Accounts.findFirst.mockResolvedValueOnce({ pricelist_id: "A" });
+  db.crm_Accounts.findFirst.mockResolvedValueOnce({ pricelist_id: "A", pricelist: { isActive: true } });
   await expect(resolvePriceListId("acc")).resolves.toBe("A");
   db.crm_Accounts.findFirst.mockResolvedValueOnce({ pricelist_id: null });
   db.crm_SystemSettings.findUnique.mockResolvedValueOnce({ value: "D" });
   await expect(resolvePriceListId("acc")).resolves.toBe("D");
   db.crm_SystemSettings.findUnique.mockResolvedValueOnce(null);
   await expect(resolvePriceListId(null)).resolves.toBeNull();
+});
+
+it("ignores an inactive account list and falls back to the default list", async () => {
+  db.crm_Accounts.findFirst.mockResolvedValueOnce({ pricelist_id: "OLD", pricelist: { isActive: false } });
+  db.crm_SystemSettings.findUnique.mockResolvedValueOnce({ value: "D" });
+  await expect(resolvePriceListId("acc")).resolves.toBe("D");
 });
