@@ -90,7 +90,9 @@
     "stuckSubject": "Auftrag {number} wartet seit einem Tag auf OXO ERP",
     "stuckText": "Auftrag {number} wartet seit {since} auf den Versand an OXO ERP. Letzter Fehler: {error}. Der Connector versucht es weiter; prüfen Sie OXO ERP.",
     "missingSubject": "Auftrag {number}: in OXO ERP nicht gefunden",
-    "missingText": "Der Connector findet CRM-Auftrag {number} nicht mehr in OXO ERP. Der CRM-Auftrag behält seinen Status; stornieren Sie ihn von Hand, wenn der Auftrag entfernt wurde."
+    "missingText": "Der Connector findet CRM-Auftrag {number} nicht mehr in OXO ERP. Der CRM-Auftrag behält seinen Status; stornieren Sie ihn von Hand, wenn der Auftrag entfernt wurde.",
+    "proposalsSubject": "{count} Kunde(n) aus OXO ERP warten auf eine Verknüpfung",
+    "proposalsText": "Der Sync hat {count} neue Kunden aus OXO ERP gefunden, die zu einem CRM-Konto passen. Ein Manager bestätigt oder lehnt jede Verknüpfung unter Verknüpfungsvorschläge ab."
   },
   "tab": {
     "title": "OXO ERP",
@@ -103,5 +105,21 @@
     "total": "Summe",
     "status": "Status",
     "delivery": "Lieferung"
+  },
+  "proposals": {
+    "title": "Verknüpfungsvorschläge",
+    "nav": "Verknüpfungsvorschläge",
+    "empty": "Kein Kunde wartet auf eine Verknüpfung.",
+    "help": "Ein Kunde aus OXO ERP passt zu einem CRM-Konto. Bestätigen verknüpft beide (der nächste Sync aktualisiert das Konto); Ablehnen gibt dem Kunden ein eigenes Konto. Ein abgelehntes Paar wird nie wieder vorgeschlagen.",
+    "customer": "Kunde in OXO ERP",
+    "account": "CRM-Konto",
+    "reason": "Übereinstimmung",
+    "found": "Gefunden",
+    "confirm": "Bestätigen",
+    "reject": "Ablehnen",
+    "confirmedDone": "Bestätigt. Der nächste Sync verknüpft das Konto.",
+    "rejectedDone": "Abgelehnt. Der nächste Sync legt ein Konto für den Kunden an.",
+    "gone": "Dieser Vorschlag ist nicht mehr offen. Laden Sie die Seite neu.",
+    "taken": "Dieses Konto ist bereits mit einem anderen Kunden verknüpft."
   }
 }

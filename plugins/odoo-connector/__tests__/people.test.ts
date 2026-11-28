@@ -25,6 +25,7 @@ it("links an existing contact with the same email instead of creating one", asyn
   const accounts: RecordData[] = [{ id: "a1", name: "Co", company_id: "27082440", deletedAt: null }];
   const { ctx, client } = mk([company(1, { company_registry: "27082440" }), person(11, 1, { email: "known@x.example" })], accounts);
   await ctx.data.contacts.create({ last_name: "Known", email: "known@x.example", accountsIDs: "a1" });
+  await ctx.store.set(K.confirmed(1, "a1"), { at: now.toISOString() });   // a manager confirmed the first link
   await runSync(ctx, client, now);
   expect(await ctx.data.contacts.find({})).toHaveLength(1);
   expect(await ctx.store.get(K.contact(11))).toEqual({ contactId: expect.any(String) });

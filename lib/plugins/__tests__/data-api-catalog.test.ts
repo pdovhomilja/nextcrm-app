@@ -20,7 +20,7 @@ import { createDataApi } from "@/lib/plugins/data-api";
 
 const f = { name: "Cup", sku: "S1", description: null, type: "PRODUCT" as const, status: "ACTIVE" as const, unit_price: "1", unit_cost: null, currency: "CZK", tax_rate: null, unit: null, categoryRef: null };
 
-it("is SDK 0.2.6 (additive)", () => expect(SDK_VERSION).toBe("0.2.6"));
+it("is SDK 0.2.7 (additive)", () => expect(SDK_VERSION).toBe("0.2.7"));
 
 it("lists external categories with products:read", async () => {
   await expect(createDataApi("demo", []).productCategories.findExternal()).rejects.toThrow("products:read");

@@ -6,6 +6,8 @@ import { loadPriceLists, queueJob, runQueued } from "./jobs";
 import { onOrderUpdated, sweepOrders } from "./orders-out";
 import { AdminSection } from "./ui/AdminSection";
 import { NeedsOwnerPage } from "./ui/NeedsOwnerPage";
+import { LinkProposalsPage } from "./ui/LinkProposalsPage";
+import { confirmProposal, rejectProposal } from "./proposals";
 import { AccountPanel } from "./ui/AccountPanel";
 import { ProductPanel } from "./ui/ProductPanel";
 import { OrderPanel } from "./ui/OrderPanel";
@@ -14,8 +16,8 @@ import { AccountTab } from "./ui/AccountTab";
 export default definePlugin({
   id: "odoo-connector",
   name: "Odoo connector",
-  version: "0.4.3",
-  sdk: "^0.2.5",
+  version: "0.5.0",
+  sdk: "^0.2.7",
   description: "Imports customers, their people and the product catalog with price lists from an Odoo ERP and keeps them current; sends READY orders to Odoo as draft sale orders and brings their status back; imports confirmed Odoo orders and shows the customer's orders, open invoices and totals on the account.",
   permissions: ["http", "accounts:read", "accounts:write", "contacts:read", "contacts:write", "users:read", "notify", "products:read", "products:write", "priceLists:read", "priceLists:write", "orders:read", "orders:write"],
   settings: settingsSchema,
@@ -32,6 +34,9 @@ export default definePlugin({
     x.productPanel({ id: "odoo", component: ProductPanel });
     x.orderPanel({ id: "odoo", component: OrderPanel });
     x.page({ path: "needs-owner", title: "needsOwner.title", component: NeedsOwnerPage, roles: ["manager", "admin"], nav: { label: "needsOwner.nav" } });
+    x.page({ path: "link-proposals", title: "proposals.title", component: LinkProposalsPage, roles: ["manager", "admin"], nav: { label: "proposals.nav" } });
+    x.pageAction({ id: "confirm", roles: ["manager", "admin"], handler: (ctx, input) => confirmProposal(ctx, input, new Date()) });
+    x.pageAction({ id: "reject", roles: ["manager", "admin"], handler: (ctx, input) => rejectProposal(ctx, input, new Date()) });
     x.adminSection(AdminSection);
   },
   // Ruling 7: an install never fails on Odoo; the cron imports on its first good run.

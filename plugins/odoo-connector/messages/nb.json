@@ -78,7 +78,9 @@
     "missingSubject": "Ordre {number}: fant ikke ordren i Odoo",
     "missingText": "Koblingen finner ikke lenger Odoo-ordre {name} for CRM-ordre {number}. Den er slettet i Odoo, eller API-brukeren i Odoo har mistet tilgangen til den. CRM-ordren beholder statusen sin; kanseller den manuelt hvis Odoo-ordren ble slettet.",
     "movedSubject": "Ordre {number}: kunden er endret i Odoo",
-    "movedText": "Odoo-ordre {name} (CRM-ordre {number}) tilhører nå en annen kunde i Odoo. CRM-ordren beholder kunden sin og følger fortsatt Odoo-ordren; sjekk i Odoo om endringen er riktig."
+    "movedText": "Odoo-ordre {name} (CRM-ordre {number}) tilhører nå en annen kunde i Odoo. CRM-ordren beholder kunden sin og følger fortsatt Odoo-ordren; sjekk i Odoo om endringen er riktig.",
+    "proposalsSubject": "{count} kunde(r) fra Odoo venter på kobling",
+    "proposalsText": "Synkroniseringen fant {count} nye kunder fra Odoo som passer med en CRM-konto. En leder bekrefter eller avviser hver kobling under Koblingsforslag."
   },
   "product": {
     "linked": "Odoo-produkt #{id}"
@@ -131,5 +133,21 @@
     "total": "Totalt",
     "left": "Gjenstår å betale",
     "status": "Status"
+  },
+  "proposals": {
+    "title": "Koblingsforslag",
+    "nav": "Koblingsforslag",
+    "empty": "Ingen kunde venter på kobling.",
+    "help": "En kunde fra Odoo passer med én CRM-konto. Bekreft for å koble dem (neste synkronisering oppdaterer kontoen); avvis for å gi kunden en egen konto. Et avvist par foreslås aldri igjen.",
+    "customer": "Kunde i Odoo",
+    "account": "CRM-konto",
+    "reason": "Treff",
+    "found": "Funnet",
+    "confirm": "Bekreft",
+    "reject": "Avvis",
+    "confirmedDone": "Bekreftet. Neste synkronisering kobler kontoen.",
+    "rejectedDone": "Avvist. Neste synkronisering oppretter en konto for kunden.",
+    "gone": "Dette forslaget er ikke lenger åpent. Last inn siden på nytt.",
+    "taken": "Denne kontoen er allerede koblet til en annen kunde."
   }
 }

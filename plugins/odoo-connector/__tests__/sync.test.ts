@@ -10,6 +10,8 @@ it("imports customers on the first run: create, link by number, link by VAT, own
     { id: "a2", name: "VAT match", company_id: null, vat: "CZ11111111", billing_country: "CZ", deletedAt: null, assigned_to: null },
   ];
   const { ctx, client } = mk([company(1, { company_registry: "27082440" }), company(2, { vat: "CZ11111111" }), company(3, { name: "Bob Customer", is_company: false, user_id: false }), company(4, { customer_rank: 0 })], accounts);
+  await ctx.store.set(K.confirmed(1, "a1"), { at: now.toISOString() });   // a manager confirmed the first link
+  await ctx.store.set(K.confirmed(2, "a2"), { at: now.toISOString() });   // a manager confirmed the first link
   const s = await runSync(ctx, client, now);
   expect(s).toMatchObject({ ok: true, created: 1, updated: 2, conflicts: 0 });
   expect(accounts.find((a) => a.id === "a1")).toMatchObject({ name: "Co 1", assigned_to: "someone" });   // owner kept
@@ -122,6 +124,8 @@ it("fills a missing owner on an existing account from the Odoo salesperson; keep
     { id: "a2", name: "Co 2", company_id: "27082441", billing_country: "CZ", deletedAt: null, assigned_to: "someone" },
   ];
   const { ctx, client } = mk([company(1, { company_registry: "27082440" }), company(2, { company_registry: "27082441" })], accounts);
+  await ctx.store.set(K.confirmed(1, "a1"), { at: now.toISOString() });   // a manager confirmed the first link
+  await ctx.store.set(K.confirmed(2, "a2"), { at: now.toISOString() });   // a manager confirmed the first link
   await runSync(ctx, client, now);
   expect(accounts.find((a) => a.id === "a1")?.assigned_to).toBe("u-rep");
   expect(accounts.find((a) => a.id === "a2")?.assigned_to).toBe("someone");
@@ -132,6 +136,7 @@ it("leaves existing accounts unowned when fillOwners is off, and shows the curre
   const accounts: RecordData[] = [{ id: "a1", name: "Co 1", company_id: "27082440", billing_country: "CZ", deletedAt: null, assigned_to: null }];
   const { ctx, client } = mk([company(1, { company_registry: "27082440", user_id: [10, "New Rep"] })], accounts, { fillOwners: false });
   await ctx.store.set(K.account("a1"), { partnerId: 1, syncedAt: now.toISOString(), salesperson: "Old Rep", odooPriceList: null } satisfies AccountLink);
+  await ctx.store.set(K.confirmed(1, "a1"), { at: now.toISOString() });   // a manager confirmed the first link
   await runSync(ctx, client, now);
   expect(accounts[0].assigned_to).toBeNull();
   expect((await ctx.store.get<AccountLink>(K.account("a1")))?.salesperson).toBe("New Rep");

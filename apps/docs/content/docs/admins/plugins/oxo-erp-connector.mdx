@@ -24,13 +24,20 @@ Install it under **Admin → Plugins → OXO ERP connector** and enter the OXO E
 
 Each sync reads the customers OXO ERP changed since the last run. A customer lands on the account it is already linked to; otherwise on one account with the same country + IČO, then the same DIČ, then the same name + zip; otherwise a new account is created, without an owner. Two or more candidates are a conflict: nothing is linked until the CRM data is fixed.
 
+A first match by IČO, DIČ or name + zip is not linked straight away. The customer is listed under **Link proposals** (sidebar, **Plugins** group; managers and admins) with the matching account and the reason, and managers and admins get an email once per sync that adds proposals. Until someone decides, the account is left as it is.
+
+- **Confirm** links the two on the next sync (queued at once). Confirm is refused if another OXO ERP customer was linked to the account in the meantime.
+- **Reject** means they are different companies: the next sync creates a new account for the customer, without an owner, and this pair is never proposed again.
+
+**Upgrading to 0.2.0:** existing links stay as they are. Customers that are not linked yet and match an account now wait under **Link proposals** instead of being linked on the next sync.
+
 ### Account external_ref
 
-Every account the connector creates or links gets an `external_ref`, so other systems (for example a customer portal that reads the CRM over MCP with `crm_search_accounts`) can find the OXO ERP customer:
+Every account the connector creates, or links after a confirmed proposal, gets an `external_ref`, so other systems (for example a customer portal that reads the CRM over MCP with `crm_search_accounts`) can find the OXO ERP customer:
 
 - the Odoo partner id as a plain number, for example `812`, when OXO ERP has one for the customer;
 - otherwise `oxo:<id>` with the OXO ERP customer id, for example `oxo:6`.
 
 An `external_ref` that is already set is never changed. When it differs from the value above, the plugin log gets a warning and the account stays as it is. When another account (not deleted) already holds the value, the account is left without one and the log names both accounts. A linked customer that is no longer in OXO ERP's customer list is logged too.
 
-Accounts linked before version 0.1.1, or linked by a sent order, get their `external_ref` on the next normal sync; no separate step is needed. In a dry run the sync only counts them. The run summary in the admin section shows the number as "external_ref filled".
+A proposed account gets no `external_ref` until the proposal is confirmed; the sync that links the pair writes it. Accounts linked before version 0.1.1, or linked by a sent order, get their `external_ref` on the next normal sync; no separate step is needed. In a dry run the sync only counts them. The run summary in the admin section shows the number as "external_ref filled".

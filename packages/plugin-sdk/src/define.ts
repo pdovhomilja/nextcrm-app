@@ -32,9 +32,9 @@ export function definePlugin<S extends z.ZodObject<any>, K extends z.ZodObject<a
 
   const ext: PluginExtensions = {
     rules: [], afters: [], events: [], crons: [], accountTabs: [], accountPanels: [], orderPanels: [], productPanels: [],
-    pages: [], adminSections: [], adminActions: [], companyRegistries: [],
+    pages: [], adminSections: [], adminActions: [], pageActions: [], companyRegistries: [],
   };
-  const ids = { cron: new Set<string>(), event: new Set<string>(), tab: new Set<string>(), panel: new Set<string>(), orderPanel: new Set<string>(), productPanel: new Set<string>(), page: new Set<string>(), adminAction: new Set<string>() };
+  const ids = { cron: new Set<string>(), event: new Set<string>(), tab: new Set<string>(), panel: new Set<string>(), orderPanel: new Set<string>(), productPanel: new Set<string>(), page: new Set<string>(), adminAction: new Set<string>(), pageAction: new Set<string>() };
 
   const x: ExtensionBuilder<z.infer<S>, z.infer<K>> = {
     rule: (entity, operation, handler, options) =>
@@ -49,6 +49,11 @@ export function definePlugin<S extends z.ZodObject<any>, K extends z.ZodObject<a
     page: (page) => { unique(ids.page, page.path, "Duplicate page path"); ext.pages.push({ ...page, roles: page.roles ?? ALL_ROLES }); },
     adminSection: (component) => ext.adminSections.push(component),
     adminAction: (action) => { unique(ids.adminAction, action.id, "Duplicate admin action id"); ext.adminActions.push(action); },
+    pageAction: (action) => {
+      if (action.roles.includes("partner")) throw new Error(`Page actions never run for partners: ${action.id}`);
+      unique(ids.pageAction, action.id, "Duplicate page action id");
+      ext.pageActions.push(action);
+    },
     companyRegistry: (provider) => ext.companyRegistries.push(provider),
   };
   manifest.extensions(x);

@@ -1,9 +1,10 @@
 import { emptyRows, syncCustomers, zeroCustomers, type CustomerRun } from "../customers";
+import { confirmProposal } from "../proposals";
 import { K } from "../store";
 import { customer } from "./fake-oxo";
 import { mk, now, type TestCtx } from "./helpers";
 
-const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set() });
+const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set(), proposed: 0 });
 const acc = (id: string, over: Record<string, unknown> = {}) => ({ id, name: `Acc ${id}`, company_id: null, vat: null, billing_postal_code: null, assigned_to: "u-rep", deletedAt: null, ...over });
 
 describe("customers", () => {
@@ -13,6 +14,9 @@ describe("customers", () => {
       customer(2, { dic: "CZ 99", name: "Two" }),
       customer(3, { name: "Kavárna u Mostu", zip: "110 00" }),
     ] }, { accounts: [acc("a1", { company_id: "01234567" }), acc("a2", { vat: "cz99" }), acc("a3", { name: "kavárna u mostu", billing_postal_code: "11000" })] });
+    await ctx.store.set(K.confirmed(1, "a1"), { at: now.toISOString() });   // a manager confirmed the first link
+    await ctx.store.set(K.confirmed(2, "a2"), { at: now.toISOString() });   // a manager confirmed the first link
+    await ctx.store.set(K.confirmed(3, "a3"), { at: now.toISOString() });   // a manager confirmed the first link
     const r = run(ctx);
     await syncCustomers(r, client);
     expect([r.counts.number, r.counts.vat, r.counts.name, r.counts.created]).toEqual([1, 1, 1, 0]);
@@ -45,11 +49,16 @@ describe("customers", () => {
     data.accounts[1].deletedAt = "2026-10-18";
     r = run(ctx);
     await syncCustomers(r, client);
-    expect([await ctx.store.get(K.customer(7)), await ctx.store.get(K.conflict(7))]).toEqual([{ accountId: "a1" }, null]);
+    // The fixed conflict is now a first link: it waits for a manager, then links from the stored copy.
+    expect([await ctx.store.get(K.customer(7)), await ctx.store.get(K.conflict(7))]).toEqual([null, null]);
+    await confirmProposal(ctx, { customerId: "7", accountId: "a1" }, now);
+    await syncCustomers(run(ctx), client);
+    expect([await ctx.store.get(K.customer(7)), await ctx.store.get(K.proposal(7))]).toEqual([{ accountId: "a1" }, null]);
   });
 
   it("one account is never linked to two customers, not even inside one dry run", async () => {
     const { ctx, client } = mk({ customers: [customer(1, { ico: "22222222" }), customer(2, { ico: "22222222", updatedAt: "2026-10-18T08:00:01.000Z" })] }, { accounts: [acc("a1", { company_id: "22222222" })] });
+    await ctx.store.set(K.confirmed(1, "a1"), { at: now.toISOString() });   // a manager confirmed the first link
     const r = run(ctx, true);
     await syncCustomers(r, client);
     expect([r.counts.number, r.counts.conflicts, r.rows.conflicts[0]?.reason]).toEqual([1, 1, "linked"]);
@@ -57,12 +66,13 @@ describe("customers", () => {
 
   it("dry run writes nothing", async () => {
     const { ctx, client, data } = mk({ customers: [customer(1, { ico: "1", name: "Changed" }), customer(2)] }, { accounts: [acc("a1", { company_id: "00000001" })] });
+    await ctx.store.set(K.confirmed(1, "a1"), { at: now.toISOString() });   // a manager confirmed the first link
     const before = JSON.stringify(data);
     const r = run(ctx, true);
     await syncCustomers(r, client);
     expect([r.counts.number, r.counts.updated, r.counts.created]).toEqual([1, 1, 1]);
     expect(JSON.stringify(data)).toBe(before);
-    expect(await ctx.store.list("")).toEqual([]);
+    expect((await ctx.store.list("")).map((e) => e.key)).toEqual([K.confirmed(1, "a1")]);
   });
 
   it("an inactive customer is not written; its link is marked inactive", async () => {

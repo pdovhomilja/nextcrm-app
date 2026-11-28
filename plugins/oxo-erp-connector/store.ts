@@ -4,6 +4,9 @@ export const K = {
   customer: (id: number) => `customer:${id}`,              // → { accountId }
   account: (id: string) => `account:${id}`,                 // → AccountLink
   conflict: (id: number) => `conflict:${id}`,               // → Conflict (holds the customer; re-tried every run)
+  proposal: (id: number) => `proposal:${id}`,               // → Proposal: a first link waiting for a manager (holds the customer; re-tried every run)
+  confirmed: (id: number, accountId: string) => `confirmed:${id}:${accountId}`, // → { at } the next sync links this pair
+  rejected: (id: number, accountId: string) => `rejected:${id}:${accountId}`,   // → { at } never proposed again
   retry: (id: number) => `retry:${id}`,                     // → { customer } a customer whose last write failed
   product: (crmId: string) => `product:${crmId}`,           // → ProductLink
   retryProduct: (id: number) => `retryProduct:${id}`,       // → { product } a product whose last write failed
@@ -32,6 +35,8 @@ export const keepLock = (ctx: { store: { set(key: string, value: unknown): Promi
 export interface AccountLink { customerId: number; syncedAt: string; priceListId: number | null; addresses: OxoAddress[]; inactive?: boolean }
 export type MatchReason = "number" | "vat" | "name" | "linked";
 export interface Conflict { customerId: number; name: string; reason: MatchReason; candidates: string[]; foundAt: string; customer: OxoCustomer }
+/** `decided` is set by Confirm / Reject; the next sync handles the pair from the stored customer and deletes the proposal. */
+export interface Proposal { customerId: number; name: string; accountId: string; reason: "number" | "vat" | "name"; foundAt: string; customer: OxoCustomer; decided?: "confirmed" | "rejected" }
 export interface ProductLink { oxoId: number; ref: string; templateId: number | null; categoryRef: string | null }
 export interface PriceListLink { priceListId: string; ref: string; name: string; currency: string; hash: string; syncedAt: string; isActive: boolean }
 export interface OrderLink {

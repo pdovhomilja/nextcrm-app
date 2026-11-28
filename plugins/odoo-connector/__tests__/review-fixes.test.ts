@@ -2,6 +2,7 @@ import type { RecordData } from "@nextcrm/plugin-sdk";
 import { createTestContext } from "@nextcrm/plugin-sdk/testing";
 import { jsonClient, OdooAuthError, OdooError } from "../odoo";
 import { changedFields } from "../map";
+import { confirmProposal } from "../proposals";
 import { runSync, scheduledSync } from "../sync";
 import { settingsSchema } from "../settings";
 import { K, type Conflict } from "../store";
@@ -20,8 +21,12 @@ it("retries a conflict once it is resolved in the CRM, with Odoo unchanged, and 
   accounts[1].deletedAt = "2026-10-13";
   await ctx.store.set(K.cursor, { at: "2026-10-13 07:00:00" });   // other partners moved the cursor on; partner 1 is unchanged
   await runSync(ctx, client, later(20));
-  expect(await ctx.store.get(K.partner(1))).toEqual({ accountId: "a1" });
+  // The resolved conflict is now a first link: it waits for a manager, then links on the next run.
   expect(await ctx.store.get(K.conflict(1))).toBeNull();
+  expect(await ctx.store.get(K.partner(1))).toBeNull();
+  await confirmProposal(ctx, { partnerId: "1", accountId: "a1" }, later(21));
+  await runSync(ctx, client, later(25));
+  expect(await ctx.store.get(K.partner(1))).toEqual({ accountId: "a1" });
   expect((await ctx.data.contacts.find({})).map((c) => c.accountsIDs)).toEqual(["a1"]);
 });
 

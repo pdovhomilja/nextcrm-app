@@ -19,13 +19,14 @@ const takeoverOxo = () => ({
 describe("runSync", () => {
   it("takeover dry run then real run: the dry run writes nothing and reports links, not creations; the real run makes no duplicates", async () => {
     const { ctx, client, data } = mk(takeoverOxo(), takeoverData(), { dryRun: true, priceLists: "3" });
+    await ctx.store.set(K.confirmed(222, "a1"), { at: now.toISOString() });   // a manager confirmed the first link
     const before = JSON.stringify(data);
     const dry = await runSync(ctx, client, now);
     expect(JSON.stringify(data)).toBe(before);
     expect([dry.ok, dry.dryRun, dry.customers.number, dry.customers.created, dry.catalog?.productsUpdated, dry.catalog?.productsCreated, dry.catalog?.listsReplaced]).toEqual([true, true, 1, 1, 1, 0, 1]);
     expect(dry.rows.created).toEqual([{ customerId: 300, name: "Nový bar" }]);
     expect(await ctx.store.get(K.report)).toEqual(dry);
-    expect((await ctx.store.list("")).map((e) => e.key).sort()).toEqual([K.failures, K.lastRun, K.report].sort());
+    expect((await ctx.store.list("")).map((e) => e.key).sort()).toEqual([K.confirmed(222, "a1"), K.failures, K.lastRun, K.report].sort());
 
     ctx.settings.dryRun = false;
     const real = await runSync(ctx, client, now);

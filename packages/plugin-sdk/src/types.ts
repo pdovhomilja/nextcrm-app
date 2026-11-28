@@ -242,6 +242,8 @@ export interface PageProps<S = RecordData, K = RecordData> {
   path: string[];
   searchParams: Record<string, string | string[] | undefined>;
   ctx: PluginContext<S, K>;
+  /** A button that runs one of the plugin's page actions with `input`; the host checks the caller's role. */
+  actionButton: (button: { action: string; input: Record<string, string>; label: string }) => ReactNode;
 }
 
 export interface AdminSectionProps<S = RecordData, K = RecordData> { ctx: PluginContext<S, K> }
@@ -275,6 +277,8 @@ export interface ProductPanelRegistration { id: string; component: ServerCompone
 export interface PageRegistration { path: string; title: string; component: ServerComponent<PageProps<any, any>>; roles: Role[]; nav?: { label: string } }
 /** A button on the plugin's admin page; the host runs the handler with the plugin's context and shows the returned text. */
 export interface AdminActionRegistration { id: string; label: string; handler: (ctx: PluginContext<any, any>) => Promise<string | void> }
+/** A button on a plugin page; the host runs the handler only for the listed roles (never partners) and shows the returned text. */
+export interface PageActionRegistration { id: string; roles: Role[]; handler: (ctx: PluginContext<any, any>, input: Record<string, string>) => Promise<string | void> }
 
 export interface PluginExtensions {
   rules: RuleRegistration[];
@@ -288,6 +292,7 @@ export interface PluginExtensions {
   pages: PageRegistration[];
   adminSections: ServerComponent<AdminSectionProps<any, any>>[];
   adminActions: AdminActionRegistration[];
+  pageActions: PageActionRegistration[];
   companyRegistries: CompanyRegistryProvider<any, any>[];
 }
 
@@ -303,6 +308,7 @@ export interface ExtensionBuilder<S, K> {
   page(page: { path: string; title: string; component: ServerComponent<PageProps<S, K>>; roles?: Role[]; nav?: { label: string } }): void;
   adminSection(component: ServerComponent<AdminSectionProps<S, K>>): void;
   adminAction(action: { id: string; label: string; handler: (ctx: PluginContext<S, K>) => Promise<string | void> }): void;
+  pageAction(action: { id: string; roles: Role[]; handler: (ctx: PluginContext<S, K>, input: Record<string, string>) => Promise<string | void> }): void;
   companyRegistry(provider: CompanyRegistryProvider<S, K>): void;
 }
 

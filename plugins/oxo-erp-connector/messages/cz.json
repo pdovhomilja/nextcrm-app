@@ -90,7 +90,9 @@
     "stuckSubject": "Objednávka {number} čeká na OXO ERP už den",
     "stuckText": "Objednávka {number} čeká na odeslání do OXO ERP od {since}. Poslední chyba: {error}. Konektor to zkouší dál; zkontrolujte OXO ERP.",
     "missingSubject": "Objednávka {number}: v OXO ERP nenalezena",
-    "missingText": "Konektor už v OXO ERP nenachází objednávku CRM {number}. Objednávka v CRM si nechává svůj stav; pokud byla odstraněna, zrušte ji ručně."
+    "missingText": "Konektor už v OXO ERP nenachází objednávku CRM {number}. Objednávka v CRM si nechává svůj stav; pokud byla odstraněna, zrušte ji ručně.",
+    "proposalsSubject": "{count} zákazník(ů) z OXO ERP čeká na propojení",
+    "proposalsText": "Synchronizace našla {count} nových zákazníků z OXO ERP, kteří odpovídají účtu v CRM. Manažer každé propojení potvrdí nebo odmítne v Návrzích propojení."
   },
   "tab": {
     "title": "OXO ERP",
@@ -103,5 +105,21 @@
     "total": "Celkem",
     "status": "Stav",
     "delivery": "Dodání"
+  },
+  "proposals": {
+    "title": "Návrhy propojení",
+    "nav": "Návrhy propojení",
+    "empty": "Žádný zákazník nečeká na propojení.",
+    "help": "Zákazník z OXO ERP odpovídá jednomu účtu v CRM. Potvrzením je propojíte (další synchronizace účet aktualizuje), odmítnutím dostane zákazník vlastní účet. Odmítnutá dvojice se už znovu nenavrhne.",
+    "customer": "Zákazník z OXO ERP",
+    "account": "Účet v CRM",
+    "reason": "Shoda",
+    "found": "Nalezeno",
+    "confirm": "Potvrdit",
+    "reject": "Odmítnout",
+    "confirmedDone": "Potvrzeno. Další synchronizace účet propojí.",
+    "rejectedDone": "Odmítnuto. Další synchronizace zákazníkovi založí účet.",
+    "gone": "Tento návrh už není otevřený. Načtěte stránku znovu.",
+    "taken": "Tento účet je už propojený s jiným zákazníkem."
   }
 }

@@ -6,7 +6,7 @@ import { summaryText } from "../sync";
 import { customer } from "./fake-oxo";
 import { mk, now, type TestCtx } from "./helpers";
 
-const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set() });
+const run = (ctx: TestCtx, dry = false): CustomerRun => ({ ctx, dry, now, counts: zeroCustomers(), rows: emptyRows(), claimed: new Map(), refsDecided: new Set(), proposed: 0 });
 
 // Other systems (e.g. a customer portal reading the CRM over MCP) find the OXO ERP customer through the account's external_ref:
 // a bare number = Odoo partner id, `oxo:<id>` = OXO ERP customer id.
@@ -19,12 +19,13 @@ describe("account external_ref", () => {
     expect(r.counts.externalRefsFilled).toBe(2);
   });
 
-  it("a matched account without one gets it; a different existing one is kept and logged", async () => {
+  it("a confirmed matched account without one gets it; a different existing one is kept and logged", async () => {
     const { ctx, client, data } = mk({ customers: [customer(1, { ico: "11111111", odooId: 41 }), customer(2, { ico: "22222222" }), customer(3, { ico: "33333333", odooId: 43 })] }, { accounts: [
       { id: "a1", name: "Co 1", company_id: "11111111", external_ref: null, deletedAt: null },
       { id: "a2", name: "Co 2", company_id: "22222222", external_ref: "", deletedAt: null },
       { id: "a3", name: "Co 3", company_id: "33333333", external_ref: "999", deletedAt: null },
     ] });
+    for (const [n, a] of [[1, "a1"], [2, "a2"], [3, "a3"]] as const) await ctx.store.set(K.confirmed(n, a), { at: "x" });   // a first match links only once confirmed
     const r = run(ctx);
     await syncCustomers(r, client);
     expect(data.accounts.map((a) => a.external_ref)).toEqual(["41", "oxo:2", "999"]);
@@ -63,6 +64,7 @@ describe("account external_ref", () => {
       { id: "a8", name: "Old", external_ref: "41", deletedAt: null },
       { id: "a9", name: "Old 2", external_ref: "42", deletedAt: null },
     ] });
+    await ctx.store.set(K.confirmed(1, "a1"), { at: "x" });
     await ctx.store.set(K.customer(2), { accountId: "a2" });
     await ctx.store.set(K.account("a2"), { customerId: 2, syncedAt: "x", priceListId: null, addresses: [] });
     await ctx.store.set(K.cursor("customers"), { at: "2026-10-18T08:30:00.000Z" });   // only customer 1 changed; a2 comes from the stored link

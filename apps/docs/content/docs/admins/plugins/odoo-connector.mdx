@@ -47,7 +47,18 @@ For each Odoo customer the plugin tries, in this order:
 3. an account with the same VAT number;
 4. otherwise it creates a new account.
 
-When two or more accounts match in step 2 or 3, or the matching account is already linked to another Odoo customer, the plugin links nothing and lists the customer under **Customers matching more than one account** on the plugin's admin page. Fix it in the CRM (correct or remove the duplicate) and the next sync links it, even if nothing changed in Odoo.
+A match in step 2 or 3 is not linked straight away. The customer is listed under **Link proposals** (sidebar, **Plugins** group; managers and admins), with the matching account and the reason, and managers and admins get an email once per sync that adds proposals. Until someone decides, the customer gets no account and its people and orders are not imported.
+
+- **Confirm** links the two on the next sync (queued at once): the account gets the Odoo fields and the Odoo panel, as an automatic link did before.
+- **Reject** means they are different companies: the next sync creates a new account for the customer, and this pair is never proposed again.
+
+Customers already linked keep syncing as before. Confirm is refused if another Odoo customer was linked to the account in the meantime.
+
+When two or more accounts match in step 2 or 3, or the matching account is already linked to another Odoo customer, the plugin links nothing and lists the customer under **Customers matching more than one account** on the plugin's admin page. Fix it in the CRM (correct or remove the duplicate) and the next sync proposes the link, even if nothing changed in Odoo.
+
+Sending an order still links an account to the Odoo customer it finds without a proposal (see [Orders](#orders)).
+
+**Upgrading to 0.5.0:** existing links stay as they are. Customers that are not linked yet and match an account now wait under **Link proposals** instead of being linked on the next sync. After the upgrade, check that page, especially on a first import with many existing accounts.
 
 ## Owners
 
