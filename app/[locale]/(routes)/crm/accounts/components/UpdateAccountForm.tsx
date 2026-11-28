@@ -34,6 +34,8 @@ import { updateAccount } from "@/actions/crm/accounts/update-account";
 import { getIndustries } from "@/actions/crm/get-industries";
 import { getPriceListOptions } from "@/actions/crm/price-lists/queries";
 import { VatCheckButton } from "./VatCheckButton";
+import { useSession } from "@/lib/auth-client";
+import { isManagerOrAdmin, mapLegacyRole } from "@/lib/authz/roles";
 
 interface UpdateAccountFormProps {
   //TODO: fix this any
@@ -46,6 +48,9 @@ export function UpdateAccountForm({
   open,
 }: UpdateAccountFormProps) {
   const t = useTranslations("CrmAccountForm");
+  const { data: session } = useSession();
+  // The client session holds the stored role; legacy `member` means manager.
+  const canPickPriceList = isManagerOrAdmin({ id: session?.user?.id ?? "", role: mapLegacyRole(session?.user?.role) });
   const c = useTranslations("Common");
 
   const [industries, setIndustries] = useState<any[] | null>(null);
@@ -530,6 +535,8 @@ export function UpdateAccountForm({
                     <Select
                       onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
                       value={field.value || "__none__"}
+                      // Only an admin/manager picks the price list (the server enforces it too).
+                      disabled={!canPickPriceList}
                     >
                       <FormControl>
                         <SelectTrigger>

@@ -7,6 +7,7 @@ const db: Record<string, any> = {
   crm_Orders: { create: jest.fn(), findFirst: jest.fn(), findMany: jest.fn(), count: jest.fn(), updateMany: jest.fn(), deleteMany: jest.fn() },
   crm_OrderLines: { deleteMany: jest.fn(), createMany: jest.fn() },
   exchangeRate: { findMany: jest.fn() },
+  crm_SystemSettings: { findUnique: jest.fn() },
   $queryRaw: jest.fn(),
 };
 db.$transaction = jest.fn(async (fn: (tx: unknown) => unknown) => fn(db));
@@ -98,6 +99,15 @@ it("returns not found for orders outside the scope (Review Focus 3)", async () =
   db.crm_Orders.findFirst.mockResolvedValue(null);
   await expect(loadOrder(rep, "o9")).rejects.toMatchObject({ code: "notFound" });
   expect(db.crm_Orders.findFirst.mock.calls[0][0].where).toMatchObject({ id: "o9", OR: expect.any(Array) });
+});
+
+it("prices an order at the default list when the account's list is inactive", async () => {
+  (resolvePriceListId as jest.Mock).mockImplementation(jest.requireActual("@/lib/pricing/get-price").resolvePriceListId);
+  db.crm_Accounts.findFirst.mockResolvedValue({ ...account, pricelist_id: "OLD", pricelist: { isActive: false } });
+  db.crm_SystemSettings.findUnique.mockResolvedValue({ value: "D" });
+  await createOrder(rep, { accountId: "acc", lines: [{ productId: "p1", quantity: 2 }] });
+  expect(db.crm_Orders.create.mock.calls[0][0].data).toMatchObject({ priceListId: "D" });
+  expect(getPrice).toHaveBeenCalledWith(expect.objectContaining({ priceListId: "D" }));
 });
 
 it("edits only drafts, replaces lines and reports a concurrent change", async () => {

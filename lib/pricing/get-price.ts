@@ -79,11 +79,11 @@ export async function getPrice(input: { priceListId: string | null; productId: s
   return computePrice({ lists, product, categoryChain: chain, rate: rateLookup(rates) }, input.priceListId, dec(input.quantity), input.date ?? new Date());
 }
 
-/** Account list → instance default list → null (product unit price). */
+/** Account list (if active) → instance default list → null (product unit price). */
 export async function resolvePriceListId(accountId: string | null): Promise<string | null> {
   if (accountId) {
-    const account = await prismadb.crm_Accounts.findFirst({ where: { id: accountId, deletedAt: null }, select: { pricelist_id: true } });
-    if (account?.pricelist_id) return account.pricelist_id;
+    const account = await prismadb.crm_Accounts.findFirst({ where: { id: accountId, deletedAt: null }, select: { pricelist_id: true, pricelist: { select: { isActive: true } } } });
+    if (account?.pricelist_id && account.pricelist?.isActive) return account.pricelist_id;
   }
   const setting = await prismadb.crm_SystemSettings.findUnique({ where: { key: "default_pricelist_id" } });
   return setting?.value || null;
