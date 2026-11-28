@@ -26,12 +26,14 @@ export async function move(order: { id: string; status: string }, to: OrderStatu
 
 export async function submitOrder(user: AuthzUser, id: string) {
   const order = await loadOrder(user, id);
-  if (!can(order, "submit", toActor(user))) throw new OrderError("forbidden");
+  const actor = toActor(user);
+  if (!can(order, "submit", actor)) throw new OrderError("forbidden");
   if (!order.lines.length) throw new OrderError("noLines");
   const lines = await Promise.all(order.lines.map((l, i) => priceLine(order, {
     productId: l.productId, quantity: l.quantity.toString(), unitPrice: l.unitPriceOverridden ? l.unitPrice.toString() : null,
   }, i)));
-  const pending = user.role === "user" && lines.some(isBelowList);
+  // Reps and partners need a manager for below-list prices; managers and admins do not.
+  const pending = actor.kind === "user" && actor.role === "user" && lines.some(isBelowList);
   const status = pending ? "PENDING_APPROVAL" : "READY";
   // One conditional write: a concurrent edit of the draft makes this fail with "changed" instead of
   // deciding the status on lines that are no longer the order's lines.
