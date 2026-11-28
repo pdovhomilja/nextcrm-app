@@ -84,6 +84,15 @@ describe("first link of an OXO ERP customer needs a manager's confirmation", () 
     expect(await ctx.store.get(K.rejected(1, "a1"))).toBeNull();
   });
 
+  it("confirm is refused when another customer was linked to the account in the meantime", async () => {
+    const { ctx, client } = setup();
+    await syncCustomers(run(ctx), client);
+    await ctx.store.set(K.account("a1"), { customerId: 7, syncedAt: "x", priceListId: null, addresses: [] });
+    await expect(confirmProposal(ctx, { customerId: "1", accountId: "a1" }, now)).rejects.toThrow(ctx.t("proposals.taken"));
+    expect(await ctx.store.get(K.confirmed(1, "a1"))).toBeNull();
+    expect(await ctx.store.get<Proposal>(K.proposal(1))).not.toHaveProperty("decided");
+  });
+
   it("tells managers and admins once when a run adds proposals; a dry run stores none", async () => {
     const { ctx, client } = setup();
     await syncCustomers(run(ctx), client);

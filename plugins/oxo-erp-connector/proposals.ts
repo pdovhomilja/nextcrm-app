@@ -1,5 +1,5 @@
 import type { Ctx } from "./settings";
-import { K, type Proposal } from "./store";
+import { K, type AccountLink, type Proposal } from "./store";
 import { queueJob } from "./jobs";
 
 /** The open proposal for this exact pair; a stale, decided or forged pair is refused. */
@@ -12,6 +12,11 @@ async function open(ctx: Ctx, input: Record<string, string>): Promise<{ id: numb
 
 async function decide(ctx: Ctx, input: Record<string, string>, now: Date, decided: "confirmed" | "rejected"): Promise<void> {
   const { id, p } = await open(ctx, input);
+  if (decided === "confirmed") {
+    // Another customer may have been linked to this account first: an account is never shared.
+    const link = await ctx.store.get<AccountLink>(K.account(p.accountId));
+    if (link && link.customerId !== id) throw new Error(ctx.t("proposals.taken"));
+  }
   await ctx.store.set((decided === "confirmed" ? K.confirmed : K.rejected)(id, p.accountId), { at: now.toISOString() });
   // Kept until the next sync: it re-reads the customer from here (OXO ERP may not change it).
   await ctx.store.set(K.proposal(id), { ...p, decided } satisfies Proposal);
