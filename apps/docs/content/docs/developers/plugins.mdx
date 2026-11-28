@@ -225,7 +225,7 @@ A standalone page at `/<locale>/p/<pluginId>/<path>`. `path` must have at least 
 
 ### `x.pageAction({ id, roles, handler })`
 
-A button a plugin page renders with `actionButton({ action, input, label })`, where `action` is the page action's `id` and `input` a flat object of strings (SDK 0.2.7). On click the host checks that the plugin is enabled and that the signed-in user's role is in `roles`, then runs `handler(ctx, input)` as that user and shows the returned text. Partners can never run a page action. Treat `input` as untrusted: anyone with a listed role can send any strings, so check them against what the plugin stored.
+A button a plugin page renders with `actionButton({ action, input, label })`, where `action` is the page action's `id` and `input` a flat object of strings (SDK 0.2.7). On click the host checks that the plugin is enabled and that the signed-in user's role is in `roles`, then runs `handler(ctx, input)` as that user and shows the returned text. Partners can never run a page action: `definePlugin` throws when `roles` lists `partner`, and the host refuses a partner anyway. Treat `input` as untrusted: anyone with a listed role can send any strings, so check them against what the plugin stored.
 
 ### `x.adminSection(component)`
 
