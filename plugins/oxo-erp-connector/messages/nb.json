@@ -13,7 +13,7 @@
     "never": "ikke ennå",
     "nextRun": "Neste kjøring",
     "failed": "Feilet: {error}",
-    "customerCounts": "Kunder: {linked} allerede koblet, {number} funnet via IČO, {vat} via DIČ, {name} via navn og postnummer, {created} nye, {updated} oppdatert, {conflicts} konflikter, {skipped} inaktive, {failed} feilet, {refs} external_ref fylt inn",
+    "customerCounts": "Kunder: {linked} allerede koblet, {number} funnet via IČO, {vat} via DIČ, {name} via navn og postnummer, {created} nye, {updated} oppdatert, {conflicts} konflikter, {skipped} inaktive, {failed} feilet, {externalRefsFilled} external_ref fylt inn",
     "catalogCounts": "Katalog: kategorier {categoriesMatched} funnet, {categoriesCreated} nye · produkter {productsUpdated} oppdatert, {productsCreated} nye, {productsFailed} feilet · prislister erstattet {listsReplaced} · prislister satt på kunder {accountLists}",
     "orderCounts": "Ordrer: {checked} kontrollert, {moved} flyttet, {imported} importert, {updated} oppdatert, {pending} venter på kunden sin",
     "listsMissing": "Fant ikke disse prislistene i OXO ERP: {ids}",

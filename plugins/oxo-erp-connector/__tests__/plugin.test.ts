@@ -24,7 +24,7 @@ it("has the same message keys in every locale", () => {
 });
 
 it("every locale shows how many external_refs a run filled", () => {
-  for (const m of [en, cz, de, uk, nb]) expect(m.admin.customerCounts).toContain("{refs}");
+  for (const m of [en, cz, de, uk, nb]) expect(m.admin.customerCounts).toContain("{externalRefsFilled}");
 });
 
 it("never fails an install", async () => {

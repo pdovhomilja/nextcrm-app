@@ -13,7 +13,7 @@
     "never": "noch nicht",
     "nextRun": "Nächster Lauf",
     "failed": "Fehlgeschlagen: {error}",
-    "customerCounts": "Kunden: {linked} bereits verknüpft, {number} über IČO, {vat} über DIČ, {name} über Name und PLZ, {created} neu, {updated} geändert, {conflicts} Konflikte, {skipped} inaktiv, {failed} Fehler, {refs} external_ref ergänzt",
+    "customerCounts": "Kunden: {linked} bereits verknüpft, {number} über IČO, {vat} über DIČ, {name} über Name und PLZ, {created} neu, {updated} geändert, {conflicts} Konflikte, {skipped} inaktiv, {failed} Fehler, {externalRefsFilled} external_ref ergänzt",
     "catalogCounts": "Katalog: Kategorien {categoriesMatched} zugeordnet, {categoriesCreated} neu · Produkte {productsUpdated} geändert, {productsCreated} neu, {productsFailed} Fehler · Preislisten ersetzt {listsReplaced} · Kontopreislisten gesetzt {accountLists}",
     "orderCounts": "Aufträge: {checked} geprüft, {moved} weitergesetzt, {imported} importiert, {updated} geändert, {pending} warten auf ihren Kunden",
     "listsMissing": "Preislisten, die OXO ERP nicht hat: {ids}",

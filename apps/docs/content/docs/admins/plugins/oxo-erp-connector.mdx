@@ -31,6 +31,6 @@ Every account the connector creates or links gets an `external_ref`, so other sy
 - the Odoo partner id as a plain number, for example `812`, when OXO ERP has one for the customer;
 - otherwise `oxo:<id>` with the OXO ERP customer id, for example `oxo:6`.
 
-An `external_ref` that is already set is never changed. When it differs from the value above, the plugin log gets a warning and the account stays as it is.
+An `external_ref` that is already set is never changed. When it differs from the value above, the plugin log gets a warning and the account stays as it is. When another account (not deleted) already holds the value, the account is left without one and the log names both accounts. A linked customer that is no longer in OXO ERP's customer list is logged too.
 
 Accounts linked before version 0.1.1, or linked by a sent order, get their `external_ref` on the next normal sync; no separate step is needed. In a dry run the sync only counts them. The run summary in the admin section shows the number as "external_ref filled".
