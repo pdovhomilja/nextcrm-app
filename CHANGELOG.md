@@ -5,6 +5,20 @@ All notable changes to NextCRM are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.44.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.43.0...v0.44.0) (2026-11-28)
+
+
+### Added
+
+* **erp-connectors:** a manager confirms the first customer link (SDK 0.2.7 page actions) ([#543](https://github.com/pdovhomilja/nextcrm-app/issues/543)) ([e69c24a](https://github.com/pdovhomilja/nextcrm-app/commit/e69c24a0350dd03320b36abe1837259855d88a7d))
+
+
+### Fixed
+
+* **accounts:** only admin/manager choose an account's price list ([#542](https://github.com/pdovhomilja/nextcrm-app/issues/542)) ([6851860](https://github.com/pdovhomilja/nextcrm-app/commit/685186034a95ba91a56799b4d6dbc6e91c9faebf))
+* **orders:** partner below-list orders need a manager's approval ([#544](https://github.com/pdovhomilja/nextcrm-app/issues/544)) ([d18d559](https://github.com/pdovhomilja/nextcrm-app/commit/d18d5594171f84b787b23e38176cf2ceb341a338))
+* **oxo-erp-connector:** write the account's external_ref when it creates or links an account (0.1.1) ([#546](https://github.com/pdovhomilja/nextcrm-app/issues/546)) ([ff3c8b3](https://github.com/pdovhomilja/nextcrm-app/commit/ff3c8b36d52c61e3fa11d4e0cb3d6134da03aacb))
+
 ## [0.43.0](https://github.com/pdovhomilja/nextcrm-app/compare/v0.42.5...v0.43.0) (2026-11-26)
 
 
