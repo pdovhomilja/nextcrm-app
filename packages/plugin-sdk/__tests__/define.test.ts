@@ -69,3 +69,7 @@ it("registers page actions with their roles and refuses duplicate ids", () => {
   expect(def.extensions.pageActions.map((a) => [a.id, a.roles])).toEqual([["confirm", ["manager", "admin"]]]);
   expect(() => definePlugin({ ...base, extensions: (x) => { x.pageAction({ id: "a", roles: ["admin"], handler: async () => {} }); x.pageAction({ id: "a", roles: ["admin"], handler: async () => {} }); } })).toThrow("Duplicate page action id");
 });
+
+it("refuses a page action that lists partner", () => {
+  expect(() => definePlugin({ ...base, extensions: (x) => x.pageAction({ id: "a", roles: ["manager", "partner"], handler: async () => {} }) })).toThrow("Page actions never run for partners");
+});

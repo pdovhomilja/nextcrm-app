@@ -25,7 +25,8 @@ export async function runPluginPageActionAction(pluginId: string, actionId: stri
   const action = plugin?.definition.extensions.pageActions.find((a) => a.id === actionId);
   const state = await getPluginState(pluginId);
   if (!plugin || !action || state?.status !== "ENABLED") return { ok: false, error: "Not found" };
-  if (!action.roles.includes(user.role)) return { ok: false, error: "Forbidden" };
+  // Partners never run a page action, even when a plugin lists the role.
+  if (user.role === "partner" || !action.roles.includes(user.role)) return { ok: false, error: "Forbidden" };
   const ctx = await createPluginContext({ plugin, actor: { type: "user", userId: user.id, role: user.role }, locale: (await getLocale()) as Locale });
   try {
     const message = await action.handler(ctx, { ...input });
