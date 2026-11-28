@@ -95,3 +95,35 @@ describe("first link of an OXO ERP customer needs a manager's confirmation", () 
     expect(dry.ctx.notifications).toEqual([]);
   });
 });
+
+describe("external_ref waits for the confirmation", () => {
+  it("a proposal leaves the candidate's external_ref empty, also after the backfill of a later run", async () => {
+    const { ctx, client, data, quiet } = setup();
+    const r = run(ctx);
+    await syncCustomers(r, client);
+    quiet();
+    await syncCustomers(run(ctx), client);
+    expect([r.counts.externalRefsFilled, data.accounts[0].external_ref ?? null, r.refsDecided.has("a1")]).toEqual([0, null, false]);
+  });
+
+  it("confirming writes it in the run that links the pair", async () => {
+    const { ctx, client, data, quiet } = setup();
+    await syncCustomers(run(ctx), client);
+    quiet();
+    await confirmProposal(ctx, { customerId: "1", accountId: "a1" }, now);
+    const r = run(ctx);
+    await syncCustomers(r, client);
+    expect([r.counts.externalRefsFilled, data.accounts[0].external_ref]).toEqual([1, "oxo:1"]);
+  });
+
+  it("a dry run writes nothing, before or after the confirmation", async () => {
+    const { ctx, client, data } = setup();
+    await syncCustomers(run(ctx, true), client);
+    expect([data.accounts[0].external_ref ?? null, await ctx.store.get(K.proposal(1))]).toEqual([null, null]);
+    await syncCustomers(run(ctx), client);
+    await confirmProposal(ctx, { customerId: "1", accountId: "a1" }, now);
+    const r = run(ctx, true);
+    await syncCustomers(r, client);
+    expect([r.counts.externalRefsFilled, data.accounts[0].external_ref ?? null, await ctx.store.get(K.account("a1"))]).toEqual([1, null, null]);
+  });
+});
