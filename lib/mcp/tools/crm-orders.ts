@@ -69,7 +69,7 @@ export const crmOrderTools = [
   },
   {
     name: "crm_submit_order",
-    description: "Submit a draft: READY, or PENDING_APPROVAL when a sales rep priced a line below the list",
+    description: "Submit a draft: READY, or PENDING_APPROVAL when someone other than a manager or admin priced a line below the list",
     schema: z.object({ id: z.string() }),
     async handler(args: { id: string }, _userId: string, user: AuthzUser) {
       return guard(async () => itemResponse(await submitOrder(user, args.id)));
