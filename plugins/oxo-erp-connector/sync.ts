@@ -12,7 +12,7 @@ export const zeroOrders = (): OrderCounts => ({ checked: 0, moved: 0, imported: 
 
 export function summaryText(ctx: Ctx, s: RunSummary): string {
   if (!s.ok) return ctx.t("admin.failed", { error: s.error ?? "?" });
-  const parts = [ctx.t("admin.customerCounts", { ...s.customers })];
+  const parts = [ctx.t("admin.customerCounts", { ...s.customers, refs: s.customers.refs ?? 0 })];   // summaries stored by 0.1.0 have no refs
   if (s.catalog) parts.push(ctx.t("admin.catalogCounts", { ...s.catalog, listsMissing: s.catalog.listsMissing.join(", ") }));
   if (s.orders) parts.push(ctx.t("admin.orderCounts", { ...s.orders }));
   return parts.join(" · ");

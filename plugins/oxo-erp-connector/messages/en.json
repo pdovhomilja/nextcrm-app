@@ -13,7 +13,7 @@
     "never": "not yet",
     "nextRun": "Next run",
     "failed": "Failed: {error}",
-    "customerCounts": "Customers: {linked} already linked, {number} matched by IČO, {vat} by DIČ, {name} by name and zip, {created} new, {updated} updated, {conflicts} conflicts, {skipped} inactive, {failed} failed",
+    "customerCounts": "Customers: {linked} already linked, {number} matched by IČO, {vat} by DIČ, {name} by name and zip, {created} new, {updated} updated, {conflicts} conflicts, {skipped} inactive, {failed} failed, {refs} external_ref filled",
     "catalogCounts": "Catalog: categories {categoriesMatched} matched, {categoriesCreated} new · products {productsUpdated} updated, {productsCreated} new, {productsFailed} failed · price lists replaced {listsReplaced} · account price lists set {accountLists}",
     "orderCounts": "Orders: {checked} checked, {moved} moved, {imported} imported, {updated} updated, {pending} waiting for their customer",
     "listsMissing": "Price lists not found in OXO ERP: {ids}",

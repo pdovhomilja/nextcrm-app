@@ -13,7 +13,7 @@
     "never": "zatím ne",
     "nextRun": "Další běh",
     "failed": "Selhalo: {error}",
-    "customerCounts": "Zákazníci: {linked} už propojeno, {number} podle IČO, {vat} podle DIČ, {name} podle názvu a PSČ, {created} nových, {updated} upraveno, {conflicts} konfliktů, {skipped} neaktivních, {failed} chyb",
+    "customerCounts": "Zákazníci: {linked} už propojeno, {number} podle IČO, {vat} podle DIČ, {name} podle názvu a PSČ, {created} nových, {updated} upraveno, {conflicts} konfliktů, {skipped} neaktivních, {failed} chyb, {refs} doplněných external_ref",
     "catalogCounts": "Katalog: kategorie {categoriesMatched} spárováno, {categoriesCreated} nových · produkty {productsUpdated} upraveno, {productsCreated} nových, {productsFailed} chyb · ceníky nahrazeno {listsReplaced} · ceníky účtů nastaveno {accountLists}",
     "orderCounts": "Objednávky: {checked} zkontrolováno, {moved} posunuto, {imported} importováno, {updated} upraveno, {pending} čeká na zákazníka",
     "listsMissing": "Ceníky, které OXO ERP nemá: {ids}",

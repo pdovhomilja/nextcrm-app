@@ -1,13 +1,13 @@
-import { accountFields, changedFields } from "./map";
+import { accountFields, changedFields, ref } from "./map";
 import { matchAccount } from "./match";
 import type { OxoClient, OxoCustomer } from "./oxo";
-import { msg, type Ctx } from "./settings";
+import { findAll, msg, type Ctx } from "./settings";
 import { K, keepLock, type AccountLink, type Conflict, type CustomerCounts, type ReportRow, type RunSummary } from "./store";
 
 const ROWS = 200;
 const OVERLAP_MS = 2 * 60_000;
 
-export const zeroCustomers = (): CustomerCounts => ({ linked: 0, number: 0, vat: 0, name: 0, created: 0, updated: 0, conflicts: 0, skipped: 0, failed: 0 });
+export const zeroCustomers = (): CustomerCounts => ({ linked: 0, number: 0, vat: 0, name: 0, created: 0, updated: 0, conflicts: 0, skipped: 0, failed: 0, refs: 0 });
 export const emptyRows = (): RunSummary["rows"] => ({ name: [], created: [], conflicts: [] });
 
 export interface CustomerRun {
@@ -44,19 +44,25 @@ async function syncCustomer(r: CustomerRun, c: OxoCustomer): Promise<void> {
   let accountId: string;
   if (match.kind === "new") {
     r.counts.created++;
+    r.counts.refs++;
     add(r.rows.created, { customerId: c.id, name: fields.name });
     if (dry) return;
-    accountId = (await ctx.data.accounts.create({ ...fields, billing_country: fields.billing_country ?? ctx.settings.defaultCountry, assigned_to: null, status: "Active" })).id as string;
+    accountId = (await ctx.data.accounts.create({ ...fields, billing_country: fields.billing_country ?? ctx.settings.defaultCountry, assigned_to: null, status: "Active", external_ref: ref(c) })).id as string;
   } else {
     accountId = match.accountId;
     r.counts[match.kind]++;
     if (match.kind === "name") add(r.rows.name, { customerId: c.id, name: fields.name, accountId });
     r.claimed.set(accountId, c.id);
-    const diff = changedFields((await ctx.data.accounts.get(accountId)) ?? {}, fields);
-    if (Object.keys(diff).length) {
-      r.counts.updated++;
-      if (!dry) await ctx.data.accounts.update(accountId, diff);
+    const current = (await ctx.data.accounts.get(accountId)) ?? {};
+    const diff: Record<string, unknown> = changedFields(current, fields);
+    if (Object.keys(diff).length) r.counts.updated++;
+    if (!current.external_ref) {
+      r.counts.refs++;
+      diff.external_ref = ref(c);
+    } else if (current.external_ref !== ref(c)) {
+      ctx.log.warn(`Account ${accountId} keeps external_ref ${String(current.external_ref)}; OXO ERP customer ${c.id} would give ${ref(c)}`, { accountId, customerId: c.id });
     }
+    if (!dry && Object.keys(diff).length) await ctx.data.accounts.update(accountId, diff);
     if (dry) return;
   }
   r.claimed.set(accountId, c.id);
@@ -78,6 +84,28 @@ async function guarded(r: CustomerRun, c: OxoCustomer, done: Set<number>): Promi
 }
 
 /**
+ * Accounts linked earlier (by a sync before external_ref was written, or by a sent order) that still have no external_ref
+ * get it by the same rule; the whole customer list is read only when such an account exists. Never overwrites a value.
+ */
+async function fillRefs(r: CustomerRun, client: OxoClient, done: Set<number>): Promise<void> {
+  const links = new Map<string, number>();
+  for (const e of await r.ctx.store.list("account:")) {
+    const { customerId } = e.value as AccountLink;
+    if (!done.has(customerId)) links.set(e.key.slice("account:".length), customerId);
+  }
+  if (!links.size) return;
+  const missing = (await findAll(r.ctx.data.accounts, { id: { in: Array.from(links.keys()) }, deletedAt: null })).filter((a) => !a.external_ref);
+  if (!missing.length) return;
+  const byId = new Map((await client.all<OxoCustomer>("/customers")).map((c) => [c.id, c]));
+  for (const a of missing) {
+    const c = byId.get(links.get(a.id as string) as number);
+    if (!c) continue;
+    r.counts.refs++;
+    if (!r.dry) await r.ctx.data.accounts.update(a.id as string, { external_ref: ref(c) });
+  }
+}
+
+/**
  * Changed customers since the cursor (minus 2 minutes), then those the CRM still owes from their stored copy:
  * conflicts (the CRM data may have been fixed) and failed writes. Returns the newest updatedAt seen; the caller moves the cursor.
  */
@@ -95,5 +123,6 @@ export async function syncCustomers(r: CustomerRun, client: OxoClient): Promise<
   for (const e of [...(await r.ctx.store.list("conflict:")), ...(await r.ctx.store.list("retry:"))]) {
     await guarded(r, (e.value as { customer: OxoCustomer }).customer, done);
   }
+  await fillRefs(r, client, done);
   return top;
 }
